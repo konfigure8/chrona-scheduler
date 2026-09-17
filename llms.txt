@@ -1,4 +1,4 @@
-﻿# Chrona Scheduler
+# Chrona Scheduler
 
 > A drag-and-drop scheduler for any Dataverse table with a start and an end. It installs as one managed solution and runs inside model-driven apps. No Chrona account is needed to use it; Optimize, which fills and balances the schedule, connects to the Chrona service.
 
