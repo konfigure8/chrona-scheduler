@@ -1,0 +1,19 @@
+﻿# Chrona Scheduler
+
+> A drag-and-drop scheduler for any Dataverse table with a start and an end. It installs as one managed solution and runs inside model-driven apps. No Chrona account is needed to use it; Optimize, which fills and balances the schedule, connects to the Chrona service.
+
+Every page below is plain Markdown. Read them in order for an install; each stands alone for a question.
+
+## Install
+
+- [Install guide](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/README.md): import the solution, give people roles, bind the scheduler to a view, open it in an app, Optimize.
+- [Bindings](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/bindings.md): every binding in the property pane, the three that matter, and what the rest are for.
+- [Questions](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/faq.md): what the platform shows along the way, removing the solution, languages, what Optimize sends.
+
+## Download
+
+- [Releases](https://github.com/konfigure8/chrona-scheduler/releases): `ChronaScheduler-<version>.zip` holds `01-ChronaScheduler_managed.zip` and the install guide.
+
+## Help
+
+- support@chrona365.com
