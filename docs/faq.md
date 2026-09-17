@@ -15,7 +15,7 @@ The solution appears in the Solutions list, under the **Managed** filter, and th
 The platform finishes the import in the background for a minute or so after the banner. Wait a minute and select **Save** again.
 
 **Does anyone need a Chrona account?**
-No. The scheduler works without one, and Connect registers your environment with the Chrona service without a sign-up form. A Chrona account matters only for plans and usage.
+No. The scheduler works without one. **Try a free sample run** in the Optimize dialog connects your environment to the Chrona service without a sign-up form. A Chrona account matters only for plans and usage.
 
 ## Binding the scheduler
 

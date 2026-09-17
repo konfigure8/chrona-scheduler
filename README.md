@@ -50,7 +50,7 @@ Drag to move and resize, create and edit rows, and switch between the day, week,
 
 ## Optimize
 
-Optimize asks the Chrona service to fill and balance the schedule. Select **Optimize**, read what it does, and select **Connect**. Connecting registers your environment with Chrona, creates the scheduler configuration it needs, and runs a first sample optimization. A connected environment gets a free daily allowance of optimizations; nothing about the scheduler itself changes. Connecting does not ask you to sign up; a Chrona account matters only for plans and usage. When the day's free allowance is used, the scheduler says so and Optimize returns the next day. An answer arrives as a proposal on the board: review it, drop what you disagree with, and select **Apply**. Nothing is written before that.
+Optimize asks the Chrona service to fill and balance the schedule. Select **Optimize**, read what it does, and select **Try a free sample run**. That connects your environment to Chrona, creates the scheduler configuration it needs, and runs a first sample optimization. A connected environment gets a free daily allowance of optimizations; nothing about the scheduler itself changes. Connecting does not ask you to sign up; a Chrona account matters only for plans and usage. When the day's free allowance is used, the scheduler says so and Optimize returns the next day. An answer arrives as a proposal on the board: review it, drop what you disagree with, and select **Apply**. Nothing is written before that.
 
 ## Help
 
