@@ -35,7 +35,7 @@ If you are creating the table now: **Tables**, **New table**, **Table (advanced 
 2. On the view designer's command bar, select **Components**, then **Add a component**.
 3. Chrona Scheduler is not in the short list yet. Select **Get more components**, select the **Chrona Scheduler** row, then **Add**. Now select **Chrona Scheduler** in the list.
 4. The property pane lists many bindings. Three are marked required: **Title** to your title column, **Start** to your start column, **End** to your end column. Bind **Resource** to your person or asset lookup if you want lanes. Leave the optional bindings at **Select an option** and leave **Calendar configuration** empty.
-5. Under **Show component on**, tick **Web** and **Tablet**, then select **Done**; it stays grey until Title, Start, and End are bound. Then select **Save** in the Components pane.
+5. Under **Show component on**, keep **Web** and **Tablet** and untick **Mobile**; the phone layout is not part of this release. Select **Done**; it stays grey until Title, Start, and End are bound. Then select **Save** in the Components pane.
 6. Select **Save and publish**.
 
 ## 4. Open it in an app

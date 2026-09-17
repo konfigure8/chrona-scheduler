@@ -35,7 +35,7 @@ That happens when the bindings of a view that already has the scheduler are edit
 After adding columns, select **Update forms and views**, pick the columns, then **Update**, then **Publish all customizations** under Solutions. The app can keep the old form for a few minutes; reload it.
 
 **Which platforms should I tick under Show component on?**
-Web and Tablet. A phone layout is not part of this release.
+Keep Web and Tablet and untick Mobile. A phone layout is not part of this release.
 
 ## Using it
 
