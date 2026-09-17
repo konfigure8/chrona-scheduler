@@ -11,6 +11,9 @@ The solution carries German labels. They install only where German is enabled fo
 **How do I know the import has finished?**
 The solution appears in the Solutions list, under the **Managed** filter, and the banner above the list reports the result.
 
+**Creating a table right after the import fails with "another Import running".**
+The platform finishes the import in the background for a minute or so after the banner. Wait a minute and select **Save** again.
+
 **Does anyone need a Chrona account?**
 No. The scheduler works without one, and Connect registers your environment with the Chrona service without a sign-up form. A Chrona account matters only for plans and usage.
 
