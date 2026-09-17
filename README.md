@@ -1,56 +1,87 @@
-# Install Chrona Scheduler
+# Chrona Scheduler
 
-Chrona Scheduler is a drag-and-drop scheduler for any Dataverse table that has a start and an end column. It runs inside your model-driven apps. You do not need a Chrona account to use it. Optimize connects your environment to the Chrona service in one step; there is no sign-up form.
+A drag-and-drop scheduler for any Dataverse table with a start and an end. One managed solution, no account, inside the model-driven app you already have.
 
-## What you need
+![The Chrona Scheduler board: people in lanes, shifts as bars, an unscheduled panel on the right](docs/images/hero.png)
 
-- A Power Platform environment with Dataverse, where you are a System Administrator or System Customizer.
-- `01-ChronaScheduler_managed.zip`, the file in this download. New downloads: take `ChronaScheduler-<version>.zip` from https://github.com/konfigure8/chrona-scheduler/releases, not the Source code archives; it holds the package and this guide.
+Bind it to a view of your table in the view designer, map Title, Start and End, and every row becomes a bar you can drag. Add a lookup to the person or asset a row belongs to and the board grows lanes and an unscheduled panel. Every edit is written to your table as it happens, with who made it.
 
-## 1. Import the solution
+## Features
 
-1. Open https://make.powerapps.com and pick your environment at the top right.
-2. Select **Solutions**, then **Import solution**.
-3. Select **Browse**, choose `01-ChronaScheduler_managed.zip`, then select **Next**.
-4. The wizard shows an **Environment Variables** step with two addresses already filled in. Its heading may say **2 updates needed**; that is the wizard's wording for the prefilled values. Leave them as they are and select **Import**.
-5. The solution appears in the list when the import has finished, and the banner reports that Chrona Scheduler was imported. It may add that translated labels for language 1031 could not be imported: those are the German labels, which install only where German is enabled. Nothing is missing.
+**Views**
+- Resource timeline with lanes: day, week, work week and month time scales, groups such as teams, a current-time line, non-working time and weekend shading.
+- Calendar layouts when no resource is bound: day, week and month.
+- The whole view loads, up to 20,000 rows, and only the visible rows are rendered.
 
-The solution is managed. You do not edit it; you update it by importing a newer version. The **Managed** filter on the Solutions page lists it. To remove it later, first take Chrona Scheduler off the views that use it, then delete the solution from the Solutions list: the platform refuses to delete a solution a view still depends on, and names those views.
+**Editing**
+- Drag to move, drag the edges to resize, with snapping to the time scale.
+- Create by dragging on an empty slot or with **New event**; a details dialog for everything else.
+- Select several bars and use **Move to...** by hours, days or weeks, or **Reassign to...** another person in one go.
+- Copy and paste, undo and redo. Undo writes back to your table too.
+- Pin a bar so it keeps its person and time when optimizing.
 
-## 2. Give people access
+**Checks on every drop**
+- Overlaps and working-hours windows are checked as you drag; a placement that breaks a rule is refused, one that bends it shows a note.
+- Status colours and text statuses from your columns; open rows show as needing cover.
 
-- People who use the scheduler need the security role **Chrona Scheduler User**.
-- People who configure it need **Chrona Scheduler Admin**.
-- System Administrators need nothing more.
+**Inside your app**
+- Right-click a bar for Open record, Chrona's actions and your app's own commands; selecting bars puts them on the app's command bar.
+- The app's Fluent theme, light or dark, is the scheduler's theme.
+- English and German, following the user's Power Apps language.
+- Time shown in the user's time zone.
 
-Assign roles in the Power Platform admin center: **Environments**, your environment, **Settings**, **Users + permissions**, **Users**, select the user, **Manage security roles**.
+![Right-click on a shift: Open record, Chrona's actions and the app's own commands](docs/images/menu.png)
 
-## 3. Put the scheduler on a table
+**Optimize**
+- One click sends a pseudonymous copy of the period to the Chrona service and the answer comes back as a proposal on the board. Free daily allowance, no sign-up form.
 
-Pick the table you want to schedule, for example bookings, jobs, or shifts. It needs a text column for the title, a date and time column for the start, and one for the end. A lookup column for the person or asset each row is assigned to gives you lanes; without one the scheduler is a calendar. The table's Owner is not offered as that lookup, so add one, for example **Assigned to**.
+## Staff rostering
 
-If you are creating the table now: **Tables**, **New table**, **Table (advanced properties)**, name it, **Save**. Then add the columns with **New**, **Column**: **Start** and **End** with data type **Date and time**, and if you want lanes, **Assigned to** with data type **Lookup** and related table **User** (choose the entry named exactly User). Finish with **Update forms and views**: pick the new columns and select **Update**, then **Solutions**, **Publish all customizations**, so they appear on the form.
+With **Chrona Workforce Scheduler**, the scenario solution for rostering people, the same board gains skills and roles with mismatch highlighting, availability and preference bands, hours against capacity, a coverage strip from demand, shift templates with rotating patterns and generation, roster periods with publish, and a ready-made app.
 
-1. Open the table, select **Views**, and open the view you want to schedule. **Active** rows is a good start. Use a view that does not have the scheduler yet: changing its bindings on a view that already has it can leave the property pane loading.
-2. On the view designer's command bar, select **Components**, then **Add a component**.
-3. Chrona Scheduler is not in the short list yet. Select **Get more components**, select the **Chrona Scheduler** row, then **Add**. Now select **Chrona Scheduler** in the list.
-4. The property pane lists many bindings. Three are marked required: **Title** to your title column, **Start** to your start column, **End** to your end column. Bind **Resource** to your person or asset lookup if you want lanes. Leave the optional bindings at **Select an option** and leave **Calendar configuration** empty.
-5. Under **Show component on**, keep **Web** and **Tablet** and untick **Mobile**; the phone layout is not part of this release. Select **Done**; it stays grey until Title, Start, and End are bound. Then select **Save** in the Components pane.
-6. Select **Save and publish**.
+![Planning a roster: the horizon of roster periods, coverage per hour, people with skills and hours, the unscheduled panel](docs/images/planning.png)
 
-## 4. Open it in an app
+The day calendar, for a table without a resource lookup:
 
-The scheduler shows wherever that view opens in a model-driven app. If your table is not in an app yet, open the table and select **Create an app**; the app is created and published with your table in it. Select **Play** and open the view you configured. If the app's form does not show your new columns yet, wait a few minutes and reload.
-
-Add your first rows with **+ New event** in the scheduler, or with **New** in the app.
-
-## What works before you connect
-
-Drag to move and resize, create and edit rows, and switch between the day, week, month, roster, and timeline views. Every edit is saved to your table. Right-click a row for Open record and your app's own commands.
+![The day calendar layout](docs/images/day-calendar.png)
 
 ## Optimize
 
-Optimize asks the Chrona service to fill and balance the schedule. Select **Optimize**, read what it does, and select **Try a free sample run**. That connects your environment to Chrona, creates the scheduler configuration it needs, and runs a first sample optimization. A connected environment gets a free daily allowance of optimizations; nothing about the scheduler itself changes. Connecting does not ask you to sign up; a Chrona account matters only for plans and usage. When the day's free allowance is used, the scheduler says so and Optimize returns the next day. An answer arrives as a proposal on the board: review it, drop what you disagree with, and select **Apply**. Nothing is written before that.
+Optimize fills open work and balances the schedule against the rules you have. Nothing is sent until you choose to connect, and the dialog shows exactly what a run would use.
+
+![The Optimize explainer: a sample run before and after, what a real run would use, and the free trial button](docs/images/optimize.png)
+
+The answer arrives as a proposal on the same board: proposed placements carry a dashed ring, a moved shift leaves a ghost at its old place, the list on the right names every change with its notes. Drop the ones you disagree with, then **Apply**. Nothing is written before that.
+
+![Reviewing a proposal: proposed changes on the board with the Current / Proposed switch, the change list, Apply and Discard](docs/images/review.png)
+
+## Performance
+
+Measured in the package's bench in Microsoft Edge on a developer laptop, with 2,000 people and 20,000 shifts:
+
+| What | Time |
+| --- | --- |
+| Board first painted after the data arrives | 1.2 s |
+| Render of the board | 0.4 s |
+| Next week | 0.12 s |
+| Switch to the month scale | 0.2 s |
+
+Only the rows in view are in the page: 59 bars on screen for 20,000 shifts. In Power Apps the control loads a view in pages of 5,000 rows, up to 20,000 rows.
+
+## Basic setup
+
+1. Import `01-ChronaScheduler_managed.zip` from the [latest release](https://github.com/konfigure8/chrona-scheduler/releases) in **Solutions**, **Import solution**.
+2. Give people the security role **Chrona Scheduler User** (**Chrona Scheduler Admin** for those who configure it).
+3. Open a view of your table in the view designer, **Components**, **Add a component**, **Chrona Scheduler**, and bind **Title**, **Start** and **End**; bind **Resource** to a lookup for lanes. **Save and publish**.
+4. Open the view in your app.
+
+![The property pane in the view designer: Title, Start and End required, Resource for lanes, the rest optional](docs/images/bind.png)
+
+The full guide, with the platform's own wording at every step: [docs/install.md](docs/install.md). Every binding explained: [docs/bindings.md](docs/bindings.md). Questions: [docs/faq.md](docs/faq.md). Agents: [llms.txt](llms.txt).
+
+## Download
+
+`ChronaScheduler-<version>.zip` from the [Releases](https://github.com/konfigure8/chrona-scheduler/releases) page holds the managed solution and the install guide.
 
 ## Help
 
