@@ -1,0 +1,36 @@
+name: Something broke
+description: The scheduler does not do what the documentation says.
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Chrona Scheduler version
+      description: From the Solutions page in the maker portal, Managed filter.
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you saw. Screenshots help.
+    validations:
+      required: true
+  - type: input
+    id: table
+    attributes:
+      label: Table and view
+      description: The table the scheduler is bound to and the view, so the bindings can be reasoned about.
+      placeholder: Bookings, Active Bookings
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - In the app (using the scheduler)
+        - In the view designer (setting it up)
+        - Importing the solution
+        - Optimize or Connect
+    validations:
+      required: true

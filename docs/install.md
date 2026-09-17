@@ -46,7 +46,11 @@ Add your first rows with **+ New event** in the scheduler, or with **New** in th
 
 ## What works before you connect
 
-Drag to move and resize, create and edit rows, and switch between the day, week, month, roster, and timeline views. Every edit is saved to your table. Right-click a row for Open record and your app's own commands.
+Drag to move and resize, create and edit rows, and switch between the day, week, work week and month scales. Every edit is saved to your table. Right-click a row for Open record and your app's own commands.
+
+## Settings
+
+Working hours, weekends, the time scale, the time zone, grouping, capacity and the collision policies live in two rows the scheduler reads: the Chrona Scheduler Calendar row for your table and the Chrona Scheduler View row for the view. Connect creates them; edit them in the maker portal under **Tables**. Every setting is listed at https://github.com/konfigure8/chrona-scheduler/blob/main/docs/configure.md.
 
 ## Optimize
 

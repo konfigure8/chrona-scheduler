@@ -1,10 +1,14 @@
 # Chrona Scheduler
 
-A drag-and-drop scheduler for any Dataverse table with a start and an end. One managed solution, no account, inside the model-driven app you already have.
+A drag-and-drop scheduler for any Dataverse table with a start and an end: a Power Apps component framework (PCF) control, shipped as one managed solution. No account, no second system; it lives on a view in the model-driven app you already have.
 
 ![The Chrona Scheduler board: people in lanes, shifts as bars, an unscheduled panel on the right](docs/images/hero.png)
 
 Bind it to a view of your table in the view designer, map Title, Start and End, and every row becomes a bar you can drag. Add a lookup to the person or asset a row belongs to and the board grows lanes and an unscheduled panel. Every edit is written to your table as it happens, with who made it.
+
+**On this page:** [Features](#features) · [Staff rostering](#staff-rostering) · [Optimize](#optimize) · [Performance](#performance) · [Basic setup](#basic-setup) · [Where things are set up](#where-things-are-set-up) · [Download](#download) · [Support](#support)
+
+**Documentation:** [Install guide](docs/install.md) · [Bindings](docs/bindings.md) · [Where things are set up](docs/configure.md) · [Questions](docs/faq.md) · [All pages](docs/README.md) · [llms.txt](llms.txt) for agents
 
 ## Features
 
@@ -20,9 +24,10 @@ Bind it to a view of your table in the view designer, map Title, Start and End, 
 - Copy and paste, undo and redo. Undo writes back to your table too.
 - Pin a bar so it keeps its person and time when optimizing.
 
-**Checks on every drop**
-- Overlaps and working-hours windows are checked as you drag; a placement that breaks a rule is refused, one that bends it shows a note.
-- Status colours and text statuses from your columns; open rows show as needing cover.
+**Collision detection on every drop**
+- Overlaps for the same person, placements outside the working hours, missing skills and booked leave are checked as you drag. Each check is set per scheduler to off, warn or block: a blocked placement snaps back with its reason, a warning lands with a note.
+- Text statuses from your columns; open rows show as needing cover.
+- Pinned rows stay put; a lock can fix the time, the person, or both.
 
 **Inside your app**
 - Right-click a bar for Open record, Chrona's actions and your app's own commands; selecting bars puts them on the app's command bar.
@@ -77,12 +82,20 @@ Only the rows in view are in the page: 59 bars on screen for 20,000 shifts. In P
 
 ![The property pane in the view designer: Title, Start and End required, Resource for lanes, the rest optional](docs/images/bind.png)
 
-The full guide, with the platform's own wording at every step: [docs/install.md](docs/install.md). Every binding explained: [docs/bindings.md](docs/bindings.md). Questions: [docs/faq.md](docs/faq.md). Agents: [llms.txt](llms.txt).
+## Where things are set up
+
+- **The property pane** on the view maps your columns: which column is the title, the start, the end, the person, the status, the group, the pin. [docs/bindings.md](docs/bindings.md).
+- **Two configuration rows** hold the scheduler's settings: the calendar row for the people table, grouping, capacity and the collision policies; the view row for working hours, weekends, the time scale and the time zone. Connect creates them; you can edit them in the maker portal. [docs/configure.md](docs/configure.md).
+- **The toolbar** remembers each person's own choices: the interval, the time scale, weekends, the unscheduled panel.
+
+The full install guide, with the platform's own wording at every step: [docs/install.md](docs/install.md). Questions: [docs/faq.md](docs/faq.md). Agents: [llms.txt](llms.txt).
 
 ## Download
 
 `ChronaScheduler-<version>.zip` from the [Releases](https://github.com/konfigure8/chrona-scheduler/releases) page holds the managed solution and the install guide.
 
-## Help
+## Support
 
-support@chrona365.com
+- Something broke: open an [issue](https://github.com/konfigure8/chrona-scheduler/issues/new/choose).
+- A question or an idea: start a [discussion](https://github.com/konfigure8/chrona-scheduler/discussions).
+- Anything private: support@chrona365.com.
