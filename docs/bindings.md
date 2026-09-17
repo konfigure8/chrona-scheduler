@@ -1,6 +1,6 @@
 # Bindings
 
-The property pane of Chrona Scheduler in the view designer lists one static input and sixteen column bindings. Three are required. Everything else is optional and stays at **Select an option** until you have a reason to bind it.
+The property pane of Chrona Scheduler in the view designer lists one static input, Calendar configuration, and sixteen column bindings. Three bindings are required. Everything else is optional and stays at **Select an option** until you have a reason to bind it.
 
 ## Required
 
@@ -18,11 +18,16 @@ The property pane of Chrona Scheduler in the view designer lists one static inpu
 | --- | --- | --- |
 | Resource | A lookup column to the person or asset a row is assigned to | Bound, the scheduler shows one lane per person and an unscheduled panel for rows without one. Unbound, it is a calendar. The table's Owner is not offered; add a lookup column such as Assigned to. |
 
+## Static input
+
+| Input | Value | What it does |
+| --- | --- | --- |
+| Calendar configuration | Leave empty | Id or name of a Chrona Scheduler Calendar row. Connect creates one for this view. |
+
 ## Optional
 
 | Binding | Bind to | What it does |
 | --- | --- | --- |
-| Calendar configuration | Leave empty | Id or name of a Chrona Scheduler Calendar row. Connect creates one for this view. |
 | Status | A text or choice column | Rows whose status reads open or unassigned show as needing cover. |
 | Group | A text or choice column | Buckets rows, for example by team. |
 | Pinned | A Yes/No column | A pinned row keeps its person and time when optimizing. |

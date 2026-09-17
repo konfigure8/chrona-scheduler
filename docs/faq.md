@@ -12,7 +12,7 @@ The solution carries German labels. They install only where German is enabled fo
 The solution appears in the Solutions list, under the **Managed** filter, and the banner above the list reports the result.
 
 **Does anyone need a Chrona account?**
-No. The scheduler works without one. Optimize connects your environment to the Chrona service when you choose to use it.
+No. The scheduler works without one, and Connect registers your environment with the Chrona service without a sign-up form. A Chrona account matters only for plans and usage.
 
 ## Binding the scheduler
 
@@ -44,6 +44,9 @@ A pseudonymous copy of the rows in the period: ids replaced with placeholders, n
 
 **What does a connected environment cost?**
 Nothing for the scheduler. A connected environment gets a free daily allowance of optimizations. Scenario solutions such as Chrona Workforce Scheduler are licensed separately.
+
+**What happens when the day's free allowance is used up?**
+The scheduler says so and Optimize returns the next day. Scheduling itself keeps working.
 
 ## Languages
 

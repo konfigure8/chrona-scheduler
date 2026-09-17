@@ -1,11 +1,11 @@
 # Install Chrona Scheduler
 
-Chrona Scheduler is a drag-and-drop scheduler for any Dataverse table that has a start and an end column. It runs inside your model-driven apps. You do not need a Chrona account to use it; an account is only needed for Optimize.
+Chrona Scheduler is a drag-and-drop scheduler for any Dataverse table that has a start and an end column. It runs inside your model-driven apps. You do not need a Chrona account to use it. Optimize connects your environment to the Chrona service in one step; there is no sign-up form.
 
 ## What you need
 
 - A Power Platform environment with Dataverse, where you are a System Administrator or System Customizer.
-- The file in this download: `01-ChronaScheduler_managed.zip`. Downloads live at https://github.com/konfigure8/chrona-scheduler/releases.
+- `01-ChronaScheduler_managed.zip`, the file in this download. New downloads: take `ChronaScheduler-<version>.zip` from https://github.com/konfigure8/chrona-scheduler/releases, not the Source code archives; it holds the package and this guide.
 
 ## 1. Import the solution
 
@@ -13,15 +13,15 @@ Chrona Scheduler is a drag-and-drop scheduler for any Dataverse table that has a
 2. Select **Solutions**, then **Import solution**.
 3. Select **Browse**, choose `01-ChronaScheduler_managed.zip`, then select **Next**.
 4. The wizard shows an **Environment Variables** step with two addresses already filled in. Its heading may say **2 updates needed**; that is the wizard's wording for the prefilled values. Leave them as they are and select **Import**.
-5. The solution appears in the list when the import has finished, and the banner reports that Chrona Scheduler was imported. It may add that translated labels for language 1031 were skipped: that is the German labels, which only install where German is enabled. Nothing is missing.
+5. The solution appears in the list when the import has finished, and the banner reports that Chrona Scheduler was imported. It may add that translated labels for language 1031 could not be imported: those are the German labels, which install only where German is enabled. Nothing is missing.
 
-The solution is managed. You do not edit it; you update it by importing a newer version. The **Managed** filter on the Solutions page lists it. To remove it later, first take Chrona Scheduler off the views that use it: the platform refuses to uninstall a solution a view still depends on, and names those views.
+The solution is managed. You do not edit it; you update it by importing a newer version. The **Managed** filter on the Solutions page lists it. To remove it later, first take Chrona Scheduler off the views that use it, then delete the solution from the Solutions list: the platform refuses to delete a solution a view still depends on, and names those views.
 
 ## 2. Give people access
 
 - People who use the scheduler need the security role **Chrona Scheduler User**.
 - People who configure it need **Chrona Scheduler Admin**.
-- The person who imported the solution is a System Administrator and needs nothing more.
+- System Administrators need nothing more.
 
 Assign roles in the Power Platform admin center: **Environments**, your environment, **Settings**, **Users + permissions**, **Users**, select the user, **Manage security roles**.
 
@@ -44,13 +44,13 @@ The scheduler shows wherever that view opens in a model-driven app. If your tabl
 
 Add your first rows with **+ New event** in the scheduler, or with **New** in the app.
 
-## What works without an account
+## What works before you connect
 
 Drag to move and resize, create and edit rows, and switch between the day, week, month, roster, and timeline views. Every edit is saved to your table. Right-click a row for Open record and your app's own commands.
 
 ## Optimize
 
-Optimize asks the Chrona service to fill and balance the schedule. Select **Optimize**, read what it does, and select **Connect**. Connecting registers your environment with Chrona, creates the scheduler configuration it needs, and runs a first sample optimization. A connected environment gets a free daily allowance of optimizations; nothing about the scheduler itself changes. An answer arrives as a proposal on the board: review it, drop what you disagree with, and select **Apply**. Nothing is written before that.
+Optimize asks the Chrona service to fill and balance the schedule. Select **Optimize**, read what it does, and select **Connect**. Connecting registers your environment with Chrona, creates the scheduler configuration it needs, and runs a first sample optimization. A connected environment gets a free daily allowance of optimizations; nothing about the scheduler itself changes. Connecting does not ask you to sign up; a Chrona account matters only for plans and usage. When the day's free allowance is used, the scheduler says so and Optimize returns the next day. An answer arrives as a proposal on the board: review it, drop what you disagree with, and select **Apply**. Nothing is written before that.
 
 ## Help
 
