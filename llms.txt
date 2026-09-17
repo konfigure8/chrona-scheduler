@@ -6,7 +6,7 @@ Every page below is plain Markdown. Read them in order for an install; each stan
 
 ## Install
 
-- [Overview](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/README.md): what it is, features, views, Optimize, performance, basic setup.
+- [Overview](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/README.md): what it is, why builders pick it, the ten-minute setup, what you get, Optimize, staff rostering, performance, trust.
 - [Install guide](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/install.md): import the solution, give people roles, bind the scheduler to a view, open it in an app, connect for Optimize.
 - [Bindings](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/bindings.md): every binding in the property pane, the three that matter, and what the rest are for.
 - [Where things are set up](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/configure.md): the property pane, the calendar and view configuration rows with every setting, the toolbar's per-user choices, the Workforce tables.
