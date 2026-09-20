@@ -1,6 +1,6 @@
 # Bindings
 
-The property pane of Chrona Scheduler in the view designer lists one static input, Calendar configuration, and sixteen column bindings. Three bindings are required. Everything else is optional and stays at **Select an option** until you have a reason to bind it.
+The property pane of Chrona Scheduler in the view designer lists one static input, Calendar configuration, and eighteen column bindings. Three bindings are required. Everything else is optional and stays at **Select an option** until you have a reason to bind it.
 
 ## Required
 
@@ -30,6 +30,8 @@ The property pane of Chrona Scheduler in the view designer lists one static inpu
 | --- | --- | --- |
 | Status | A text or choice column | Rows whose status reads open or unassigned show as needing cover. |
 | Group | A text or choice column | Buckets rows, for example by team. |
+| Subgroup | A text or choice column | The second lane level under Group. |
+| Role | A lookup to the Role table (Chrona Workforce Scheduler) | The role the row needs; people are matched by the roles they hold. |
 | Pinned | A Yes/No column | A pinned row keeps its person and time when optimizing. |
 | Lock | A text or choice column | What stays fixed on the row: time, resource, or both. |
 | Priority | A whole number column, 1 to 100 | Higher rows are placed first when optimizing. |

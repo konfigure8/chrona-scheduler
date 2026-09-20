@@ -12,16 +12,16 @@ Table **Chrona Scheduler Calendar** (`chr_chronaschedulercalendar`). The first s
 
 | Setting | Column | What it does | Without it |
 | --- | --- | --- | --- |
-| Resource table | `chr_resourcetable` | Logical name of the people or asset table, for example `contact` or your own. | The table behind the Resource lookup. |
-| Resource name column | `chr_resourcenamecolumn` | The column shown as the lane's name. | The table's primary name. |
-| Group column | `chr_resourcegroupcolumn` | Lanes grouped under this column's value, for example a team or a site. | No groups. |
-| Subgroup column | `chr_resourcesubgroupcolumn` | A second grouping level. | None. |
-| Time zone column | `chr_resourcetimezonecolumn` | A column with a person's IANA time zone. | None. |
-| Capacity column | `chr_resourcecapacitycolumn` | Weekly hours per person; shows hours against capacity and lets the optimizer respect them. | No hours. |
+| Resource table | `chr_resourcetable` | The people or asset table, picked from a list, for example `contact` or your own. | The table behind the Resource lookup. |
+| Resource name column | `chr_resourcenamecolumn` | The column shown as the lane's name, picked from the table's columns. | The table's primary name. |
+| Group column | `chr_resourcegroupcolumn` | Lanes grouped under this column's value, for example a team or a site; picked from the table's columns. | No groups. |
+| Subgroup column | `chr_resourcesubgroupcolumn` | A second grouping level, picked from the table's columns. | None. |
+| Time zone column | `chr_resourcetimezonecolumn` | A column with a person's IANA time zone, picked from the table's columns. | None. |
+| Capacity column | `chr_resourcecapacitycolumn` | Weekly hours per person, picked from the table's number columns; shows hours against capacity and lets the optimizer respect them. | No hours. |
 | Cost column | `chr_resourcecostcolumn` | Employer cost per hour, in cents, for the optimizer. | No cost. |
 | Resource filter | `chr_resourcefilter` | An OData `$filter` fragment for the lanes, for example active people only. | Every row. |
 | Overlap policy | `chr_overlappolicy` | Two rows on the same person at the same time: off, warn or block. | Warn. |
-| Skill mismatch policy | `chr_skillmismatchpolicy` | A row on a person without a skill it requires: off, warn or block. | Block. |
+| Skill mismatch policy | `chr_skillmismatchpolicy` | A row on a person without the role it requires: off, warn or block. | Block. |
 | Working hours policy | `chr_workinghourspolicy` | A row outside the view's working hours: off, warn or block. | Off; the shading is the guidance. |
 | Availability policy | `chr_availabilitypolicy` | A row over booked leave or another unavailable span: off, warn or block. | Block. |
 | Default solve seconds | `chr_defaultsolverseconds` | How long the optimizer works on a run. The service caps it per plan. | 30 seconds. |
@@ -34,11 +34,13 @@ Table **Chrona Scheduler View** (`chr_chronaschedulerview`), keyed by the view's
 
 | Setting | Column | What it does | Without it |
 | --- | --- | --- | --- |
+| Bound view | `chr_viewid` | The id of the view this row configures; Connect sets it. | The row is not found. |
+| Layout | `chr_layout` | The board's layout: timeline lanes, the roster grid, top-down columns or the agenda list. | Timeline. |
 | Display time zone | `chr_displaytimezone` | An IANA zone such as `Australia/Brisbane`, or `site` for stored wall-clock times. | The user's Power Apps time zone, labelled with its offset. |
-| Slot minutes | `chr_slotminutes` | The time scale bars snap to. | 30. |
-| Pixels per hour | `chr_pxperhour` | The board's density. | The control's default. |
-| Working start hour | `chr_workingstarthour` | Start of the working day, 0 to 24; earlier hours are shaded. | No shading. |
-| Working end hour | `chr_workingendhour` | End of the working day, 0 to 24; later hours are shaded. | No shading. |
+| Slot length | `chr_slotminutes` | The time scale bars snap to, picked as a duration. | 30 minutes. |
+| Hour width | `chr_pxperhour` | Width of one hour in pixels, the board's density. | The control's default. |
+| Working start | `chr_workingstart` | Start of the working day, picked from a list; earlier hours are shaded. | No shading. |
+| Working end | `chr_workingend` | End of the working day, picked from a list; later hours are shaded. | No shading. |
 | Show weekends | `chr_showweekends` | Whether weekends are shown by default. | Shown. |
 
 ## 4. The toolbar, per person
@@ -47,7 +49,7 @@ Each person's choices are remembered for them, per view: the interval (day, week
 
 ## 5. With Chrona Workforce Scheduler
 
-The scenario solution adds its own tables, each with a page in its app: skills and the skills of people and work items, roles, availability types and availability, demand and demand drivers, work item templates with their spans and skills, and resource preferences. The scheduler reads them for skill matching, availability bands, the coverage strip, generation and the optimizer's rules.
+The scenario solution adds its own tables, each with a page in its app: skills, roles and the skills a role needs, the roles and skills of people, availability types and availability, demand and demand drivers, work item templates with their spans, and resource preferences. The scheduler reads them for role matching, availability bands, the coverage strip, generation and the optimizer's rules.
 
 ## Editing the rows without an app
 

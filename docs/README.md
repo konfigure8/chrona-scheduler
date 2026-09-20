@@ -7,6 +7,7 @@ Every page is plain Markdown; agents start at [llms.txt](../llms.txt).
 | [Overview](../README.md) | What it is, features, views, Optimize, performance, basic setup. |
 | [Install guide](install.md) | Import, roles, the table and its columns, the scheduler on a view, the app, the first sample run; the platform's own wording at every step. |
 | [Bindings](bindings.md) | Every binding in the property pane, the three that matter, what the rest are for. |
+| [Layouts](layouts.md) | The four layouts with a picture of each, when each fits, and how the view row sets one. |
 | [Where things are set up](configure.md) | The property pane, the calendar and view configuration rows with every setting, the toolbar's per-person choices, the Workforce tables. |
 | [Questions](faq.md) | What the platform shows along the way, removing the solution, languages, what Optimize sends, the free allowance. |
 

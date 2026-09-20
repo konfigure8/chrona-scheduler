@@ -8,7 +8,7 @@ A timeline and calendar control for Power Apps: put it on a view of your booking
 
 **On this page:** [Why builders pick it](#why-builders-pick-it) · [Try it in ten minutes](#try-it-in-ten-minutes) · [What you get](#what-you-get) · [See it](#see-it) · [When you need optimization](#when-you-need-optimization) · [Staff rostering](#staff-rostering) · [Performance](#performance) · [Trust](#trust) · [Support](#support)
 
-**Documentation:** [Install guide](docs/install.md) · [Bindings](docs/bindings.md) · [Where things are set up](docs/configure.md) · [Questions](docs/faq.md) · [All pages](docs/README.md) · [llms.txt](llms.txt) for agents
+**Documentation:** [Install guide](docs/install.md) · [Bindings](docs/bindings.md) · [Layouts](docs/layouts.md) · [Where things are set up](docs/configure.md) · [Questions](docs/faq.md) · [All pages](docs/README.md) · [llms.txt](llms.txt) for agents
 
 ## Why builders pick it
 
@@ -37,14 +37,14 @@ The [install guide](docs/install.md) walks every step with the platform's own wo
 - Copy and paste, undo and redo, all saved to your table.
 
 **Keep it right**
-- **Collision detection** on every drop: two shifts on the same person, a shift outside working hours, a person without a required skill, a shift over booked leave. Each check is off, a warning or a block, your choice per scheduler. A block snaps the bar back with the reason; a warning lands it with a note.
+- **Collision detection** on every drop: two shifts on the same person, a shift outside working hours, a person without the required role, a shift over booked leave. Each check is off, a warning or a block, your choice per scheduler. A block snaps the bar back with the reason; a warning lands it with a note.
 - Pin a bar so it keeps its person and time; lock the time, the person, or both.
 - See hours against capacity on every lane when your people table carries weekly hours.
 
 **Live in your app**
 - Right-click a bar for **Open record**, Chrona's actions and your app's own commands; select bars and your command bar works on them.
 - Your app's Fluent theme, light or dark. English and German, following each user's language. Times in each user's time zone.
-- Day, week, work week and month time scales; groups such as teams or sites; a current-time line; non-working time and weekend shading.
+- A layout per view, set by the maker: timeline lanes, a roster grid, top-down columns or an agenda list. Day, week, work week and month time scales; groups such as teams or sites; a current-time line; non-working time and weekend shading.
 - The whole view loads, up to 20,000 rows.
 
 ## See it
@@ -52,6 +52,10 @@ The [install guide](docs/install.md) walks every step with the platform's own wo
 The board with the right-click menu, in a model-driven app:
 
 ![Right-click on a shift: Open record, Chrona's actions and the app's own commands](docs/images/menu.png)
+
+The roster grid, one of four layouts the maker sets per view ([Layouts](docs/layouts.md) shows all four):
+
+![The roster grid layout: a row per person, a column per day, a chip per shift](docs/images/layout-roster.png)
 
 The day calendar, for a table without a resource lookup:
 
@@ -69,7 +73,7 @@ The answer arrives as a proposal on the same board. Proposed placements carry a 
 
 ## Staff rostering
 
-When scheduling turns into rostering, **Chrona Workforce Scheduler** adds the tables and the app for it: skills and roles with mismatch highlighting, availability and preferences, hours against capacity, demand and the coverage strip, shift templates with rotating patterns and generation, roster periods with publish. Same board, same control. It is licensed per scheduled person; ask us at support@chrona365.com.
+When scheduling turns into rostering, **Chrona Workforce Scheduler** adds the tables and the app for it: roles built from skills, with mismatch highlighting, availability and preferences, hours against capacity, demand and the coverage strip, shift templates with rotating patterns and generation, roster periods with publish. Same board, same control. It is licensed per scheduled person; ask us at support@chrona365.com.
 
 ![Planning a roster: the horizon of roster periods, coverage per hour, people with skills and hours, the unscheduled panel](docs/images/planning.png)
 
@@ -91,7 +95,7 @@ Only the rows in view are on the page: 59 bars on screen for 20,000 shifts. In P
 - **Your data stays put.** The free scheduler makes no calls outside your environment. When you connect for optimization, a run sends a copy of the period with ids replaced by placeholders: no names, no notes, no contact details, no unrelated records. You can read the exact payload before the first run.
 - **No licence of its own.** The scheduler is a code component in your model-driven app and runs under the Power Apps licences the app already has. There is no Chrona licence for it.
 - **A managed solution.** It installs, updates and uninstalls the way every managed solution does. Take it off the views that use it, and the platform deletes it cleanly.
-- **Version 0.1.0 is the first public release.** Not there yet: a phone layout, and the roster grid, top-down and agenda layouts the component contains but the app does not yet expose. Releases are listed on this page.
+- **Version 0.1.0 is the first public release.** Not there yet: a phone layout. Releases are listed on this page.
 - **Built by Chrona**, chrona365.com. Support: support@chrona365.com.
 
 ## Support
