@@ -2,7 +2,7 @@
 
 The scheduler draws a view in one of four layouts. The maker picks the layout once, on the view's configuration row (**Layout** on the Chrona Scheduler View row, see [Where things are set up](configure.md)); the people using the view do not switch it. What they do choose, per person, is the interval: Day, Week, Work week or Month, and the rest of the toolbar's settings.
 
-Every layout shows the same rows: the shifts, jobs or visits of the bound view, drag-and-drop scheduling, the right-click menu, the unscheduled panel, and the collision checks.
+Every layout shows the same rows: the shifts, jobs or visits of the bound view, drag-and-drop scheduling, the right-click menu, the unscheduled panel, and the collision checks. The colors in the pictures come from the view row's **Color by** setting, here set to Role: a bar takes its role's color; Group and Status are the other choices, and nothing leaves the bars neutral.
 
 | Layout | What it draws | Pick it when |
 | --- | --- | --- |

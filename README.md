@@ -44,7 +44,7 @@ The [install guide](docs/install.md) walks every step with the platform's own wo
 **Live in your app**
 - Right-click a bar for **Open record**, Chrona's actions and your app's own commands; select bars and your command bar works on them.
 - Your app's Fluent theme, light or dark. English and German, following each user's language. Times in each user's time zone.
-- A layout per view, set by the maker: timeline lanes, a roster grid, top-down columns or an agenda list. Day, week, work week and month time scales; groups such as teams or sites; a current-time line; non-working time and weekend shading.
+- A layout per view, set by the maker: timeline lanes, a roster grid, top-down columns or an agenda list; and a color per row by role, group or status when the maker wants one. Day, week, work week and month time scales; groups such as teams or sites; a current-time line; non-working time and weekend shading.
 - The whole view loads, up to 20,000 rows.
 
 ## See it

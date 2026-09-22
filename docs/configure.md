@@ -36,6 +36,7 @@ Table **Chrona Scheduler View** (`chr_chronaschedulerview`), keyed by the view's
 | --- | --- | --- | --- |
 | Bound view | `chr_viewid` | The id of the view this row configures; Connect sets it. | The row is not found. |
 | Layout | `chr_layout` | The board's layout: timeline lanes, the roster grid, top-down columns or the agenda list. | Timeline. |
+| Color by | `chr_colorby` | What colors the rows: the role's color, one color per lane group, or the warning tint for rows needing cover. | Nothing; the bars stay neutral. |
 | Display time zone | `chr_displaytimezone` | An IANA zone such as `Australia/Brisbane`, or `site` for stored wall-clock times. | The user's Power Apps time zone, labelled with its offset. |
 | Slot length | `chr_slotminutes` | The time scale bars snap to, picked as a duration. | 30 minutes. |
 | Hour width | `chr_pxperhour` | Width of one hour in pixels, the board's density. | The control's default. |
