@@ -44,6 +44,18 @@ The scheduler shows wherever that view opens in a model-driven app. If your tabl
 
 Add your first rows with **+ New event** in the scheduler, or with **New** in the app.
 
+## Install with an agent
+
+Your coding agent can do the four steps for you when it holds two servers: Microsoft's Dataverse MCP server for your environment, and the Chrona server at https://mcp.chrona365.com/mcp, which answers with this guide, a mapping recipe for your table, and the requests in order. No sign-in, nothing to install, and the Chrona server reads nothing from your environment: every change goes through your own Dataverse tools, so you see it and can undo it.
+
+Give the agent your environment's address and https://github.com/konfigure8/chrona-scheduler, then answer its questions about your table: which view, and which columns are the title, the start, the end and the person.
+
+- Agents that take a URL, such as Claude Code or VS Code: add `https://mcp.chrona365.com/mcp` as an MCP server named Chrona Scheduler.
+- Copilot Studio: after the import, the connector **Chrona Scheduler** is in your environment. In the agent's **Tools** page select **Add a tool**, search for **Chrona Scheduler**, select it, then **Add to agent**. Without the import, add it by address: **Add a tool**, **New tool**, **Model Context Protocol**, the address above, authentication **None**.
+- If a data policy blocks custom connectors in your environment, an admin adds Chrona Scheduler to the policy's business data group; the server keeps no data.
+
+When a tool asks for a description, use: Chrona Scheduler, the install guide, a mapping recipe for a table, and the install as ordered Dataverse Web API requests.
+
 ## What works before you connect
 
 Drag to move and resize, create and edit rows, and switch between the day, week, work week and month scales. Every edit is saved to your table. Right-click a row for Open record and your app's own commands.

@@ -13,6 +13,10 @@ Every page below is plain Markdown. Read them in order for an install; each stan
 - [Where things are set up](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/configure.md): the property pane, the calendar and view configuration rows with every setting, the toolbar's per-user choices, the Workforce tables.
 - [Questions](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/faq.md): what the platform shows along the way, removing the solution, languages, what Optimize sends.
 
+## Agent server
+
+- [Chrona MCP server](https://mcp.chrona365.com/): Model Context Protocol over Streamable HTTP at `https://mcp.chrona365.com/mcp`, no sign-in. Tools: `install_guide` (these pages by section or by question), `mapping_recipe` (a table's columns to the bindings and the calendar row), `generate_configuration` (the install and configuration as ordered Dataverse Web API requests, each naming the tool that sends it). It writes nothing; your Dataverse tools do.
+
 ## Download
 
 - [Releases](https://github.com/konfigure8/chrona-scheduler/releases): `ChronaScheduler-<version>.zip` holds `01-ChronaScheduler_managed.zip` and the install guide.
