@@ -53,7 +53,7 @@ The scheduler says so and Optimize returns the next day. Scheduling itself keeps
 
 ## Languages
 
-The current [GitHub download](https://github.com/konfigure8/chrona-scheduler/releases) is version 0.1.17 and includes English and German. Version 0.1.18 includes English, German, French, Spanish, Portuguese, Dutch and Italian. That version was submitted for Microsoft Marketplace certification and is not yet a public download. Check the version of your installed solution before relying on the additional languages.
+Chrona Scheduler supports English, German, French, Spanish, Portuguese, Dutch and Italian. Download the current package from [GitHub releases](https://github.com/konfigure8/chrona-scheduler/releases).
 
 | Language | Language ID in the solution |
 | --- | --- |
