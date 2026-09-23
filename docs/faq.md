@@ -5,8 +5,8 @@
 ### The import wizard's Environment Variables step says "2 updates needed". What do I type?
 Nothing. The two addresses are filled in already; the heading is the wizard's wording for prefilled values. Select **Import**.
 
-### The import banner says translated labels for language 1031 could not be imported.
-Language 1031 is German. The solution carries German labels, but Dataverse installs them only where German is enabled for the environment. If German is not enabled, this warning is expected.
+### The import banner says translated labels could not be imported.
+The banner may name a language ID. Dataverse installs translated labels only for languages enabled in the environment. The warning does not stop the scheduler import. For example, 1031 is German. See the [language IDs](#languages) below.
 
 ### How do I know the import has finished?
 The solution appears in the Solutions list, under the **Managed** filter, and the banner above the list reports the result.
@@ -53,9 +53,19 @@ The scheduler says so and Optimize returns the next day. Scheduling itself keeps
 
 ## Languages
 
-The current package includes English and German scheduler text and solution labels. A user's Power Apps language selects the available scheduler text. Dataverse installs translated table and view labels only for languages enabled in the environment.
+The current [GitHub download](https://github.com/konfigure8/chrona-scheduler/releases) is version 0.1.17 and includes English and German. Version 0.1.18 includes English, German, French, Spanish, Portuguese, Dutch and Italian. That version was submitted for Microsoft Marketplace certification and is not yet a public download. Check the version of your installed solution before relying on the additional languages.
 
-French, Spanish, Portuguese, Dutch and Italian are planned launch languages. They are not in the current package.
+| Language | Language ID in the solution |
+| --- | --- |
+| English | 1033 |
+| German | 1031 |
+| French | 1036 |
+| Spanish | 3082 |
+| Portuguese | 2070 (Portugal), 1046 (Brazil) |
+| Dutch | 1043 |
+| Italian | 1040 |
+
+The user's Power Apps language selects available scheduler text. Dataverse installs translated table and view labels only for languages enabled in the environment. The Portuguese locales use the same wording.
 
 ## Removing the solution
 

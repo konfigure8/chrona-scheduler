@@ -13,7 +13,7 @@ Chrona Scheduler is a drag-and-drop scheduler for any Dataverse table that has a
 2. Select **Solutions**, then **Import solution**.
 3. Select **Browse**, choose `01-ChronaScheduler_managed.zip`, then select **Next**.
 4. The wizard shows an **Environment Variables** step with two addresses already filled in. Its heading may say **2 updates needed**; that is the wizard's wording for the prefilled values. Leave them as they are and select **Import**.
-5. The solution appears in the list when the import has finished, and the banner reports that Chrona Scheduler was imported. If it adds that translated labels for language 1031 could not be imported, that refers to German. Dataverse installs those labels only where German is enabled for the environment.
+5. The solution appears in the list when the import has finished, and the banner reports that Chrona Scheduler was imported. The banner may also say that translated labels for a language could not be imported. Dataverse installs labels only for languages enabled in the environment; this warning does not stop the scheduler import.
 
 The solution is managed. You do not edit it; you update it by importing a newer version. The **Managed** filter on the Solutions page lists it. To remove it later, first take Chrona Scheduler off the views that use it, then delete the solution from the Solutions list: the platform refuses to delete a solution a view still depends on, and names those views.
 
