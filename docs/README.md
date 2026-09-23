@@ -1,6 +1,8 @@
 # Chrona Scheduler documentation
 
-Every page is plain Markdown; agents start at [llms.txt](../llms.txt).
+Install the scheduler on a Dataverse view, then use these guides to set up the board for your table. Start with the [install guide](install.md), or [install with an agent](https://chrona365.com/install-with-an-agent).
+
+## Choose a guide
 
 | Page | What it answers |
 | --- | --- |
@@ -11,4 +13,6 @@ Every page is plain Markdown; agents start at [llms.txt](../llms.txt).
 | [Where things are set up](configure.md) | The property pane, the calendar and view configuration rows with every setting, the toolbar's per-person choices, the Workforce tables. |
 | [Questions](faq.md) | What the platform shows along the way, removing the solution, languages, what Optimize sends, the free allowance. |
 
-Help: [issues](https://github.com/konfigure8/chrona-scheduler/issues) for problems, [discussions](https://github.com/konfigure8/chrona-scheduler/discussions) for questions and ideas, support@chrona365.com for anything private.
+## Get help
+
+Report a problem in [GitHub issues](https://github.com/konfigure8/chrona-scheduler/issues). Ask a question in [GitHub discussions](https://github.com/konfigure8/chrona-scheduler/discussions), or email support@chrona365.com for anything private. Agents can read the guide index at [llms.txt](../llms.txt).
