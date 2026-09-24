@@ -2,6 +2,10 @@
 
 Chrona Scheduler is a drag-and-drop scheduler for any Dataverse table that has a start and an end column. It runs inside your model-driven apps. You do not need a Chrona account to use it. Optimize connects your environment to the Chrona service in one step; there is no sign-up form.
 
+[![Play the install video: import, access, binding and first drag in about six minutes](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/images/install-video.png)](https://youtu.be/PaablRQmC1o)
+
+The video walks the import, access, binding and first drag in about six minutes, with captions.
+
 ## What you need
 
 - A Power Platform environment with Dataverse, where you are a System Administrator or System Customizer.

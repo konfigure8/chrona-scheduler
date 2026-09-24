@@ -18,6 +18,10 @@ A timeline and calendar control for Power Apps: put it on a view of your booking
 
 ## Try it in ten minutes
 
+[![Play the install video: from download to first drag in about six minutes](docs/images/install-video.png)](https://youtu.be/PaablRQmC1o)
+
+The video walks these steps, from download to first drag, in about six minutes, with captions.
+
 1. Download `ChronaScheduler-<version>.zip` from the [latest release](https://github.com/konfigure8/chrona-scheduler/releases) and import `01-ChronaScheduler_managed.zip` under **Solutions**, **Import solution**.
 2. Give people the security role **Chrona Scheduler User** (**Chrona Scheduler Admin** for those who configure it).
 3. Open a view of your table in the view designer: **Components**, **Add a component**, **Chrona Scheduler**. Bind **Title**, **Start** and **End**; bind **Resource** to a lookup if you want lanes. **Save and publish**.
