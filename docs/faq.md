@@ -43,7 +43,7 @@ Keep Web and Tablet and untick Mobile. A phone layout is not part of this releas
 The row's start, end and, with a Resource binding, its lookup. Every edit writes to your table at once; Undo and Redo write back the same way.
 
 ### What does Optimize send?
-A pseudonymous copy of the rows in the period: ids replaced with placeholders, no names or titles. You can read the exact payload before the first run from the Optimize dialog. The answer comes back as a proposal on the board; nothing is written until you select **Apply**.
+A pseudonymous copy of the rows in the period: each person or asset becomes the same placeholder in every run, a keyed one-way hash of its id, and no names or titles travel. You can read the exact payload before the first run from the Optimize dialog. The answer comes back as a proposal on the board; nothing is written until you select **Apply**.
 
 ### What does a connected environment cost?
 Nothing for the scheduler. A connected environment gets a free daily allowance of optimizations. Scenario solutions such as Chrona Workforce Scheduler are licensed separately.

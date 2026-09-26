@@ -1,6 +1,6 @@
 # Bindings
 
-The property pane of Chrona Scheduler in the view designer lists one static input, Calendar configuration, and eighteen column bindings. Three bindings are required. Everything else is optional and stays at **Select an option** until you have a reason to bind it.
+The property pane of Chrona Scheduler in the view designer lists one static input, Calendar configuration, and nineteen column bindings. Three bindings are required. Everything else is optional and stays at **Select an option** until you have a reason to bind it.
 
 ## Required
 
@@ -11,6 +11,8 @@ The property pane of Chrona Scheduler in the view designer lists one static inpu
 | End | A date and time column | When the row ends. |
 
 **Done** in the property pane stays grey until these three are bound.
+
+A row with no start and no end waits in the unscheduled list under No date; drag it onto the board to date it.
 
 ## Lanes
 
@@ -35,6 +37,7 @@ The property pane of Chrona Scheduler in the view designer lists one static inpu
 | Pinned | A Yes/No column | A pinned row keeps its person and time when optimizing. |
 | Lock | A text or choice column | What stays fixed on the row: time, resource, or both. |
 | Priority | A whole number column, 1 to 100 | Higher rows are placed first when optimizing. |
+| Duration | A whole number column, in minutes | How long a row with no start and end lasts once dropped on the board. Without it, one hour. |
 | Bundle | A text column | Links rows that are scheduled together. |
 | Publish state | A text or choice column | The row's lifecycle, for example draft or published. |
 | Provenance | A text or choice column | The scheduler writes who changed the row: a person or the optimizer. |

@@ -25,6 +25,7 @@ Table **Chrona Scheduler Calendar** (`chr_chronaschedulercalendar`). The first s
 | Working hours policy | `chr_workinghourspolicy` | A row outside the view's working hours: off, warn or block. | Off; the shading is the guidance. |
 | Availability policy | `chr_availabilitypolicy` | A row over booked leave or another unavailable span: off, warn or block. | Block. |
 | Default solve seconds | `chr_defaultsolverseconds` | How long the optimizer works on a run. The service caps it per plan. | 30 seconds. |
+| Product | `chr_product` | The product this calendar optimizes with: Chrona Scheduler, or Chrona Workforce Scheduler for roles and availability. | Chrona Scheduler. |
 
 Warn lands the row with a note. Block snaps it back with the reason. The same rules score the optimizer's proposals, so a proposed change shows its note before you apply it.
 
@@ -34,19 +35,19 @@ Table **Chrona Scheduler View** (`chr_chronaschedulerview`), keyed by the view's
 
 | Setting | Column | What it does | Without it |
 | --- | --- | --- | --- |
-| Bound view | `chr_viewid` | The id of the view this row configures; Connect sets it. | The row is not found. |
+| Bound view | `chr_viewid` | The view this row configures, picked from the public views; Connect sets it. | The row is not found. |
 | Layout | `chr_layout` | The board's layout: timeline lanes, the roster grid, top-down columns or the agenda list. | Timeline. |
 | Color by | `chr_colorby` | What colors the rows: the role's color, one color per lane group, or the warning tint for rows needing cover. | Nothing; the bars stay neutral. |
 | Display time zone | `chr_displaytimezone` | An IANA zone such as `Australia/Brisbane`, or `site` for stored wall-clock times. | The user's Power Apps time zone, labelled with its offset. |
 | Slot length | `chr_slotminutes` | The time scale bars snap to, picked as a duration. | 30 minutes. |
-| Hour width | `chr_pxperhour` | Width of one hour in pixels, the board's density. | The control's default. |
+| Hour width | `chr_pxperhour` | Width of one hour in pixels when the board opens on Day; Week and Month open fitted to the board. | 60 pixels. |
 | Working start | `chr_workingstart` | Start of the working day, picked from a list; earlier hours are shaded. | No shading. |
 | Working end | `chr_workingend` | End of the working day, picked from a list; later hours are shaded. | No shading. |
 | Show weekends | `chr_showweekends` | Whether weekends are shown by default. | Shown. |
 
 ## 4. The toolbar, per person
 
-Each person's choices are remembered for them, per view: the interval (day, week, work week, month), the time scale, weekends, the grouping, the unscheduled panel (shown or hidden, its width, All or In view) and the width of the resource column. They override the view row's defaults for that person only.
+Each person's choices are remembered for them, per view: the zoom in each interval, the time scale, weekends, the grouping, the unscheduled panel (shown or hidden, its width, All or In view) and the width of the resource column. They override the view row's defaults for that person only.
 
 ## 5. With Chrona Workforce Scheduler
 
@@ -54,4 +55,4 @@ The scenario solution adds its own tables, each with a page in its app: skills, 
 
 ## Editing the rows without an app
 
-The two configuration tables are managed, org-owned and plain. In the maker portal, select **Tables**, search for **Chrona Scheduler**, open the table, and edit the rows in its data grid, or add the two tables to any model-driven app as pages. The row for your view is the one whose view id matches; the calendar row is named after your table.
+Makers open the view row from the gear on the board, shown to users who can edit it. The two configuration tables are managed, org-owned and plain. In the maker portal, select **Tables**, search for **Chrona Scheduler**, open the table, and edit the rows in its data grid, or add the two tables to any model-driven app as pages. The row for your view is the one whose view id matches; the calendar row is named after your table.
