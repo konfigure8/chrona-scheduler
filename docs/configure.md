@@ -4,7 +4,7 @@ Chrona Scheduler is a Power Apps component framework (PCF) control on a view. It
 
 ## 1. The property pane on the view
 
-The pane maps your columns: title, start, end, the person or asset, status, group, pin, lock, priority and the rest. It is edited in the view designer under **Components**. Every binding is explained in [bindings.md](bindings.md).
+The pane maps your columns: title, start, end, the person or asset, status, group, pin, lock and the rest. It is edited in the view designer under **Components**. Every binding is explained in [bindings.md](bindings.md).
 
 ## 2. The scheduler calendar row, one per scheduler
 

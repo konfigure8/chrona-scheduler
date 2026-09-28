@@ -36,7 +36,6 @@ A row with no start and no end waits in the unscheduled list under No date; drag
 | Role | A lookup to the Role table (Chrona Workforce Scheduler) | The role the row needs; people are matched by the roles they hold. |
 | Pinned | A Yes/No column | A pinned row keeps its person and time when optimizing. |
 | Lock | A text or choice column | What stays fixed on the row: time, resource, or both. |
-| Priority | A whole number column, 1 to 100 | Higher rows are placed first when optimizing. |
 | Duration | A whole number column, in minutes | How long a row with no start and end lasts once dropped on the board. Without it, one hour. |
 | Bundle | A text column | Links rows that are scheduled together. |
 | Publish state | A text or choice column | The row's lifecycle, for example draft or published. |
