@@ -96,7 +96,7 @@ Only the rows in view are on the page: 59 bars on screen for 20,000 shifts. In P
 
 ## Trust
 
-- **Your data stays put.** The free scheduler makes no calls outside your environment. When you connect for optimization, a run sends a copy of the period with ids replaced by placeholders: no names, no notes, no contact details, no unrelated records. You can read the exact payload before the first run.
+- **Your data stays put.** The free scheduler makes no calls outside your environment. When you connect for optimization, a run sends a copy of the period with ids replaced by placeholders, and the calendar's name: no personal names, no notes, no contact details, no unrelated records. You can read the exact payload before the first run.
 - **No licence of its own.** The scheduler is a code component in your model-driven app and runs under the Power Apps licences the app already has. There is no Chrona licence for it.
 - **A managed solution.** It installs, updates and uninstalls the way every managed solution does. Take it off the views that use it, and the platform deletes it cleanly.
 - **Version 0.1.0 is the first public release.** Not there yet: a phone layout. Releases are listed on this page.
