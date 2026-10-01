@@ -1,0 +1,17 @@
+{
+  "extends": "./node_modules/pcf-scripts/tsconfig_base.json",
+  "compilerOptions": {
+    "typeRoots": [
+      "node_modules/@types"
+    ]
+  },
+  "exclude": [
+    "e2e",
+    "node_modules",
+    "out",
+    "playwright.config.ts",
+    "scripts",
+    "unit",
+    "out-unit"
+  ]
+}

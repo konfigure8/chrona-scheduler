@@ -1,0 +1,202 @@
+/*
+ * Bench data-editor chrome. The backdrop composes the scheduler's
+ * own classes ("chrona-sched" for the token scope plus the dialog
+ * idioms), so every color, radius, and shadow is the same Fluent
+ * token the product uses - this file only lays out the grids.
+ */
+
+.chrona-bench-editor {
+  background: var(--csui-overlay);
+  font-size: 14px;
+  height: auto;
+}
+
+/*
+ * Compound selector: the base dialog class pins width 420px for
+ * confirms; the editor needs one big, STABLE size - no per-tab
+ * resizing, humans hate that.
+ */
+.chrona-sched__dialog.chrona-bench-editor__dialog {
+  display: flex;
+  flex-direction: column;
+  height: min(860px, 90vh);
+  max-height: none;
+  max-width: none;
+  overflow: hidden;
+  width: min(1440px, 96vw);
+}
+
+.chrona-bench-editor__tabs {
+  border-bottom: 1px solid var(--csui-stroke);
+  display: flex;
+  gap: 2px;
+  padding: 8px 16px 0;
+}
+
+.chrona-bench-editor__tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--csui-text-soft);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  padding: 6px 10px;
+}
+
+.chrona-bench-editor__tab--on {
+  border-bottom-color: var(--csui-brand);
+  color: var(--csui-text);
+  font-weight: 600;
+}
+
+.chrona-bench-editor__body {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 8px 16px;
+}
+
+.chrona-bench-editor__grid {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.chrona-bench-editor__grid th {
+  background: var(--csui-bg);
+  border-bottom: 1px solid var(--csui-stroke);
+  padding: 4px 12px 6px 0;
+  position: sticky;
+  text-align: left;
+  top: 0;
+  vertical-align: bottom;
+  z-index: 1;
+}
+
+.chrona-bench-editor__col {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.chrona-bench-editor__logical {
+  color: var(--csui-text-soft);
+  display: block;
+  font-family: Consolas, monospace;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.chrona-sched__dialog-title .chrona-bench-editor__logical {
+  display: inline;
+  margin-left: 8px;
+}
+
+.chrona-bench-editor__grid td {
+  border-bottom: 1px solid var(--csui-grid-hour);
+  padding: 4px 12px 4px 0;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.chrona-bench-editor__grid tbody tr:hover td {
+  background: var(--csui-surface);
+}
+
+.chrona-bench-editor__grid input,
+.chrona-bench-editor__grid select {
+  background: var(--csui-bg);
+  border: 1px solid transparent;
+  border-radius: var(--csui-radius);
+  color: var(--csui-text);
+  font: inherit;
+  font-size: 13px;
+  min-width: 140px;
+  padding: 4px 6px;
+  width: 100%;
+}
+
+.chrona-bench-editor__grid input[type="number"],
+.chrona-bench-editor__grid input[type="time"],
+.chrona-bench-editor__grid input[type="datetime-local"],
+.chrona-bench-editor__grid input[type="color"],
+.chrona-bench-editor__grid select {
+  min-width: 0;
+  width: auto;
+}
+
+/* Chips wrap inside their own column instead of stretching the row. */
+.chrona-bench-editor__grid .chrona-bench-editor__chips {
+  max-width: 320px;
+  white-space: normal;
+}
+
+.chrona-bench-editor__grid input:hover,
+.chrona-bench-editor__grid select:hover {
+  border-color: var(--csui-stroke);
+}
+
+.chrona-bench-editor__grid input:focus,
+.chrona-bench-editor__grid select:focus {
+  border-color: var(--csui-brand);
+  outline: none;
+}
+
+.chrona-bench-editor__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.chrona-bench-editor__chip {
+  background: transparent;
+  border: 1px solid var(--csui-stroke);
+  border-radius: var(--csui-radius);
+  color: var(--csui-text-soft);
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 14px;
+  padding: 0 5px;
+}
+
+.chrona-bench-editor__chip--on {
+  background: var(--csui-brand-bg);
+  border-color: var(--csui-brand-stroke);
+  color: var(--csui-brand);
+}
+
+.chrona-bench-editor__delete {
+  background: transparent;
+  border: none;
+  border-radius: var(--csui-radius);
+  color: var(--csui-text-soft);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 6px;
+}
+
+.chrona-bench-editor__delete:hover {
+  background: var(--csui-surface-hover);
+  color: var(--csui-danger);
+}
+
+.chrona-bench-editor__add {
+  background: transparent;
+  border: 1px dashed var(--csui-stroke-strong);
+  border-radius: var(--csui-radius);
+  color: var(--csui-text-soft);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 8px;
+  padding: 4px 12px;
+}
+
+.chrona-bench-editor__add:hover {
+  border-color: var(--csui-brand);
+  color: var(--csui-brand);
+}

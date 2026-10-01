@@ -1,0 +1,29 @@
+{
+  "id": "1deb9974-84a6-4678-ab7d-37f70a19daac",
+  "jobId": "1deb9974-84a6-4678-ab7d-37f70a19daac",
+  "runId": "1deb9974-84a6-4678-ab7d-37f70a19daac",
+  "tenantId": "tenant-dev-a",
+  "kind": "rostering",
+  "status": "succeeded",
+  "createdAt": "2026-08-23T09:35:31.320Z",
+  "startedAt": "2026-08-23T09:35:31.344Z",
+  "completedAt": "2026-08-23T09:35:31.401Z",
+  "payload": {
+    "inputPayloadUri": "http://azurite:10000/devstoreaccount1/solver-payloads/runs/tenant-dev-a/1deb9974-84a6-4678-ab7d-37f70a19daac/input.json"
+  },
+  "solverSeconds": 2,
+  "notBeforePollAt": "2026-08-23T09:35:33.294Z",
+  "pollAfterSeconds": 0,
+  "inputPayloadUri": "http://azurite:10000/devstoreaccount1/solver-payloads/runs/tenant-dev-a/1deb9974-84a6-4678-ab7d-37f70a19daac/input.json",
+  "outputPayloadUri": "http://azurite:10000/devstoreaccount1/solver-payloads/runs/tenant-dev-a/1deb9974-84a6-4678-ab7d-37f70a19daac/output.json",
+  "resultDeferred": false,
+  "result": {
+    "contractVersion": "2",
+    "assignments": [
+      {
+        "shiftId": "level0-shift",
+        "resourceId": "noah"
+      }
+    ]
+  }
+}

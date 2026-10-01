@@ -1,0 +1,164 @@
+{
+  "id": "e8396991-2a60-46ba-96dc-8d3fbc4b3309",
+  "jobId": "e8396991-2a60-46ba-96dc-8d3fbc4b3309",
+  "runId": "e8396991-2a60-46ba-96dc-8d3fbc4b3309",
+  "tenantId": "tenant-dev-a",
+  "kind": "rostering",
+  "status": "succeeded",
+  "createdAt": "2026-08-22T11:20:49.337Z",
+  "startedAt": "2026-08-22T11:20:49.384Z",
+  "completedAt": "2026-08-22T11:20:49.475Z",
+  "payload": {
+    "inputPayloadUri": "http://azurite:10000/devstoreaccount1/solver-payloads/runs/tenant-dev-a/e8396991-2a60-46ba-96dc-8d3fbc4b3309/input.json"
+  },
+  "solverSeconds": 2,
+  "notBeforePollAt": "2026-08-22T11:20:51.302Z",
+  "pollAfterSeconds": 0,
+  "inputPayloadUri": "http://azurite:10000/devstoreaccount1/solver-payloads/runs/tenant-dev-a/e8396991-2a60-46ba-96dc-8d3fbc4b3309/input.json",
+  "outputPayloadUri": "http://azurite:10000/devstoreaccount1/solver-payloads/runs/tenant-dev-a/e8396991-2a60-46ba-96dc-8d3fbc4b3309/output.json",
+  "resultDeferred": false,
+  "result": {
+    "events": [
+      {
+        "assignedTo": "Noah Patel",
+        "description": "",
+        "end": "2027-02-01T05:00:00.000Z",
+        "id": "level0-shift",
+        "pinned": false,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "level0-shift",
+        "skill": "Floor",
+        "start": "2027-02-01T00:00:00.000Z",
+        "status": "Assigned",
+        "title": "Level0 Floor shift"
+      }
+    ],
+    "planningSetup": {
+      "availabilityBands": [],
+      "employees": [
+        {
+          "employeeId": "mia",
+          "employeeName": "Mia Wong",
+          "skills": [
+            "Bar",
+            "Supervisor"
+          ]
+        },
+        {
+          "employeeId": "noah",
+          "employeeName": "Noah Patel",
+          "skills": [
+            "Floor",
+            "First Aid"
+          ]
+        }
+      ]
+    },
+    "proposedVersionId": "harness-proposal-level0",
+    "scheduleConfigId": "employee-shift-scheduling",
+    "workbenchId": "harness-workbench",
+    "workbenchVersionId": "harness-draft",
+    "solverResult": {
+      "employees": [
+        {
+          "id": "mia",
+          "name": "Mia Wong",
+          "skills": [
+            "Supervisor",
+            "Bar"
+          ],
+          "contractType": "FIXED",
+          "minHoursPerHorizon": null,
+          "maxHoursPerHorizon": null,
+          "hourlyRateCents": 0,
+          "overtimeThresholdHours": null,
+          "overtimeMultiplierPercent": 150,
+          "agency": false,
+          "minEngagementMinutes": null,
+          "availability": [],
+          "contractId": null
+        },
+        {
+          "id": "noah",
+          "name": "Noah Patel",
+          "skills": [
+            "Floor",
+            "First Aid"
+          ],
+          "contractType": "FIXED",
+          "minHoursPerHorizon": null,
+          "maxHoursPerHorizon": null,
+          "hourlyRateCents": 0,
+          "overtimeThresholdHours": null,
+          "overtimeMultiplierPercent": 150,
+          "agency": false,
+          "minEngagementMinutes": null,
+          "availability": [],
+          "contractId": null
+        }
+      ],
+      "shifts": [
+        {
+          "id": "level0-shift",
+          "label": "Level0 Floor shift",
+          "start": "2027-02-01T00:00:00Z",
+          "end": "2027-02-01T05:00:00Z",
+          "requiredSkills": [
+            "Floor"
+          ],
+          "group": null,
+          "placeId": null,
+          "pinned": false,
+          "generated": false,
+          "templateId": null,
+          "employee": {
+            "id": "noah",
+            "name": "Noah Patel",
+            "skills": [
+              "Floor",
+              "First Aid"
+            ],
+            "contractType": "FIXED",
+            "minHoursPerHorizon": null,
+            "maxHoursPerHorizon": null,
+            "hourlyRateCents": 0,
+            "overtimeThresholdHours": null,
+            "overtimeMultiplierPercent": 150,
+            "agency": false,
+            "minEngagementMinutes": null,
+            "availability": [],
+            "contractId": null
+          }
+        }
+      ],
+      "generatedShifts": [],
+      "score": {
+        "hardScore": 0,
+        "softScore": 0,
+        "feasible": true,
+        "zero": true
+      },
+      "scoreText": "0hard/0soft",
+      "feasible": true,
+      "metrics": {
+        "totalDemandPersonSlots": 0,
+        "coveredDemandPersonSlots": 0,
+        "uncoveredDemandPersonSlots": 0,
+        "demandGeneratedShifts": 0,
+        "staffedGeneratedShifts": 0
+      },
+      "cost": {
+        "totalLabourCostCents": 0,
+        "agencyLabourCostCents": 0,
+        "overtimeSurchargeCents": 0,
+        "loadingSurchargeCents": 0,
+        "scheduledMinutes": 300,
+        "agencyScheduledMinutes": 0,
+        "costPerCoveredPersonSlotCents": 0,
+        "ratesSupplied": false
+      }
+    }
+  }
+}

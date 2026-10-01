@@ -1,0 +1,172 @@
+{
+  "id": "d317ab3f-c98b-4caa-b3ba-909af6d098a1",
+  "jobId": "d317ab3f-c98b-4caa-b3ba-909af6d098a1",
+  "runId": "d317ab3f-c98b-4caa-b3ba-909af6d098a1",
+  "tenantId": "tenant-dev-a",
+  "kind": "rostering",
+  "status": "succeeded",
+  "createdAt": "2026-08-22T11:20:31.575Z",
+  "startedAt": "2026-08-22T11:20:31.617Z",
+  "completedAt": "2026-08-22T11:20:31.724Z",
+  "payload": {
+    "inputPayloadUri": "http://azurite:10000/devstoreaccount1/solver-payloads/runs/tenant-dev-a/d317ab3f-c98b-4caa-b3ba-909af6d098a1/input.json"
+  },
+  "solverSeconds": 2,
+  "notBeforePollAt": "2026-08-22T11:20:33.546Z",
+  "pollAfterSeconds": 0,
+  "inputPayloadUri": "http://azurite:10000/devstoreaccount1/solver-payloads/runs/tenant-dev-a/d317ab3f-c98b-4caa-b3ba-909af6d098a1/input.json",
+  "outputPayloadUri": "http://azurite:10000/devstoreaccount1/solver-payloads/runs/tenant-dev-a/d317ab3f-c98b-4caa-b3ba-909af6d098a1/output.json",
+  "resultDeferred": false,
+  "result": {
+    "events": [
+      {
+        "assignedTo": "Quinn Lee",
+        "description": "",
+        "end": "2027-02-01T05:00:00.000Z",
+        "id": "level2-shift",
+        "pinned": false,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "level2-shift",
+        "skill": "Floor",
+        "start": "2027-02-01T00:00:00.000Z",
+        "status": "Assigned",
+        "title": "Level2 Floor shift"
+      }
+    ],
+    "planningSetup": {
+      "availabilityBands": [
+        {
+          "employeeName": "Pat Reyes",
+          "end": "2027-02-01T14:00:00.000Z",
+          "kind": "Unavailable",
+          "start": "2027-01-31T14:00:00.000Z"
+        }
+      ],
+      "employees": [
+        {
+          "employeeId": "pat",
+          "employeeName": "Pat Reyes",
+          "skills": [
+            "Floor"
+          ]
+        },
+        {
+          "employeeId": "quinn",
+          "employeeName": "Quinn Lee",
+          "skills": [
+            "Floor"
+          ]
+        }
+      ]
+    },
+    "proposedVersionId": "harness-proposal-level2",
+    "scheduleConfigId": "employee-shift-scheduling",
+    "workbenchId": "harness-workbench",
+    "workbenchVersionId": "harness-draft",
+    "solverResult": {
+      "employees": [
+        {
+          "id": "pat",
+          "name": "Pat Reyes",
+          "skills": [
+            "Floor"
+          ],
+          "contractType": "FIXED",
+          "minHoursPerHorizon": null,
+          "maxHoursPerHorizon": null,
+          "hourlyRateCents": 0,
+          "overtimeThresholdHours": null,
+          "overtimeMultiplierPercent": 150,
+          "agency": false,
+          "minEngagementMinutes": null,
+          "availability": [
+            {
+              "start": "2027-01-31T14:00:00Z",
+              "end": "2027-02-01T14:00:00Z",
+              "kind": "UNAVAILABLE"
+            }
+          ],
+          "contractId": null
+        },
+        {
+          "id": "quinn",
+          "name": "Quinn Lee",
+          "skills": [
+            "Floor"
+          ],
+          "contractType": "FIXED",
+          "minHoursPerHorizon": null,
+          "maxHoursPerHorizon": null,
+          "hourlyRateCents": 0,
+          "overtimeThresholdHours": null,
+          "overtimeMultiplierPercent": 150,
+          "agency": false,
+          "minEngagementMinutes": null,
+          "availability": [],
+          "contractId": null
+        }
+      ],
+      "shifts": [
+        {
+          "id": "level2-shift",
+          "label": "Level2 Floor shift",
+          "start": "2027-02-01T00:00:00Z",
+          "end": "2027-02-01T05:00:00Z",
+          "requiredSkills": [
+            "Floor"
+          ],
+          "group": null,
+          "placeId": null,
+          "pinned": false,
+          "generated": false,
+          "templateId": null,
+          "employee": {
+            "id": "quinn",
+            "name": "Quinn Lee",
+            "skills": [
+              "Floor"
+            ],
+            "contractType": "FIXED",
+            "minHoursPerHorizon": null,
+            "maxHoursPerHorizon": null,
+            "hourlyRateCents": 0,
+            "overtimeThresholdHours": null,
+            "overtimeMultiplierPercent": 150,
+            "agency": false,
+            "minEngagementMinutes": null,
+            "availability": [],
+            "contractId": null
+          }
+        }
+      ],
+      "generatedShifts": [],
+      "score": {
+        "hardScore": 0,
+        "softScore": 0,
+        "feasible": true,
+        "zero": true
+      },
+      "scoreText": "0hard/0soft",
+      "feasible": true,
+      "metrics": {
+        "totalDemandPersonSlots": 0,
+        "coveredDemandPersonSlots": 0,
+        "uncoveredDemandPersonSlots": 0,
+        "demandGeneratedShifts": 0,
+        "staffedGeneratedShifts": 0
+      },
+      "cost": {
+        "totalLabourCostCents": 0,
+        "agencyLabourCostCents": 0,
+        "overtimeSurchargeCents": 0,
+        "loadingSurchargeCents": 0,
+        "scheduledMinutes": 300,
+        "agencyScheduledMinutes": 0,
+        "costPerCoveredPersonSlotCents": 0,
+        "ratesSupplied": false
+      }
+    }
+  }
+}

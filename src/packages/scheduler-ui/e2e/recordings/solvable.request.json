@@ -1,0 +1,250 @@
+{
+  "capabilities": [
+    "assignment",
+    "locks",
+    "roles",
+    "availability"
+  ],
+  "problem": {
+    "contractVersion": "2",
+    "resources": [
+      {
+        "id": "p-1",
+        "name": "p-1",
+        "skills": [
+          "Floor",
+          "Bar"
+        ]
+      },
+      {
+        "id": "p-2",
+        "name": "p-2",
+        "skills": [
+          "Floor"
+        ]
+      },
+      {
+        "id": "p-3",
+        "name": "p-3",
+        "skills": [
+          "Bar",
+          "First Aid"
+        ]
+      },
+      {
+        "id": "p-4",
+        "name": "p-4",
+        "skills": [
+          "Floor",
+          "First Aid"
+        ]
+      },
+      {
+        "id": "p-5",
+        "name": "p-5",
+        "skills": [
+          "Kitchen"
+        ]
+      },
+      {
+        "id": "p-6",
+        "name": "p-6",
+        "skills": [
+          "Kitchen",
+          "Bar"
+        ]
+      },
+      {
+        "id": "p-7",
+        "name": "p-7",
+        "skills": [
+          "Kitchen",
+          "First Aid"
+        ]
+      },
+      {
+        "id": "p-8",
+        "name": "p-8",
+        "skills": [
+          "Kitchen",
+          "First Aid"
+        ]
+      }
+    ],
+    "shifts": [
+      {
+        "assignment": {
+          "pinned": false,
+          "resourceId": "p-1"
+        },
+        "end": "2026-08-17T04:00:00.000Z",
+        "id": "w-1",
+        "requiredSkills": [
+          "Floor"
+        ],
+        "start": "2026-08-16T20:00:00.000Z",
+        "title": "w-1"
+      },
+      {
+        "assignment": {
+          "pinned": false,
+          "resourceId": "p-2"
+        },
+        "end": "2026-08-17T12:00:00.000Z",
+        "id": "w-2",
+        "requiredSkills": [
+          "Floor"
+        ],
+        "start": "2026-08-17T05:00:00.000Z",
+        "title": "w-2"
+      },
+      {
+        "assignment": {
+          "pinned": false,
+          "resourceId": "p-5"
+        },
+        "end": "2026-08-17T04:00:00.000Z",
+        "id": "w-3",
+        "requiredSkills": [
+          "Kitchen"
+        ],
+        "start": "2026-08-16T20:00:00.000Z",
+        "title": "w-3"
+      },
+      {
+        "assignment": {
+          "pinned": false,
+          "resourceId": "p-6"
+        },
+        "end": "2026-08-17T12:00:00.000Z",
+        "id": "w-4",
+        "requiredSkills": [
+          "Kitchen"
+        ],
+        "start": "2026-08-17T05:00:00.000Z",
+        "title": "w-4"
+      },
+      {
+        "assignment": {
+          "pinned": false,
+          "resourceId": "p-4"
+        },
+        "end": "2026-08-18T04:00:00.000Z",
+        "id": "w-5",
+        "requiredSkills": [
+          "Floor"
+        ],
+        "start": "2026-08-17T20:00:00.000Z",
+        "title": "w-5"
+      },
+      {
+        "assignment": {
+          "pinned": false,
+          "resourceId": "p-7"
+        },
+        "end": "2026-08-18T04:00:00.000Z",
+        "id": "w-6",
+        "requiredSkills": [
+          "Kitchen"
+        ],
+        "start": "2026-08-17T20:00:00.000Z",
+        "title": "w-6"
+      },
+      {
+        "assignment": {
+          "pinned": false,
+          "resourceId": "p-3"
+        },
+        "end": "2026-08-18T09:00:00.000Z",
+        "id": "w-7",
+        "requiredSkills": [
+          "Bar"
+        ],
+        "start": "2026-08-18T01:00:00.000Z",
+        "title": "w-7"
+      },
+      {
+        "assignment": {
+          "pinned": false,
+          "resourceId": "p-8"
+        },
+        "end": "2026-08-18T12:00:00.000Z",
+        "id": "w-8",
+        "requiredSkills": [
+          "Kitchen"
+        ],
+        "start": "2026-08-18T05:00:00.000Z",
+        "title": "w-8"
+      },
+      {
+        "end": "2026-08-17T12:00:00.000Z",
+        "id": "w-9",
+        "requiredSkills": [
+          "Bar"
+        ],
+        "start": "2026-08-17T06:00:00.000Z",
+        "title": "w-9"
+      },
+      {
+        "end": "2026-08-17T04:00:00.000Z",
+        "id": "w-10",
+        "requiredSkills": [
+          "Floor"
+        ],
+        "start": "2026-08-16T23:00:00.000Z",
+        "title": "w-10"
+      },
+      {
+        "end": "2026-08-17T04:00:00.000Z",
+        "id": "w-11",
+        "requiredSkills": [
+          "Kitchen"
+        ],
+        "start": "2026-08-17T00:00:00.000Z",
+        "title": "w-11"
+      },
+      {
+        "end": "2026-08-18T03:00:00.000Z",
+        "id": "w-12",
+        "requiredSkills": [
+          "First Aid"
+        ],
+        "start": "2026-08-17T22:00:00.000Z",
+        "title": "w-12"
+      },
+      {
+        "end": "2026-08-18T00:00:00.000Z",
+        "id": "w-13",
+        "requiredSkills": [
+          "Bar"
+        ],
+        "start": "2026-08-17T20:00:00.000Z",
+        "title": "w-13"
+      },
+      {
+        "end": "2026-08-19T12:00:00.000Z",
+        "id": "w-14",
+        "requiredSkills": [
+          "Floor"
+        ],
+        "start": "2026-08-19T05:00:00.000Z",
+        "title": "w-14"
+      }
+    ],
+    "unavailability": [
+      {
+        "end": "2026-08-18T14:00:00.000Z",
+        "resourceId": "p-2",
+        "start": "2026-08-17T14:00:00.000Z"
+      }
+    ],
+    "window": {
+      "end": "2026-08-30T14:00:00.000Z",
+      "start": "2026-08-16T14:00:00.000Z"
+    }
+  },
+  "problemType": "rostering",
+  "solutionType": "workforce-scheduling",
+  "solverSeconds": 2,
+  "tenantId": "tenant-dev-a"
+}

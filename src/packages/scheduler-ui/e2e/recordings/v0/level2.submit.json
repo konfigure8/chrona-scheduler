@@ -1,0 +1,8 @@
+{
+  "jobId": "d317ab3f-c98b-4caa-b3ba-909af6d098a1",
+  "runId": "d317ab3f-c98b-4caa-b3ba-909af6d098a1",
+  "status": "queued",
+  "notBeforePollAt": "2026-08-22T11:20:33.546Z",
+  "pollAfterSeconds": 2,
+  "inputPayloadUri": "http://azurite:10000/devstoreaccount1/solver-payloads/runs/tenant-dev-a/d317ab3f-c98b-4caa-b3ba-909af6d098a1/input.json"
+}

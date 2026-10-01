@@ -1,0 +1,66 @@
+{
+  "problem": {
+    "events": [
+      {
+        "assignedTo": "Unassigned",
+        "description": "",
+        "end": "2027-02-01T03:00:00.000Z",
+        "id": "level1-bar",
+        "pinned": false,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "level1-bar",
+        "skill": "Bar",
+        "start": "2027-01-31T23:00:00.000Z",
+        "status": "Needs cover",
+        "title": "Level1 Bar shift"
+      },
+      {
+        "assignedTo": "Unassigned",
+        "description": "",
+        "end": "2027-02-01T05:00:00.000Z",
+        "id": "level1-floor",
+        "pinned": false,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "level1-floor",
+        "skill": "Floor",
+        "start": "2027-02-01T00:00:00.000Z",
+        "status": "Needs cover",
+        "title": "Level1 Floor shift"
+      }
+    ],
+    "planningSetup": {
+      "availabilityBands": [],
+      "employees": [
+        {
+          "employeeId": "mia",
+          "employeeName": "Mia Wong",
+          "skills": [
+            "Bar",
+            "Supervisor"
+          ]
+        },
+        {
+          "employeeId": "noah",
+          "employeeName": "Noah Patel",
+          "skills": [
+            "Floor",
+            "First Aid"
+          ]
+        }
+      ]
+    },
+    "proposedVersionId": "harness-proposal-level1",
+    "scheduleConfigId": "employee-shift-scheduling",
+    "workbenchId": "harness-workbench",
+    "workbenchVersionId": "harness-draft"
+  },
+  "problemType": "rostering",
+  "scheduleConfigId": "employee-shift-scheduling",
+  "solutionType": "workforce-scheduling",
+  "solverSeconds": 2,
+  "tenantId": "tenant-dev-a"
+}

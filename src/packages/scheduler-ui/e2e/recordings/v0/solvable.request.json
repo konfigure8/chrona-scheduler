@@ -1,0 +1,299 @@
+{
+  "problem": {
+    "events": [
+      {
+        "assignedTo": "Ava Cole",
+        "description": "",
+        "end": "2026-08-17T04:00:00.000Z",
+        "id": "sv-01",
+        "pinned": true,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-01",
+        "skill": "Floor",
+        "start": "2026-08-16T20:00:00.000Z",
+        "status": "Assigned",
+        "title": "Floor open"
+      },
+      {
+        "assignedTo": "Ben Ito",
+        "description": "",
+        "end": "2026-08-17T12:00:00.000Z",
+        "id": "sv-02",
+        "pinned": true,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-02",
+        "skill": "Floor",
+        "start": "2026-08-17T05:00:00.000Z",
+        "status": "Assigned",
+        "title": "Floor close"
+      },
+      {
+        "assignedTo": "Eli Tran",
+        "description": "",
+        "end": "2026-08-17T04:00:00.000Z",
+        "id": "sv-03",
+        "pinned": true,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-03",
+        "skill": "Kitchen",
+        "start": "2026-08-16T20:00:00.000Z",
+        "status": "Assigned",
+        "title": "Kitchen prep"
+      },
+      {
+        "assignedTo": "Fay Osei",
+        "description": "",
+        "end": "2026-08-17T12:00:00.000Z",
+        "id": "sv-04",
+        "pinned": true,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-04",
+        "skill": "Kitchen",
+        "start": "2026-08-17T05:00:00.000Z",
+        "status": "Assigned",
+        "title": "Kitchen close"
+      },
+      {
+        "assignedTo": "Dan Petrov",
+        "description": "",
+        "end": "2026-08-18T04:00:00.000Z",
+        "id": "sv-05",
+        "pinned": true,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-05",
+        "skill": "Floor",
+        "start": "2026-08-17T20:00:00.000Z",
+        "status": "Assigned",
+        "title": "Floor open"
+      },
+      {
+        "assignedTo": "Gus Novak",
+        "description": "",
+        "end": "2026-08-18T04:00:00.000Z",
+        "id": "sv-06",
+        "pinned": true,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-06",
+        "skill": "Kitchen",
+        "start": "2026-08-17T20:00:00.000Z",
+        "status": "Assigned",
+        "title": "Kitchen prep"
+      },
+      {
+        "assignedTo": "Cleo Marsh",
+        "description": "",
+        "end": "2026-08-18T09:00:00.000Z",
+        "id": "sv-07",
+        "pinned": true,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-07",
+        "skill": "Bar",
+        "start": "2026-08-18T01:00:00.000Z",
+        "status": "Assigned",
+        "title": "Bar mid"
+      },
+      {
+        "assignedTo": "Hana Reid",
+        "description": "",
+        "end": "2026-08-18T12:00:00.000Z",
+        "id": "sv-08",
+        "pinned": true,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-08",
+        "skill": "Kitchen",
+        "start": "2026-08-18T05:00:00.000Z",
+        "status": "Assigned",
+        "title": "Kitchen close"
+      },
+      {
+        "assignedTo": "Unassigned",
+        "description": "",
+        "end": "2026-08-17T12:00:00.000Z",
+        "id": "sv-u1",
+        "pinned": false,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-u1",
+        "skill": "Bar",
+        "start": "2026-08-17T06:00:00.000Z",
+        "status": "Needs cover",
+        "title": "Bar close"
+      },
+      {
+        "assignedTo": "Unassigned",
+        "description": "",
+        "end": "2026-08-17T04:00:00.000Z",
+        "id": "sv-u2",
+        "pinned": false,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-u2",
+        "skill": "Floor",
+        "start": "2026-08-16T23:00:00.000Z",
+        "status": "Needs cover",
+        "title": "Floor mid"
+      },
+      {
+        "assignedTo": "Unassigned",
+        "description": "",
+        "end": "2026-08-17T04:00:00.000Z",
+        "id": "sv-u3",
+        "pinned": false,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-u3",
+        "skill": "Kitchen",
+        "start": "2026-08-17T00:00:00.000Z",
+        "status": "Needs cover",
+        "title": "Kitchen mid"
+      },
+      {
+        "assignedTo": "Unassigned",
+        "description": "",
+        "end": "2026-08-18T03:00:00.000Z",
+        "id": "sv-u4",
+        "pinned": false,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-u4",
+        "skill": "First Aid",
+        "start": "2026-08-17T22:00:00.000Z",
+        "status": "Needs cover",
+        "title": "First aid cover"
+      },
+      {
+        "assignedTo": "Unassigned",
+        "description": "",
+        "end": "2026-08-18T00:00:00.000Z",
+        "id": "sv-u5",
+        "pinned": false,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-u5",
+        "skill": "Bar",
+        "start": "2026-08-17T20:00:00.000Z",
+        "status": "Needs cover",
+        "title": "Bar open"
+      },
+      {
+        "assignedTo": "Unassigned",
+        "description": "",
+        "end": "2026-08-19T12:00:00.000Z",
+        "id": "sv-u6",
+        "pinned": false,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-u6",
+        "skill": "Floor",
+        "start": "2026-08-19T05:00:00.000Z",
+        "status": "Needs cover",
+        "title": "Floor close"
+      }
+    ],
+    "planningSetup": {
+      "availabilityBands": [
+        {
+          "employeeName": "Ben Ito",
+          "end": "2026-08-18T14:00:00.000Z",
+          "kind": "Unavailable",
+          "start": "2026-08-17T14:00:00.000Z"
+        }
+      ],
+      "employees": [
+        {
+          "employeeId": "s-ava",
+          "employeeName": "Ava Cole",
+          "skills": [
+            "Floor",
+            "Bar"
+          ]
+        },
+        {
+          "employeeId": "s-ben",
+          "employeeName": "Ben Ito",
+          "skills": [
+            "Floor"
+          ]
+        },
+        {
+          "employeeId": "s-cleo",
+          "employeeName": "Cleo Marsh",
+          "skills": [
+            "Bar",
+            "First Aid"
+          ]
+        },
+        {
+          "employeeId": "s-dan",
+          "employeeName": "Dan Petrov",
+          "skills": [
+            "Floor",
+            "First Aid"
+          ]
+        },
+        {
+          "employeeId": "s-eli",
+          "employeeName": "Eli Tran",
+          "skills": [
+            "Kitchen"
+          ]
+        },
+        {
+          "employeeId": "s-fay",
+          "employeeName": "Fay Osei",
+          "skills": [
+            "Kitchen",
+            "Bar"
+          ]
+        },
+        {
+          "employeeId": "s-gus",
+          "employeeName": "Gus Novak",
+          "skills": [
+            "Kitchen",
+            "First Aid"
+          ]
+        },
+        {
+          "employeeId": "s-hana",
+          "employeeName": "Hana Reid",
+          "skills": [
+            "Kitchen",
+            "First Aid"
+          ]
+        }
+      ]
+    },
+    "proposedVersionId": "harness-proposal-solvable",
+    "scheduleConfigId": "employee-shift-scheduling",
+    "workbenchId": "harness-workbench",
+    "workbenchVersionId": "harness-draft"
+  },
+  "problemType": "rostering",
+  "scheduleConfigId": "employee-shift-scheduling",
+  "solutionType": "workforce-scheduling",
+  "solverSeconds": 2,
+  "tenantId": "tenant-dev-a"
+}

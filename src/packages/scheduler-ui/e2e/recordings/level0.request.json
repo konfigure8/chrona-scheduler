@@ -1,0 +1,48 @@
+{
+  "capabilities": [
+    "assignment",
+    "locks",
+    "roles"
+  ],
+  "problem": {
+    "contractVersion": "2",
+    "resources": [
+      {
+        "id": "p-1",
+        "name": "p-1",
+        "skills": [
+          "Bar",
+          "Supervisor"
+        ]
+      },
+      {
+        "id": "p-2",
+        "name": "p-2",
+        "skills": [
+          "Floor",
+          "First Aid"
+        ]
+      }
+    ],
+    "shifts": [
+      {
+        "end": "2027-02-01T05:00:00.000Z",
+        "id": "w-1",
+        "requiredSkills": [
+          "Floor"
+        ],
+        "start": "2027-02-01T00:00:00.000Z",
+        "title": "w-1"
+      }
+    ],
+    "unavailability": [],
+    "window": {
+      "end": "2027-02-14T14:00:00.000Z",
+      "start": "2027-01-31T14:00:00.000Z"
+    }
+  },
+  "problemType": "rostering",
+  "solutionType": "workforce-scheduling",
+  "solverSeconds": 2,
+  "tenantId": "tenant-dev-a"
+}

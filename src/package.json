@@ -1,0 +1,33 @@
+{
+  "name": "chrona-scheduler-source",
+  "private": true,
+  "description": "Source of the Chrona Scheduler control for Power Apps",
+  "license": "PolyForm-Shield-1.0.0",
+  "packageManager": "pnpm@10.6.3",
+  "scripts": {
+    "build": "pnpm --filter @chrona/scheduler-ui run build && pnpm --filter @chrona/scheduler-control-pcf run build",
+    "build:production": "pnpm --filter @chrona/scheduler-ui run build && pnpm --filter @chrona/scheduler-control-pcf exec pcf-scripts build --buildMode production",
+    "test": "pnpm --filter @chrona/scheduler-ui run test && pnpm --filter @chrona/scheduler-control-pcf run test:unit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "typescript": "^5.7.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/powerapps-component-framework>@types/react": "16.14.70"
+    },
+    "packageExtensions": {
+      "@fluentui/react-icons": {
+        "peerDependencies": {
+          "@types/react": ">=16.14.0 <20.0.0"
+        },
+        "peerDependenciesMeta": {
+          "@types/react": {
+            "optional": true
+          }
+        }
+      }
+    }
+  }
+}

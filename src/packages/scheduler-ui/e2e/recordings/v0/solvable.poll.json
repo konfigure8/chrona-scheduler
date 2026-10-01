@@ -1,0 +1,949 @@
+{
+  "id": "ce6b47cd-d9e9-4b24-98b6-7f2e37b83513",
+  "jobId": "ce6b47cd-d9e9-4b24-98b6-7f2e37b83513",
+  "runId": "ce6b47cd-d9e9-4b24-98b6-7f2e37b83513",
+  "tenantId": "tenant-dev-a",
+  "kind": "rostering",
+  "status": "succeeded",
+  "createdAt": "2026-08-22T14:40:51.954Z",
+  "startedAt": "2026-08-22T14:40:52.706Z",
+  "completedAt": "2026-08-22T14:40:57.644Z",
+  "payload": {
+    "inputPayloadUri": "http://azurite:10000/devstoreaccount1/solver-payloads/runs/tenant-dev-a/ce6b47cd-d9e9-4b24-98b6-7f2e37b83513/input.json"
+  },
+  "solverSeconds": 2,
+  "notBeforePollAt": "2026-08-22T14:40:53.907Z",
+  "pollAfterSeconds": 0,
+  "inputPayloadUri": "http://azurite:10000/devstoreaccount1/solver-payloads/runs/tenant-dev-a/ce6b47cd-d9e9-4b24-98b6-7f2e37b83513/input.json",
+  "outputPayloadUri": "http://azurite:10000/devstoreaccount1/solver-payloads/runs/tenant-dev-a/ce6b47cd-d9e9-4b24-98b6-7f2e37b83513/output.json",
+  "resultDeferred": false,
+  "result": {
+    "events": [
+      {
+        "assignedTo": "Ava Cole",
+        "description": "",
+        "end": "2026-08-17T04:00:00.000Z",
+        "id": "sv-01",
+        "pinned": true,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-01",
+        "skill": "Floor",
+        "start": "2026-08-16T20:00:00.000Z",
+        "status": "Assigned",
+        "title": "Floor open"
+      },
+      {
+        "assignedTo": "Ben Ito",
+        "description": "",
+        "end": "2026-08-17T12:00:00.000Z",
+        "id": "sv-02",
+        "pinned": true,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-02",
+        "skill": "Floor",
+        "start": "2026-08-17T05:00:00.000Z",
+        "status": "Assigned",
+        "title": "Floor close"
+      },
+      {
+        "assignedTo": "Eli Tran",
+        "description": "",
+        "end": "2026-08-17T04:00:00.000Z",
+        "id": "sv-03",
+        "pinned": true,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-03",
+        "skill": "Kitchen",
+        "start": "2026-08-16T20:00:00.000Z",
+        "status": "Assigned",
+        "title": "Kitchen prep"
+      },
+      {
+        "assignedTo": "Fay Osei",
+        "description": "",
+        "end": "2026-08-17T12:00:00.000Z",
+        "id": "sv-04",
+        "pinned": true,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-04",
+        "skill": "Kitchen",
+        "start": "2026-08-17T05:00:00.000Z",
+        "status": "Assigned",
+        "title": "Kitchen close"
+      },
+      {
+        "assignedTo": "Dan Petrov",
+        "description": "",
+        "end": "2026-08-18T04:00:00.000Z",
+        "id": "sv-05",
+        "pinned": true,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-05",
+        "skill": "Floor",
+        "start": "2026-08-17T20:00:00.000Z",
+        "status": "Assigned",
+        "title": "Floor open"
+      },
+      {
+        "assignedTo": "Gus Novak",
+        "description": "",
+        "end": "2026-08-18T04:00:00.000Z",
+        "id": "sv-06",
+        "pinned": true,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-06",
+        "skill": "Kitchen",
+        "start": "2026-08-17T20:00:00.000Z",
+        "status": "Assigned",
+        "title": "Kitchen prep"
+      },
+      {
+        "assignedTo": "Cleo Marsh",
+        "description": "",
+        "end": "2026-08-18T09:00:00.000Z",
+        "id": "sv-07",
+        "pinned": true,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-07",
+        "skill": "Bar",
+        "start": "2026-08-18T01:00:00.000Z",
+        "status": "Assigned",
+        "title": "Bar mid"
+      },
+      {
+        "assignedTo": "Hana Reid",
+        "description": "",
+        "end": "2026-08-18T12:00:00.000Z",
+        "id": "sv-08",
+        "pinned": true,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-08",
+        "skill": "Kitchen",
+        "start": "2026-08-18T05:00:00.000Z",
+        "status": "Assigned",
+        "title": "Kitchen close"
+      },
+      {
+        "assignedTo": "Ava Cole",
+        "description": "",
+        "end": "2026-08-17T12:00:00.000Z",
+        "id": "sv-u1",
+        "pinned": false,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-u1",
+        "skill": "Bar",
+        "start": "2026-08-17T06:00:00.000Z",
+        "status": "Assigned",
+        "title": "Bar close"
+      },
+      {
+        "assignedTo": "Ben Ito",
+        "description": "",
+        "end": "2026-08-17T04:00:00.000Z",
+        "id": "sv-u2",
+        "pinned": false,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-u2",
+        "skill": "Floor",
+        "start": "2026-08-16T23:00:00.000Z",
+        "status": "Assigned",
+        "title": "Floor mid"
+      },
+      {
+        "assignedTo": "Fay Osei",
+        "description": "",
+        "end": "2026-08-17T04:00:00.000Z",
+        "id": "sv-u3",
+        "pinned": false,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-u3",
+        "skill": "Kitchen",
+        "start": "2026-08-17T00:00:00.000Z",
+        "status": "Assigned",
+        "title": "Kitchen mid"
+      },
+      {
+        "assignedTo": "Hana Reid",
+        "description": "",
+        "end": "2026-08-18T03:00:00.000Z",
+        "id": "sv-u4",
+        "pinned": false,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-u4",
+        "skill": "First Aid",
+        "start": "2026-08-17T22:00:00.000Z",
+        "status": "Assigned",
+        "title": "First aid cover"
+      },
+      {
+        "assignedTo": "Cleo Marsh",
+        "description": "",
+        "end": "2026-08-18T00:00:00.000Z",
+        "id": "sv-u5",
+        "pinned": false,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-u5",
+        "skill": "Bar",
+        "start": "2026-08-17T20:00:00.000Z",
+        "status": "Assigned",
+        "title": "Bar open"
+      },
+      {
+        "assignedTo": "Dan Petrov",
+        "description": "",
+        "end": "2026-08-19T12:00:00.000Z",
+        "id": "sv-u6",
+        "pinned": false,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "sv-u6",
+        "skill": "Floor",
+        "start": "2026-08-19T05:00:00.000Z",
+        "status": "Assigned",
+        "title": "Floor close"
+      }
+    ],
+    "planningSetup": {
+      "availabilityBands": [
+        {
+          "employeeName": "Ben Ito",
+          "end": "2026-08-18T14:00:00.000Z",
+          "kind": "Unavailable",
+          "start": "2026-08-17T14:00:00.000Z"
+        }
+      ],
+      "employees": [
+        {
+          "employeeId": "s-ava",
+          "employeeName": "Ava Cole",
+          "skills": [
+            "Floor",
+            "Bar"
+          ]
+        },
+        {
+          "employeeId": "s-ben",
+          "employeeName": "Ben Ito",
+          "skills": [
+            "Floor"
+          ]
+        },
+        {
+          "employeeId": "s-cleo",
+          "employeeName": "Cleo Marsh",
+          "skills": [
+            "Bar",
+            "First Aid"
+          ]
+        },
+        {
+          "employeeId": "s-dan",
+          "employeeName": "Dan Petrov",
+          "skills": [
+            "Floor",
+            "First Aid"
+          ]
+        },
+        {
+          "employeeId": "s-eli",
+          "employeeName": "Eli Tran",
+          "skills": [
+            "Kitchen"
+          ]
+        },
+        {
+          "employeeId": "s-fay",
+          "employeeName": "Fay Osei",
+          "skills": [
+            "Kitchen",
+            "Bar"
+          ]
+        },
+        {
+          "employeeId": "s-gus",
+          "employeeName": "Gus Novak",
+          "skills": [
+            "Kitchen",
+            "First Aid"
+          ]
+        },
+        {
+          "employeeId": "s-hana",
+          "employeeName": "Hana Reid",
+          "skills": [
+            "Kitchen",
+            "First Aid"
+          ]
+        }
+      ]
+    },
+    "proposedVersionId": "harness-proposal-solvable",
+    "scheduleConfigId": "employee-shift-scheduling",
+    "workbenchId": "harness-workbench",
+    "workbenchVersionId": "harness-draft",
+    "solverResult": {
+      "employees": [
+        {
+          "id": "s-ava",
+          "name": "Ava Cole",
+          "skills": [
+            "Floor",
+            "Bar"
+          ],
+          "contractType": "FIXED",
+          "minHoursPerHorizon": null,
+          "maxHoursPerHorizon": null,
+          "hourlyRateCents": 0,
+          "overtimeThresholdHours": null,
+          "overtimeMultiplierPercent": 150,
+          "agency": false,
+          "minEngagementMinutes": null,
+          "availability": [],
+          "contractId": null
+        },
+        {
+          "id": "s-ben",
+          "name": "Ben Ito",
+          "skills": [
+            "Floor"
+          ],
+          "contractType": "FIXED",
+          "minHoursPerHorizon": null,
+          "maxHoursPerHorizon": null,
+          "hourlyRateCents": 0,
+          "overtimeThresholdHours": null,
+          "overtimeMultiplierPercent": 150,
+          "agency": false,
+          "minEngagementMinutes": null,
+          "availability": [
+            {
+              "start": "2026-08-17T14:00:00Z",
+              "end": "2026-08-18T14:00:00Z",
+              "kind": "UNAVAILABLE"
+            }
+          ],
+          "contractId": null
+        },
+        {
+          "id": "s-cleo",
+          "name": "Cleo Marsh",
+          "skills": [
+            "Bar",
+            "First Aid"
+          ],
+          "contractType": "FIXED",
+          "minHoursPerHorizon": null,
+          "maxHoursPerHorizon": null,
+          "hourlyRateCents": 0,
+          "overtimeThresholdHours": null,
+          "overtimeMultiplierPercent": 150,
+          "agency": false,
+          "minEngagementMinutes": null,
+          "availability": [],
+          "contractId": null
+        },
+        {
+          "id": "s-dan",
+          "name": "Dan Petrov",
+          "skills": [
+            "Floor",
+            "First Aid"
+          ],
+          "contractType": "FIXED",
+          "minHoursPerHorizon": null,
+          "maxHoursPerHorizon": null,
+          "hourlyRateCents": 0,
+          "overtimeThresholdHours": null,
+          "overtimeMultiplierPercent": 150,
+          "agency": false,
+          "minEngagementMinutes": null,
+          "availability": [],
+          "contractId": null
+        },
+        {
+          "id": "s-eli",
+          "name": "Eli Tran",
+          "skills": [
+            "Kitchen"
+          ],
+          "contractType": "FIXED",
+          "minHoursPerHorizon": null,
+          "maxHoursPerHorizon": null,
+          "hourlyRateCents": 0,
+          "overtimeThresholdHours": null,
+          "overtimeMultiplierPercent": 150,
+          "agency": false,
+          "minEngagementMinutes": null,
+          "availability": [],
+          "contractId": null
+        },
+        {
+          "id": "s-fay",
+          "name": "Fay Osei",
+          "skills": [
+            "Bar",
+            "Kitchen"
+          ],
+          "contractType": "FIXED",
+          "minHoursPerHorizon": null,
+          "maxHoursPerHorizon": null,
+          "hourlyRateCents": 0,
+          "overtimeThresholdHours": null,
+          "overtimeMultiplierPercent": 150,
+          "agency": false,
+          "minEngagementMinutes": null,
+          "availability": [],
+          "contractId": null
+        },
+        {
+          "id": "s-gus",
+          "name": "Gus Novak",
+          "skills": [
+            "Kitchen",
+            "First Aid"
+          ],
+          "contractType": "FIXED",
+          "minHoursPerHorizon": null,
+          "maxHoursPerHorizon": null,
+          "hourlyRateCents": 0,
+          "overtimeThresholdHours": null,
+          "overtimeMultiplierPercent": 150,
+          "agency": false,
+          "minEngagementMinutes": null,
+          "availability": [],
+          "contractId": null
+        },
+        {
+          "id": "s-hana",
+          "name": "Hana Reid",
+          "skills": [
+            "Kitchen",
+            "First Aid"
+          ],
+          "contractType": "FIXED",
+          "minHoursPerHorizon": null,
+          "maxHoursPerHorizon": null,
+          "hourlyRateCents": 0,
+          "overtimeThresholdHours": null,
+          "overtimeMultiplierPercent": 150,
+          "agency": false,
+          "minEngagementMinutes": null,
+          "availability": [],
+          "contractId": null
+        }
+      ],
+      "shifts": [
+        {
+          "id": "sv-01",
+          "label": "Floor open",
+          "start": "2026-08-16T20:00:00Z",
+          "end": "2026-08-17T04:00:00Z",
+          "requiredSkills": [
+            "Floor"
+          ],
+          "group": null,
+          "placeId": null,
+          "pinned": true,
+          "generated": false,
+          "templateId": null,
+          "employee": {
+            "id": "s-ava",
+            "name": "Ava Cole",
+            "skills": [
+              "Floor",
+              "Bar"
+            ],
+            "contractType": "FIXED",
+            "minHoursPerHorizon": null,
+            "maxHoursPerHorizon": null,
+            "hourlyRateCents": 0,
+            "overtimeThresholdHours": null,
+            "overtimeMultiplierPercent": 150,
+            "agency": false,
+            "minEngagementMinutes": null,
+            "availability": [],
+            "contractId": null
+          }
+        },
+        {
+          "id": "sv-02",
+          "label": "Floor close",
+          "start": "2026-08-17T05:00:00Z",
+          "end": "2026-08-17T12:00:00Z",
+          "requiredSkills": [
+            "Floor"
+          ],
+          "group": null,
+          "placeId": null,
+          "pinned": true,
+          "generated": false,
+          "templateId": null,
+          "employee": {
+            "id": "s-ben",
+            "name": "Ben Ito",
+            "skills": [
+              "Floor"
+            ],
+            "contractType": "FIXED",
+            "minHoursPerHorizon": null,
+            "maxHoursPerHorizon": null,
+            "hourlyRateCents": 0,
+            "overtimeThresholdHours": null,
+            "overtimeMultiplierPercent": 150,
+            "agency": false,
+            "minEngagementMinutes": null,
+            "availability": [
+              {
+                "start": "2026-08-17T14:00:00Z",
+                "end": "2026-08-18T14:00:00Z",
+                "kind": "UNAVAILABLE"
+              }
+            ],
+            "contractId": null
+          }
+        },
+        {
+          "id": "sv-03",
+          "label": "Kitchen prep",
+          "start": "2026-08-16T20:00:00Z",
+          "end": "2026-08-17T04:00:00Z",
+          "requiredSkills": [
+            "Kitchen"
+          ],
+          "group": null,
+          "placeId": null,
+          "pinned": true,
+          "generated": false,
+          "templateId": null,
+          "employee": {
+            "id": "s-eli",
+            "name": "Eli Tran",
+            "skills": [
+              "Kitchen"
+            ],
+            "contractType": "FIXED",
+            "minHoursPerHorizon": null,
+            "maxHoursPerHorizon": null,
+            "hourlyRateCents": 0,
+            "overtimeThresholdHours": null,
+            "overtimeMultiplierPercent": 150,
+            "agency": false,
+            "minEngagementMinutes": null,
+            "availability": [],
+            "contractId": null
+          }
+        },
+        {
+          "id": "sv-04",
+          "label": "Kitchen close",
+          "start": "2026-08-17T05:00:00Z",
+          "end": "2026-08-17T12:00:00Z",
+          "requiredSkills": [
+            "Kitchen"
+          ],
+          "group": null,
+          "placeId": null,
+          "pinned": true,
+          "generated": false,
+          "templateId": null,
+          "employee": {
+            "id": "s-fay",
+            "name": "Fay Osei",
+            "skills": [
+              "Bar",
+              "Kitchen"
+            ],
+            "contractType": "FIXED",
+            "minHoursPerHorizon": null,
+            "maxHoursPerHorizon": null,
+            "hourlyRateCents": 0,
+            "overtimeThresholdHours": null,
+            "overtimeMultiplierPercent": 150,
+            "agency": false,
+            "minEngagementMinutes": null,
+            "availability": [],
+            "contractId": null
+          }
+        },
+        {
+          "id": "sv-05",
+          "label": "Floor open",
+          "start": "2026-08-17T20:00:00Z",
+          "end": "2026-08-18T04:00:00Z",
+          "requiredSkills": [
+            "Floor"
+          ],
+          "group": null,
+          "placeId": null,
+          "pinned": true,
+          "generated": false,
+          "templateId": null,
+          "employee": {
+            "id": "s-dan",
+            "name": "Dan Petrov",
+            "skills": [
+              "Floor",
+              "First Aid"
+            ],
+            "contractType": "FIXED",
+            "minHoursPerHorizon": null,
+            "maxHoursPerHorizon": null,
+            "hourlyRateCents": 0,
+            "overtimeThresholdHours": null,
+            "overtimeMultiplierPercent": 150,
+            "agency": false,
+            "minEngagementMinutes": null,
+            "availability": [],
+            "contractId": null
+          }
+        },
+        {
+          "id": "sv-06",
+          "label": "Kitchen prep",
+          "start": "2026-08-17T20:00:00Z",
+          "end": "2026-08-18T04:00:00Z",
+          "requiredSkills": [
+            "Kitchen"
+          ],
+          "group": null,
+          "placeId": null,
+          "pinned": true,
+          "generated": false,
+          "templateId": null,
+          "employee": {
+            "id": "s-gus",
+            "name": "Gus Novak",
+            "skills": [
+              "Kitchen",
+              "First Aid"
+            ],
+            "contractType": "FIXED",
+            "minHoursPerHorizon": null,
+            "maxHoursPerHorizon": null,
+            "hourlyRateCents": 0,
+            "overtimeThresholdHours": null,
+            "overtimeMultiplierPercent": 150,
+            "agency": false,
+            "minEngagementMinutes": null,
+            "availability": [],
+            "contractId": null
+          }
+        },
+        {
+          "id": "sv-07",
+          "label": "Bar mid",
+          "start": "2026-08-18T01:00:00Z",
+          "end": "2026-08-18T09:00:00Z",
+          "requiredSkills": [
+            "Bar"
+          ],
+          "group": null,
+          "placeId": null,
+          "pinned": true,
+          "generated": false,
+          "templateId": null,
+          "employee": {
+            "id": "s-cleo",
+            "name": "Cleo Marsh",
+            "skills": [
+              "Bar",
+              "First Aid"
+            ],
+            "contractType": "FIXED",
+            "minHoursPerHorizon": null,
+            "maxHoursPerHorizon": null,
+            "hourlyRateCents": 0,
+            "overtimeThresholdHours": null,
+            "overtimeMultiplierPercent": 150,
+            "agency": false,
+            "minEngagementMinutes": null,
+            "availability": [],
+            "contractId": null
+          }
+        },
+        {
+          "id": "sv-08",
+          "label": "Kitchen close",
+          "start": "2026-08-18T05:00:00Z",
+          "end": "2026-08-18T12:00:00Z",
+          "requiredSkills": [
+            "Kitchen"
+          ],
+          "group": null,
+          "placeId": null,
+          "pinned": true,
+          "generated": false,
+          "templateId": null,
+          "employee": {
+            "id": "s-hana",
+            "name": "Hana Reid",
+            "skills": [
+              "Kitchen",
+              "First Aid"
+            ],
+            "contractType": "FIXED",
+            "minHoursPerHorizon": null,
+            "maxHoursPerHorizon": null,
+            "hourlyRateCents": 0,
+            "overtimeThresholdHours": null,
+            "overtimeMultiplierPercent": 150,
+            "agency": false,
+            "minEngagementMinutes": null,
+            "availability": [],
+            "contractId": null
+          }
+        },
+        {
+          "id": "sv-u1",
+          "label": "Bar close",
+          "start": "2026-08-17T06:00:00Z",
+          "end": "2026-08-17T12:00:00Z",
+          "requiredSkills": [
+            "Bar"
+          ],
+          "group": null,
+          "placeId": null,
+          "pinned": false,
+          "generated": false,
+          "templateId": null,
+          "employee": {
+            "id": "s-ava",
+            "name": "Ava Cole",
+            "skills": [
+              "Floor",
+              "Bar"
+            ],
+            "contractType": "FIXED",
+            "minHoursPerHorizon": null,
+            "maxHoursPerHorizon": null,
+            "hourlyRateCents": 0,
+            "overtimeThresholdHours": null,
+            "overtimeMultiplierPercent": 150,
+            "agency": false,
+            "minEngagementMinutes": null,
+            "availability": [],
+            "contractId": null
+          }
+        },
+        {
+          "id": "sv-u2",
+          "label": "Floor mid",
+          "start": "2026-08-16T23:00:00Z",
+          "end": "2026-08-17T04:00:00Z",
+          "requiredSkills": [
+            "Floor"
+          ],
+          "group": null,
+          "placeId": null,
+          "pinned": false,
+          "generated": false,
+          "templateId": null,
+          "employee": {
+            "id": "s-ben",
+            "name": "Ben Ito",
+            "skills": [
+              "Floor"
+            ],
+            "contractType": "FIXED",
+            "minHoursPerHorizon": null,
+            "maxHoursPerHorizon": null,
+            "hourlyRateCents": 0,
+            "overtimeThresholdHours": null,
+            "overtimeMultiplierPercent": 150,
+            "agency": false,
+            "minEngagementMinutes": null,
+            "availability": [
+              {
+                "start": "2026-08-17T14:00:00Z",
+                "end": "2026-08-18T14:00:00Z",
+                "kind": "UNAVAILABLE"
+              }
+            ],
+            "contractId": null
+          }
+        },
+        {
+          "id": "sv-u3",
+          "label": "Kitchen mid",
+          "start": "2026-08-17T00:00:00Z",
+          "end": "2026-08-17T04:00:00Z",
+          "requiredSkills": [
+            "Kitchen"
+          ],
+          "group": null,
+          "placeId": null,
+          "pinned": false,
+          "generated": false,
+          "templateId": null,
+          "employee": {
+            "id": "s-fay",
+            "name": "Fay Osei",
+            "skills": [
+              "Bar",
+              "Kitchen"
+            ],
+            "contractType": "FIXED",
+            "minHoursPerHorizon": null,
+            "maxHoursPerHorizon": null,
+            "hourlyRateCents": 0,
+            "overtimeThresholdHours": null,
+            "overtimeMultiplierPercent": 150,
+            "agency": false,
+            "minEngagementMinutes": null,
+            "availability": [],
+            "contractId": null
+          }
+        },
+        {
+          "id": "sv-u4",
+          "label": "First aid cover",
+          "start": "2026-08-17T22:00:00Z",
+          "end": "2026-08-18T03:00:00Z",
+          "requiredSkills": [
+            "First Aid"
+          ],
+          "group": null,
+          "placeId": null,
+          "pinned": false,
+          "generated": false,
+          "templateId": null,
+          "employee": {
+            "id": "s-hana",
+            "name": "Hana Reid",
+            "skills": [
+              "Kitchen",
+              "First Aid"
+            ],
+            "contractType": "FIXED",
+            "minHoursPerHorizon": null,
+            "maxHoursPerHorizon": null,
+            "hourlyRateCents": 0,
+            "overtimeThresholdHours": null,
+            "overtimeMultiplierPercent": 150,
+            "agency": false,
+            "minEngagementMinutes": null,
+            "availability": [],
+            "contractId": null
+          }
+        },
+        {
+          "id": "sv-u5",
+          "label": "Bar open",
+          "start": "2026-08-17T20:00:00Z",
+          "end": "2026-08-18T00:00:00Z",
+          "requiredSkills": [
+            "Bar"
+          ],
+          "group": null,
+          "placeId": null,
+          "pinned": false,
+          "generated": false,
+          "templateId": null,
+          "employee": {
+            "id": "s-cleo",
+            "name": "Cleo Marsh",
+            "skills": [
+              "Bar",
+              "First Aid"
+            ],
+            "contractType": "FIXED",
+            "minHoursPerHorizon": null,
+            "maxHoursPerHorizon": null,
+            "hourlyRateCents": 0,
+            "overtimeThresholdHours": null,
+            "overtimeMultiplierPercent": 150,
+            "agency": false,
+            "minEngagementMinutes": null,
+            "availability": [],
+            "contractId": null
+          }
+        },
+        {
+          "id": "sv-u6",
+          "label": "Floor close",
+          "start": "2026-08-19T05:00:00Z",
+          "end": "2026-08-19T12:00:00Z",
+          "requiredSkills": [
+            "Floor"
+          ],
+          "group": null,
+          "placeId": null,
+          "pinned": false,
+          "generated": false,
+          "templateId": null,
+          "employee": {
+            "id": "s-dan",
+            "name": "Dan Petrov",
+            "skills": [
+              "Floor",
+              "First Aid"
+            ],
+            "contractType": "FIXED",
+            "minHoursPerHorizon": null,
+            "maxHoursPerHorizon": null,
+            "hourlyRateCents": 0,
+            "overtimeThresholdHours": null,
+            "overtimeMultiplierPercent": 150,
+            "agency": false,
+            "minEngagementMinutes": null,
+            "availability": [],
+            "contractId": null
+          }
+        }
+      ],
+      "generatedShifts": [],
+      "score": {
+        "hardScore": 0,
+        "softScore": -1500,
+        "feasible": true,
+        "zero": false
+      },
+      "scoreText": "0hard/-1500soft",
+      "feasible": true,
+      "metrics": {
+        "totalDemandPersonSlots": 0,
+        "coveredDemandPersonSlots": 0,
+        "uncoveredDemandPersonSlots": 0,
+        "demandGeneratedShifts": 0,
+        "staffedGeneratedShifts": 0
+      },
+      "cost": {
+        "totalLabourCostCents": 0,
+        "agencyLabourCostCents": 0,
+        "overtimeSurchargeCents": 0,
+        "loadingSurchargeCents": 0,
+        "scheduledMinutes": 5520,
+        "agencyScheduledMinutes": 0,
+        "costPerCoveredPersonSlotCents": 0,
+        "ratesSupplied": false
+      }
+    }
+  }
+}

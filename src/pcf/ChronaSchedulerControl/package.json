@@ -1,0 +1,41 @@
+{
+  "name": "@chrona/scheduler-control-pcf",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Chrona Scheduler - the shippable PCF control on @chrona/scheduler-ui",
+  "scripts": {
+    "prebuild": "node scripts/copy-styles.mjs",
+    "build": "pcf-scripts build",
+    "clean": "pcf-scripts clean",
+    "prelint": "node scripts/copy-styles.mjs",
+    "lint": "pcf-scripts build",
+    "rebuild": "pcf-scripts rebuild",
+    "refreshTypes": "pcf-scripts refreshTypes",
+    "prestart": "node scripts/copy-styles.mjs",
+    "start": "pcf-scripts start",
+    "start:watch": "pcf-scripts start watch",
+    "test:pcf": "playwright test",
+    "test:unit": "tsc -p unit/tsconfig.json && node out-unit/unit/configLoader.spec.js && node out-unit/unit/solveBridge.spec.js && node out-unit/unit/dataverseData.spec.js && node out-unit/unit/strings.spec.js && node out-unit/unit/settingsDialog.spec.js && node out-unit/unit/hostNotifications.spec.js"
+  },
+  "dependencies": {
+    "@chrona/scheduler-ui": "workspace:*",
+    "@fluentui/react-components": "9.68.0",
+    "react": "16.14.0",
+    "react-dom": "16.14.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@microsoft/eslint-plugin-power-apps": "^0.2.51",
+    "@types/powerapps-component-framework": "1.3.16",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
+    "eslint": "^9.39.4",
+    "eslint-plugin-promise": "^7.1.0",
+    "eslint-plugin-react": "^7.37.2",
+    "globals": "^15.15.0",
+    "pcf-scripts": "^1",
+    "pcf-start": "^1",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "8.44.0"
+  }
+}

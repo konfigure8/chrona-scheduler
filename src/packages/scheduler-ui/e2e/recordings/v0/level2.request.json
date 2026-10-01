@@ -1,0 +1,56 @@
+{
+  "problem": {
+    "events": [
+      {
+        "assignedTo": "Unassigned",
+        "description": "",
+        "end": "2027-02-01T05:00:00.000Z",
+        "id": "level2-shift",
+        "pinned": false,
+        "reason": "",
+        "recommendedAction": "No action",
+        "score": "0hard/0medium/0soft",
+        "shiftId": "level2-shift",
+        "skill": "Floor",
+        "start": "2027-02-01T00:00:00.000Z",
+        "status": "Needs cover",
+        "title": "Level2 Floor shift"
+      }
+    ],
+    "planningSetup": {
+      "availabilityBands": [
+        {
+          "employeeName": "Pat Reyes",
+          "end": "2027-02-01T14:00:00.000Z",
+          "kind": "Unavailable",
+          "start": "2027-01-31T14:00:00.000Z"
+        }
+      ],
+      "employees": [
+        {
+          "employeeId": "pat",
+          "employeeName": "Pat Reyes",
+          "skills": [
+            "Floor"
+          ]
+        },
+        {
+          "employeeId": "quinn",
+          "employeeName": "Quinn Lee",
+          "skills": [
+            "Floor"
+          ]
+        }
+      ]
+    },
+    "proposedVersionId": "harness-proposal-level2",
+    "scheduleConfigId": "employee-shift-scheduling",
+    "workbenchId": "harness-workbench",
+    "workbenchVersionId": "harness-draft"
+  },
+  "problemType": "rostering",
+  "scheduleConfigId": "employee-shift-scheduling",
+  "solutionType": "workforce-scheduling",
+  "solverSeconds": 2,
+  "tenantId": "tenant-dev-a"
+}

@@ -20,6 +20,7 @@ Every page below is plain Markdown. Read them in order for an install; each stan
 ## Download
 
 - [Releases](https://github.com/konfigure8/chrona-scheduler/releases): `ChronaScheduler-<version>.zip` holds `01-ChronaScheduler_managed.zip` and the install guide.
+- [Source](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/src/README.md): the control's source for the latest release and how to build it, under PolyForm Shield 1.0.0.
 
 ## Help
 

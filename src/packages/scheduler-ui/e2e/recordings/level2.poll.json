@@ -1,0 +1,29 @@
+{
+  "id": "5906ea8b-19cd-451f-83f9-098766d91458",
+  "jobId": "5906ea8b-19cd-451f-83f9-098766d91458",
+  "runId": "5906ea8b-19cd-451f-83f9-098766d91458",
+  "tenantId": "tenant-dev-a",
+  "kind": "rostering",
+  "status": "succeeded",
+  "createdAt": "2026-08-23T09:35:36.236Z",
+  "startedAt": "2026-08-23T09:35:36.255Z",
+  "completedAt": "2026-08-23T09:35:36.286Z",
+  "payload": {
+    "inputPayloadUri": "http://azurite:10000/devstoreaccount1/solver-payloads/runs/tenant-dev-a/5906ea8b-19cd-451f-83f9-098766d91458/input.json"
+  },
+  "solverSeconds": 2,
+  "notBeforePollAt": "2026-08-23T09:35:38.222Z",
+  "pollAfterSeconds": 0,
+  "inputPayloadUri": "http://azurite:10000/devstoreaccount1/solver-payloads/runs/tenant-dev-a/5906ea8b-19cd-451f-83f9-098766d91458/input.json",
+  "outputPayloadUri": "http://azurite:10000/devstoreaccount1/solver-payloads/runs/tenant-dev-a/5906ea8b-19cd-451f-83f9-098766d91458/output.json",
+  "resultDeferred": false,
+  "result": {
+    "contractVersion": "2",
+    "assignments": [
+      {
+        "shiftId": "level2-shift",
+        "resourceId": "quinn"
+      }
+    ]
+  }
+}

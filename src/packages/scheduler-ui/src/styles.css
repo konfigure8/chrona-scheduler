@@ -1,0 +1,2968 @@
+/*
+ * Fluent-aligned design tokens as CSS custom properties. Values default to
+ * the Fluent v9 light theme so the components look native in Power Apps;
+ * the hosting adapter (PCF) may override the custom properties from the
+ * platform theme without touching component code.
+ */
+.chrona-sched {
+  height: 100%;
+  --csui-font: "Segoe UI", "Segoe UI Web (West European)", -apple-system,
+    sans-serif;
+  --csui-bg: #ffffff;
+  --csui-surface: #fafafa;
+  --csui-surface-hover: #f5f5f5;
+  --csui-stroke: #e0e0e0;
+  --csui-stroke-strong: #d1d1d1;
+  --csui-text: #242424;
+  --csui-text-soft: #616161;
+  --csui-brand: #0f6cbd;
+  --csui-brand-bg: #ebf3fc;
+  --csui-brand-fg: #0f6cbd;
+  --csui-brand-stroke: #b4d6fa;
+  /* Fluent colorNeutralForegroundOnBrand: text on brand/danger fills. */
+  --csui-on-brand: #ffffff;
+  --csui-danger: #b10e1c;
+  --csui-danger-bg: #fdf3f4;
+  --csui-danger-stroke: #eeacb2;
+  /* Fluent v9 status warning (colorStatusWarning*): generation flags. */
+  --csui-warn: #bc4b09;
+  --csui-warn-bg: #fff9f5;
+  --csui-warn-stroke: #fdcfb4;
+  /* Fluent v9 status success (colorStatusSuccess*): period status. */
+  --csui-success: #0e700e;
+  --csui-success-bg: #f1faf1;
+  --csui-success-stroke: #9fd89f;
+  /* Fluent colorPaletteGrapeBorderActive: holiday decorations. */
+  --csui-holiday: #881798;
+  --csui-now: #bc2f32;
+  /*
+   * Today wash must stay off the status palette: blue is event fill,
+   * striped grey is non-working, amber is unpreferred, green preferred,
+   * red unavailable. A faint SOLID neutral collides with none of them;
+   * the loud marker is the brand-filled header cell, not the wash.
+   */
+  --csui-today-bg: color-mix(in srgb, var(--csui-text) 4%, transparent);
+  /* Fluent shadow2: faint elevation for cards and containers. */
+  --csui-shadow: 0 0 2px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.14);
+  /* Fluent shadow16: menus, hover cards, and other flyouts. */
+  --csui-shadow-flyout: 0 0 2px rgba(0, 0, 0, 0.12),
+    0 8px 16px rgba(0, 0, 0, 0.14);
+  /* Fluent shadow64: dialogs. */
+  --csui-shadow-dialog: 0 0 8px rgba(0, 0, 0, 0.12),
+    0 32px 64px rgba(0, 0, 0, 0.14);
+  /* Fluent colorBackgroundOverlay: the dialog scrim. */
+  --csui-overlay: rgba(0, 0, 0, 0.4);
+  /*
+   * Grid ramp (Fluent-2 review): day boundaries keep the full
+   * stroke; hourly lines substantially lighter; sub-hour slots
+   * lighter still - spacing over dividers. color-mix derives from
+   * the theme vars, so dark mode follows automatically.
+   */
+  --csui-grid-day: var(--csui-stroke);
+  --csui-grid-hour: color-mix(in srgb, var(--csui-stroke) 45%, var(--csui-bg));
+  --csui-grid-slot: color-mix(in srgb, var(--csui-stroke) 28%, var(--csui-bg));
+  --csui-radius: 4px;
+
+  background: var(--csui-bg);
+  box-sizing: border-box;
+  color: var(--csui-text);
+  font-family: var(--csui-font);
+  font-size: 14px;
+  /* One layer in the host page: a z-index inside the control (the
+   * roster grid's sticky header) never paints over the host's own
+   * dialogs, such as the model-driven app's side dialog. */
+  isolation: isolate;
+}
+
+.chrona-sched *,
+.chrona-sched *::before,
+.chrona-sched *::after {
+  box-sizing: inherit;
+}
+
+/*
+ * Buttons do not inherit colour: a button with no colour of its own
+ * paints the browser's button text, which stays dark on a dark host.
+ * :where() keeps this at no weight, so any class that sets a colour
+ * still wins.
+ */
+:where(.chrona-sched) button {
+  color: inherit;
+}
+
+/* Timeline */
+
+.chrona-sched__timeline {
+  border: 1px solid var(--csui-stroke);
+  border-radius: var(--csui-radius);
+  overflow: auto;
+}
+
+.chrona-sched__timeline-grid {
+  display: grid;
+  grid-template-columns: 168px 1fr;
+}
+
+.chrona-sched__corner,
+.chrona-sched__resource-label {
+  background: var(--csui-surface);
+  border-bottom: 1px solid var(--csui-stroke);
+  border-right: 1px solid var(--csui-stroke-strong);
+  left: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+  position: sticky;
+  z-index: 2;
+}
+
+.chrona-sched__corner {
+  z-index: 3;
+}
+
+.chrona-sched__resource-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0 12px;
+}
+
+.chrona-sched__resource-name {
+  font-weight: 600;
+}
+
+.chrona-sched__resource-group {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+}
+
+/* Two-tier header: centered day cells over centered time
+   cells, cell borders matching the body gridlines. */
+.chrona-sched__axis {
+  border-bottom: 1px solid var(--csui-stroke);
+  height: 44px;
+  position: relative;
+}
+
+.chrona-sched__axis-days,
+.chrona-sched__axis-times,
+.chrona-sched__axis-weeks {
+  display: flex;
+  height: 22px;
+}
+
+.chrona-sched__axis-days,
+.chrona-sched__axis-weeks {
+  border-bottom: 1px solid var(--csui-surface-hover);
+  /* A pinned label in a narrow last cell must not widen the board;
+     clip, unlike hidden, keeps the outer scroller for sticky labels. */
+  overflow: clip;
+}
+
+.chrona-sched__tick--week {
+  border-right: 1px solid var(--csui-stroke);
+  font-weight: 600;
+}
+
+.chrona-sched__axis-cell {
+  align-items: center;
+  border-right: 1px solid var(--csui-surface-hover);
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: center;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.chrona-sched__tick {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+}
+
+/*
+ * Week cells can be wider than the viewport; their labels pin just right
+ * of the sticky resource column instead of centering off-screen. The
+ * compound selector outranks the base cell's centering, and overflow
+ * must stay visible or sticky loses its scroller reference.
+ */
+.chrona-sched__axis-cell.chrona-sched__tick--week,
+.chrona-sched__axis-cell.chrona-sched__tick--day-wide {
+  justify-content: flex-start;
+  overflow: visible;
+}
+
+.chrona-sched__tick--week .chrona-sched__tick-label,
+.chrona-sched__tick--day-wide .chrona-sched__tick-label {
+  padding: 0 8px;
+  position: sticky;
+}
+
+.chrona-sched__tick--day {
+  border-right: 1px solid var(--csui-stroke);
+  color: var(--csui-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.chrona-sched__row-canvas {
+  border-bottom: 1px solid var(--csui-stroke);
+  position: relative;
+}
+
+.chrona-sched__row-grid {
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+/* Today (Outlook convention: tinted column, emphasized header cell) */
+
+.chrona-sched__today-col {
+  background: var(--csui-today-bg);
+  bottom: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+}
+
+/*
+ * The timeline day cell can be a full day wide; a solid fill at that
+ * width shouts. Brand text plus a thick underline scales to any width;
+ * the narrow per-column headers (roster, vertical, month badge) carry
+ * the solid brand marker instead.
+ */
+.chrona-sched__axis-cell--today {
+  box-shadow: inset 0 -3px 0 var(--csui-brand);
+  color: var(--csui-brand-fg);
+  font-weight: 700;
+}
+
+/* Continuation chevrons: the event extends past the visible window. */
+
+/*
+ * A rostered gap: the bar keeps its outline so a split still reads as ONE
+ * shift, and the gap section washes out so you can see the hole. Sits
+ * above the bar fill but below the handles, and keeps pointer events so
+ * the browser tooltip fires - clicks still bubble to the bar, so drag and
+ * selection are unaffected.
+ */
+.chrona-sched__bar-gap {
+  background: color-mix(in srgb, var(--csui-bg) 62%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--csui-bg) 85%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--csui-bg) 85%, transparent);
+  bottom: 0;
+  position: absolute;
+  top: 0;
+  z-index: 1;
+}
+
+.chrona-sched__bar-gap--vertical {
+  border-bottom: 1px solid color-mix(in srgb, var(--csui-bg) 85%, transparent);
+  border-left: 0;
+  border-right: 0;
+  border-top: 1px solid color-mix(in srgb, var(--csui-bg) 85%, transparent);
+  left: 0;
+  right: 0;
+}
+
+.chrona-sched__bar-clip {
+  color: var(--csui-brand-fg);
+  flex: 0 0 auto;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.chrona-sched__bar--needs-cover .chrona-sched__bar-clip {
+  color: var(--csui-danger);
+}
+
+/* A clipped edge is squared off: the bar is cut, not ended. */
+
+.chrona-sched__bar--clip-end {
+  border-bottom-right-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.chrona-sched__bar--clip-start {
+  border-bottom-left-radius: 0;
+  border-top-left-radius: 0;
+}
+
+.chrona-sched__bar-clip--end {
+  margin-left: auto;
+}
+
+.chrona-sched__vclip {
+  color: var(--csui-brand-fg);
+  font-size: 10px;
+  font-weight: 700;
+  left: 50%;
+  line-height: 1;
+  pointer-events: none;
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+.chrona-sched__vclip--start {
+  top: 0;
+}
+
+.chrona-sched__vclip--end {
+  bottom: 0;
+}
+
+/* Empty state: configuration produced nothing to render. */
+
+.chrona-sched__empty {
+  align-items: center;
+  color: var(--csui-text-soft);
+  display: flex;
+  flex: 1 1 auto;
+  justify-content: center;
+  min-height: 160px;
+  padding: 32px;
+  text-align: center;
+}
+
+/* Pinned variant stays inside the scrollport of a wide canvas. */
+.chrona-sched__empty--pinned {
+  left: 0;
+  position: sticky;
+}
+
+.chrona-sched__bar {
+  align-items: center;
+  background: var(--csui-brand-bg);
+  border: 1px solid var(--csui-brand-stroke);
+  border-left: 3px solid var(--csui-brand);
+  border-radius: var(--csui-radius);
+  color: var(--csui-text);
+  cursor: pointer;
+  display: flex;
+  font-size: 12px;
+  gap: 6px;
+  overflow: hidden;
+  padding: 0 8px;
+  position: absolute;
+  white-space: nowrap;
+}
+
+.chrona-sched__bar--needs-cover {
+  background: var(--csui-danger-bg);
+  border: 1px dashed var(--csui-danger-stroke);
+  border-left: 3px solid var(--csui-danger);
+}
+
+.chrona-sched__bar-time {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+}
+
+.chrona-sched__now {
+  border-left: 2px solid var(--csui-now);
+  bottom: 0;
+  position: absolute;
+  top: 0;
+  z-index: 1;
+}
+
+.chrona-sched__layout {
+  display: flex;
+  gap: 12px;
+  height: 100%;
+}
+
+.chrona-sched__layout > .chrona-sched__timeline-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.chrona-sched__timeline-wrap {
+  height: 100%;
+  position: relative;
+}
+
+.chrona-sched__unscheduled-wrap {
+  flex: 0 0 auto;
+  max-height: 100%;
+  position: relative;
+}
+
+/* Column/panel resize handles: invisible until hovered or dragged. */
+
+.chrona-sched__splitter {
+  bottom: 0;
+  cursor: col-resize;
+  position: absolute;
+  top: 0;
+  touch-action: none;
+  width: 7px;
+  z-index: 5;
+}
+
+.chrona-sched__splitter::after {
+  background: transparent;
+  bottom: 0;
+  content: "";
+  left: 2px;
+  position: absolute;
+  top: 0;
+  width: 3px;
+}
+
+.chrona-sched__splitter:hover::after,
+.chrona-sched__splitter--active::after,
+.chrona-sched__splitter:focus-visible::after {
+  background: var(--csui-brand);
+}
+
+.chrona-sched__splitter--panel {
+  left: -3px;
+}
+
+.chrona-sched__bar--editable {
+  cursor: grab;
+}
+
+.chrona-sched__bar--editable:active {
+  cursor: grabbing;
+}
+
+.chrona-sched__bar--selected {
+  box-shadow: 0 0 0 2px var(--csui-brand);
+}
+
+.chrona-sched__bar--drag-source {
+  opacity: 0.45;
+}
+
+.chrona-sched__preview {
+  align-items: center;
+  border-radius: var(--csui-radius);
+  display: flex;
+  font-size: 12px;
+  gap: 6px;
+  overflow: hidden;
+  padding: 0 8px;
+  pointer-events: none;
+  position: absolute;
+  white-space: nowrap;
+  z-index: 3;
+}
+
+.chrona-sched__preview--allow {
+  background: color-mix(in srgb, var(--csui-brand) 18%, transparent);
+  border: 1px dashed var(--csui-brand);
+  color: var(--csui-brand-fg);
+}
+
+.chrona-sched__preview--warn {
+  background: color-mix(in srgb, var(--csui-warn) 18%, transparent);
+  border: 1px dashed var(--csui-warn);
+  color: var(--csui-warn);
+}
+
+.chrona-sched__preview--block {
+  background: color-mix(in srgb, var(--csui-danger) 16%, transparent);
+  border: 1px dashed var(--csui-danger);
+  color: var(--csui-danger);
+}
+
+.chrona-sched__preview-reason {
+  font-weight: 600;
+}
+
+/* Pinned items: glyph plus a default cursor (no grab affordance). */
+
+.chrona-sched__pin {
+  flex: 0 0 auto;
+  opacity: 0.75;
+}
+
+.chrona-sched__bar--pinned {
+  cursor: default;
+}
+
+.chrona-sched__vertical-event-title .chrona-sched__pin {
+  margin-right: 3px;
+  vertical-align: -1px;
+}
+
+.chrona-sched__chip .chrona-sched__pin {
+  margin-right: 3px;
+  vertical-align: -1px;
+}
+
+.chrona-sched__dialog-warn {
+  background: var(--csui-warn-bg);
+  border: 1px solid var(--csui-warn-stroke);
+  border-radius: 4px;
+  color: var(--csui-warn);
+  font-size: 12px;
+  margin: 4px 0 0;
+  padding: 8px 10px;
+  text-align: center;
+}
+
+.chrona-sched__dialog-primary:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.chrona-sched__dialog-info {
+  background: var(--csui-brand-bg, #ebf3fc);
+  border: 1px solid var(--csui-brand-stroke, #b4d6fa);
+  border-radius: 4px;
+  color: var(--csui-brand, #0f6cbd);
+  font-size: 12px;
+  margin: 0 16px;
+  padding: 8px 10px;
+  text-align: center;
+}
+
+.chrona-sched__dialog-pinned {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+
+/* Maker-colored tag pills: text color is computed for contrast. */
+.chrona-sched__tag--colored {
+  font-weight: 600;
+}
+
+/* A held tag the person is not fully backed for (an assigned role with a
+   skill missing): the warning stroke, the note in the tooltip. */
+.chrona-sched__tag--warning {
+  border-color: var(--csui-warn);
+}
+
+/* Saved-view switcher: Fluent-styled select, leftmost in the toolbar. */
+.chrona-sched__toolbar-groupselect,
+.chrona-sched__toolbar-viewselect {
+  background: var(--csui-bg);
+  border: 1px solid var(--csui-stroke-strong);
+  border-radius: var(--csui-radius);
+  color: var(--csui-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 4px 8px;
+}
+
+/* Display-zone chip beside the range label. */
+.chrona-sched__toolbar-tz {
+  background: var(--csui-surface-hover);
+  border-radius: 9999px;
+  color: var(--csui-text-soft);
+  font-size: 12px;
+  padding: 2px 10px;
+}
+
+/* Teams-style time-scale menu */
+
+.chrona-sched__timescale {
+  margin-left: auto;
+  position: relative;
+}
+
+/* When the menu is present it claims the auto gap; the pills follow. */
+.chrona-sched__timescale + .chrona-sched__toolbar-views {
+  margin-left: 8px;
+}
+
+.chrona-sched__timescale-trigger {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+}
+
+.chrona-sched__timescale-caret {
+  font-size: 10px;
+}
+
+.chrona-sched__timescale-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 30;
+}
+
+.chrona-sched__timescale-item {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.chrona-sched__timescale-item:disabled {
+  color: var(--csui-text-soft);
+  cursor: default;
+  opacity: 0.55;
+}
+
+.chrona-sched__timescale-check {
+  color: var(--csui-brand-fg);
+  display: inline-block;
+  font-weight: 700;
+  width: 14px;
+}
+
+/* Group-move badge: how many events travel with the ghost. */
+.chrona-sched__preview-count {
+  background: var(--csui-brand);
+  border-radius: 9999px;
+  color: var(--csui-on-brand);
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 2px 6px;
+}
+
+.chrona-sched__preview--block .chrona-sched__preview-count {
+  background: var(--csui-danger);
+}
+
+.chrona-sched__preview--draft {
+  border-style: solid;
+  font-weight: 600;
+}
+
+.chrona-sched__preview--vertical {
+  flex-direction: column;
+  gap: 2px;
+  left: 0;
+  padding: 2px 6px;
+  right: 0;
+  white-space: normal;
+}
+
+.chrona-sched__cell-drop--allow {
+  box-shadow: inset 0 0 0 2px var(--csui-brand);
+}
+
+.chrona-sched__cell-drop--warn {
+  box-shadow: inset 0 0 0 2px var(--csui-warn);
+}
+
+.chrona-sched__cell-drop--block {
+  box-shadow: inset 0 0 0 2px var(--csui-danger);
+}
+
+.chrona-sched__chip--dragging {
+  opacity: 0.45;
+}
+
+.chrona-sched__bar-handle {
+  bottom: 0;
+  cursor: ew-resize;
+  position: absolute;
+  top: 0;
+  width: 8px;
+}
+
+.chrona-sched__bar-handle--start {
+  left: 0;
+}
+
+.chrona-sched__bar-handle--end {
+  right: 0;
+}
+
+.chrona-sched__bar-handle::after {
+  background: currentColor;
+  border-radius: 1px;
+  bottom: 8px;
+  content: "";
+  left: 3px;
+  opacity: 0;
+  position: absolute;
+  top: 8px;
+  transition: opacity 0.1s ease;
+  width: 2px;
+}
+
+.chrona-sched__bar:hover .chrona-sched__bar-handle::after,
+.chrona-sched__bar--selected .chrona-sched__bar-handle::after {
+  opacity: 0.55;
+}
+
+.chrona-sched__vertical-handle {
+  cursor: ns-resize;
+  height: 8px;
+  left: 0;
+  position: absolute;
+  right: 0;
+}
+
+.chrona-sched__vertical-handle--start {
+  top: 0;
+}
+
+.chrona-sched__vertical-handle--end {
+  bottom: 0;
+}
+
+.chrona-sched__vertical-handle::after {
+  background: currentColor;
+  border-radius: 1px;
+  content: "";
+  height: 2px;
+  left: 8px;
+  opacity: 0;
+  position: absolute;
+  right: 8px;
+  top: 3px;
+  transition: opacity 0.1s ease;
+}
+
+.chrona-sched__vertical-event:hover .chrona-sched__vertical-handle::after {
+  opacity: 0.55;
+}
+
+.chrona-sched__row-canvas--droppable {
+  background: color-mix(in srgb, var(--csui-brand) 4%, transparent);
+  box-shadow: inset 0 0 0 1px var(--csui-brand-stroke);
+}
+
+.chrona-sched__row-canvas--drop-hover {
+  background: color-mix(in srgb, var(--csui-brand) 10%, transparent);
+  box-shadow: inset 0 0 0 2px var(--csui-brand);
+}
+
+.chrona-sched__legend {
+  align-items: center;
+  color: var(--csui-text-soft);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 12px;
+  gap: 14px;
+  padding: 8px 2px 0;
+}
+
+.chrona-sched__legend-item {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+}
+
+.chrona-sched__legend-swatch {
+  border: 1px solid var(--csui-stroke);
+  border-radius: 4px;
+  display: inline-block;
+  height: 14px;
+  position: relative;
+  width: 14px;
+}
+
+.chrona-sched__shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+.chrona-sched__toolbar {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 0 10px;
+}
+
+.chrona-sched__toolbar-primary {
+  background: var(--csui-brand);
+  border: 1px solid var(--csui-brand);
+  border-radius: 4px;
+  color: var(--csui-on-brand);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 14px;
+}
+
+/* Flat navigation: text Today, bare chevrons, flat date. */
+.chrona-sched__toolbar-button {
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--csui-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 12px;
+}
+
+.chrona-sched__toolbar-button:hover {
+  background: var(--csui-surface-hover);
+}
+
+/*
+ * Standalone conversion surface (F22; design ratified 2026-09-01
+ * from the designer comp): the ONE ratified branded exception to
+ * host-Fluent styling - Chrona identity (Docs/assets/design.png)
+ * on a fixed light card in every host theme, like any SaaS connect
+ * modal. Brand values are scoped HERE and nowhere else. Layout:
+ * navy rail (mark, wordmark, pitch, info card) + light main column
+ * (title, counts, sample boards, disclosure ledger, reassurance
+ * callout, actions). 8pt spacing rhythm, 24px between sections.
+ */
+.chrona-sched__conversion {
+  --chrona-blue: #2563eb;
+  --chrona-blue-soft: #4f8bff;
+  --chrona-ink: #0f172a;
+  --chrona-slate: #64748b;
+  --chrona-mist: #f1f5f9;
+  --chrona-line: #e2e8f0;
+  --chrona-amber: #b45309;
+  --chrona-red: #dc2626;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.3);
+  color: var(--chrona-ink);
+  display: flex;
+  font-family: "Manrope", "Segoe UI", -apple-system, sans-serif;
+  max-height: 90vh;
+  overflow: hidden;
+  width: min(960px, 94vw);
+}
+
+.chrona-sched__conversion-rail {
+  background: var(--chrona-ink);
+  color: #ffffff;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  padding: 32px 28px;
+  width: 224px;
+}
+
+@media (max-width: 760px) {
+  .chrona-sched__conversion-rail {
+    display: none;
+  }
+}
+
+.chrona-sched__conversion-wordmark {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  margin-top: 14px;
+  text-transform: uppercase;
+}
+
+.chrona-sched__conversion-pitch {
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.6;
+  margin: 26px 0 0;
+}
+
+.chrona-sched__conversion-pitch + .chrona-sched__conversion-pitch {
+  margin-top: 16px;
+}
+
+.chrona-sched__conversion-info {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.6;
+  margin-top: auto;
+  padding: 14px 16px;
+}
+
+.chrona-sched__conversion-info-lead {
+  align-items: flex-start;
+  color: #e2e8f0;
+  display: flex;
+  font-weight: 700;
+  gap: 9px;
+  line-height: 1.35;
+  margin-bottom: 6px;
+}
+
+.chrona-sched__conversion-info-lead svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.chrona-sched__conversion-info-line {
+  display: block;
+}
+
+.chrona-sched__conversion-main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 32px 32px 28px;
+  position: relative;
+}
+
+.chrona-sched__conversion-close {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  font-size: 15px;
+  height: 32px;
+  justify-content: center;
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  width: 32px;
+}
+
+.chrona-sched__conversion-close:hover {
+  background: var(--chrona-mist);
+  color: var(--chrona-ink);
+}
+
+.chrona-sched__conversion-title {
+  color: var(--chrona-ink);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.chrona-sched__conversion-sub {
+  color: var(--chrona-slate);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.55;
+  margin: 10px 0 0;
+}
+
+.chrona-sched__conversion-counts {
+  color: var(--chrona-ink);
+  display: block;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.chrona-sched__conversion-section {
+  color: var(--chrona-ink);
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.chrona-sched__conversion-demo {
+  border: 1px solid var(--chrona-line);
+  border-radius: 12px;
+  margin-top: 26px;
+  padding: 18px 20px 16px;
+}
+
+.chrona-sched__conversion-demo .chrona-sched__conversion-section {
+  margin-bottom: 14px;
+}
+
+.chrona-sched__conversion-halves {
+  align-items: stretch;
+  display: flex;
+  position: relative;
+}
+
+.chrona-sched__conversion-half {
+  flex: 1;
+  min-width: 0;
+  padding-right: 18px;
+}
+
+.chrona-sched__conversion-half--after {
+  padding-left: 18px;
+  padding-right: 0;
+}
+
+.chrona-sched__conversion-boardsplit {
+  background: var(--chrona-line);
+  width: 1px;
+}
+
+.chrona-sched__conversion-pivot {
+  align-items: center;
+  background: var(--chrona-blue);
+  border-radius: 50%;
+  box-shadow:
+    0 4px 14px rgba(37, 99, 235, 0.35),
+    0 0 0 4px #ffffff;
+  display: flex;
+  height: 32px;
+  justify-content: center;
+  left: 50%;
+  position: absolute;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+}
+
+.chrona-sched__conversion-halftag {
+  color: var(--chrona-ink);
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.chrona-sched__conversion-board {
+  display: block;
+  width: 100%;
+}
+
+.chrona-sched__conversion-boardcounts {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 10px;
+}
+
+.chrona-sched__conversion-boardcounts--before
+  .chrona-sched__conversion-count-open {
+  color: var(--chrona-amber);
+}
+
+.chrona-sched__conversion-boardcounts--before
+  .chrona-sched__conversion-count-conflicts {
+  color: var(--chrona-red);
+}
+
+.chrona-sched__conversion-boardcounts--before
+  .chrona-sched__conversion-count-sep {
+  color: var(--chrona-slate);
+  font-weight: 500;
+}
+
+.chrona-sched__conversion-boardcounts--after {
+  color: var(--chrona-blue);
+}
+
+.chrona-sched__conversion-ledger {
+  border: 1px solid var(--chrona-line);
+  border-radius: 10px;
+  margin-top: 28px;
+  overflow: hidden;
+}
+
+.chrona-sched__conversion-ledgerhead {
+  align-items: center;
+  background: var(--chrona-mist);
+  display: flex;
+  padding: 10px 15px;
+}
+
+.chrona-sched__conversion-inspect {
+  background: transparent;
+  border: none;
+  color: var(--chrona-blue);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  margin-left: auto;
+  padding: 0;
+}
+
+.chrona-sched__conversion-inspect:hover {
+  text-decoration: underline;
+}
+
+.chrona-sched__conversion-lrow {
+  align-items: center;
+  border-top: 1px solid var(--chrona-line);
+  color: var(--chrona-ink);
+  display: flex;
+  font-size: 13.5px;
+  font-weight: 500;
+  gap: 12px;
+  padding: 10px 16px;
+}
+
+.chrona-sched__conversion-lrow svg {
+  flex: none;
+}
+
+.chrona-sched__conversion-lrow--none {
+  color: var(--chrona-slate);
+}
+
+.chrona-sched__conversion-payload-wrap {
+  background: #f8fafc;
+  border-top: 1px solid var(--chrona-line);
+  padding: 10px 16px 12px;
+}
+
+.chrona-sched__conversion-payload {
+  color: #475569;
+  font-family: Consolas, "Cascadia Mono", monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  margin: 0;
+  max-height: 180px;
+  overflow: auto;
+}
+
+.chrona-sched__conversion-payload-note {
+  color: var(--chrona-slate);
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.chrona-sched__conversion-lock {
+  align-items: flex-start;
+  background: rgba(37, 99, 235, 0.06);
+  border-radius: 8px;
+  color: #334155;
+  display: flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 10px;
+  line-height: 1.55;
+  margin-top: 20px;
+  padding: 12px 14px;
+}
+
+.chrona-sched__conversion-lock svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.chrona-sched__conversion-buttons {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.chrona-sched__conversion-spacer {
+  flex: 1;
+}
+
+.chrona-sched__conversion-learn {
+  background: transparent;
+  border: 1.5px solid rgba(37, 99, 235, 0.35);
+  border-radius: 8px;
+  color: var(--chrona-blue);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+  padding: 8.5px 18px;
+  white-space: nowrap;
+}
+
+.chrona-sched__conversion-learn:hover {
+  background: rgba(37, 99, 235, 0.06);
+}
+
+.chrona-sched__conversion-cancel {
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--chrona-slate);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+  padding: 10px 20px;
+  white-space: nowrap;
+}
+
+.chrona-sched__conversion-cancel:hover {
+  background: var(--chrona-mist);
+  color: var(--chrona-ink);
+}
+
+.chrona-sched__conversion-connect {
+  background: var(--chrona-blue);
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+  padding: 10px 20px;
+  white-space: nowrap;
+}
+
+.chrona-sched__conversion-connect:hover {
+  background: color-mix(in srgb, var(--chrona-blue) 85%, #0f172a);
+}
+
+/* Panel header dismiss: quiet icon button, Fluent subtle style. */
+.chrona-sched__panel-close {
+  background: transparent;
+  border: none;
+  border-radius: var(--csui-radius);
+  color: var(--csui-text-soft);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  margin-left: auto;
+  padding: 2px 6px;
+}
+
+.chrona-sched__panel-close:hover {
+  background: var(--csui-surface-hover);
+  color: var(--csui-text);
+}
+
+/*
+ * Collapsed-pane reopen affordance (Outlook/Teams pattern): a slim
+ * vertical tab at the right edge carrying the live count.
+ */
+.chrona-sched__panel-reopen {
+  align-items: center;
+  background: var(--csui-surface);
+  border: 1px solid var(--csui-stroke);
+  border-radius: var(--csui-radius);
+  color: var(--csui-text-soft);
+  cursor: pointer;
+  display: flex;
+  flex: none;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  justify-content: center;
+  padding: 12px 5px;
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+}
+
+.chrona-sched__panel-reopen:hover {
+  border-color: var(--csui-brand);
+  color: var(--csui-brand-fg);
+}
+
+/* Paired Fluent icon buttons (undo/redo, previous/next) sit tight together. */
+.chrona-sched__toolbar-group {
+  align-items: center;
+  display: flex;
+  gap: 2px;
+}
+
+/* Stadium-shaped interval switcher with a white active pill. */
+/* View pills plus the actions that belong beside them (Generate,
+   Optimize) wrap as one cluster instead of stranding a button alone
+   on the next row. */
+.chrona-sched__toolbar-trailing {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.chrona-sched__toolbar-views {
+  background: var(--csui-surface-hover);
+  border-radius: 9999px;
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+  padding: 4px;
+}
+
+.chrona-sched__toolbar-view {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  color: var(--csui-text-soft);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  padding: 5px 16px;
+}
+
+.chrona-sched__toolbar-view--active {
+  background: var(--csui-bg);
+  border-color: var(--csui-stroke);
+  box-shadow: var(--csui-shadow);
+  color: var(--csui-text);
+  font-weight: 600;
+}
+
+.chrona-sched__shell > .chrona-sched__layout {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/*
+ * Fluent v9 outline tag: 4px radius, surface background with a visible
+ * neutral stroke so chips stay legible on both the white canvas and the
+ * gray label column, in light and dark themes alike.
+ */
+.chrona-sched__tag {
+  background: var(--csui-bg);
+  border: 1px solid var(--csui-stroke-strong);
+  border-radius: 4px;
+  color: var(--csui-text);
+  display: inline-block;
+  font-size: 12px;
+  line-height: 16px;
+  margin-right: 4px;
+  overflow: hidden;
+  padding: 0 7px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrona-sched__resource-load {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+  font-weight: 400;
+  margin-left: 8px;
+}
+
+.chrona-sched__resource-tags {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 2px;
+  margin-top: 3px;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Tags keep their natural width; the row clips whole chips instead of
+   squeezing every chip into unreadable ellipses. */
+.chrona-sched__resource-tags .chrona-sched__tag {
+  flex: 0 0 auto;
+}
+
+.chrona-sched__row-canvas--mismatch {
+  background: repeating-linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--csui-danger) 5%, transparent),
+    color-mix(in srgb, var(--csui-danger) 5%, transparent) 8px,
+    color-mix(in srgb, var(--csui-danger) 9%, transparent) 8px,
+    color-mix(in srgb, var(--csui-danger) 9%, transparent) 16px
+  );
+}
+
+.chrona-sched__vertical-column--mismatch .chrona-sched__vertical-canvas {
+  background: repeating-linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--csui-danger) 5%, transparent),
+    color-mix(in srgb, var(--csui-danger) 5%, transparent) 8px,
+    color-mix(in srgb, var(--csui-danger) 9%, transparent) 8px,
+    color-mix(in srgb, var(--csui-danger) 9%, transparent) 16px
+  );
+}
+
+.chrona-sched__menu {
+  background: var(--csui-bg);
+  border: 1px solid var(--csui-stroke);
+  border-radius: var(--csui-radius);
+  box-shadow: var(--csui-shadow-flyout);
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  padding: 4px;
+  position: absolute;
+  z-index: 20;
+}
+
+.chrona-sched__menu-item {
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--csui-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  padding: 7px 10px;
+  text-align: left;
+}
+
+.chrona-sched__menu-item:hover,
+.chrona-sched__menu-item:focus-visible {
+  background: var(--csui-surface-hover);
+}
+
+.chrona-sched__menu-item--danger {
+  color: var(--csui-danger);
+}
+
+.chrona-sched__hover-card {
+  background: var(--csui-bg);
+  border: 1px solid var(--csui-stroke);
+  border-radius: var(--csui-radius);
+  box-shadow: var(--csui-shadow-flyout);
+  min-width: 240px;
+  max-width: 340px;
+  padding: 12px 14px;
+  pointer-events: none;
+  position: absolute;
+  z-index: 15;
+}
+
+.chrona-sched__hover-card-beak {
+  background: var(--csui-bg);
+  border-bottom: 1px solid var(--csui-stroke);
+  border-right: 1px solid var(--csui-stroke);
+  bottom: -5px;
+  height: 10px;
+  position: absolute;
+  transform: rotate(45deg);
+  width: 10px;
+}
+
+.chrona-sched__hover-card--below .chrona-sched__hover-card-beak {
+  border: none;
+  border-left: 1px solid var(--csui-stroke);
+  border-top: 1px solid var(--csui-stroke);
+  bottom: auto;
+  top: -5px;
+}
+
+.chrona-sched__hover-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.chrona-sched__hover-card-grid {
+  display: grid;
+  gap: 8px 18px;
+  grid-template-columns: 1fr 1fr;
+  margin: 0;
+}
+
+.chrona-sched__hover-card-grid dt {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+}
+
+.chrona-sched__hover-card-grid dd {
+  font-size: 14px;
+  margin: 0;
+}
+
+.chrona-sched__dialog-backdrop {
+  align-items: flex-start;
+  background: var(--csui-overlay);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding-top: 8vh;
+  position: fixed;
+  z-index: 30;
+}
+
+.chrona-sched__dialog {
+  background: var(--csui-bg);
+  border-radius: 8px;
+  box-shadow: var(--csui-shadow-dialog);
+  color: var(--csui-text);
+  font-family: var(--csui-font);
+  font-size: 14px;
+  max-height: 80vh;
+  overflow: auto;
+  width: 420px;
+}
+
+.chrona-sched__dialog-header {
+  align-items: center;
+  border-bottom: 1px solid var(--csui-stroke);
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+
+.chrona-sched__dialog-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.chrona-sched__dialog-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.chrona-sched__dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.chrona-sched__dialog-field {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 110px 1fr;
+}
+
+.chrona-sched__dialog-field > span:first-child {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+}
+
+.chrona-sched__dialog-field input,
+.chrona-sched__dialog-field select {
+  border: 1px solid var(--csui-stroke-strong);
+  border-radius: 4px;
+  font: inherit;
+  padding: 6px 8px;
+}
+
+.chrona-sched__dialog-block {
+  background: var(--csui-danger-bg);
+  border: 1px solid var(--csui-danger-stroke);
+  border-radius: 4px;
+  color: var(--csui-danger);
+  margin: 0;
+  padding: 8px 10px;
+}
+
+
+.chrona-sched__dialog-actions {
+  border-top: 1px solid var(--csui-stroke);
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 12px 16px;
+}
+
+.chrona-sched__dialog-actions button {
+  border: 1px solid var(--csui-stroke-strong);
+  border-radius: 4px;
+  background: var(--csui-bg);
+  color: var(--csui-text);
+  cursor: pointer;
+  font: inherit;
+  padding: 7px 14px;
+}
+
+.chrona-sched__dialog-actions button.chrona-sched__dialog-primary {
+  background: var(--csui-brand);
+  border-color: var(--csui-brand);
+  color: var(--csui-on-brand);
+}
+
+.chrona-sched__dialog-actions button.chrona-sched__dialog-danger {
+  color: var(--csui-danger);
+}
+
+.chrona-sched__dialog-actions button.chrona-sched__dialog-danger-primary {
+  background: var(--csui-danger);
+  border-color: var(--csui-danger);
+  color: var(--csui-on-brand);
+}
+
+.chrona-sched__confirm-dialog p {
+  font-size: 14px;
+  margin: 0;
+  padding: 4px 16px 8px;
+}
+
+/* Field rows inside a confirm-style dialog share the paragraph inset. */
+.chrona-sched__confirm-dialog .chrona-sched__dialog-fields {
+  display: grid;
+  gap: 8px;
+  padding: 4px 16px 12px;
+}
+
+.chrona-sched__confirm-dialog .chrona-sched__dialog-field input {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+}
+
+.chrona-sched__dialog-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chrona-sched__dialog-tag {
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+
+.chrona-sched__unscheduled-head {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.chrona-sched__unscheduled-duration {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.chrona-sched__unscheduled-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-top: 3px;
+}
+
+.chrona-sched__unscheduled {
+  border: 1px solid var(--csui-stroke);
+  border-radius: var(--csui-radius);
+  flex: 0 0 200px;
+  max-height: 100%;
+  overflow: auto;
+  padding: 10px;
+}
+
+/* All / In view scope toggle: a miniature segmented control. */
+.chrona-sched__unscheduled-filter {
+  background: var(--csui-surface-hover);
+  border-radius: 9999px;
+  display: inline-flex;
+  gap: 2px;
+  margin-bottom: 8px;
+  padding: 2px;
+}
+
+.chrona-sched__unscheduled-filter-option {
+  background: transparent;
+  border: none;
+  border-radius: 9999px;
+  color: var(--csui-text-soft);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  padding: 2px 10px;
+}
+
+.chrona-sched__unscheduled-filter-option[aria-pressed="true"] {
+  background: var(--csui-bg);
+  box-shadow: var(--csui-shadow);
+  color: var(--csui-text);
+  font-weight: 600;
+}
+
+.chrona-sched__unscheduled-group {
+  border-bottom: 1px solid var(--csui-stroke);
+  color: var(--csui-text-soft);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin: 10px 0 4px;
+  padding-bottom: 2px;
+  text-transform: uppercase;
+}
+
+.chrona-sched__unscheduled-date {
+  font-weight: 600;
+}
+
+.chrona-sched__unscheduled-title {
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+
+.chrona-sched__unscheduled-empty {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+}
+
+.chrona-sched__unscheduled-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.chrona-sched__unscheduled-item {
+  background: var(--csui-bg);
+  border: 1px solid var(--csui-stroke);
+  border-left: 3px solid var(--csui-warn-stroke);
+  border-radius: var(--csui-radius);
+  cursor: grab;
+  display: flex;
+  flex-direction: column;
+  font: inherit;
+  font-size: 12px;
+  margin: 0 0 6px;
+  padding: 6px 8px 6px 10px;
+  text-align: left;
+  width: 100%;
+}
+
+.chrona-sched__unscheduled-item--dragging {
+  opacity: 0.45;
+}
+
+.chrona-sched__unscheduled-name {
+  font-weight: 600;
+}
+
+.chrona-sched__unscheduled-time {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+}
+
+.chrona-sched__resource-tags {
+  color: var(--csui-brand-fg);
+  font-size: 10px;
+}
+
+/*
+ * Decorations receive pointer events so their tooltips (Unavailable,
+ * Non-working time, ...) work; pointer-down and double-click bubble to the
+ * row canvas, so create gestures on shaded areas behave normally.
+ */
+.chrona-sched__decoration {
+  bottom: 0;
+  position: absolute;
+  top: 0;
+}
+
+.chrona-sched__decoration--nonWorking {
+  background: repeating-linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--csui-text-soft) 4.5%, transparent),
+    color-mix(in srgb, var(--csui-text-soft) 4.5%, transparent) 6px,
+    color-mix(in srgb, var(--csui-text-soft) 7.5%, transparent) 6px,
+    color-mix(in srgb, var(--csui-text-soft) 7.5%, transparent) 12px
+  );
+}
+
+.chrona-sched__decoration--unavailable {
+  background: repeating-linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--csui-danger) 5%, transparent),
+    color-mix(in srgb, var(--csui-danger) 5%, transparent) 6px,
+    color-mix(in srgb, var(--csui-danger) 9%, transparent) 6px,
+    color-mix(in srgb, var(--csui-danger) 9%, transparent) 12px
+  );
+}
+
+.chrona-sched__decoration--busyElsewhere {
+  background: repeating-linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--csui-brand) 5%, transparent),
+    color-mix(in srgb, var(--csui-brand) 5%, transparent) 6px,
+    color-mix(in srgb, var(--csui-brand) 9%, transparent) 6px,
+    color-mix(in srgb, var(--csui-brand) 9%, transparent) 12px
+  );
+}
+
+.chrona-sched__decoration--preferred {
+  background: color-mix(in srgb, var(--csui-success) 9%, transparent);
+}
+
+.chrona-sched__decoration--unpreferred {
+  background: color-mix(in srgb, var(--csui-warn) 12%, transparent);
+}
+
+.chrona-sched__decoration--holiday {
+  background: color-mix(in srgb, var(--csui-holiday) 8%, transparent);
+}
+
+.chrona-sched__coverage-label {
+  align-items: center;
+  background: var(--csui-surface);
+  border-bottom: 1px solid var(--csui-stroke);
+  border-right: 1px solid var(--csui-stroke-strong);
+  color: var(--csui-text-soft);
+  display: flex;
+  font-size: 12px;
+  font-weight: 600;
+  left: 0;
+  padding: 0 12px;
+  position: sticky;
+  z-index: 2;
+}
+
+.chrona-sched__coverage-cell {
+  align-items: center;
+  border-radius: 2px;
+  bottom: 4px;
+  color: var(--csui-text);
+  display: flex;
+  font-size: 10px;
+  letter-spacing: -0.2px;
+  justify-content: center;
+  overflow: hidden;
+  position: absolute;
+  top: 4px;
+  white-space: nowrap;
+}
+
+.chrona-sched__coverage-cell--under {
+  background: var(--csui-danger);
+  color: var(--csui-on-brand);
+}
+
+.chrona-sched__coverage-cell--met {
+  background: color-mix(in srgb, var(--csui-success) 12%, transparent);
+}
+
+.chrona-sched__coverage-cell--over {
+  background: color-mix(in srgb, var(--csui-warn) 40%, transparent);
+}
+
+/*
+ * Unscheduled lane: unassigned demand as pale bars on the time axis,
+ * one lane at the top of each group. The bar is the warn treatment
+ * (attention, not error), dashed like every other unfilled thing.
+ */
+.chrona-sched__lane-label {
+  align-items: center;
+  background: var(--csui-surface);
+  border-bottom: 1px solid var(--csui-stroke);
+  border-right: 1px solid var(--csui-stroke-strong);
+  color: var(--csui-text-soft);
+  display: flex;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 12px;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+
+.chrona-sched__lane-canvas {
+  background: var(--csui-surface);
+  border-bottom: 1px solid var(--csui-stroke);
+  position: relative;
+}
+
+.chrona-sched__lane-bar {
+  align-items: center;
+  background: var(--csui-warn-bg);
+  border: 1px dashed var(--csui-stroke-strong);
+  border-left: 3px solid var(--csui-warn-stroke);
+  border-radius: var(--csui-radius);
+  color: var(--csui-text);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  font-size: 12px;
+  gap: 6px;
+  height: 24px;
+  overflow: hidden;
+  padding: 0 8px;
+  position: absolute;
+  white-space: nowrap;
+}
+
+.chrona-sched__lane-bar:hover,
+.chrona-sched__lane-bar:focus-visible {
+  border-color: var(--csui-warn);
+}
+
+.chrona-sched__lane-bar-title {
+  font-weight: 600;
+}
+
+/* Curated staff picker for an unscheduled shift. */
+.chrona-sched__assign-dialog {
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
+  width: 400px;
+}
+
+.chrona-sched__assign-shift {
+  align-items: center;
+  color: var(--csui-text-soft);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 12px;
+  gap: 6px;
+  padding: 8px 16px 0;
+}
+
+.chrona-sched__assign-shift-title {
+  color: var(--csui-text);
+  font-weight: 600;
+}
+
+.chrona-sched__assign-search {
+  background: var(--csui-bg);
+  border: 1px solid var(--csui-stroke-strong);
+  border-radius: var(--csui-radius);
+  color: var(--csui-text);
+  font: inherit;
+  font-size: 14px;
+  margin: 10px 16px 0;
+  padding: 5px 10px;
+}
+
+.chrona-sched__assign-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 4px 0 8px;
+}
+
+.chrona-sched__assign-section {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 10px 16px 4px;
+  text-transform: uppercase;
+}
+
+.chrona-sched__assign-candidate {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: var(--csui-text);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: 10px;
+  padding: 7px 16px;
+  text-align: left;
+  width: 100%;
+}
+
+.chrona-sched__assign-candidate:hover {
+  background: var(--csui-surface-hover);
+}
+
+.chrona-sched__assign-candidate--selected {
+  background: var(--csui-brand-bg);
+  box-shadow: inset 3px 0 0 var(--csui-brand);
+}
+
+.chrona-sched__assign-candidate--dim {
+  opacity: 0.55;
+}
+
+.chrona-sched__assign-main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.chrona-sched__assign-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.chrona-sched__assign-meta {
+  align-items: center;
+  color: var(--csui-text-soft);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 12px;
+  gap: 6px;
+}
+
+.chrona-sched__assign-hours {
+  color: var(--csui-text-soft);
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.chrona-sched__assign-empty {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+  margin: 0;
+  padding: 10px 16px;
+}
+
+.chrona-sched__assign-foot {
+  align-items: center;
+  display: flex;
+}
+
+.chrona-sched__assign-more {
+  background: transparent;
+  border: none;
+  color: var(--csui-brand-fg);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0;
+}
+
+.chrona-sched__assign-spacer {
+  flex: 1 1 auto;
+}
+
+.chrona-sched__group-label {
+  align-items: center;
+  background: var(--csui-surface);
+  border: none;
+  border-bottom: 1px solid var(--csui-stroke);
+  border-right: 1px solid var(--csui-stroke-strong);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 6px;
+  left: 0;
+  padding: 0 12px;
+  position: sticky;
+  text-align: left;
+  z-index: 2;
+}
+
+/* Second grouping level: indented, lighter weight. */
+.chrona-sched__group-label--sub {
+  background: var(--csui-bg);
+  font-weight: 600;
+  padding-left: 28px;
+}
+
+.chrona-sched__group-canvas {
+  position: relative;
+  background: var(--csui-surface);
+  border-bottom: 1px solid var(--csui-stroke);
+}
+
+/* Vertical views (top-down, day, week) */
+
+.chrona-sched__vertical {
+  border: 1px solid var(--csui-stroke);
+  border-radius: var(--csui-radius);
+  display: flex;
+  height: 100%;
+  max-height: 100%;
+  overflow: auto;
+  width: 100%;
+}
+
+.chrona-sched__vertical-hours {
+  border-right: 1px solid var(--csui-stroke-strong);
+  flex: 0 0 56px;
+  left: 0;
+  position: sticky;
+  background: var(--csui-surface);
+  z-index: 2;
+}
+
+.chrona-sched__vertical-corner,
+.chrona-sched__vertical-title {
+  background: var(--csui-surface);
+  border-bottom: 1px solid var(--csui-stroke);
+  font-size: 12px;
+  font-weight: 600;
+  height: 32px;
+  line-height: 32px;
+  padding: 0 8px;
+  position: sticky;
+  top: 0;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.chrona-sched__vertical-hour {
+  color: var(--csui-text-soft);
+  font-size: 10px;
+  padding: 1px 4px;
+  position: absolute;
+}
+
+.chrona-sched__vertical-title--today {
+  background: var(--csui-brand);
+  color: var(--csui-on-brand);
+}
+
+.chrona-sched__vertical-canvas--today {
+  background: var(--csui-today-bg);
+}
+
+.chrona-sched__vertical-column {
+  border-right: 1px solid var(--csui-stroke);
+  flex: 1 0 150px;
+  min-width: 150px;
+}
+
+.chrona-sched__vertical-canvas {
+  position: relative;
+}
+
+.chrona-sched__vertical-gridline {
+  border-top: 1px solid var(--csui-surface-hover);
+  left: 0;
+  position: absolute;
+  right: 0;
+}
+
+.chrona-sched__vertical-event {
+  background: var(--csui-brand-bg);
+  border: 1px solid var(--csui-brand-stroke);
+  border-left: 3px solid var(--csui-brand);
+  border-radius: var(--csui-radius);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  font: inherit;
+  font-size: 12px;
+  overflow: hidden;
+  padding: 2px 6px;
+  position: absolute;
+  text-align: left;
+}
+
+.chrona-sched__vertical-event-title {
+  font-weight: 600;
+}
+
+/* Month */
+
+.chrona-sched__month {
+  border: 1px solid var(--csui-stroke);
+  border-radius: var(--csui-radius);
+  max-height: 100%;
+  overflow: auto;
+  width: 100%;
+}
+
+.chrona-sched__month-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.chrona-sched__month-table th {
+  background: var(--csui-surface);
+  border: 1px solid var(--csui-stroke);
+  font-size: 12px;
+  padding: 4px 8px;
+  text-align: left;
+}
+
+.chrona-sched__month-cell {
+  border: 1px solid var(--csui-stroke);
+  height: 92px;
+  min-width: 120px;
+  padding: 4px 6px;
+  vertical-align: top;
+}
+
+.chrona-sched__month-cell--outside {
+  background: var(--csui-surface);
+  color: var(--csui-text-soft);
+}
+
+.chrona-sched__month-day {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.chrona-sched__month-cell--today:not(.chrona-sched__cell-drop) {
+  background: var(--csui-today-bg);
+}
+
+/* Outlook-style filled badge on today's day number. */
+.chrona-sched__month-day--today {
+  align-items: center;
+  background: var(--csui-brand);
+  border-radius: 50%;
+  color: var(--csui-on-brand);
+  display: inline-flex;
+  height: 20px;
+  justify-content: center;
+  min-width: 20px;
+}
+
+.chrona-sched__month-more {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+}
+
+/* Agenda */
+
+.chrona-sched__agenda {
+  border: 1px solid var(--csui-stroke);
+  border-radius: var(--csui-radius);
+  max-height: 100%;
+  overflow: auto;
+  padding: 8px 12px;
+  width: 100%;
+}
+
+.chrona-sched__agenda-day {
+  border-bottom: 1px solid var(--csui-stroke);
+  font-size: 14px;
+  margin: 10px 0 6px;
+  padding-bottom: 4px;
+}
+
+.chrona-sched__agenda-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.chrona-sched__agenda-item {
+  background: none;
+  border: none;
+  border-radius: var(--csui-radius);
+  cursor: pointer;
+  display: grid;
+  font: inherit;
+  font-size: 12px;
+  gap: 12px;
+  grid-template-columns: 96px 1fr auto auto;
+  padding: 4px 6px;
+  text-align: left;
+  width: 100%;
+}
+
+.chrona-sched__agenda-item:hover {
+  background: var(--csui-surface-hover);
+}
+
+.chrona-sched__agenda-time {
+  color: var(--csui-text-soft);
+}
+
+.chrona-sched__agenda-title {
+  font-weight: 600;
+}
+
+.chrona-sched__agenda-resource {
+  color: var(--csui-text-soft);
+}
+
+.chrona-sched__agenda-needs-cover {
+  color: var(--csui-danger);
+  font-weight: 600;
+}
+
+.chrona-sched__live {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.chrona-sched__timeline:focus-visible,
+.chrona-sched__bar:focus-visible,
+.chrona-sched__chip:focus-visible,
+.chrona-sched__unscheduled-item:focus-visible {
+  outline: 2px solid var(--csui-brand);
+  outline-offset: 1px;
+}
+
+.chrona-sched__timeline {
+  height: 100%;
+  max-height: 100%;
+}
+
+/* Roster */
+
+.chrona-sched__roster {
+  border: 1px solid var(--csui-stroke);
+  border-radius: var(--csui-radius);
+  max-height: 100%;
+  overflow: auto;
+  width: 100%;
+}
+
+.chrona-sched__roster-table {
+  border-collapse: collapse;
+  min-width: 100%;
+}
+
+.chrona-sched__roster-table th,
+.chrona-sched__roster-table td {
+  border: 1px solid var(--csui-stroke);
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.chrona-sched__roster-table th {
+  background: var(--csui-surface);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.chrona-sched__roster-resource {
+  background: var(--csui-surface);
+  font-weight: 600;
+  left: 0;
+  min-width: 150px;
+  position: sticky;
+  z-index: 1;
+}
+
+.chrona-sched__roster-table th.chrona-sched__roster-day--today {
+  background: var(--csui-brand);
+  color: var(--csui-on-brand);
+}
+
+.chrona-sched__roster-table
+  td.chrona-sched__roster-cell--today:not(.chrona-sched__cell-drop) {
+  background: var(--csui-today-bg);
+}
+
+.chrona-sched__chip {
+  background: var(--csui-brand-bg);
+  border: 1px solid var(--csui-brand-stroke);
+  border-radius: var(--csui-radius);
+  cursor: pointer;
+  display: block;
+  margin: 2px 0;
+  padding: 3px 6px;
+}
+
+.chrona-sched__chip--needs-cover {
+  background: var(--csui-danger-bg);
+  border: 1px dashed var(--csui-danger-stroke);
+}
+
+.chrona-sched__chip-time {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+}
+
+/* Solve + proposal summary: toolbar/message conventions only. */
+.chrona-sched__solve-bar {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+}
+.chrona-sched__solve-button:disabled {
+  background: var(--csui-surface-hover);
+  border-color: var(--csui-surface-hover);
+  color: var(--csui-text-soft);
+  cursor: default;
+}
+.chrona-sched__solve-error {
+  color: var(--csui-danger);
+  font-size: 12px;
+}
+
+/* F19/F22 deliverable 3: the free-tier allowance is quiet metadata
+ * next to the solve entry; exhaustion is the MessageBar idiom -
+ * attention, never error, never a disabled button. */
+.chrona-sched__solve-quota {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+}
+
+/* F22 deliverable 2: the active constraint tiers, quiet metadata. */
+.chrona-sched__solve-capabilities {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+}
+
+.chrona-sched__solve-quota-notice {
+  align-items: center;
+  background: var(--csui-surface);
+  border: 1px solid var(--csui-stroke);
+  border-radius: var(--csui-radius);
+  color: var(--csui-text);
+  display: inline-flex;
+  font-size: 12px;
+  gap: 8px;
+  padding: 4px 8px;
+}
+
+.chrona-sched__solve-quota-upgrade {
+  background: transparent;
+  border: none;
+  color: var(--csui-brand-fg);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  padding: 0;
+}
+
+.chrona-sched__solve-quota-upgrade:hover {
+  text-decoration: underline;
+}
+.chrona-sched__proposal-bar {
+  align-items: center;
+  background: var(--csui-surface-hover);
+  border-radius: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 2px 0;
+  padding: 4px 8px;
+}
+.chrona-sched__proposal-count {
+  font-size: 14px;
+  font-weight: 600;
+}
+.chrona-sched__proposal-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.chrona-sched__proposal-list li {
+  font-size: 12px;
+}
+
+/* Roster period bar: toolbar conventions, no invented chrome. */
+.chrona-sched__period-bar {
+  align-items: center;
+  display: flex;
+  gap: 2px;
+  padding: 2px 0;
+}
+.chrona-sched__period-chip {
+  margin-left: 0;
+}
+.chrona-sched__period-boundary {
+  border-left: 1px dashed var(--csui-stroke-strong, #8a8886);
+  bottom: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  z-index: 1;
+}
+
+.chrona-sched__proposal-note--block {
+  color: var(--csui-danger);
+  font-weight: 600;
+}
+.chrona-sched__proposal-note--warn {
+  color: var(--csui-warn);
+}
+
+/*
+ * Generation flags (domain model 6.4): demand no longer requires the
+ * shift but a human invested in it. Thin warning border - never a
+ * background change, backgrounds already carry role/status colors.
+ */
+.chrona-sched__flag {
+  color: var(--csui-warn);
+  flex: none;
+}
+
+.chrona-sched__bar--flagged,
+.chrona-sched__chip--flagged {
+  border-color: var(--csui-warn);
+  box-shadow: inset 0 0 0 1px var(--csui-warn);
+}
+
+.chrona-sched__unscheduled-item--flagged {
+  border-color: var(--csui-warn);
+  box-shadow: inset 0 0 0 1px var(--csui-warn);
+}
+
+/*
+ * Planning chrome (PLAN doctrine 2026-08-24): mode tabs, the horizon
+ * rail (primary period selector), and the persistent period header.
+ * Fluent v9 idioms via the token layer throughout.
+ */
+/* Fluent segmented pill for Plan / Operate, in the toolbar. */
+.chrona-sched__mode-pill {
+  background: var(--csui-surface);
+  border: 1px solid var(--csui-stroke);
+  border-radius: 8px;
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  padding: 2px;
+}
+
+.chrona-sched__mode-tab {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--csui-text);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 14px;
+  gap: 6px;
+  padding: 4px 12px;
+}
+
+.chrona-sched__mode-tab:hover {
+  background: var(--csui-surface-hover);
+}
+
+.chrona-sched__mode-tab[aria-selected="true"] {
+  background: var(--csui-brand);
+  color: var(--csui-on-brand);
+  font-weight: 600;
+}
+
+/* The horizon container: the elevated parent of the roster cards. */
+.chrona-sched__horizon {
+  background: var(--csui-bg);
+  border: 1px solid var(--csui-stroke);
+  border-radius: var(--csui-radius);
+  box-shadow: var(--csui-shadow);
+  flex: none;
+  margin: 12px 12px 4px;
+  padding: 12px;
+}
+
+.chrona-sched__horizon-head {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 12px;
+}
+
+.chrona-sched__horizon-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.chrona-sched__rail-row {
+  align-items: stretch;
+  display: flex;
+  gap: 4px;
+}
+
+.chrona-sched__rail-chevron {
+  align-self: stretch;
+  background: transparent;
+  border: 1px solid var(--csui-stroke);
+  border-radius: var(--csui-radius);
+  color: var(--csui-text-soft);
+  cursor: pointer;
+  flex: none;
+  font: inherit;
+  font-size: 24px;
+  line-height: 1;
+  margin-left: 4px;
+  padding: 0 10px;
+}
+
+.chrona-sched__rail-chevron:hover {
+  background: var(--csui-surface-hover);
+  color: var(--csui-text);
+}
+
+/* Fluent MessageBar idiom for the horizon-full notice. */
+.chrona-sched__horizon-notice {
+  align-items: center;
+  background: var(--csui-surface);
+  border: 1px solid var(--csui-stroke);
+  border-radius: var(--csui-radius);
+  display: flex;
+  font-size: 14px;
+  gap: 8px;
+  justify-content: space-between;
+  margin: 0 4px 8px;
+  padding: 6px 6px 6px 12px;
+}
+
+/* F26 resume-or-discard prompt: the notice idiom with its actions. */
+/* F27: the lapsed entitlement bar - Fluent MessageBar warning intent
+ * on the horizon-notice idiom; attention, never error, never modal. */
+.chrona-sched__horizon-notice--warning {
+  background: var(--csui-warn-bg);
+  border-color: var(--csui-warn-stroke);
+}
+.chrona-sched__entitlement-action {
+  text-decoration: none;
+}
+.chrona-sched__resume-notice {
+  flex: none;
+  margin: 0 0 8px;
+}
+
+.chrona-sched__resume-actions {
+  align-items: center;
+  display: flex;
+  flex: none;
+  gap: 8px;
+}
+
+.chrona-sched__account-link {
+  color: var(--csui-brand-fg);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.chrona-sched__account-link:hover {
+  text-decoration: underline;
+}
+
+.chrona-sched__horizon-notice-close {
+  background: transparent;
+  border: none;
+  border-radius: var(--csui-radius);
+  color: var(--csui-text-soft);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  padding: 4px 6px;
+}
+
+.chrona-sched__horizon-notice-close:hover {
+  background: var(--csui-surface-hover);
+  color: var(--csui-text);
+}
+
+.chrona-sched__rail {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 2px;
+  scroll-behavior: smooth;
+}
+
+.chrona-sched__rail-card {
+  background: var(--csui-bg);
+  border: 1px solid var(--csui-stroke);
+  border-radius: var(--csui-radius);
+  box-shadow: var(--csui-shadow);
+  color: var(--csui-text);
+  display: flex;
+  flex: none;
+  min-width: 208px;
+}
+
+.chrona-sched__rail-card-main {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  font: inherit;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px 4px 12px 12px;
+  text-align: left;
+}
+
+.chrona-sched__rail-card:hover {
+  background: var(--csui-surface-hover);
+}
+
+/*
+ * Selection = quiet Fluent selected state: 2px brand stroke plus a
+ * subtle brand tint. Semantic greens/oranges are reserved for
+ * status, so selection never competes with them.
+ */
+.chrona-sched__rail-card--selected {
+  background: color-mix(in srgb, var(--csui-brand-bg) 55%, var(--csui-bg));
+  border-color: var(--csui-brand);
+  box-shadow: inset 0 0 0 1px var(--csui-brand), var(--csui-shadow);
+}
+
+.chrona-sched__rail-card--readonly {
+  background: var(--csui-surface);
+  color: var(--csui-text-soft);
+}
+
+.chrona-sched__rail-menu {
+  align-self: flex-start;
+  background: transparent;
+  border: none;
+  border-radius: var(--csui-radius);
+  color: var(--csui-text-soft);
+  cursor: pointer;
+  flex: none;
+  font-size: 14px;
+  line-height: 1;
+  margin: 4px 4px 0 0;
+  padding: 4px 6px;
+}
+
+.chrona-sched__rail-menu:hover {
+  background: var(--csui-surface-hover);
+  color: var(--csui-text);
+}
+
+.chrona-sched__rail-add {
+  align-items: center;
+  background: transparent;
+  border: 1px dashed var(--csui-stroke-strong);
+  border-radius: var(--csui-radius);
+  color: var(--csui-text-soft);
+  cursor: pointer;
+  display: flex;
+  flex: none;
+  font: inherit;
+  font-size: 20px;
+  justify-content: center;
+  min-width: 44px;
+}
+
+.chrona-sched__rail-add:hover {
+  background: var(--csui-surface-hover);
+  border-color: var(--csui-brand);
+  color: var(--csui-brand-fg);
+}
+
+.chrona-sched__rail-range {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.chrona-sched__rail-meta {
+  align-items: center;
+  color: var(--csui-text-soft);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 12px;
+  gap: 6px;
+}
+
+/*
+ * Schedule-progress pill: neutral in progress, green only at 100%,
+ * warning when incomplete past its deadline.
+ */
+.chrona-sched__progress-chip {
+  border: 1px solid var(--csui-stroke-strong);
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  padding: 0 8px;
+}
+
+.chrona-sched__progress-chip--neutral {
+  background: var(--csui-surface);
+  color: var(--csui-text-soft);
+}
+
+.chrona-sched__progress-chip--full {
+  background: var(--csui-success-bg);
+  border-color: var(--csui-success-stroke);
+  color: var(--csui-success);
+}
+
+.chrona-sched__progress-chip--late {
+  background: var(--csui-warn-bg);
+  border-color: var(--csui-warn-stroke);
+  color: var(--csui-warn);
+}
+
+.chrona-sched__rail-deadline--overdue {
+  color: var(--csui-warn);
+  font-weight: 600;
+}
+
+/*
+ * The selected-roster command bar: breathing room instead of
+ * another table row - no divider, just spacing (Fluent-2 layout
+ * guidance: spacing over graphical dividers).
+ */
+.chrona-sched__period-header {
+  align-items: center;
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding: 14px 16px 12px;
+}
+
+.chrona-sched__period-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.chrona-sched__period-publine,
+.chrona-sched__scope-notice {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+}
+
+.chrona-sched__period-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* Collapsible unscheduled groups: the header is the toggle. */
+.chrona-sched__unscheduled-group-toggle {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: 6px;
+  padding: 0;
+  width: 100%;
+}
+
+.chrona-sched__unscheduled-caret {
+  display: inline-block;
+  font-size: 10px;
+  transition: transform 0.12s ease;
+}
+
+.chrona-sched__unscheduled-group-toggle[aria-expanded="false"]
+  .chrona-sched__unscheduled-caret {
+  transform: rotate(-90deg);
+}
+
+/*
+ * Proposal review (F31). A proposed placement keeps its status color
+ * and gains a dashed brand ring: pending, distinct from selection's
+ * solid ring. A ghost is the faded current place of a moved item:
+ * outline only, never interactive. The cards' inline status color is
+ * withheld for ghosts, so the transparent background here applies.
+ */
+.chrona-sched__bar--proposed,
+.chrona-sched__chip--proposed {
+  outline: 2px dashed var(--csui-brand);
+  outline-offset: -1px;
+}
+
+.chrona-sched__bar--ghost,
+.chrona-sched__chip--ghost {
+  background: transparent;
+  border: 1px dashed var(--csui-stroke-strong, #8a8886);
+  color: var(--csui-text-soft);
+  cursor: default;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.chrona-sched__proposal-hint {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+}
+
+.chrona-sched__proposal-note--dropped {
+  color: var(--csui-text-soft);
+}
+
+/* The change list beside the board: the unscheduled panel's chrome. */
+.chrona-sched__proposal-panel {
+  border: 1px solid var(--csui-stroke);
+  border-radius: var(--csui-radius);
+  flex: 0 0 240px;
+  max-height: 100%;
+  overflow: auto;
+  padding: 10px;
+}
+
+.chrona-sched__proposal-group {
+  margin-top: 8px;
+}
+
+.chrona-sched__proposal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.chrona-sched__proposal-entry {
+  border: 1px solid var(--csui-stroke);
+  border-left: 3px solid var(--csui-brand);
+  border-radius: var(--csui-radius);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 6px;
+  padding: 6px 8px 6px 10px;
+}
+
+.chrona-sched__proposal-entry--dropped {
+  border-left-color: var(--csui-stroke);
+  opacity: 0.6;
+}
+
+.chrona-sched__proposal-entry--blocked {
+  border-left-color: var(--csui-danger);
+}
+
+.chrona-sched__proposal-item {
+  background: transparent;
+  border: none;
+  color: var(--csui-text);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  font: inherit;
+  font-size: 12px;
+  gap: 2px;
+  padding: 0;
+  text-align: left;
+}
+
+.chrona-sched__proposal-detail,
+.chrona-sched__proposal-was {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+}
+
+.chrona-sched__proposal-drop {
+  align-self: flex-start;
+  font-size: 12px;
+  padding: 2px 8px;
+}
+
+/* The Fluent Spinner idiom while a solve runs. */
+@keyframes chrona-sched-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.chrona-sched__solve-progress-group {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.chrona-sched__solve-progress {
+  align-items: center;
+  color: var(--csui-text);
+  display: inline-flex;
+  font-size: 14px;
+  gap: 8px;
+}
+
+.chrona-sched__spinner {
+  animation: chrona-sched-spin 0.9s linear infinite;
+  border: 2px solid color-mix(in srgb, var(--csui-brand) 25%, transparent);
+  border-radius: 50%;
+  border-top-color: var(--csui-brand);
+  box-sizing: border-box;
+  display: inline-block;
+  flex: none;
+  height: 16px;
+  width: 16px;
+}
+
+.chrona-sched__solve-elapsed {
+  color: var(--csui-text-soft);
+  font-variant-numeric: tabular-nums;
+}

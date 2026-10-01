@@ -1,0 +1,81 @@
+{
+  "id": "16fee61a-d17f-4954-8b7b-a11cac1fd4fe",
+  "jobId": "16fee61a-d17f-4954-8b7b-a11cac1fd4fe",
+  "runId": "16fee61a-d17f-4954-8b7b-a11cac1fd4fe",
+  "tenantId": "tenant-dev-a",
+  "kind": "rostering",
+  "status": "succeeded",
+  "createdAt": "2026-08-23T09:35:38.594Z",
+  "startedAt": "2026-08-23T09:35:38.620Z",
+  "completedAt": "2026-08-23T09:35:39.667Z",
+  "payload": {
+    "inputPayloadUri": "http://azurite:10000/devstoreaccount1/solver-payloads/runs/tenant-dev-a/16fee61a-d17f-4954-8b7b-a11cac1fd4fe/input.json"
+  },
+  "solverSeconds": 2,
+  "notBeforePollAt": "2026-08-23T09:35:40.577Z",
+  "pollAfterSeconds": 0,
+  "inputPayloadUri": "http://azurite:10000/devstoreaccount1/solver-payloads/runs/tenant-dev-a/16fee61a-d17f-4954-8b7b-a11cac1fd4fe/input.json",
+  "outputPayloadUri": "http://azurite:10000/devstoreaccount1/solver-payloads/runs/tenant-dev-a/16fee61a-d17f-4954-8b7b-a11cac1fd4fe/output.json",
+  "resultDeferred": false,
+  "result": {
+    "contractVersion": "2",
+    "assignments": [
+      {
+        "shiftId": "sv-01",
+        "resourceId": "s-ava"
+      },
+      {
+        "shiftId": "sv-02",
+        "resourceId": "s-ben"
+      },
+      {
+        "shiftId": "sv-03",
+        "resourceId": "s-eli"
+      },
+      {
+        "shiftId": "sv-04",
+        "resourceId": "s-fay"
+      },
+      {
+        "shiftId": "sv-05",
+        "resourceId": "s-dan"
+      },
+      {
+        "shiftId": "sv-06",
+        "resourceId": "s-gus"
+      },
+      {
+        "shiftId": "sv-07",
+        "resourceId": "s-cleo"
+      },
+      {
+        "shiftId": "sv-08",
+        "resourceId": "s-hana"
+      },
+      {
+        "shiftId": "sv-u1",
+        "resourceId": "s-ava"
+      },
+      {
+        "shiftId": "sv-u2",
+        "resourceId": "s-ben"
+      },
+      {
+        "shiftId": "sv-u3",
+        "resourceId": "s-fay"
+      },
+      {
+        "shiftId": "sv-u4",
+        "resourceId": "s-hana"
+      },
+      {
+        "shiftId": "sv-u5",
+        "resourceId": "s-cleo"
+      },
+      {
+        "shiftId": "sv-u6",
+        "resourceId": "s-dan"
+      }
+    ]
+  }
+}
