@@ -1,0 +1,31 @@
+# Chrona Scheduler
+
+> A drag-and-drop scheduler for any Dataverse table with a start and an end. It installs as one managed solution and runs inside model-driven apps. No Chrona account is needed to use it; Optimize, which fills and balances the schedule, connects to the Chrona service.
+
+Every page below is plain Markdown. Read them in order for an install; each stands alone for a question.
+
+## Install
+
+- [Overview](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/README.md): what it is, why builders pick it, the ten-minute setup, what you get, Optimize, staff rostering, performance, trust.
+- [Install guide](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/install.md): import the solution, give people roles, bind the scheduler to a view, open it in an app, connect for Optimize.
+- [Bindings](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/bindings.md): every binding in the property pane, the three that matter, and what the rest are for.
+- [Layouts](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/layouts.md): the four layouts (timeline, roster grid, top-down, agenda), when each fits, and the view row setting that picks one.
+- [Where things are set up](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/configure.md): the property pane, the calendar and view configuration rows with every setting, the toolbar's per-user choices, the Workforce tables.
+- [Questions](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/faq.md): what the platform shows along the way, removing the solution, languages, what Optimize sends.
+
+## Chrona Workforce Mobile
+
+- [Directory setup](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/workforce-mobile-directory.md): select worker groups, keep worker details and reporting managers current, set up sign-in and repair directory connections.
+
+## Agent server
+
+- [Chrona MCP server](https://mcp.chrona365.com/): Model Context Protocol over Streamable HTTP at `https://mcp.chrona365.com/mcp`, no sign-in. Tools: `install_guide` (these pages by section or by question), `mapping_recipe` (a table's columns to the bindings and the calendar row), `generate_configuration` (the install and configuration as ordered Dataverse Web API requests, each naming the tool that sends it). It writes nothing; your Dataverse tools do.
+
+## Download
+
+- [Releases](https://github.com/konfigure8/chrona-scheduler/releases): `ChronaScheduler-<version>.zip` holds `01-ChronaScheduler_<version>_managed.zip` (the version with underscores) and the install guide.
+- [Source](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/src/README.md): the control's source for the latest release and how to build it, under PolyForm Shield 1.0.0.
+
+## Help
+
+- support@chrona365.com

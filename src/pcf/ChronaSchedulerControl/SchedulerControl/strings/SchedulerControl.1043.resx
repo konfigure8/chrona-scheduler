@@ -1,0 +1,996 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter</value>
+  </resheader>
+  <data name="agendaEmpty" xml:space="preserve">
+    <value>Niets gepland in deze periode.</value>
+  </data>
+  <data name="apply" xml:space="preserve">
+    <value>Toepassen</value>
+  </data>
+  <data name="assignAction" xml:space="preserve">
+    <value>{name} toewijzen</value>
+  </data>
+  <data name="assignBestOptions" xml:space="preserve">
+    <value>Beste opties</value>
+  </data>
+  <data name="assignEmpty" xml:space="preserve">
+    <value>Geen passend personeel.</value>
+  </data>
+  <data name="assignHoursLeft" xml:space="preserve">
+    <value>{left} u over van {capacity} u</value>
+  </data>
+  <data name="assignNotAvailable" xml:space="preserve">
+    <value>Niet beschikbaar</value>
+  </data>
+  <data name="assignReasonBusy" xml:space="preserve">
+    <value>Werkt al {range}</value>
+  </data>
+  <data name="assignReasonHours" xml:space="preserve">
+    <value>Zou {capacity} u overschrijden</value>
+  </data>
+  <data name="assignReasonUnavailable" xml:space="preserve">
+    <value>Niet beschikbaar {range}</value>
+  </data>
+  <data name="assignSearchPlaceholder" xml:space="preserve">
+    <value>Personeel zoeken</value>
+  </data>
+  <data name="assignShowEveryone" xml:space="preserve">
+    <value>Iedereen ({count})</value>
+  </data>
+  <data name="assignTitle" xml:space="preserve">
+    <value>Personeel toewijzen</value>
+  </data>
+  <data name="assignedTo" xml:space="preserve">
+    <value>Toegewezen aan</value>
+  </data>
+  <data name="unassigned" xml:space="preserve">
+    <value>Niet toegewezen</value>
+  </data>
+  <data name="cancel" xml:space="preserve">
+    <value>Annuleren</value>
+  </data>
+  <data name="capabilityAssignment" xml:space="preserve">
+    <value>toewijzing</value>
+  </data>
+  <data name="capabilityAvailability" xml:space="preserve">
+    <value>beschikbaarheid</value>
+  </data>
+  <data name="capabilityCost" xml:space="preserve">
+    <value>kosten</value>
+  </data>
+  <data name="capabilityHours" xml:space="preserve">
+    <value>uren</value>
+  </data>
+  <data name="capabilityLocks" xml:space="preserve">
+    <value>vergrendelingen</value>
+  </data>
+  <data name="capabilityRoles" xml:space="preserve">
+    <value>rollen</value>
+  </data>
+  <data name="close" xml:space="preserve">
+    <value>Sluiten</value>
+  </data>
+  <data name="conversionAllClear" xml:space="preserve">
+    <value>Geen meldingen in de huidige gegevens. Lokaal geteld, niets verzonden.</value>
+  </data>
+  <data name="conversionAxisLabels" xml:space="preserve">
+    <value>Ma 8:00|Ma 12:00|Ma 16:00|Di 8:00</value>
+  </data>
+  <data name="conversionClaimBase" xml:space="preserve">
+    <value>Werk toegewezen. Conflicten opgelost.</value>
+  </data>
+  <data name="conversionClaimRespected" xml:space="preserve">
+    <value>Rekening gehouden met: {list}.</value>
+  </data>
+  <data name="conversionConnect" xml:space="preserve">
+    <value>Gratis proberen</value>
+  </data>
+  <data name="conversionCountsSuffix" xml:space="preserve">
+    <value> — lokaal geteld, niets verzonden.</value>
+  </data>
+  <data name="conversionCoverageGaps" xml:space="preserve">
+    <value>{gaps} bezettingsgaten</value>
+  </data>
+  <data name="conversionInfoBody" xml:space="preserve">
+    <value>Chrona koppelen verandert niets aan de planner.</value>
+  </data>
+  <data name="conversionInfoLead" xml:space="preserve">
+    <value>Optioneel. Gratis proberen.</value>
+  </data>
+  <data name="conversionInspect" xml:space="preserve">
+    <value>Exacte gegevens bekijken</value>
+  </data>
+  <data name="conversionLearnMore" xml:space="preserve">
+    <value>Meer informatie</value>
+  </data>
+  <data name="conversionLockLine" xml:space="preserve">
+    <value>Gratis. Geen creditcard. Niets verzonden vóór het koppelen. Een voorbeeld wijzigt nooit je rooster.</value>
+  </data>
+  <data name="conversionNotNow" xml:space="preserve">
+    <value>Niet nu</value>
+  </data>
+  <data name="conversionOptimize" xml:space="preserve">
+    <value>Optimaliseren</value>
+  </data>
+  <data name="conversionPayloadNote" xml:space="preserve">
+    <value>Exact deze JSON. Niets wordt verzonden vóór het koppelen.</value>
+  </data>
+  <data name="conversionPitchMechanism" xml:space="preserve">
+    <value>Chrona bekijkt het hele rooster: vaardigheden, beschikbaarheid, uren, kosten en conflicten.</value>
+  </data>
+  <data name="conversionPitchProblem" xml:space="preserve">
+    <value>Eén item tegelijk plannen mist de samenhang.</value>
+  </data>
+  <data name="conversionSampleAfter" xml:space="preserve">
+    <value>Na optimalisatie</value>
+  </data>
+  <data name="conversionSampleBefore" xml:space="preserve">
+    <value>Voor</value>
+  </data>
+  <data name="conversionSampleCounts" xml:space="preserve">
+    <value>{open} open items · {conflicts} conflicten</value>
+  </data>
+  <data name="conversionSampleTitle" xml:space="preserve">
+    <value>Voorbeeldoptimalisatie</value>
+  </data>
+  <data name="conversionSentNothingElse" xml:space="preserve">
+    <value>Niets anders: geen namen, notities, contactgegevens of overige records</value>
+  </data>
+  <data name="conversionSentPeople" xml:space="preserve">
+    <value>Personen: resource-ID's, vaardigheden, beschikbaarheid, uren en tarieven</value>
+  </data>
+  <data name="conversionSentTitle" xml:space="preserve">
+    <value>Gegevens voor een echte optimalisatie</value>
+  </data>
+  <data name="conversionSentWork" xml:space="preserve">
+    <value>Werkitems: tijden, vereisten en ID van de toegewezen persoon</value>
+  </data>
+  <data name="conversionTitle" xml:space="preserve">
+    <value>Het hele rooster in één keer</value>
+  </data>
+  <data name="delete" xml:space="preserve">
+    <value>Verwijderen</value>
+  </data>
+  <data name="deleteConfirmAction" xml:space="preserve">
+    <value>Verwijderen</value>
+  </data>
+  <data name="deleteConfirmCount" xml:space="preserve">
+    <value>{count} items verwijderen? Dit kan niet ongedaan worden gemaakt.</value>
+  </data>
+  <data name="deleteConfirmMessage" xml:space="preserve">
+    <value>{title} verwijderen? Dit kan niet ongedaan worden gemaakt.</value>
+  </data>
+  <data name="deleteConfirmTitle" xml:space="preserve">
+    <value>Verwijderen bevestigen</value>
+  </data>
+  <data name="dialogBestOptions" xml:space="preserve">
+    <value>Beste opties</value>
+  </data>
+  <data name="dialogFinishAfterStart" xml:space="preserve">
+    <value>Het einde moet na het begin liggen.</value>
+  </data>
+  <data name="dialogNameRequired" xml:space="preserve">
+    <value>Naam is verplicht.</value>
+  </data>
+  <data name="dialogNotAllowed" xml:space="preserve">
+    <value>Deze wijziging is niet toegestaan.</value>
+  </data>
+  <data name="dialogOtherOptions" xml:space="preserve">
+    <value>Overige</value>
+  </data>
+  <data name="directionEarlier" xml:space="preserve">
+    <value>Eerder</value>
+  </data>
+  <data name="directionLater" xml:space="preserve">
+    <value>Later</value>
+  </data>
+  <data name="draftItem" xml:space="preserve">
+    <value>Nieuw item</value>
+  </data>
+  <data name="duration" xml:space="preserve">
+    <value>Duur</value>
+  </data>
+  <data name="emptyResources" xml:space="preserve">
+    <value>Geen resources. Controleer de instellingen van de weergave.</value>
+  </data>
+  <data name="entitlementGrace" xml:space="preserve">
+    <value>Betaling te laat. Uitstel tot {date}</value>
+  </data>
+  <data name="entitlementLapsed" xml:space="preserve">
+    <value>Chrona-abonnement verlopen. Optimaliseren en genereren zijn gepauzeerd tot de betaling is geregeld.</value>
+  </data>
+  <data name="entitlementPaused" xml:space="preserve">
+    <value>Optimalisatie gepauzeerd sinds {since}. Chrona is onbereikbaar; plannen blijft werken.</value>
+  </data>
+  <data name="entitlementPlanUsage" xml:space="preserve">
+    <value>Abonnement en gebruik</value>
+  </data>
+  <data name="entitlementResources" xml:space="preserve">
+    <value>{scheduled} van {included} resources gepland deze periode</value>
+  </data>
+  <data name="entitlementResourcesAbovePlan" xml:space="preserve">
+    <value>{scheduled} van {included} resources gepland, boven abonnement</value>
+  </data>
+  <data name="entitlementResourcesNoCeiling" xml:space="preserve">
+    <value>{scheduled} resources gepland deze periode</value>
+  </data>
+  <data name="entitlementRetry" xml:space="preserve">
+    <value>Opnieuw</value>
+  </data>
+  <data name="finish" xml:space="preserve">
+    <value>Einde</value>
+  </data>
+  <data name="flagCauseAssigned" xml:space="preserve">
+    <value>toegewezen</value>
+  </data>
+  <data name="flagCauseEdited" xml:space="preserve">
+    <value>bewerkt</value>
+  </data>
+  <data name="flagCausePinned" xml:space="preserve">
+    <value>vastgezet</value>
+  </data>
+  <data name="flagReason" xml:space="preserve">
+    <value>Niet meer nodig: {required} vereist, {existing} aanwezig. Behouden: {cause}.</value>
+  </data>
+  <data name="goToDate" xml:space="preserve">
+    <value>Ga naar datum</value>
+  </data>
+  <data name="groupByLabel" xml:space="preserve">
+    <value>Rijen groeperen</value>
+  </data>
+  <data name="groupByNone" xml:space="preserve">
+    <value>Geen groepering</value>
+  </data>
+  <data name="hideUnscheduledPanel" xml:space="preserve">
+    <value>Ongeplande items verbergen</value>
+  </data>
+  <data name="interval" xml:space="preserve">
+    <value>Interval</value>
+  </data>
+  <data name="intervalDay" xml:space="preserve">
+    <value>Dag</value>
+  </data>
+  <data name="intervalDaySpan" xml:space="preserve">
+    <value>Tijdvak</value>
+  </data>
+  <data name="intervalMonth" xml:space="preserve">
+    <value>Maand</value>
+  </data>
+  <data name="intervalWeek" xml:space="preserve">
+    <value>Week</value>
+  </data>
+  <data name="itemsCount" xml:space="preserve">
+    <value>{count} items</value>
+  </data>
+  <data name="legendBusyElsewhere" xml:space="preserve">
+    <value>Elders bezet</value>
+  </data>
+  <data name="legendCustom" xml:space="preserve">
+    <value>Gemarkeerd</value>
+  </data>
+  <data name="legendHoliday" xml:space="preserve">
+    <value>Feestdag</value>
+  </data>
+  <data name="legendNeedsCover" xml:space="preserve">
+    <value>Bezetting nodig</value>
+  </data>
+  <data name="legendNonWorking" xml:space="preserve">
+    <value>Buiten werktijd</value>
+  </data>
+  <data name="legendPreferred" xml:space="preserve">
+    <value>Voorkeurstijden</value>
+  </data>
+  <data name="legendUnavailable" xml:space="preserve">
+    <value>Niet beschikbaar</value>
+  </data>
+  <data name="legendUnpreferred" xml:space="preserve">
+    <value>Niet-voorkeurstijden</value>
+  </data>
+  <data name="listAnd" xml:space="preserve">
+    <value>en</value>
+  </data>
+  <data name="menuAssign" xml:space="preserve">
+    <value>Personeel toewijzen…</value>
+  </data>
+  <data name="menuDeleteCount" xml:space="preserve">
+    <value>{count} items verwijderen</value>
+  </data>
+  <data name="menuDuplicate" xml:space="preserve">
+    <value>Dupliceren</value>
+  </data>
+  <data name="menuMoveTo" xml:space="preserve">
+    <value>Verplaatsen naar…</value>
+  </data>
+  <data name="menuMoveToCount" xml:space="preserve">
+    <value>{count} items verplaatsen naar…</value>
+  </data>
+  <data name="menuOpen" xml:space="preserve">
+    <value>Openen</value>
+  </data>
+  <data name="menuOpenRecord" xml:space="preserve">
+    <value>Record openen</value>
+  </data>
+  <data name="menuPin" xml:space="preserve">
+    <value>Vastzetten</value>
+  </data>
+  <data name="menuPinCount" xml:space="preserve">
+    <value>{count} items vastzetten</value>
+  </data>
+  <data name="menuReassign" xml:space="preserve">
+    <value>Opnieuw toewijzen…</value>
+  </data>
+  <data name="menuReassignCount" xml:space="preserve">
+    <value>{count} items opnieuw toewijzen…</value>
+  </data>
+  <data name="menuUnpin" xml:space="preserve">
+    <value>Losmaken</value>
+  </data>
+  <data name="menuUnpinCount" xml:space="preserve">
+    <value>{count} items losmaken</value>
+  </data>
+  <data name="menuUnschedule" xml:space="preserve">
+    <value>Toewijzing wissen</value>
+  </data>
+  <data name="monthMore" xml:space="preserve">
+    <value>+{count} meer</value>
+  </data>
+  <data name="monthsLong" xml:space="preserve">
+    <value>januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december</value>
+  </data>
+  <data name="monthsShort" xml:space="preserve">
+    <value>jan|feb|mrt|apr|mei|jun|jul|aug|sep|okt|nov|dec</value>
+  </data>
+  <data name="moveAmount" xml:space="preserve">
+    <value>Aantal</value>
+  </data>
+  <data name="moveDialogTitle" xml:space="preserve">
+    <value>Verplaatsen naar</value>
+  </data>
+  <data name="moveDirection" xml:space="preserve">
+    <value>Richting</value>
+  </data>
+  <data name="moveUnit" xml:space="preserve">
+    <value>Eenheid</value>
+  </data>
+  <data name="msgCannotCreateHere" xml:space="preserve">
+    <value>Hier aanmaken niet mogelijk</value>
+  </data>
+  <data name="msgConnectAdminOnly" xml:space="preserve">
+    <value>Een beheerder koppelt Chrona aan deze omgeving (rol Chrona Scheduler Admin).</value>
+  </data>
+  <data name="msgConnectFailed" xml:space="preserve">
+    <value>Chrona koppelen mislukt: {message}</value>
+  </data>
+  <data name="msgConnected" xml:space="preserve">
+    <value>Chrona gekoppeld ({limit} gratis optimalisaties per dag). Eerste voorbeeld wordt gestart…</value>
+  </data>
+  <data name="msgConnectedUnlimited" xml:space="preserve">
+    <value>Chrona gekoppeld. Eerste optimalisatie wordt gestart…</value>
+  </data>
+  <data name="msgCreateFailed" xml:space="preserve">
+    <value>{title} aanmaken mislukt (ontbreken verplichte kolommen?)</value>
+  </data>
+  <data name="msgCreated" xml:space="preserve">
+    <value>{title} aangemaakt</value>
+  </data>
+  <data name="msgDeletedMany" xml:space="preserve">
+    <value>{count} items verwijderd</value>
+  </data>
+  <data name="msgDeletedOne" xml:space="preserve">
+    <value>{title} verwijderd</value>
+  </data>
+  <data name="msgLocalOnly" xml:space="preserve">
+    <value> (alleen lokaal, geen Dataverse)</value>
+  </data>
+  <data name="msgMovedMany" xml:space="preserve">
+    <value>{count} items verplaatst</value>
+  </data>
+  <data name="msgPersonNotSaved" xml:space="preserve">
+    <value>Niet opgeslagen: de persoon kan nog niet worden opgeslagen. Probeer het opnieuw.</value>
+  </data>
+  <data name="fieldBundle" xml:space="preserve">
+    <value>Bundel</value>
+  </data>
+  <data name="fieldProvenance" xml:space="preserve">
+    <value>Herkomst</value>
+  </data>
+  <data name="fieldPublishState" xml:space="preserve">
+    <value>Publicatie</value>
+  </data>
+  <data name="fieldStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="msgPinnedMany" xml:space="preserve">
+    <value>{count} items vastgezet</value>
+  </data>
+  <data name="msgPinnedOne" xml:space="preserve">
+    <value>{title} vastgezet</value>
+  </data>
+  <data name="msgRedid" xml:space="preserve">
+    <value>Wijziging opnieuw uitgevoerd</value>
+  </data>
+  <data name="msgRestoreSkipped" xml:space="preserve">
+    <value> ({count} items niet hersteld)</value>
+  </data>
+  <data name="msgRestored" xml:space="preserve">
+    <value>Hersteld</value>
+  </data>
+  <data name="msgResumeChanged" xml:space="preserve">
+    <value>Een optimalisatie is afgerond tijdens je afwezigheid, maar het rooster is gewijzigd. Het resultaat is niet meer toepasbaar.</value>
+  </data>
+  <data name="msgRowCapReached" xml:space="preserve">
+    <value>Alleen de eerste {count} rijen worden getoond. Beperk de weergave om de rest te zien.</value>
+  </data>
+  <data name="msgRowsSkipped" xml:space="preserve">
+    <value>{count} rijen overgeslagen (begin/einde ontbreekt of is ongeldig)</value>
+  </data>
+  <data name="msgSelected" xml:space="preserve">
+    <value>{title} geselecteerd</value>
+  </data>
+  <data name="msgSessionFailed" xml:space="preserve">
+    <value>Chrona-optimalisatie starten mislukt: {message}</value>
+  </data>
+  <data name="msgSolveNoPrivilege" xml:space="preserve">
+    <value>Optimaliseren vereist de rol Chrona Scheduler User.</value>
+  </data>
+  <data name="msgSolveNoCalendar" xml:space="preserve">
+    <value>Deze weergave heeft nog geen Chrona-agenda, dus optimaliseren kan niet.</value>
+  </data>
+  <data name="msgUndid" xml:space="preserve">
+    <value>Wijziging ongedaan gemaakt</value>
+  </data>
+  <data name="msgUnpinnedMany" xml:space="preserve">
+    <value>{count} items losgemaakt</value>
+  </data>
+  <data name="msgUnpinnedOne" xml:space="preserve">
+    <value>{title} losgemaakt</value>
+  </data>
+  <data name="msgUnscheduled" xml:space="preserve">
+    <value>Toewijzing van {title} gewist</value>
+  </data>
+  <data name="msgUpdated" xml:space="preserve">
+    <value>{title} bijgewerkt</value>
+  </data>
+  <data name="msgWarningSuffix" xml:space="preserve">
+    <value> (let op: {reason})</value>
+  </data>
+  <data name="name" xml:space="preserve">
+    <value>Naam</value>
+  </data>
+  <data name="needsCover" xml:space="preserve">
+    <value>Bezetting nodig</value>
+  </data>
+  <data name="newEvent" xml:space="preserve">
+    <value>Nieuwe afspraak</value>
+  </data>
+  <data name="next" xml:space="preserve">
+    <value>Volgende</value>
+  </data>
+  <data name="noticeBlocked" xml:space="preserve">
+    <value>Geblokkeerd: {reason}</value>
+  </data>
+  <data name="noticeWarning" xml:space="preserve">
+    <value>Let op: {reason}</value>
+  </data>
+  <data name="openChronaAccount" xml:space="preserve">
+    <value>Chrona-account openen</value>
+  </data>
+  <data name="periodNext" xml:space="preserve">
+    <value>Volgende periode</value>
+  </data>
+  <data name="periodOf" xml:space="preserve">
+    <value>dag {day} van {days}</value>
+  </data>
+  <data name="periodPrevious" xml:space="preserve">
+    <value>Vorige periode</value>
+  </data>
+  <data name="pinnedNotice" xml:space="preserve">
+    <value>Vastgezet. Maak los om te wijzigen.</value>
+  </data>
+  <data name="previous" xml:space="preserve">
+    <value>Vorige</value>
+  </data>
+  <data name="proposalAppliedMany" xml:space="preserve">
+    <value>{count} voorstellen toegepast</value>
+  </data>
+  <data name="proposalAppliedOne" xml:space="preserve">
+    <value>1 voorstel toegepast</value>
+  </data>
+  <data name="proposalApply" xml:space="preserve">
+    <value>Toepassen</value>
+  </data>
+  <data name="proposalDiscard" xml:space="preserve">
+    <value>Verwerpen</value>
+  </data>
+  <data name="proposalEmpty" xml:space="preserve">
+    <value>Geen wijzigingen voorgesteld</value>
+  </data>
+  <data name="proposalDropped" xml:space="preserve">
+    <value>{count} verworpen</value>
+  </data>
+  <data name="proposalDropChange" xml:space="preserve">
+    <value>Wijziging verwerpen</value>
+  </data>
+  <data name="proposalKeepChange" xml:space="preserve">
+    <value>Wijziging behouden</value>
+  </data>
+  <data name="proposalKeepAll" xml:space="preserve">
+    <value>Alles behouden</value>
+  </data>
+  <data name="proposalKeepNone" xml:space="preserve">
+    <value>Niets behouden</value>
+  </data>
+  <data name="proposalPerPerson" xml:space="preserve">
+    <value>{count} wijzigingen, per persoon samengevat.</value>
+  </data>
+  <data name="proposalPersonShifts" xml:space="preserve">
+    <value>{count} diensten · {hours} u</value>
+  </data>
+  <data name="proposalPersonShiftOne" xml:space="preserve">
+    <value>1 dienst · {hours} u</value>
+  </data>
+  <data name="proposalHeldBack" xml:space="preserve">
+    <value>Tegengehouden ({count})</value>
+  </data>
+  <data name="proposalHeldBackHint" xml:space="preserve">
+    <value>Elk zou iemand dubbel boeken, dus Toepassen laat het weg.</value>
+  </data>
+  <data name="proposalApplyAll" xml:space="preserve">
+    <value>Alle {count} toepassen</value>
+  </data>
+  <data name="proposalApplySome" xml:space="preserve">
+    <value>{kept} van {count} toepassen</value>
+  </data>
+  <data name="proposalReviewHint" xml:space="preserve">
+    <value>Voorstel bekijken. Pas toe of verwerp om te bewerken.</value>
+  </data>
+  <data name="proposalShowCurrent" xml:space="preserve">
+    <value>Huidig</value>
+  </data>
+  <data name="proposalShowProposed" xml:space="preserve">
+    <value>Voorgesteld</value>
+  </data>
+  <data name="proposalHoldCompare" xml:space="preserve">
+    <value>Vasthouden om te vergelijken</value>
+  </data>
+  <data name="proposalChangesOnly" xml:space="preserve">
+    <value>Alleen wijzigingen</value>
+  </data>
+  <data name="proposalPanelTitle" xml:space="preserve">
+    <value>Voorgestelde wijzigingen</value>
+  </data>
+  <data name="proposalPanelToggle" xml:space="preserve">
+    <value>Voorgestelde wijzigingen ({count})</value>
+  </data>
+  <data name="proposalGroupAssigned" xml:space="preserve">
+    <value>Toegewezen ({count})</value>
+  </data>
+  <data name="proposalGroupMoved" xml:space="preserve">
+    <value>Verplaatst ({count})</value>
+  </data>
+  <data name="proposalGroupUnassigned" xml:space="preserve">
+    <value>Niet toegewezen ({count})</value>
+  </data>
+  <data name="proposalMustBroken" xml:space="preserve">
+    <value>Enkele verplichte regels overtreden</value>
+  </data>
+  <data name="proposalMustKept" xml:space="preserve">
+    <value>Alle verplichte regels nageleefd</value>
+  </data>
+  <data name="proposalWas" xml:space="preserve">
+    <value>was {detail}</value>
+  </data>
+  <data name="proposalTitle" xml:space="preserve">
+    <value>Voorgesteld rooster</value>
+  </data>
+  <data name="proposalSummaryChangeOne" xml:space="preserve">
+    <value>1 wijziging</value>
+  </data>
+  <data name="proposalSummaryChanges" xml:space="preserve">
+    <value>{count} wijzigingen</value>
+  </data>
+  <data name="proposalFilled" xml:space="preserve">
+    <value>{filled} van {total} diensten bezet</value>
+  </data>
+  <data name="scorecardLabel" xml:space="preserve">
+    <value>Ten opzichte van het huidige rooster</value>
+  </data>
+  <data name="scoreFilled" xml:space="preserve">
+    <value>Bezette diensten</value>
+  </data>
+  <data name="scoreMustBroken" xml:space="preserve">
+    <value>Overtreden verplichte regels</value>
+  </data>
+  <data name="scoreNone" xml:space="preserve">
+    <value>Geen</value>
+  </data>
+  <data name="scoreSome" xml:space="preserve">
+    <value>Enkele</value>
+  </data>
+  <data name="scoreNotChecked" xml:space="preserve">
+    <value>Niet gecontroleerd</value>
+  </data>
+  <data name="scoreChanges" xml:space="preserve">
+    <value>Wijzigingen</value>
+  </data>
+  <data name="scorePeople" xml:space="preserve">
+    <value>Betrokken personen</value>
+  </data>
+  <data name="scoreVsNow" xml:space="preserve">
+    <value>{delta} t.o.v. nu</value>
+  </data>
+  <data name="scoreNoChange" xml:space="preserve">
+    <value>Ongewijzigd</value>
+  </data>
+  <data name="scoreOfPeople" xml:space="preserve">
+    <value>van {count} personen</value>
+  </data>
+  <data name="scorecardToggle" xml:space="preserve">
+    <value>Kerncijfers</value>
+  </data>
+  <data name="scoreSearch" xml:space="preserve">
+    <value>Geteste roosters</value>
+  </data>
+  <data name="scoreSearchNote" xml:space="preserve">
+    <value>{better} verbeteringen · {seconds} s</value>
+  </data>
+  <data name="scoreSearchNoteOne" xml:space="preserve">
+    <value>1 verbetering · {seconds} s</value>
+  </data>
+  <data name="scoreSearchUnit" xml:space="preserve">
+    <value>versies</value>
+  </data>
+  <data name="proposalCheckFoundMany" xml:space="preserve">
+    <value>{count} wijzigingen zijn verouderd. Controleer ze en pas opnieuw toe.</value>
+  </data>
+  <data name="proposalCheckFoundOne" xml:space="preserve">
+    <value>1 wijziging is verouderd. Controleer deze en pas opnieuw toe.</value>
+  </data>
+  <data name="proposalDoubleBookingMany" xml:space="preserve">
+    <value>{count} dubbele boekingen</value>
+  </data>
+  <data name="proposalDoubleBookingOne" xml:space="preserve">
+    <value>1 dubbele boeking</value>
+  </data>
+  <data name="proposalDoubleBooks" xml:space="preserve">
+    <value>Dubbele boeking van {person} met {title}</value>
+  </data>
+  <data name="proposalGroupOutOfDate" xml:space="preserve">
+    <value>Verouderd ({count})</value>
+  </data>
+  <data name="proposalOutOfDate" xml:space="preserve">
+    <value>{count} verouderd</value>
+  </data>
+  <data name="proposalReasonChanged" xml:space="preserve">
+    <value>Gewijzigd nadat het plan is gemaakt</value>
+  </data>
+  <data name="proposalReasonNewShift" xml:space="preserve">
+    <value>{person} heeft nu een andere dienst op dit tijdstip</value>
+  </data>
+  <data name="proposalReasonPersonChanged" xml:space="preserve">
+    <value>Gegevens van {person} gewijzigd nadat het plan is gemaakt</value>
+  </data>
+  <data name="proposalReasonStarted" xml:space="preserve">
+    <value>Al begonnen</value>
+  </data>
+  <data name="proposalReasonUnavailable" xml:space="preserve">
+    <value>{person} is nu niet beschikbaar op dit tijdstip</value>
+  </data>
+  <data name="solvePeriodPassed" xml:space="preserve">
+    <value>Deze periode is voorbij</value>
+  </data>
+  <data name="solveQueued" xml:space="preserve">
+    <value>In wachtrij…</value>
+  </data>
+  <data name="solveElapsed" xml:space="preserve">
+    <value>{seconds} s</value>
+  </data>
+  <data name="reasonMinimumBreak" xml:space="preserve">
+    <value>Pauze korter dan {minimum} min (ruimte: {gap} min)</value>
+  </data>
+  <data name="reasonOutsideGroup" xml:space="preserve">
+    <value>Buiten {group}</value>
+  </data>
+  <data name="reasonOutsideHours" xml:space="preserve">
+    <value>Buiten werktijd ({start}-{end})</value>
+  </data>
+  <data name="reasonOverlap" xml:space="preserve">
+    <value>Overlapt een bestaand item</value>
+  </data>
+  <data name="reassignDialogTitle" xml:space="preserve">
+    <value>Opnieuw toewijzen</value>
+  </data>
+  <data name="redo" xml:space="preserve">
+    <value>Opnieuw uitvoeren</value>
+  </data>
+  <data name="requiredSkills" xml:space="preserve">
+    <value>Vereiste rollen</value>
+  </data>
+  <data name="resizeResources" xml:space="preserve">
+    <value>Resourcekolom vergroten of verkleinen</value>
+  </data>
+  <data name="resizeUnscheduled" xml:space="preserve">
+    <value>Paneel Ongepland vergroten of verkleinen</value>
+  </data>
+  <data name="resourceHeader" xml:space="preserve">
+    <value>Resource</value>
+  </data>
+  <data name="resumeChanged" xml:space="preserve">
+    <value>Een optimalisatie is afgerond tijdens je afwezigheid, maar het rooster is gewijzigd. Het resultaat is niet meer toepasbaar.</value>
+  </data>
+  <data name="resumeDiscard" xml:space="preserve">
+    <value>Verwerpen</value>
+  </data>
+  <data name="resumeFinished" xml:space="preserve">
+    <value>Een optimalisatie is afgerond tijdens je afwezigheid.</value>
+  </data>
+  <data name="resumeFollow" xml:space="preserve">
+    <value>Volgen</value>
+  </data>
+  <data name="resumeReview" xml:space="preserve">
+    <value>Bekijken</value>
+  </data>
+  <data name="resumeRunning" xml:space="preserve">
+    <value>Er loopt een optimalisatie voor dit rooster.</value>
+  </data>
+  <data name="rosterOpenShifts" xml:space="preserve">
+    <value>Open diensten</value>
+  </data>
+  <data name="save" xml:space="preserve">
+    <value>Opslaan</value>
+  </data>
+  <data name="savedViews" xml:space="preserve">
+    <value>Weergaven</value>
+  </data>
+  <data name="solve" xml:space="preserve">
+    <value>Optimaliseren</value>
+  </data>
+  <data name="solveCapabilitiesLine" xml:space="preserve">
+    <value>Optimaliseren met: {list}</value>
+  </data>
+  <data name="solveFailed" xml:space="preserve">
+    <value>Optimalisatie mislukt: {message}</value>
+  </data>
+  <data name="solveQuotaExhausted" xml:space="preserve">
+    <value>Gratis optimalisaties voor vandaag op. Morgen zijn er meer, of upgrade voor onbeperkt gebruik.</value>
+  </data>
+  <data name="solveQuotaRemaining" xml:space="preserve">
+    <value>Vandaag {remaining} van {limit} gratis optimalisaties over</value>
+  </data>
+  <data name="solveQuotaUpgrade" xml:space="preserve">
+    <value>Upgraden</value>
+  </data>
+  <data name="solveSolving" xml:space="preserve">
+    <value>Optimaliseren…</value>
+  </data>
+  <data name="start" xml:space="preserve">
+    <value>Begin</value>
+  </data>
+  <data name="timeScale" xml:space="preserve">
+    <value>Tijdschaal</value>
+  </data>
+  <data name="timeScaleLeast" xml:space="preserve">
+    <value>{count} minuten – minste ruimte voor details</value>
+  </data>
+  <data name="timeScaleMinutes" xml:space="preserve">
+    <value>{count} minuten</value>
+  </data>
+  <data name="timeScaleMost" xml:space="preserve">
+    <value>{count} minuten – meeste ruimte voor details</value>
+  </data>
+  <data name="timeScaleShort" xml:space="preserve">
+    <value>{count} min</value>
+  </data>
+  <data name="timeZoneChip" xml:space="preserve">
+    <value>Getoonde tijdzone</value>
+  </data>
+  <data name="timelineLabel" xml:space="preserve">
+    <value>Resourcetijdlijn</value>
+  </data>
+  <data name="today" xml:space="preserve">
+    <value>Vandaag</value>
+  </data>
+  <data name="undo" xml:space="preserve">
+    <value>Ongedaan maken</value>
+  </data>
+  <data name="ungrouped" xml:space="preserve">
+    <value>Niet gegroepeerd</value>
+  </data>
+  <data name="unitDays" xml:space="preserve">
+    <value>Dagen</value>
+  </data>
+  <data name="unitHours" xml:space="preserve">
+    <value>Uren</value>
+  </data>
+  <data name="unitWeeks" xml:space="preserve">
+    <value>Weken</value>
+  </data>
+  <data name="unscheduleConfirmAction" xml:space="preserve">
+    <value>Toewijzing wissen</value>
+  </data>
+  <data name="unscheduleConfirmMessage" xml:space="preserve">
+    <value>Toewijzing van {title} wissen? De dienst behoudt zijn tijd en keert terug naar Ongepland voor nieuwe toewijzing.</value>
+  </data>
+  <data name="unscheduleConfirmTitle" xml:space="preserve">
+    <value>Diensttoewijzing wissen</value>
+  </data>
+  <data name="unscheduledAll" xml:space="preserve">
+    <value>Alles</value>
+  </data>
+  <data name="unscheduledEmpty" xml:space="preserve">
+    <value>Alles bezet.</value>
+  </data>
+  <data name="unscheduledEmptyInView" xml:space="preserve">
+    <value>Niets in deze periode.</value>
+  </data>
+  <data name="unscheduledFilterLabel" xml:space="preserve">
+    <value>Ongeplande items filteren</value>
+  </data>
+  <data name="unscheduledInView" xml:space="preserve">
+    <value>In weergave</value>
+  </data>
+  <data name="unscheduledLaneLabel" xml:space="preserve">
+    <value>Ongepland · {count}</value>
+  </data>
+  <data name="unscheduledTitle" xml:space="preserve">
+    <value>Ongepland</value>
+  </data>
+  <data name="unscheduledToggle" xml:space="preserve">
+    <value>Ongepland ({count})</value>
+  </data>
+  <data name="weekdaysShort" xml:space="preserve">
+    <value>zo|ma|di|wo|do|vr|za</value>
+  </data>
+  <data name="DataSet_WorkItems" xml:space="preserve">
+    <value>Werkitems</value>
+  </data>
+  <data name="Prop_CalendarConfig" xml:space="preserve">
+    <value>Configuratie (optioneel)</value>
+  </data>
+  <data name="Prop_CalendarConfig_Desc" xml:space="preserve">
+    <value>ID of naam van een Chrona Scheduler-kalender. Leeg: Connect maakt er een voor deze weergave.</value>
+  </data>
+  <data name="Prop_Title" xml:space="preserve">
+    <value>Titel (verplicht)</value>
+  </data>
+  <data name="Prop_Title_Desc" xml:space="preserve">
+    <value>Tekst op elke balk: je naam- of onderwerpkolom.</value>
+  </data>
+  <data name="Prop_Code" xml:space="preserve">
+    <value>Code (optioneel)</value>
+  </data>
+  <data name="Prop_Code_Desc" xml:space="preserve">
+    <value>Korte code per dienst in het roosterraster, bijv. VD. Anders de initialen van de titel.</value>
+  </data>
+  <data name="Prop_Start" xml:space="preserve">
+    <value>Begin (verplicht)</value>
+  </data>
+  <data name="Prop_Start_Desc" xml:space="preserve">
+    <value>Begindatum en -tijd.</value>
+  </data>
+  <data name="Prop_End" xml:space="preserve">
+    <value>Einde (verplicht)</value>
+  </data>
+  <data name="Prop_End_Desc" xml:space="preserve">
+    <value>Einddatum en -tijd.</value>
+  </data>
+  <data name="Prop_Resource" xml:space="preserve">
+    <value>Resource (banen)</value>
+  </data>
+  <data name="Prop_Resource_Desc" xml:space="preserve">
+    <value>Lookup naar toegewezen persoon of object. Gekoppeld: baan per persoon. Niet gekoppeld: kalender. Gebruik een lookup, niet Owner.</value>
+  </data>
+  <data name="Prop_Status" xml:space="preserve">
+    <value>Status (optioneel)</value>
+  </data>
+  <data name="Prop_Status_Desc" xml:space="preserve">
+    <value>Tekst- of keuzekolom. Open of niet-toegewezen rijen vereisen bezetting.</value>
+  </data>
+  <data name="Prop_Group" xml:space="preserve">
+    <value>Groep (optioneel)</value>
+  </data>
+  <data name="Prop_Group_Desc" xml:space="preserve">
+    <value>Tekst- of keuzekolom die rijen groepeert, bijvoorbeeld per team.</value>
+  </data>
+  <data name="Prop_Pinned" xml:space="preserve">
+    <value>Vastgezet (optioneel)</value>
+  </data>
+  <data name="Prop_Pinned_Desc" xml:space="preserve">
+    <value>Ja/nee-kolom. Een vastgezette rij behoudt persoon en tijd bij optimalisatie.</value>
+  </data>
+  <data name="Prop_Bundle" xml:space="preserve">
+    <value>Bundel (optioneel)</value>
+  </data>
+  <data name="Prop_Bundle_Desc" xml:space="preserve">
+    <value>Tekst die samen geplande rijen koppelt.</value>
+  </data>
+  <data name="Prop_PublishState" xml:space="preserve">
+    <value>Publicatie (optioneel)</value>
+  </data>
+  <data name="Prop_PublishState_Desc" xml:space="preserve">
+    <value>Tekst- of keuzekolom voor de levenscyclus, zoals concept of gepubliceerd.</value>
+  </data>
+  <data name="Prop_Provenance" xml:space="preserve">
+    <value>Herkomst (optioneel)</value>
+  </data>
+  <data name="Prop_Provenance_Desc" xml:space="preserve">
+    <value>Tekst- of keuzekolom waarin de planner vastlegt wie de rij wijzigde: persoon of optimalisatie.</value>
+  </data>
+  <data name="Prop_WindowStart" xml:space="preserve">
+    <value>Vensterbegin (optioneel)</value>
+  </data>
+  <data name="Prop_WindowStart_Desc" xml:space="preserve">
+    <value>Vroegst toegestane begintijd.</value>
+  </data>
+  <data name="Prop_WindowEnd" xml:space="preserve">
+    <value>Venstereinde (optioneel)</value>
+  </data>
+  <data name="Prop_WindowEnd_Desc" xml:space="preserve">
+    <value>Laatst toegestane eindtijd.</value>
+  </data>
+  <data name="Prop_Template" xml:space="preserve">
+    <value>Sjabloon (optioneel)</value>
+  </data>
+  <data name="Prop_Template_Desc" xml:space="preserve">
+    <value>Lookup naar het bronsjabloon van de rij (Chrona Workforce Scheduler).</value>
+  </data>
+  <data name="Prop_Origin" xml:space="preserve">
+    <value>Generatiebron (optioneel)</value>
+  </data>
+  <data name="Prop_Origin_Desc" xml:space="preserve">
+    <value>Tekst om gegenereerde rijen af te stemmen. Niet koppelen zonder Chrona Workforce Scheduler.</value>
+  </data>
+  <data name="Prop_Role" xml:space="preserve">
+    <value>Rol</value>
+  </data>
+  <data name="Prop_Role_Desc" xml:space="preserve">
+    <value>Lookup naar de vereiste rol. Personen worden op hun rollen afgestemd.</value>
+  </data>
+  <data name="Prop_Subgroup" xml:space="preserve">
+    <value>Subgroep</value>
+  </data>
+  <data name="Prop_Subgroup_Desc" xml:space="preserve">
+    <value>Tweede baanniveau waartoe de rij behoort.</value>
+  </data>
+  <data name="nextMonth" xml:space="preserve">
+    <value>Volgende maand</value>
+  </data>
+  <data name="previousMonth" xml:space="preserve">
+    <value>Vorige maand</value>
+  </data>
+  <data name="schedulerSettings" xml:space="preserve">
+    <value>Plannerinstellingen</value>
+  </data>
+  <data name="fullScreen" xml:space="preserve">
+    <value>Volledig scherm</value>
+  </data>
+  <data name="fullScreenExit" xml:space="preserve">
+    <value>Volledig scherm sluiten</value>
+  </data>
+  <data name="weekdaysLong" xml:space="preserve">
+    <value>zondag|maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag</value>
+  </data>
+  <data name="msgSettingsFailed" xml:space="preserve">
+    <value>Kan de plannerinstellingen niet openen</value>
+  </data>
+  <data name="noDate" xml:space="preserve">
+    <value>Geen datum</value>
+  </data>
+  <data name="Prop_Duration" xml:space="preserve">
+    <value>Duur (optioneel)</value>
+  </data>
+  <data name="Prop_Duration_Desc" xml:space="preserve">
+    <value>Minuten die een rij zonder datum inneemt na het neerzetten in de planner. Niet gekoppeld: één uur.</value>
+  </data>
+</root>

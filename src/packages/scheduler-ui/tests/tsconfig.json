@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "lib": ["ES2020"],
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "noEmit": false,
+    "noUncheckedIndexedAccess": true,
+    "outDir": "../out/tests",
+    "rootDir": "..",
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2019"
+  },
+  "include": [
+    "../src/compactChip.ts",
+    "../src/decorations.ts",
+    "../src/interactions.ts",
+    "../src/monthLayout.ts",
+    "../src/rosterLayout.ts",
+    "../src/preferences.ts",
+    "../src/rowVirtualization.ts",
+    "../src/hours.ts",
+    "../src/spans.ts",
+    "../src/stringResources.ts",
+    "../src/tagColors.ts",
+    "../src/theme.ts",
+    "../src/timeAxis.ts",
+    "../src/timeZone.ts",
+    "../src/timelineLayout.ts",
+    "../src/types.ts",
+    "../src/undoRedo.ts",
+    "../src/viewConfig.ts",
+    "./*.spec.ts"
+  ]
+}

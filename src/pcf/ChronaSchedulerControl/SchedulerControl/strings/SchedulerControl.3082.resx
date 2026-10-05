@@ -1,0 +1,996 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter</value>
+  </resheader>
+  <data name="agendaEmpty" xml:space="preserve">
+    <value>Nada programado en este periodo.</value>
+  </data>
+  <data name="apply" xml:space="preserve">
+    <value>Aplicar</value>
+  </data>
+  <data name="assignAction" xml:space="preserve">
+    <value>Asignar a {name}</value>
+  </data>
+  <data name="assignBestOptions" xml:space="preserve">
+    <value>Mejores opciones</value>
+  </data>
+  <data name="assignEmpty" xml:space="preserve">
+    <value>No hay personal coincidente.</value>
+  </data>
+  <data name="assignHoursLeft" xml:space="preserve">
+    <value>Quedan {left} h de {capacity} h</value>
+  </data>
+  <data name="assignNotAvailable" xml:space="preserve">
+    <value>No disponible</value>
+  </data>
+  <data name="assignReasonBusy" xml:space="preserve">
+    <value>Ya trabaja {range}</value>
+  </data>
+  <data name="assignReasonHours" xml:space="preserve">
+    <value>Superaría {capacity} h</value>
+  </data>
+  <data name="assignReasonUnavailable" xml:space="preserve">
+    <value>No disponible {range}</value>
+  </data>
+  <data name="assignSearchPlaceholder" xml:space="preserve">
+    <value>Buscar personal</value>
+  </data>
+  <data name="assignShowEveryone" xml:space="preserve">
+    <value>Ver todos ({count})</value>
+  </data>
+  <data name="assignTitle" xml:space="preserve">
+    <value>Asignar personal</value>
+  </data>
+  <data name="assignedTo" xml:space="preserve">
+    <value>Asignado a</value>
+  </data>
+  <data name="unassigned" xml:space="preserve">
+    <value>Sin asignar</value>
+  </data>
+  <data name="cancel" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="capabilityAssignment" xml:space="preserve">
+    <value>asignaciones</value>
+  </data>
+  <data name="capabilityAvailability" xml:space="preserve">
+    <value>disponibilidad</value>
+  </data>
+  <data name="capabilityCost" xml:space="preserve">
+    <value>costes</value>
+  </data>
+  <data name="capabilityHours" xml:space="preserve">
+    <value>horas</value>
+  </data>
+  <data name="capabilityLocks" xml:space="preserve">
+    <value>bloqueos</value>
+  </data>
+  <data name="capabilityRoles" xml:space="preserve">
+    <value>roles</value>
+  </data>
+  <data name="close" xml:space="preserve">
+    <value>Cerrar</value>
+  </data>
+  <data name="conversionAllClear" xml:space="preserve">
+    <value>Sin alertas en los datos actuales. Recuento local, sin enviar datos.</value>
+  </data>
+  <data name="conversionAxisLabels" xml:space="preserve">
+    <value>Lun 8:00|Lun 12:00|Lun 16:00|Mar 8:00</value>
+  </data>
+  <data name="conversionClaimBase" xml:space="preserve">
+    <value>Trabajo asignado. Conflictos resueltos.</value>
+  </data>
+  <data name="conversionClaimRespected" xml:space="preserve">
+    <value>Se respeta: {list}.</value>
+  </data>
+  <data name="conversionConnect" xml:space="preserve">
+    <value>Probar gratis</value>
+  </data>
+  <data name="conversionCountsSuffix" xml:space="preserve">
+    <value> — recuento local, sin enviar datos.</value>
+  </data>
+  <data name="conversionCoverageGaps" xml:space="preserve">
+    <value>{gaps} huecos sin cubrir</value>
+  </data>
+  <data name="conversionInfoBody" xml:space="preserve">
+    <value>Conectar Chrona no cambia cómo funciona el calendario.</value>
+  </data>
+  <data name="conversionInfoLead" xml:space="preserve">
+    <value>Opcional. Pruébalo gratis.</value>
+  </data>
+  <data name="conversionInspect" xml:space="preserve">
+    <value>Ver datos exactos</value>
+  </data>
+  <data name="conversionLearnMore" xml:space="preserve">
+    <value>Más información</value>
+  </data>
+  <data name="conversionLockLine" xml:space="preserve">
+    <value>Gratis. Sin tarjeta. Nada se envía hasta conectar. El ejemplo nunca cambia tu cuadrante.</value>
+  </data>
+  <data name="conversionNotNow" xml:space="preserve">
+    <value>Ahora no</value>
+  </data>
+  <data name="conversionOptimize" xml:space="preserve">
+    <value>Optimizar</value>
+  </data>
+  <data name="conversionPayloadNote" xml:space="preserve">
+    <value>Este JSON exacto. Nada se envía hasta conectar.</value>
+  </data>
+  <data name="conversionPitchMechanism" xml:space="preserve">
+    <value>Chrona evalúa todo el cuadrante: habilidades, disponibilidad, horas, costes y conflictos.</value>
+  </data>
+  <data name="conversionPitchProblem" xml:space="preserve">
+    <value>Planificar uno a uno oculta las interacciones.</value>
+  </data>
+  <data name="conversionSampleAfter" xml:space="preserve">
+    <value>Tras optimizar</value>
+  </data>
+  <data name="conversionSampleBefore" xml:space="preserve">
+    <value>Antes</value>
+  </data>
+  <data name="conversionSampleCounts" xml:space="preserve">
+    <value>{open} elementos abiertos · {conflicts} conflictos</value>
+  </data>
+  <data name="conversionSampleTitle" xml:space="preserve">
+    <value>Ejemplo de optimización</value>
+  </data>
+  <data name="conversionSentNothingElse" xml:space="preserve">
+    <value>Nada más: sin nombres, notas, contactos ni registros ajenos</value>
+  </data>
+  <data name="conversionSentPeople" xml:space="preserve">
+    <value>Personal: ID, habilidades, disponibilidad, horas y tarifas</value>
+  </data>
+  <data name="conversionSentTitle" xml:space="preserve">
+    <value>Datos de una optimización real</value>
+  </data>
+  <data name="conversionSentWork" xml:space="preserve">
+    <value>Tareas: horarios, requisitos e ID de la persona asignada</value>
+  </data>
+  <data name="conversionTitle" xml:space="preserve">
+    <value>Todo el cuadrante, de una vez</value>
+  </data>
+  <data name="delete" xml:space="preserve">
+    <value>Eliminar</value>
+  </data>
+  <data name="deleteConfirmAction" xml:space="preserve">
+    <value>Eliminar</value>
+  </data>
+  <data name="deleteConfirmCount" xml:space="preserve">
+    <value>¿Eliminar {count} elementos? No se puede deshacer.</value>
+  </data>
+  <data name="deleteConfirmMessage" xml:space="preserve">
+    <value>¿Eliminar {title}? No se puede deshacer.</value>
+  </data>
+  <data name="deleteConfirmTitle" xml:space="preserve">
+    <value>Confirmar eliminación</value>
+  </data>
+  <data name="dialogBestOptions" xml:space="preserve">
+    <value>Mejores opciones</value>
+  </data>
+  <data name="dialogFinishAfterStart" xml:space="preserve">
+    <value>El fin debe ser posterior al inicio.</value>
+  </data>
+  <data name="dialogNameRequired" xml:space="preserve">
+    <value>El nombre es obligatorio.</value>
+  </data>
+  <data name="dialogNotAllowed" xml:space="preserve">
+    <value>Este cambio no está permitido.</value>
+  </data>
+  <data name="dialogOtherOptions" xml:space="preserve">
+    <value>Otras</value>
+  </data>
+  <data name="directionEarlier" xml:space="preserve">
+    <value>Antes</value>
+  </data>
+  <data name="directionLater" xml:space="preserve">
+    <value>Después</value>
+  </data>
+  <data name="draftItem" xml:space="preserve">
+    <value>Nuevo elemento</value>
+  </data>
+  <data name="duration" xml:space="preserve">
+    <value>Duración</value>
+  </data>
+  <data name="emptyResources" xml:space="preserve">
+    <value>No hay recursos. Revisa la configuración de la vista.</value>
+  </data>
+  <data name="entitlementGrace" xml:space="preserve">
+    <value>Pago vencido. Plazo hasta {date}</value>
+  </data>
+  <data name="entitlementLapsed" xml:space="preserve">
+    <value>Suscripción de Chrona vencida. Optimización y generación en pausa hasta resolver el pago.</value>
+  </data>
+  <data name="entitlementPaused" xml:space="preserve">
+    <value>Optimizador en pausa desde {since}. Chrona no responde; puedes seguir planificando.</value>
+  </data>
+  <data name="entitlementPlanUsage" xml:space="preserve">
+    <value>Plan y uso</value>
+  </data>
+  <data name="entitlementResources" xml:space="preserve">
+    <value>{scheduled} de {included} recursos programados este periodo</value>
+  </data>
+  <data name="entitlementResourcesAbovePlan" xml:space="preserve">
+    <value>{scheduled} de {included} recursos programados; plan superado</value>
+  </data>
+  <data name="entitlementResourcesNoCeiling" xml:space="preserve">
+    <value>{scheduled} recursos programados este periodo</value>
+  </data>
+  <data name="entitlementRetry" xml:space="preserve">
+    <value>Reintentar</value>
+  </data>
+  <data name="finish" xml:space="preserve">
+    <value>Fin</value>
+  </data>
+  <data name="flagCauseAssigned" xml:space="preserve">
+    <value>asignado</value>
+  </data>
+  <data name="flagCauseEdited" xml:space="preserve">
+    <value>editado</value>
+  </data>
+  <data name="flagCausePinned" xml:space="preserve">
+    <value>fijado</value>
+  </data>
+  <data name="flagReason" xml:space="preserve">
+    <value>Ya no se necesita: {required} requeridos, {existing} existentes. Se conserva por estar {cause}.</value>
+  </data>
+  <data name="goToDate" xml:space="preserve">
+    <value>Ir a fecha</value>
+  </data>
+  <data name="groupByLabel" xml:space="preserve">
+    <value>Agrupar filas</value>
+  </data>
+  <data name="groupByNone" xml:space="preserve">
+    <value>Sin agrupar</value>
+  </data>
+  <data name="hideUnscheduledPanel" xml:space="preserve">
+    <value>Ocultar elementos sin programar</value>
+  </data>
+  <data name="interval" xml:space="preserve">
+    <value>Intervalo</value>
+  </data>
+  <data name="intervalDay" xml:space="preserve">
+    <value>Día</value>
+  </data>
+  <data name="intervalDaySpan" xml:space="preserve">
+    <value>Tramo</value>
+  </data>
+  <data name="intervalMonth" xml:space="preserve">
+    <value>Mes</value>
+  </data>
+  <data name="intervalWeek" xml:space="preserve">
+    <value>Semana</value>
+  </data>
+  <data name="itemsCount" xml:space="preserve">
+    <value>{count} elementos</value>
+  </data>
+  <data name="legendBusyElsewhere" xml:space="preserve">
+    <value>Ocupado en otra tarea</value>
+  </data>
+  <data name="legendCustom" xml:space="preserve">
+    <value>Destacado</value>
+  </data>
+  <data name="legendHoliday" xml:space="preserve">
+    <value>Festivo</value>
+  </data>
+  <data name="legendNeedsCover" xml:space="preserve">
+    <value>Sin cubrir</value>
+  </data>
+  <data name="legendNonWorking" xml:space="preserve">
+    <value>Fuera de jornada</value>
+  </data>
+  <data name="legendPreferred" xml:space="preserve">
+    <value>Horario preferido</value>
+  </data>
+  <data name="legendUnavailable" xml:space="preserve">
+    <value>No disponible</value>
+  </data>
+  <data name="legendUnpreferred" xml:space="preserve">
+    <value>Horario no preferido</value>
+  </data>
+  <data name="listAnd" xml:space="preserve">
+    <value>y</value>
+  </data>
+  <data name="menuAssign" xml:space="preserve">
+    <value>Asignar personal…</value>
+  </data>
+  <data name="menuDeleteCount" xml:space="preserve">
+    <value>Eliminar {count} elementos</value>
+  </data>
+  <data name="menuDuplicate" xml:space="preserve">
+    <value>Duplicar</value>
+  </data>
+  <data name="menuMoveTo" xml:space="preserve">
+    <value>Mover a…</value>
+  </data>
+  <data name="menuMoveToCount" xml:space="preserve">
+    <value>Mover {count} elementos a…</value>
+  </data>
+  <data name="menuOpen" xml:space="preserve">
+    <value>Abrir</value>
+  </data>
+  <data name="menuOpenRecord" xml:space="preserve">
+    <value>Abrir registro</value>
+  </data>
+  <data name="menuPin" xml:space="preserve">
+    <value>Fijar</value>
+  </data>
+  <data name="menuPinCount" xml:space="preserve">
+    <value>Fijar {count} elementos</value>
+  </data>
+  <data name="menuReassign" xml:space="preserve">
+    <value>Reasignar a…</value>
+  </data>
+  <data name="menuReassignCount" xml:space="preserve">
+    <value>Reasignar {count} elementos a…</value>
+  </data>
+  <data name="menuUnpin" xml:space="preserve">
+    <value>Desfijar</value>
+  </data>
+  <data name="menuUnpinCount" xml:space="preserve">
+    <value>Desfijar {count} elementos</value>
+  </data>
+  <data name="menuUnschedule" xml:space="preserve">
+    <value>Desasignar</value>
+  </data>
+  <data name="monthMore" xml:space="preserve">
+    <value>+{count} más</value>
+  </data>
+  <data name="monthsLong" xml:space="preserve">
+    <value>enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre</value>
+  </data>
+  <data name="monthsShort" xml:space="preserve">
+    <value>ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic</value>
+  </data>
+  <data name="moveAmount" xml:space="preserve">
+    <value>Cantidad</value>
+  </data>
+  <data name="moveDialogTitle" xml:space="preserve">
+    <value>Mover a</value>
+  </data>
+  <data name="moveDirection" xml:space="preserve">
+    <value>Dirección</value>
+  </data>
+  <data name="moveUnit" xml:space="preserve">
+    <value>Unidad</value>
+  </data>
+  <data name="msgCannotCreateHere" xml:space="preserve">
+    <value>No se puede crear aquí</value>
+  </data>
+  <data name="msgConnectAdminOnly" xml:space="preserve">
+    <value>Un administrador conecta Chrona a este entorno (rol Chrona Scheduler Admin).</value>
+  </data>
+  <data name="msgConnectFailed" xml:space="preserve">
+    <value>Error al conectar Chrona: {message}</value>
+  </data>
+  <data name="msgConnected" xml:space="preserve">
+    <value>Chrona conectado ({limit} optimizaciones gratis al día). Iniciando la primera prueba…</value>
+  </data>
+  <data name="msgConnectedUnlimited" xml:space="preserve">
+    <value>Chrona conectado. Iniciando la primera optimización…</value>
+  </data>
+  <data name="msgCreateFailed" xml:space="preserve">
+    <value>No se pudo crear {title} (¿faltan columnas obligatorias?)</value>
+  </data>
+  <data name="msgCreated" xml:space="preserve">
+    <value>{title} creado</value>
+  </data>
+  <data name="msgDeletedMany" xml:space="preserve">
+    <value>{count} elementos eliminados</value>
+  </data>
+  <data name="msgDeletedOne" xml:space="preserve">
+    <value>{title} eliminado</value>
+  </data>
+  <data name="msgLocalOnly" xml:space="preserve">
+    <value> (solo local, sin Dataverse)</value>
+  </data>
+  <data name="msgMovedMany" xml:space="preserve">
+    <value>{count} elementos movidos</value>
+  </data>
+  <data name="msgPersonNotSaved" xml:space="preserve">
+    <value>No guardado: aún no se puede guardar la persona. Inténtalo de nuevo.</value>
+  </data>
+  <data name="fieldBundle" xml:space="preserve">
+    <value>Lote</value>
+  </data>
+  <data name="fieldProvenance" xml:space="preserve">
+    <value>Origen</value>
+  </data>
+  <data name="fieldPublishState" xml:space="preserve">
+    <value>Publicación</value>
+  </data>
+  <data name="fieldStatus" xml:space="preserve">
+    <value>Estado</value>
+  </data>
+  <data name="msgPinnedMany" xml:space="preserve">
+    <value>{count} elementos fijados</value>
+  </data>
+  <data name="msgPinnedOne" xml:space="preserve">
+    <value>{title} fijado</value>
+  </data>
+  <data name="msgRedid" xml:space="preserve">
+    <value>Cambio rehecho</value>
+  </data>
+  <data name="msgRestoreSkipped" xml:space="preserve">
+    <value> ({count} elementos no restaurados)</value>
+  </data>
+  <data name="msgRestored" xml:space="preserve">
+    <value>Restaurado</value>
+  </data>
+  <data name="msgResumeChanged" xml:space="preserve">
+    <value>Una optimización terminó durante tu ausencia, pero el cuadrante cambió. El resultado ya no es válido.</value>
+  </data>
+  <data name="msgRowCapReached" xml:space="preserve">
+    <value>Solo se muestran las primeras {count} filas. Filtra la vista para ver las demás.</value>
+  </data>
+  <data name="msgRowsSkipped" xml:space="preserve">
+    <value>{count} filas omitidas (inicio o fin ausente o no válido)</value>
+  </data>
+  <data name="msgSelected" xml:space="preserve">
+    <value>{title} seleccionado</value>
+  </data>
+  <data name="msgSessionFailed" xml:space="preserve">
+    <value>No se pudo iniciar la optimización Chrona: {message}</value>
+  </data>
+  <data name="msgSolveNoPrivilege" xml:space="preserve">
+    <value>Optimizar requiere el rol Chrona Scheduler User.</value>
+  </data>
+  <data name="msgSolveNoCalendar" xml:space="preserve">
+    <value>Esta vista aún no tiene calendario Chrona, así que no se puede optimizar.</value>
+  </data>
+  <data name="msgUndid" xml:space="preserve">
+    <value>Cambio deshecho</value>
+  </data>
+  <data name="msgUnpinnedMany" xml:space="preserve">
+    <value>{count} elementos desfijados</value>
+  </data>
+  <data name="msgUnpinnedOne" xml:space="preserve">
+    <value>{title} desfijado</value>
+  </data>
+  <data name="msgUnscheduled" xml:space="preserve">
+    <value>{title} desasignado</value>
+  </data>
+  <data name="msgUpdated" xml:space="preserve">
+    <value>{title} actualizado</value>
+  </data>
+  <data name="msgWarningSuffix" xml:space="preserve">
+    <value> (aviso: {reason})</value>
+  </data>
+  <data name="name" xml:space="preserve">
+    <value>Nombre</value>
+  </data>
+  <data name="needsCover" xml:space="preserve">
+    <value>Sin cubrir</value>
+  </data>
+  <data name="newEvent" xml:space="preserve">
+    <value>Nuevo evento</value>
+  </data>
+  <data name="next" xml:space="preserve">
+    <value>Siguiente</value>
+  </data>
+  <data name="noticeBlocked" xml:space="preserve">
+    <value>Bloqueado: {reason}</value>
+  </data>
+  <data name="noticeWarning" xml:space="preserve">
+    <value>Nota: {reason}</value>
+  </data>
+  <data name="openChronaAccount" xml:space="preserve">
+    <value>Abrir cuenta Chrona</value>
+  </data>
+  <data name="periodNext" xml:space="preserve">
+    <value>Periodo siguiente</value>
+  </data>
+  <data name="periodOf" xml:space="preserve">
+    <value>día {day} de {days}</value>
+  </data>
+  <data name="periodPrevious" xml:space="preserve">
+    <value>Periodo anterior</value>
+  </data>
+  <data name="pinnedNotice" xml:space="preserve">
+    <value>Fijado. Desfija para editar.</value>
+  </data>
+  <data name="previous" xml:space="preserve">
+    <value>Anterior</value>
+  </data>
+  <data name="proposalAppliedMany" xml:space="preserve">
+    <value>{count} sugerencias aplicadas</value>
+  </data>
+  <data name="proposalAppliedOne" xml:space="preserve">
+    <value>1 sugerencia aplicada</value>
+  </data>
+  <data name="proposalApply" xml:space="preserve">
+    <value>Aplicar</value>
+  </data>
+  <data name="proposalDiscard" xml:space="preserve">
+    <value>Descartar</value>
+  </data>
+  <data name="proposalEmpty" xml:space="preserve">
+    <value>Sin cambios propuestos</value>
+  </data>
+  <data name="proposalDropped" xml:space="preserve">
+    <value>{count} descartados</value>
+  </data>
+  <data name="proposalDropChange" xml:space="preserve">
+    <value>Descartar cambio</value>
+  </data>
+  <data name="proposalKeepChange" xml:space="preserve">
+    <value>Conservar cambio</value>
+  </data>
+  <data name="proposalKeepAll" xml:space="preserve">
+    <value>Conservar todos</value>
+  </data>
+  <data name="proposalKeepNone" xml:space="preserve">
+    <value>No conservar ninguno</value>
+  </data>
+  <data name="proposalPerPerson" xml:space="preserve">
+    <value>{count} cambios, resumidos por persona.</value>
+  </data>
+  <data name="proposalPersonShifts" xml:space="preserve">
+    <value>{count} turnos · {hours} h</value>
+  </data>
+  <data name="proposalPersonShiftOne" xml:space="preserve">
+    <value>1 turno · {hours} h</value>
+  </data>
+  <data name="proposalHeldBack" xml:space="preserve">
+    <value>Retenidos ({count})</value>
+  </data>
+  <data name="proposalHeldBackHint" xml:space="preserve">
+    <value>Cada uno crearía una doble asignación, así que Aplicar lo omite.</value>
+  </data>
+  <data name="proposalApplyAll" xml:space="preserve">
+    <value>Aplicar los {count}</value>
+  </data>
+  <data name="proposalApplySome" xml:space="preserve">
+    <value>Aplicar {kept} de {count}</value>
+  </data>
+  <data name="proposalReviewHint" xml:space="preserve">
+    <value>Revisando propuesta. Aplica o descarta para editar.</value>
+  </data>
+  <data name="proposalShowCurrent" xml:space="preserve">
+    <value>Actual</value>
+  </data>
+  <data name="proposalShowProposed" xml:space="preserve">
+    <value>Propuesto</value>
+  </data>
+  <data name="proposalHoldCompare" xml:space="preserve">
+    <value>Mantén para comparar</value>
+  </data>
+  <data name="proposalChangesOnly" xml:space="preserve">
+    <value>Solo cambios</value>
+  </data>
+  <data name="proposalPanelTitle" xml:space="preserve">
+    <value>Cambios propuestos</value>
+  </data>
+  <data name="proposalPanelToggle" xml:space="preserve">
+    <value>Cambios propuestos ({count})</value>
+  </data>
+  <data name="proposalGroupAssigned" xml:space="preserve">
+    <value>Asignados ({count})</value>
+  </data>
+  <data name="proposalGroupMoved" xml:space="preserve">
+    <value>Movidos ({count})</value>
+  </data>
+  <data name="proposalGroupUnassigned" xml:space="preserve">
+    <value>Sin asignar ({count})</value>
+  </data>
+  <data name="proposalMustBroken" xml:space="preserve">
+    <value>Se incumplen algunas reglas obligatorias</value>
+  </data>
+  <data name="proposalMustKept" xml:space="preserve">
+    <value>Se cumplen todas las reglas obligatorias</value>
+  </data>
+  <data name="proposalWas" xml:space="preserve">
+    <value>antes: {detail}</value>
+  </data>
+  <data name="proposalTitle" xml:space="preserve">
+    <value>Cuadrante propuesto</value>
+  </data>
+  <data name="proposalSummaryChangeOne" xml:space="preserve">
+    <value>1 cambio</value>
+  </data>
+  <data name="proposalSummaryChanges" xml:space="preserve">
+    <value>{count} cambios</value>
+  </data>
+  <data name="proposalFilled" xml:space="preserve">
+    <value>{filled} de {total} turnos cubiertos</value>
+  </data>
+  <data name="scorecardLabel" xml:space="preserve">
+    <value>Frente al cuadrante actual</value>
+  </data>
+  <data name="scoreFilled" xml:space="preserve">
+    <value>Turnos cubiertos</value>
+  </data>
+  <data name="scoreMustBroken" xml:space="preserve">
+    <value>Reglas obligatorias incumplidas</value>
+  </data>
+  <data name="scoreNone" xml:space="preserve">
+    <value>Ninguna</value>
+  </data>
+  <data name="scoreSome" xml:space="preserve">
+    <value>Algunas</value>
+  </data>
+  <data name="scoreNotChecked" xml:space="preserve">
+    <value>Sin comprobar</value>
+  </data>
+  <data name="scoreChanges" xml:space="preserve">
+    <value>Cambios</value>
+  </data>
+  <data name="scorePeople" xml:space="preserve">
+    <value>Personas afectadas</value>
+  </data>
+  <data name="scoreVsNow" xml:space="preserve">
+    <value>{delta} vs. actual</value>
+  </data>
+  <data name="scoreNoChange" xml:space="preserve">
+    <value>Sin cambios</value>
+  </data>
+  <data name="scoreOfPeople" xml:space="preserve">
+    <value>de {count} personas</value>
+  </data>
+  <data name="scorecardToggle" xml:space="preserve">
+    <value>Indicadores</value>
+  </data>
+  <data name="scoreSearch" xml:space="preserve">
+    <value>Cuadrantes probados</value>
+  </data>
+  <data name="scoreSearchNote" xml:space="preserve">
+    <value>{better} mejoras · {seconds} s</value>
+  </data>
+  <data name="scoreSearchNoteOne" xml:space="preserve">
+    <value>1 mejora · {seconds} s</value>
+  </data>
+  <data name="scoreSearchUnit" xml:space="preserve">
+    <value>versiones</value>
+  </data>
+  <data name="proposalCheckFoundMany" xml:space="preserve">
+    <value>{count} cambios quedaron desactualizados. Revísalos y vuelve a aplicar.</value>
+  </data>
+  <data name="proposalCheckFoundOne" xml:space="preserve">
+    <value>1 cambio quedó desactualizado. Revísalo y vuelve a aplicar.</value>
+  </data>
+  <data name="proposalDoubleBookingMany" xml:space="preserve">
+    <value>{count} dobles asignaciones</value>
+  </data>
+  <data name="proposalDoubleBookingOne" xml:space="preserve">
+    <value>1 doble asignación</value>
+  </data>
+  <data name="proposalDoubleBooks" xml:space="preserve">
+    <value>Doble asignación de {person} con {title}</value>
+  </data>
+  <data name="proposalGroupOutOfDate" xml:space="preserve">
+    <value>Desactualizados ({count})</value>
+  </data>
+  <data name="proposalOutOfDate" xml:space="preserve">
+    <value>{count} desactualizados</value>
+  </data>
+  <data name="proposalReasonChanged" xml:space="preserve">
+    <value>Cambiado después de crear el plan</value>
+  </data>
+  <data name="proposalReasonNewShift" xml:space="preserve">
+    <value>{person} ahora tiene otro turno a esta hora</value>
+  </data>
+  <data name="proposalReasonPersonChanged" xml:space="preserve">
+    <value>Los datos de {person} cambiaron después de crear el plan</value>
+  </data>
+  <data name="proposalReasonStarted" xml:space="preserve">
+    <value>Ya comenzó</value>
+  </data>
+  <data name="proposalReasonUnavailable" xml:space="preserve">
+    <value>{person} ahora no está disponible a esta hora</value>
+  </data>
+  <data name="solvePeriodPassed" xml:space="preserve">
+    <value>Este período ya pasó</value>
+  </data>
+  <data name="solveQueued" xml:space="preserve">
+    <value>En cola…</value>
+  </data>
+  <data name="solveElapsed" xml:space="preserve">
+    <value>{seconds} s</value>
+  </data>
+  <data name="reasonMinimumBreak" xml:space="preserve">
+    <value>Descanso menor de {minimum} min (intervalo: {gap} min)</value>
+  </data>
+  <data name="reasonOutsideGroup" xml:space="preserve">
+    <value>Fuera de {group}</value>
+  </data>
+  <data name="reasonOutsideHours" xml:space="preserve">
+    <value>Fuera de jornada ({start}-{end})</value>
+  </data>
+  <data name="reasonOverlap" xml:space="preserve">
+    <value>Se solapa con otro elemento</value>
+  </data>
+  <data name="reassignDialogTitle" xml:space="preserve">
+    <value>Reasignar a</value>
+  </data>
+  <data name="redo" xml:space="preserve">
+    <value>Rehacer</value>
+  </data>
+  <data name="requiredSkills" xml:space="preserve">
+    <value>Roles requeridos</value>
+  </data>
+  <data name="resizeResources" xml:space="preserve">
+    <value>Redimensionar columna de recursos</value>
+  </data>
+  <data name="resizeUnscheduled" xml:space="preserve">
+    <value>Redimensionar panel sin programar</value>
+  </data>
+  <data name="resourceHeader" xml:space="preserve">
+    <value>Recurso</value>
+  </data>
+  <data name="resumeChanged" xml:space="preserve">
+    <value>Una optimización terminó durante tu ausencia, pero el cuadrante cambió. El resultado ya no es válido.</value>
+  </data>
+  <data name="resumeDiscard" xml:space="preserve">
+    <value>Descartar</value>
+  </data>
+  <data name="resumeFinished" xml:space="preserve">
+    <value>Una optimización terminó durante tu ausencia.</value>
+  </data>
+  <data name="resumeFollow" xml:space="preserve">
+    <value>Seguir</value>
+  </data>
+  <data name="resumeReview" xml:space="preserve">
+    <value>Revisar</value>
+  </data>
+  <data name="resumeRunning" xml:space="preserve">
+    <value>Hay una optimización en curso para este cuadrante.</value>
+  </data>
+  <data name="rosterOpenShifts" xml:space="preserve">
+    <value>Turnos abiertos</value>
+  </data>
+  <data name="save" xml:space="preserve">
+    <value>Guardar</value>
+  </data>
+  <data name="savedViews" xml:space="preserve">
+    <value>Vistas</value>
+  </data>
+  <data name="solve" xml:space="preserve">
+    <value>Optimizar</value>
+  </data>
+  <data name="solveCapabilitiesLine" xml:space="preserve">
+    <value>Optimizando con: {list}</value>
+  </data>
+  <data name="solveFailed" xml:space="preserve">
+    <value>Error al optimizar: {message}</value>
+  </data>
+  <data name="solveQuotaExhausted" xml:space="preserve">
+    <value>Agotaste las optimizaciones gratis de hoy. Vuelve mañana o mejora el plan para uso ilimitado.</value>
+  </data>
+  <data name="solveQuotaRemaining" xml:space="preserve">
+    <value>Quedan {remaining} de {limit} optimizaciones gratis hoy</value>
+  </data>
+  <data name="solveQuotaUpgrade" xml:space="preserve">
+    <value>Mejorar plan</value>
+  </data>
+  <data name="solveSolving" xml:space="preserve">
+    <value>Optimizando…</value>
+  </data>
+  <data name="start" xml:space="preserve">
+    <value>Inicio</value>
+  </data>
+  <data name="timeScale" xml:space="preserve">
+    <value>Escala temporal</value>
+  </data>
+  <data name="timeScaleLeast" xml:space="preserve">
+    <value>{count} minutos: menos espacio para detalles</value>
+  </data>
+  <data name="timeScaleMinutes" xml:space="preserve">
+    <value>{count} minutos</value>
+  </data>
+  <data name="timeScaleMost" xml:space="preserve">
+    <value>{count} minutos: más espacio para detalles</value>
+  </data>
+  <data name="timeScaleShort" xml:space="preserve">
+    <value>{count} min</value>
+  </data>
+  <data name="timeZoneChip" xml:space="preserve">
+    <value>Zona horaria visible</value>
+  </data>
+  <data name="timelineLabel" xml:space="preserve">
+    <value>Cronología de recursos</value>
+  </data>
+  <data name="today" xml:space="preserve">
+    <value>Hoy</value>
+  </data>
+  <data name="undo" xml:space="preserve">
+    <value>Deshacer</value>
+  </data>
+  <data name="ungrouped" xml:space="preserve">
+    <value>Sin grupo</value>
+  </data>
+  <data name="unitDays" xml:space="preserve">
+    <value>Días</value>
+  </data>
+  <data name="unitHours" xml:space="preserve">
+    <value>Horas</value>
+  </data>
+  <data name="unitWeeks" xml:space="preserve">
+    <value>Semanas</value>
+  </data>
+  <data name="unscheduleConfirmAction" xml:space="preserve">
+    <value>Desasignar</value>
+  </data>
+  <data name="unscheduleConfirmMessage" xml:space="preserve">
+    <value>¿Desasignar {title}? El turno conserva su horario y vuelve a Sin programar para reasignarlo.</value>
+  </data>
+  <data name="unscheduleConfirmTitle" xml:space="preserve">
+    <value>Desasignar turno</value>
+  </data>
+  <data name="unscheduledAll" xml:space="preserve">
+    <value>Todos</value>
+  </data>
+  <data name="unscheduledEmpty" xml:space="preserve">
+    <value>Todo cubierto.</value>
+  </data>
+  <data name="unscheduledEmptyInView" xml:space="preserve">
+    <value>Nada en este periodo.</value>
+  </data>
+  <data name="unscheduledFilterLabel" xml:space="preserve">
+    <value>Filtrar elementos sin programar</value>
+  </data>
+  <data name="unscheduledInView" xml:space="preserve">
+    <value>En la vista</value>
+  </data>
+  <data name="unscheduledLaneLabel" xml:space="preserve">
+    <value>Sin programar · {count}</value>
+  </data>
+  <data name="unscheduledTitle" xml:space="preserve">
+    <value>Sin programar</value>
+  </data>
+  <data name="unscheduledToggle" xml:space="preserve">
+    <value>Sin programar ({count})</value>
+  </data>
+  <data name="weekdaysShort" xml:space="preserve">
+    <value>dom|lun|mar|mié|jue|vie|sáb</value>
+  </data>
+  <data name="DataSet_WorkItems" xml:space="preserve">
+    <value>Tareas</value>
+  </data>
+  <data name="Prop_CalendarConfig" xml:space="preserve">
+    <value>Configuración (opcional)</value>
+  </data>
+  <data name="Prop_CalendarConfig_Desc" xml:space="preserve">
+    <value>ID o nombre del calendario Chrona Scheduler. Vacío: Connect crea uno para esta vista.</value>
+  </data>
+  <data name="Prop_Title" xml:space="preserve">
+    <value>Título (obligatorio)</value>
+  </data>
+  <data name="Prop_Title_Desc" xml:space="preserve">
+    <value>Texto de las barras: columna de nombre o asunto.</value>
+  </data>
+  <data name="Prop_Code" xml:space="preserve">
+    <value>Código (opcional)</value>
+  </data>
+  <data name="Prop_Code_Desc" xml:space="preserve">
+    <value>Código corto de cada turno en la cuadrícula de turnos, p. ej. AM. Si no, las iniciales del título.</value>
+  </data>
+  <data name="Prop_Start" xml:space="preserve">
+    <value>Inicio (obligatorio)</value>
+  </data>
+  <data name="Prop_Start_Desc" xml:space="preserve">
+    <value>Fecha y hora de inicio.</value>
+  </data>
+  <data name="Prop_End" xml:space="preserve">
+    <value>Fin (obligatorio)</value>
+  </data>
+  <data name="Prop_End_Desc" xml:space="preserve">
+    <value>Fecha y hora de fin.</value>
+  </data>
+  <data name="Prop_Resource" xml:space="preserve">
+    <value>Recurso (filas)</value>
+  </data>
+  <data name="Prop_Resource_Desc" xml:space="preserve">
+    <value>Búsqueda de la persona o activo asignado. Vinculada: una fila por persona. Sin vincular: calendario. Usa una búsqueda, no Owner.</value>
+  </data>
+  <data name="Prop_Status" xml:space="preserve">
+    <value>Estado (opcional)</value>
+  </data>
+  <data name="Prop_Status_Desc" xml:space="preserve">
+    <value>Columna de texto u opción. Las filas abiertas o sin asignar se muestran sin cubrir.</value>
+  </data>
+  <data name="Prop_Group" xml:space="preserve">
+    <value>Grupo (opcional)</value>
+  </data>
+  <data name="Prop_Group_Desc" xml:space="preserve">
+    <value>Columna de texto u opción para agrupar filas, por ejemplo por equipo.</value>
+  </data>
+  <data name="Prop_Pinned" xml:space="preserve">
+    <value>Fijado (opcional)</value>
+  </data>
+  <data name="Prop_Pinned_Desc" xml:space="preserve">
+    <value>Columna Sí/No. Una fila fijada conserva persona y horario al optimizar.</value>
+  </data>
+  <data name="Prop_Bundle" xml:space="preserve">
+    <value>Lote (opcional)</value>
+  </data>
+  <data name="Prop_Bundle_Desc" xml:space="preserve">
+    <value>Texto que vincula filas programadas juntas.</value>
+  </data>
+  <data name="Prop_PublishState" xml:space="preserve">
+    <value>Publicación (opcional)</value>
+  </data>
+  <data name="Prop_PublishState_Desc" xml:space="preserve">
+    <value>Columna de texto u opción del ciclo de vida: borrador, publicado, etc.</value>
+  </data>
+  <data name="Prop_Provenance" xml:space="preserve">
+    <value>Procedencia (opcional)</value>
+  </data>
+  <data name="Prop_Provenance_Desc" xml:space="preserve">
+    <value>Columna de texto u opción donde se anota quién cambió la fila: persona u optimizador.</value>
+  </data>
+  <data name="Prop_WindowStart" xml:space="preserve">
+    <value>Inicio de ventana (opcional)</value>
+  </data>
+  <data name="Prop_WindowStart_Desc" xml:space="preserve">
+    <value>Inicio más temprano permitido.</value>
+  </data>
+  <data name="Prop_WindowEnd" xml:space="preserve">
+    <value>Fin de ventana (opcional)</value>
+  </data>
+  <data name="Prop_WindowEnd_Desc" xml:space="preserve">
+    <value>Fin más tardío permitido.</value>
+  </data>
+  <data name="Prop_Template" xml:space="preserve">
+    <value>Plantilla (opcional)</value>
+  </data>
+  <data name="Prop_Template_Desc" xml:space="preserve">
+    <value>Búsqueda de la plantilla que generó la fila (Chrona Workforce Scheduler).</value>
+  </data>
+  <data name="Prop_Origin" xml:space="preserve">
+    <value>Origen generado (opcional)</value>
+  </data>
+  <data name="Prop_Origin_Desc" xml:space="preserve">
+    <value>Texto para conciliar filas generadas. No vincular sin Chrona Workforce Scheduler.</value>
+  </data>
+  <data name="Prop_Role" xml:space="preserve">
+    <value>Rol</value>
+  </data>
+  <data name="Prop_Role_Desc" xml:space="preserve">
+    <value>Búsqueda del rol requerido. Las personas se seleccionan por sus roles.</value>
+  </data>
+  <data name="Prop_Subgroup" xml:space="preserve">
+    <value>Subgrupo</value>
+  </data>
+  <data name="Prop_Subgroup_Desc" xml:space="preserve">
+    <value>Segundo nivel de fila al que pertenece el elemento.</value>
+  </data>
+  <data name="nextMonth" xml:space="preserve">
+    <value>Mes siguiente</value>
+  </data>
+  <data name="previousMonth" xml:space="preserve">
+    <value>Mes anterior</value>
+  </data>
+  <data name="schedulerSettings" xml:space="preserve">
+    <value>Configuración del calendario</value>
+  </data>
+  <data name="fullScreen" xml:space="preserve">
+    <value>Pantalla completa</value>
+  </data>
+  <data name="fullScreenExit" xml:space="preserve">
+    <value>Salir de pantalla completa</value>
+  </data>
+  <data name="weekdaysLong" xml:space="preserve">
+    <value>domingo|lunes|martes|miércoles|jueves|viernes|sábado</value>
+  </data>
+  <data name="msgSettingsFailed" xml:space="preserve">
+    <value>No se pudo abrir la configuración del calendario</value>
+  </data>
+  <data name="noDate" xml:space="preserve">
+    <value>Sin fecha</value>
+  </data>
+  <data name="Prop_Duration" xml:space="preserve">
+    <value>Duración (opcional)</value>
+  </data>
+  <data name="Prop_Duration_Desc" xml:space="preserve">
+    <value>Minutos que ocupa una fila sin fecha al soltarla en el calendario. Sin vincular, una hora.</value>
+  </data>
+</root>

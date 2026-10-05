@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: A question or an idea
+    url: https://github.com/konfigure8/chrona-scheduler/discussions
+    about: Discussions are the place for questions, ideas and how-to threads.
+  - name: Something private
+    url: mailto:support@chrona365.com
+    about: An environment or data you would rather not name in public.

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="Chrona" constructor="SchedulerControl" version="0.0.89" display-name-key="Chrona Scheduler" description-key="Chrona scheduler: resource timeline, roster, and calendar views with drag scheduling" control-type="virtual" >
+    <!--
+      The standalone wedge control declares NO external services: it must
+      install as a non-premium control. Optimizer connectivity arrives
+      later behind explicit configuration.
+    -->
+    <external-service-usage enabled="false">
+    </external-service-usage>
+    <!--
+      The one maker pointer (see Docs/domain_model.md): a
+      chr_chronaschedulercalendar row id or name. Everything else -
+      field mappings, saved views, zones - hangs off it as Dataverse
+      rows. More manifest properties arrive in Phase F3.
+    -->
+    <property name="calendarConfigId" display-name-key="Prop_CalendarConfig" description-key="Prop_CalendarConfig_Desc" of-type="SingleLine.Text" usage="input" required="false" />
+    <!--
+      Work-item generic per the two-layer model (Docs/domain_model.md
+      section 9): layer-1 makers bind a shift view, layer-2 makers bind
+      a task/work-order view - same control, same seam. Property-sets
+      are the maker's column mapping; only title/start/end are hard
+      requirements. Unmapped status derives from the resource lookup
+      (empty = needs cover).
+
+      Resources are NOT a second dataset (Matt, 2026-08-21): they are
+      reference data, loaded via WebAPI from the mapping config behind
+      calendarConfigId, with work-item lookups as the zero-config
+      fallback - a second dataset would force every maker to build a
+      second view before the control renders a row.
+
+      The optional columns are the ratified sweep reservations
+      (domain_model.md section 13); pinned is the only lock and holds the
+      time and the person;
+      bundleId links sibling seats of a multi-resource work item group;
+      publishState and provenance are the assignment lifecycle;
+      windowStart/windowEnd reserve per-item promise windows.
+      All are dormant contract until their consumers arrive - declared
+      now because property-set names are ship-frozen.
+    -->
+    <type-group name="text-or-choice">
+      <type>SingleLine.Text</type>
+      <type>OptionSet</type>
+    </type-group>
+    <data-set name="workItems" display-name-key="DataSet_WorkItems">
+      <property-set name="title" display-name-key="Prop_Title" description-key="Prop_Title_Desc" of-type="SingleLine.Text" usage="bound" required="true" />
+      <!-- F31 rework, batch 2: the short code on each shift in the Roster grid. -->
+      <property-set name="code" display-name-key="Prop_Code" description-key="Prop_Code_Desc" of-type="SingleLine.Text" usage="bound" required="false" />
+      <property-set name="start" display-name-key="Prop_Start" description-key="Prop_Start_Desc" of-type="DateAndTime.DateAndTime" usage="bound" required="true" />
+      <property-set name="end" display-name-key="Prop_End" description-key="Prop_End_Desc" of-type="DateAndTime.DateAndTime" usage="bound" required="true" />
+      <property-set name="resource" display-name-key="Prop_Resource" description-key="Prop_Resource_Desc" of-type="Lookup.Simple" usage="bound" required="false" />
+      <property-set name="role" display-name-key="Prop_Role" description-key="Prop_Role_Desc" of-type="Lookup.Simple" usage="bound" required="false" />
+      <property-set name="status" display-name-key="Prop_Status" description-key="Prop_Status_Desc" of-type-group="text-or-choice" usage="bound" required="false" />
+      <property-set name="group" display-name-key="Prop_Group" description-key="Prop_Group_Desc" of-type-group="text-or-choice" usage="bound" required="false" />
+      <property-set name="subgroup" display-name-key="Prop_Subgroup" description-key="Prop_Subgroup_Desc" of-type-group="text-or-choice" usage="bound" required="false" />
+      <property-set name="pinned" display-name-key="Prop_Pinned" description-key="Prop_Pinned_Desc" of-type="TwoOptions" usage="bound" required="false" />
+      <property-set name="duration" display-name-key="Prop_Duration" description-key="Prop_Duration_Desc" of-type="Whole.None" usage="bound" required="false" />
+      <property-set name="bundleId" display-name-key="Prop_Bundle" description-key="Prop_Bundle_Desc" of-type="SingleLine.Text" usage="bound" required="false" />
+      <property-set name="publishState" display-name-key="Prop_PublishState" description-key="Prop_PublishState_Desc" of-type-group="text-or-choice" usage="bound" required="false" />
+      <property-set name="provenance" display-name-key="Prop_Provenance" description-key="Prop_Provenance_Desc" of-type-group="text-or-choice" usage="bound" required="false" />
+      <property-set name="windowStart" display-name-key="Prop_WindowStart" description-key="Prop_WindowStart_Desc" of-type="DateAndTime.DateAndTime" usage="bound" required="false" />
+      <property-set name="windowEnd" display-name-key="Prop_WindowEnd" description-key="Prop_WindowEnd_Desc" of-type="DateAndTime.DateAndTime" usage="bound" required="false" />
+      <!-- F25 (ruled 2026-09-01, Q2-A): generated-item provenance. The
+           template lookup is the reportable link; origin carries the
+           reconcile-only detail (slot, date key, created snapshot) as JSON. -->
+      <property-set name="template" display-name-key="Prop_Template" description-key="Prop_Template_Desc" of-type="Lookup.Simple" usage="bound" required="false" />
+      <property-set name="origin" display-name-key="Prop_Origin" description-key="Prop_Origin_Desc" of-type="Multiple" usage="bound" required="false" />
+    </data-set>
+    <resources>
+      <code path="index.ts" order="1"/>
+      <platform-library name="React" version="16.14.0" />
+      <platform-library name="Fluent" version="9.46.2" />
+      <css path="css/SchedulerControl.css" order="1" />
+      <resx path="strings/SchedulerControl.1033.resx" version="1.0.0" />
+      <resx path="strings/SchedulerControl.1031.resx" version="1.0.0" />
+      <resx path="strings/SchedulerControl.1036.resx" version="1.0.0" />
+      <resx path="strings/SchedulerControl.3082.resx" version="1.0.0" />
+      <resx path="strings/SchedulerControl.2070.resx" version="1.0.0" />
+      <resx path="strings/SchedulerControl.1046.resx" version="1.0.0" />
+      <resx path="strings/SchedulerControl.1043.resx" version="1.0.0" />
+      <resx path="strings/SchedulerControl.1040.resx" version="1.0.0" />
+    </resources>
+    <feature-usage>
+      <uses-feature name="WebAPI" required="true" />
+      <uses-feature name="Utility" required="false" />
+    </feature-usage>
+  </control>
+</manifest>

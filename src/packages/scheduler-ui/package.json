@@ -1,0 +1,43 @@
+{
+  "name": "@chrona/scheduler-ui",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Chrona-owned scheduler UI: resource timeline and roster views, developed against fixtures in a local hot-reload harness.",
+  "main": "dist/index.js",
+  "module": "dist-esm/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist-esm/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && tsc -p tsconfig.build.esm.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "tsc -p tests/tsconfig.json && node out/tests/tests/timeAxis.spec.js && node out/tests/tests/compactChip.spec.js && node out/tests/tests/dateNames.spec.js && node out/tests/tests/timelineLayout.spec.js && node out/tests/tests/rosterLayout.spec.js && node out/tests/tests/interactions.spec.js && node out/tests/tests/undoRedo.spec.js && node out/tests/tests/viewConfig.spec.js && node out/tests/tests/decorations.spec.js && node out/tests/tests/monthLayout.spec.js && node out/tests/tests/rowVirtualization.spec.js && node out/tests/tests/theme.spec.js && node out/tests/tests/hostTheme.spec.js && node out/tests/tests/hours.spec.js && node out/tests/tests/resourceGrouping.spec.js && node out/tests/tests/strings.spec.js && node out/tests/tests/preferences.spec.js && node out/tests/tests/tagColors.spec.js && node out/tests/tests/timeZone.spec.js && node out/tests/tests/locks.spec.js && node out/tests/tests/spans.spec.js && node out/tests/tests/scheduleRules.spec.js && node out/tests/tests/solve.spec.js && node out/tests/tests/periods.spec.js && node out/tests/tests/conversion.spec.js && node out/tests/tests/redaction.spec.js && node out/tests/tests/capabilities.spec.js && node out/tests/tests/solveClient.spec.js && node out/tests/tests/entitlement.spec.js"
+  },
+  "peerDependencies": {
+    "react": ">=16.14.0 <20",
+    "react-dom": ">=16.14.0 <20"
+  },
+  "devDependencies": {
+    "@fluentui/react-components": "9.68.0",
+    "@fluentui/react-theme": "^9.2.2",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.3.4",
+    "react": "16.14.0",
+    "react-dom": "16.14.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  },
+  "dependencies": {
+    "@fluentui/react-calendar-compat": "0.3.5",
+    "@fluentui/react-icons": "2.0.339"
+  }
+}
