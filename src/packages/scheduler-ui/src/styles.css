@@ -2471,6 +2471,18 @@
   white-space: nowrap;
 }
 
+/* A name with an extension's mark: the name gives way, the mark stays. */
+.chrona-sched__roster-name--marked {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+}
+.chrona-sched__roster-name-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .chrona-sched__chip {
   background: var(--csui-brand-bg);
   border: 1px solid var(--csui-brand-stroke);
@@ -2734,6 +2746,160 @@
 }
 .chrona-sched__score-note--worse {
   color: var(--csui-warn);
+}
+/* Who the Must report does not check: attention, never error. */
+.chrona-sched__score-note--attention {
+  color: var(--csui-warn);
+}
+
+/*
+ * Design Pass 1 calls 2 and 3: the Must and Shifts filled tiles open a
+ * list below the row. The label is the button; its cover makes the
+ * whole tile the target, so the tile keeps its figures as text.
+ */
+.chrona-sched__score--disclosure {
+  position: relative;
+}
+.chrona-sched__score--disclosure:hover {
+  background: var(--csui-surface-hover);
+}
+.chrona-sched__score-toggle {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  gap: 4px;
+  padding: 0;
+  text-align: left;
+}
+.chrona-sched__score-toggle::after {
+  border-radius: var(--csui-radius);
+  content: "";
+  inset: -1px;
+  position: absolute;
+}
+.chrona-sched__score-toggle:focus-visible {
+  outline: none;
+}
+.chrona-sched__score-toggle:focus-visible::after {
+  outline: 2px solid var(--csui-brand);
+  outline-offset: 1px;
+}
+.chrona-sched__score-chevron {
+  color: var(--csui-text-soft);
+  flex: none;
+}
+/* Each tile's 16px icon before its label, as the prototype's scorecard (DR2 Pass 5). */
+.chrona-sched__score-caption {
+  align-items: center;
+  display: inline-flex;
+  gap: 4px;
+}
+.chrona-sched__score-icon {
+  color: var(--csui-text-soft);
+  flex: none;
+}
+
+/* The list a tile opens: inline, full width, the tiles' own surface. */
+.chrona-sched__breakdown {
+  background: var(--csui-bg);
+  border: 1px solid var(--csui-stroke);
+  border-radius: var(--csui-radius);
+  margin-top: 8px;
+  padding: 8px 4px;
+}
+.chrona-sched__breakdown-title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  padding: 0 8px 4px;
+}
+.chrona-sched__breakdown-list {
+  list-style: none;
+  margin: 0;
+  /* A rule's name and its figures stay within one glance. */
+  max-width: 480px;
+  padding: 0;
+}
+.chrona-sched__breakdown-row {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--csui-radius);
+  box-sizing: border-box;
+  color: var(--csui-text);
+  display: flex;
+  font: inherit;
+  font-size: 14px;
+  gap: 8px;
+  line-height: 20px;
+  min-height: 32px;
+  /* A row that opens nothing keeps its figures under the others'. */
+  padding: 0 32px 0 8px;
+  text-align: left;
+  width: 100%;
+}
+.chrona-sched__breakdown-row--open {
+  cursor: pointer;
+  padding-right: 8px;
+}
+.chrona-sched__breakdown-row--open:hover {
+  background: var(--csui-surface-hover);
+}
+.chrona-sched__breakdown-row--open:focus-visible {
+  outline: 2px solid var(--csui-brand);
+  outline-offset: -2px;
+}
+.chrona-sched__breakdown-label {
+  flex: 1;
+  min-width: 0;
+}
+.chrona-sched__breakdown-kinds {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+  margin-left: 8px;
+}
+.chrona-sched__breakdown-value {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.chrona-sched__breakdown-arrow {
+  color: var(--csui-text-soft);
+  margin: 0 6px;
+}
+.chrona-sched__breakdown-chevron {
+  color: var(--csui-text-soft);
+  flex: none;
+}
+.chrona-sched__breakdown-foot {
+  align-items: flex-start;
+  color: var(--csui-text-soft);
+  display: flex;
+  font-size: 12px;
+  gap: 8px;
+  line-height: 16px;
+  padding: 8px 8px 0;
+}
+.chrona-sched__breakdown-foot-icon {
+  color: var(--csui-warn);
+  flex: none;
+}
+.chrona-sched__breakdown-more {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+  line-height: 16px;
+  padding: 4px 8px 0;
+}
+.chrona-sched__sr-only {
+  clip: rect(0 0 0 0);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
 }
 .chrona-sched__proposal-list li {
   font-size: 12px;
@@ -3095,7 +3261,223 @@
   margin: 0 0 4px;
 }
 
+/*
+ * Design R10, Pass 5: one reason line per change, a 16px status icon
+ * and the reason; fixes in success, an added Must breach in danger, a
+ * strained Should rule in warning.
+ */
+.chrona-sched__proposal-reason {
+  align-items: flex-start;
+  color: var(--csui-text-soft);
+  display: inline-flex;
+  font-size: 12px;
+  gap: 4px;
+  line-height: 16px;
+}
+.chrona-sched__proposal-reason-icon {
+  flex: none;
+}
+.chrona-sched__proposal-reason--fix .chrona-sched__proposal-reason-icon {
+  color: var(--csui-success);
+}
+.chrona-sched__proposal-reason--add .chrona-sched__proposal-reason-icon {
+  color: var(--csui-danger);
+}
+.chrona-sched__proposal-reason--strain .chrona-sched__proposal-reason-icon {
+  color: var(--csui-warn);
+}
+/* Who takes which shift in a swap: a fact, not a status, so it stays neutral. */
+.chrona-sched__proposal-reason--move .chrona-sched__proposal-reason-icon {
+  color: var(--csui-text-soft);
+}
+
+/* A change list entry: the change, then its "Why not…?" (DR2 call 1). */
+.chrona-sched__proposal-body {
+  align-items: flex-start;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.chrona-sched__proposal-body .chrona-sched__proposal-item {
+  align-self: stretch;
+}
+/* Its text lines up with the entry's; the button's own padding sits in the margin. */
+.chrona-sched__proposal-whynot.chrona-sched__proposal-whynot {
+  margin-left: -8px;
+  min-width: 0;
+}
+
+/*
+ * "Why not…?" (E2, A2; design DR2 calls 1 to 4, 11, 12, Pass 5 and 6):
+ * a group at the top of the change list, the drill-down group's heading,
+ * a Combobox to pick a person, and the answer: verdict first, then the
+ * reason-line treatment for each rule, then what the board can offer.
+ */
+.chrona-sched__whynot-field {
+  margin: 4px 0 0;
+}
+/* Fluent's Combobox keeps a 250px minimum; in the 240px change list it takes the list's width. */
+.chrona-sched__whynot-picker.chrona-sched__whynot-picker {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+}
+.chrona-sched__whynot-option {
+  align-items: center;
+  display: inline-flex;
+  gap: 4px;
+}
+.chrona-sched__whynot-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+.chrona-sched__whynot-answer:empty {
+  display: none;
+}
+.chrona-sched__whynot-answer p {
+  margin: 0;
+}
+.chrona-sched__whynot-status {
+  align-items: center;
+  color: var(--csui-text);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 12px;
+  gap: 4px 8px;
+  line-height: 16px;
+}
+.chrona-sched__whynot-warn-icon {
+  color: var(--csui-warn);
+  flex: none;
+}
+/* The one new modifier (DR2 Pass 5): the verdict leads, in body text with its status icon. */
+.chrona-sched__proposal-verdict {
+  align-items: flex-start;
+  color: var(--csui-text);
+  display: flex;
+  font-size: 14px;
+  gap: 4px;
+  line-height: 20px;
+}
+.chrona-sched__proposal-verdict .chrona-sched__proposal-reason-icon {
+  margin-top: 2px;
+}
+.chrona-sched__proposal-verdict--add .chrona-sched__proposal-reason-icon {
+  color: var(--csui-danger);
+}
+.chrona-sched__proposal-verdict--strain .chrona-sched__proposal-reason-icon {
+  color: var(--csui-warn);
+}
+.chrona-sched__proposal-verdict--fix .chrona-sched__proposal-reason-icon {
+  color: var(--csui-success);
+}
+.chrona-sched__proposal-verdict--info .chrona-sched__proposal-reason-icon {
+  color: var(--csui-text-soft);
+}
+.chrona-sched__whynot-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.chrona-sched__whynot-lines .chrona-sched__proposal-reason,
+.chrona-sched__whynot-answer > .chrona-sched__proposal-reason {
+  display: flex;
+}
+.chrona-sched__whynot-section {
+  margin-top: 4px;
+}
+.chrona-sched__whynot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* RR2-D8: the counts-only note at the top of the change list (information). */
+.chrona-sched__proposal-notice {
+  align-items: flex-start;
+  font-size: 12px;
+  justify-content: flex-start;
+  line-height: 16px;
+  margin: 4px 0 8px;
+  padding: 6px 8px;
+}
+.chrona-sched__proposal-notice-icon {
+  color: var(--csui-text-soft);
+  flex: none;
+}
+
+/* Design Pass 1 call 4: a breakdown row's shifts, at the top of the change list. */
+.chrona-sched__drill-head {
+  align-items: center;
+  border-bottom: 1px solid var(--csui-stroke);
+  display: flex;
+  gap: 4px;
+  margin: 10px 0 4px;
+}
+.chrona-sched__drill-head .chrona-sched__drill-heading {
+  border-bottom: none;
+  flex: 1;
+  margin: 0;
+  padding-bottom: 0;
+}
+.chrona-sched__drill-heading:focus-visible {
+  outline: 2px solid var(--csui-brand);
+  outline-offset: 1px;
+}
+.chrona-sched__drill-entry {
+  background: transparent;
+  border: none;
+  border-radius: var(--csui-radius);
+  box-sizing: border-box;
+  color: var(--csui-text);
+  cursor: pointer;
+  display: block;
+  font: inherit;
+  font-size: 12px;
+  line-height: 16px;
+  padding: 6px 8px;
+  text-align: left;
+  width: 100%;
+}
+.chrona-sched__drill-entry:hover {
+  background: var(--csui-surface-hover);
+}
+.chrona-sched__drill-entry:focus-visible {
+  outline: 2px solid var(--csui-brand);
+  outline-offset: -2px;
+}
+.chrona-sched__drill-more {
+  padding: 4px 8px 0;
+}
+
+/* Design R14: a read the solve needs failed; the warning notice and Try again. */
+.chrona-sched__read-notice {
+  flex: none;
+  margin: 0 0 8px;
+}
+.chrona-sched__read-notice-text {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  min-width: 0;
+}
+.chrona-sched__read-notice-icon {
+  color: var(--csui-warn);
+  flex: none;
+}
+
 /* Above 24 changes: one line per person, with their shifts and hours. */
+.chrona-sched__proposal-person-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
 .chrona-sched__proposal-person {
   border-bottom: 1px solid var(--csui-stroke);
   display: flex;

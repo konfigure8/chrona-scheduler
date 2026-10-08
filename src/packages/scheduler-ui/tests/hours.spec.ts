@@ -1,4 +1,4 @@
-import { assignedHours } from "../src/hours";
+import { assignedHours, capacityForWindow } from "../src/hours";
 import type { SchedulerUiEvent } from "../src/types";
 
 function buildEvent(
@@ -40,6 +40,24 @@ function assertEqual<T>(actual: T, expected: T): void {
   }
 }
 
+/*
+ * A row reads "worked/capacity": up to a week against the weekly hours,
+ * past a week against the hours scaled to the window, so a month of
+ * work is not shown as several times over a week's capacity.
+ */
+function scalesCapacityPastAWeek(): void {
+  const day = { end: new Date(2026, 10, 3), start: new Date(2026, 10, 2) };
+  const week = { end: new Date(2026, 10, 9), start: new Date(2026, 10, 2) };
+  const fortnight = { end: new Date(2026, 10, 16), start: new Date(2026, 10, 2) };
+  const november = { end: new Date(2026, 11, 1), start: new Date(2026, 10, 1) };
+  assertEqual(capacityForWindow(38, day), 38);
+  assertEqual(capacityForWindow(38, week), 38);
+  assertEqual(capacityForWindow(38, fortnight), 76);
+  assertEqual(capacityForWindow(38, november), 163);
+  assertEqual(capacityForWindow(0, november), 0);
+}
+
 sumsAssignedHoursClippedToWindow();
+scalesCapacityPastAWeek();
 
 console.log("hours tests passed");

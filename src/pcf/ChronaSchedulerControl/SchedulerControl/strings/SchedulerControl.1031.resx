@@ -109,7 +109,7 @@
     <value>Optional. Kostenlos testen.</value>
   </data>
   <data name="conversionInspect" xml:space="preserve">
-    <value>Den exakten Payload prüfen</value>
+    <value>Die exakten Daten prüfen</value>
   </data>
   <data name="conversionLearnMore" xml:space="preserve">
     <value>Mehr erfahren</value>
@@ -406,7 +406,7 @@
     <value>Herkunft</value>
   </data>
   <data name="fieldPublishState" xml:space="preserve">
-    <value>Veröffentlichung</value>
+    <value>Veröffentlichungsstatus</value>
   </data>
   <data name="fieldStatus" xml:space="preserve">
     <value>Status</value>
@@ -844,7 +844,7 @@
     <value>Ungeplant · {count}</value>
   </data>
   <data name="unscheduledTitle" xml:space="preserve">
-    <value>Nicht eingeplant</value>
+    <value>Ungeplant</value>
   </data>
   <data name="unscheduledToggle" xml:space="preserve">
     <value>Ungeplant ({count})</value>
@@ -886,10 +886,10 @@
     <value>Datum und Uhrzeit, zu der die Zeile endet.</value>
   </data>
   <data name="Prop_Resource" xml:space="preserve">
-    <value>Ressource (Bahnen)</value>
+    <value>Ressource (Spuren)</value>
   </data>
   <data name="Prop_Resource_Desc" xml:space="preserve">
-    <value>Lookup auf die Person oder das Objekt, dem eine Zeile zugewiesen ist. Gebunden: eine Bahn je Person. Ungebunden: ein Kalender. Besitzer wird nicht angeboten; eine Lookup-Spalte verwenden.</value>
+    <value>Suchspalte zur Person oder zum Objekt, dem eine Zeile zugewiesen ist. Gebunden: eine Spur je Person. Ungebunden: ein Kalender. Besitzer wird nicht angeboten; eine Suchspalte verwenden.</value>
   </data>
   <data name="Prop_Status" xml:space="preserve">
     <value>Status (optional)</value>
@@ -925,7 +925,7 @@
     <value>Herkunft (optional)</value>
   </data>
   <data name="Prop_Provenance_Desc" xml:space="preserve">
-    <value>Text- oder Auswahlspalte, in die der Scheduler schreibt, wer die Zeile geändert hat: eine Person oder der Optimierer.</value>
+    <value>Text- oder Auswahlspalte, in die der Planer schreibt, wer die Zeile geändert hat: eine Person oder der Optimierer.</value>
   </data>
   <data name="Prop_WindowStart" xml:space="preserve">
     <value>Fensterbeginn (optional)</value>
@@ -943,7 +943,7 @@
     <value>Vorlage (optional)</value>
   </data>
   <data name="Prop_Template_Desc" xml:space="preserve">
-    <value>Lookup auf die Vorlage, aus der die Zeile erzeugt wurde (Chrona Workforce Scheduler).</value>
+    <value>Suchspalte zur Vorlage, aus der die Zeile erzeugt wurde (Chrona Workforce Scheduler).</value>
   </data>
   <data name="Prop_Origin" xml:space="preserve">
     <value>Erzeugungsursprung (optional)</value>
@@ -992,5 +992,212 @@
   </data>
   <data name="Prop_Duration_Desc" xml:space="preserve">
     <value>Minuten, die eine Zeile ohne Datum nach dem Ablegen im Planer belegt. Ohne Bindung eine Stunde.</value>
+  </data>
+  <data name="scoreNotCounted" xml:space="preserve">
+    <value>Diesmal nicht gezählt</value>
+  </data>
+  <data name="mustBreakdownTitle" xml:space="preserve">
+    <value>Muss-Regeln</value>
+  </data>
+  <data name="mustRowRest" xml:space="preserve">
+    <value>Ruhezeit zwischen Schichten</value>
+  </data>
+  <data name="mustRowDaysInARow" xml:space="preserve">
+    <value>Tage in Folge</value>
+  </data>
+  <data name="mustRowSkills" xml:space="preserve">
+    <value>Fähigkeiten</value>
+  </data>
+  <data name="mustRowOnLeave" xml:space="preserve">
+    <value>Abwesend oder nicht verfügbar</value>
+  </data>
+  <data name="mustRowOther" xml:space="preserve">
+    <value>Weitere Muss-Regeln</value>
+  </data>
+  <data name="mustKindOverlap" xml:space="preserve">
+    <value>Doppelbuchung</value>
+  </data>
+  <data name="mustKindMaximumHours" xml:space="preserve">
+    <value>Max. Stunden</value>
+  </data>
+  <data name="mustKindSplitParts" xml:space="preserve">
+    <value>Teildienst</value>
+  </data>
+  <data name="mustKindUnlisted" xml:space="preserve">
+    <value>Sonstige</value>
+  </data>
+  <data name="mustRowSummary" xml:space="preserve">
+    <value>{rule}: {now} aktuell, {proposed} im Vorschlag</value>
+  </data>
+  <data name="mustRowOpen" xml:space="preserve">
+    <value>{rule}: {now} aktuell, {proposed} im Vorschlag. Schichten anzeigen</value>
+  </data>
+  <data name="mustUncheckedOne" xml:space="preserve">
+    <value>Für 1 Person nicht geprüft</value>
+  </data>
+  <data name="mustUnchecked" xml:space="preserve">
+    <value>Für {count} Personen nicht geprüft</value>
+  </data>
+  <data name="mustNoAgreementOne" xml:space="preserve">
+    <value>1 Person hat keine Vereinbarung: Ruhezeit und Tageslimits nicht geprüft.</value>
+  </data>
+  <data name="mustNoAgreement" xml:space="preserve">
+    <value>{count} Personen haben keine Vereinbarung: Ruhezeit und Tageslimits nicht geprüft.</value>
+  </data>
+  <data name="mustNoAgreementNobody" xml:space="preserve">
+    <value>Niemand hat eine Vereinbarung: Ruhezeit und Tageslimits nicht geprüft.</value>
+  </data>
+  <data name="proposalMustKeptUncheckedOne" xml:space="preserve">
+    <value>Muss-Regeln eingehalten · für 1 Person nicht geprüft</value>
+  </data>
+  <data name="proposalMustKeptUnchecked" xml:space="preserve">
+    <value>Muss-Regeln eingehalten · für {count} Personen nicht geprüft</value>
+  </data>
+  <data name="drillGroup" xml:space="preserve">
+    <value>{rule} ({count})</value>
+  </data>
+  <data name="drillMore" xml:space="preserve">
+    <value>und {count} weitere</value>
+  </data>
+  <data name="reasonFixesRest" xml:space="preserve">
+    <value>Behebt die Ruhezeit von {name} ({hours} Std.)</value>
+  </data>
+  <data name="reasonFixesDaysInARow" xml:space="preserve">
+    <value>Behebt die Tage in Folge von {name}</value>
+  </data>
+  <data name="reasonFixesSkill" xml:space="preserve">
+    <value>Behebt eine fehlende Fähigkeit</value>
+  </data>
+  <data name="reasonFixesMust" xml:space="preserve">
+    <value>Behebt einen Muss-Regel-Verstoß</value>
+  </data>
+  <data name="reasonAddsRest" xml:space="preserve">
+    <value>Verkürzt die Ruhezeit von {name} auf {hours} Std.</value>
+  </data>
+  <data name="reasonAddsMust" xml:space="preserve">
+    <value>Verletzt eine Muss-Regel</value>
+  </data>
+  <data name="reasonUnpreferred" xml:space="preserve">
+    <value>{name} arbeitet dann ungern</value>
+  </data>
+  <data name="reasonAvoidsUnpreferred" xml:space="preserve">
+    <value>Vermeidet ungünstige Zeit für {name}</value>
+  </data>
+  <data name="reasonFillsOpen" xml:space="preserve">
+    <value>Besetzt eine offene Schicht</value>
+  </data>
+  <data name="reasonPersonFixesOne" xml:space="preserve">
+    <value>Behebt 1 Regelverstoß</value>
+  </data>
+  <data name="reasonPersonFixes" xml:space="preserve">
+    <value>Behebt {count} Regelverstöße</value>
+  </data>
+  <data name="countsOnlyNote" xml:space="preserve">
+    <value>Großer Dienstplan: nur Anzahlen. Gründe werden nicht gezeigt.</value>
+  </data>
+  <data name="tryAgain" xml:space="preserve">
+    <value>Erneut versuchen</value>
+  </data>
+  <data name="menuWhyNot" xml:space="preserve">
+    <value>Warum nicht…?</value>
+  </data>
+  <data name="whyNotPerson" xml:space="preserve">
+    <value>Person</value>
+  </data>
+  <data name="whyNotPlaceholder" xml:space="preserve">
+    <value>Namen eingeben</value>
+  </data>
+  <data name="whyNotNoMatch" xml:space="preserve">
+    <value>Kein Treffer</value>
+  </data>
+  <data name="whyNotNow" xml:space="preserve">
+    <value>jetzt {name}</value>
+  </data>
+  <data name="whyNotChecking" xml:space="preserve">
+    <value>{name} wird geprüft…</value>
+  </data>
+  <data name="whyNotVerdictMustOne" xml:space="preserve">
+    <value>{name} würde 1 Muss-Regel verletzen</value>
+  </data>
+  <data name="whyNotVerdictMust" xml:space="preserve">
+    <value>{name} würde {count} Muss-Regeln verletzen</value>
+  </data>
+  <data name="whyNotVerdictShould" xml:space="preserve">
+    <value>{name} hält alle Muss-Regeln ein, passt aber schlechter</value>
+  </data>
+  <data name="whyNotVerdictEqual" xml:space="preserve">
+    <value>{name} passt genauso gut.</value>
+  </data>
+  <data name="whyNotVerdictEqualReview" xml:space="preserve">
+    <value>{name} passt genauso gut. Die Optimierung musste wählen.</value>
+  </data>
+  <data name="whyNotVerdictBetter" xml:space="preserve">
+    <value>{name} passt besser.</value>
+  </data>
+  <data name="whyNotTakingOff" xml:space="preserve">
+    <value>{name} verliert die Schicht</value>
+  </data>
+  <data name="whyNotPrefers" xml:space="preserve">
+    <value>{name} arbeitet dann gern</value>
+  </data>
+  <data name="ruleSpreadOfShifts" xml:space="preserve">
+    <value>Verteilung der Schichten</value>
+  </data>
+  <data name="ruleMinimumHours" xml:space="preserve">
+    <value>Mindeststunden</value>
+  </data>
+  <data name="whyNotLessEven" xml:space="preserve">
+    <value>{rule}: ungleichmäßiger</value>
+  </data>
+  <data name="whyNotMoreEven" xml:space="preserve">
+    <value>{rule}: gleichmäßiger</value>
+  </data>
+  <data name="whyNotWorse" xml:space="preserve">
+    <value>{rule}: schlechter</value>
+  </data>
+  <data name="whyNotBetter" xml:space="preserve">
+    <value>{rule}: besser</value>
+  </data>
+  <data name="whyNotNoAgreement" xml:space="preserve">
+    <value>{name} hat keine Vereinbarung: Ruhezeit und Tageslimits nicht geprüft.</value>
+  </data>
+  <data name="whyNotUnavailable" xml:space="preserve">
+    <value>Gerade nicht prüfbar</value>
+  </data>
+  <data name="whyNotRetryIn" xml:space="preserve">
+    <value>Gerade nicht prüfbar. In {seconds} s erneut versuchen.</value>
+  </data>
+  <data name="whyNotRosterChanged" xml:space="preserve">
+    <value>Der Dienstplan hat sich geändert.</value>
+  </data>
+  <data name="whyNotAskAgain" xml:space="preserve">
+    <value>Erneut fragen</value>
+  </data>
+  <data name="whyNotAssign" xml:space="preserve">
+    <value>{name} zuweisen</value>
+  </data>
+  <data name="whyNotSwap" xml:space="preserve">
+    <value>{name} und {other} tauschen</value>
+  </data>
+  <data name="whyNotTakes" xml:space="preserve">
+    <value>{name} übernimmt {shift}</value>
+  </data>
+  <data name="whyNotLeftOpen" xml:space="preserve">
+    <value>{shift} von {name} bliebe offen</value>
+  </data>
+  <data name="whyNotInReview" xml:space="preserve">
+    <value>Für {name} diese Änderung auslassen und nach dem Übernehmen handeln.</value>
+  </data>
+  <data name="scorePreferences" xml:space="preserve">
+    <value>Erfüllte Präferenzen</value>
+  </data>
+  <data name="scorePreferencesValue" xml:space="preserve">
+    <value>{met} von {total}</value>
+  </data>
+  <data name="scorePreferencesNone" xml:space="preserve">
+    <value>Keine Präferenzen erfasst</value>
+  </data>
+  <data name="preferencesUnmetTitle" xml:space="preserve">
+    <value>Nicht erfüllte Präferenzen</value>
   </data>
 </root>

@@ -77,7 +77,7 @@ The answer arrives as a proposal on the same board. Proposed placements carry a 
 
 ## Staff rostering
 
-When scheduling turns into rostering, **Chrona Workforce Scheduler** adds the tables and the app for it: roles built from skills, with mismatch highlighting, availability and preferences, hours against capacity, demand and the coverage strip, shift templates with rotating patterns and generation, roster periods with publish. Same board. It is licensed per scheduled person; ask us at support@chrona365.com.
+When scheduling turns into rostering, **Chrona Workforce Scheduler** adds the tables and the app for it: roles built from skills, with mismatch highlighting, availability and preferences, hours against capacity, agreements with rest and day limits, demand and the coverage strip, shift templates with rotating patterns and generation, roster periods with publish. Same board. It is licensed per scheduled person; ask us at support@chrona365.com.
 
 ![Planning a roster: the horizon of roster periods, coverage per hour, people with skills and hours, the unscheduled panel](docs/images/planning.png)
 

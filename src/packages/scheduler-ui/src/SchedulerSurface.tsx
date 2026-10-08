@@ -1,6 +1,11 @@
 import * as React from "react";
 import { Button, Switch } from "@fluentui/react-components";
-import { ChevronDown20Regular, ChevronUp20Regular, Eye20Regular } from "@fluentui/react-icons";
+import {
+  ChevronDown20Regular,
+  ChevronUp20Regular,
+  Eye20Regular,
+  Warning16Regular,
+} from "@fluentui/react-icons";
 
 import { AgendaView } from "./AgendaView";
 import {
@@ -47,12 +52,17 @@ import {
   type SchedulerPeriodConfig,
 } from "./periods";
 import {
+  applyProposalChanges,
   diffProposal,
   isGhostEvent,
+  mustRowMatches,
+  openShiftsAfter,
   previewProposal,
   proposalDoubleBookings,
+  proposalMustReport,
   proposalMustRules,
   proposalScore,
+  type MustRow,
   type ProposalChange,
   type ProposalDoubleBooking,
   type ScheduleProposal,
@@ -61,8 +71,12 @@ import {
   type SolveQuotaDisplay,
   type SolveState,
 } from "./solve";
-import { ProposalPanel } from "./ProposalPanel";
-import { ProposalScorecard } from "./ProposalScorecard";
+import { ProposalPanel, type ProposalDrillDown } from "./ProposalPanel";
+import { mustRowLabel, ProposalScorecard } from "./ProposalScorecard";
+import { drillDownEntries, personFixCounts, proposalReasons } from "./proposalReasons";
+import { mustBreachTotal } from "./schedulingContract";
+import { WhyNotGroup } from "./WhyNotGroup";
+import { rosterVersionOf, whyNotAction, type WhyNotAction } from "./whyNot";
 import { SolveProgressIndicator, useElapsedSeconds } from "./SolveProgress";
 import { SchedulerLegend } from "./SchedulerLegend";
 import { SchedulerToolbar } from "./SchedulerToolbar";
@@ -368,8 +382,18 @@ export interface SchedulerSurfaceProps {
 
 interface MenuState {
   readonly event: SchedulerUiEvent;
+  /** The shift's element the menu opened on; focus returns to it. */
+  readonly origin?: HTMLElement;
   readonly x: number;
   readonly y: number;
+}
+
+/** An open "Why not…?" question: the shift, and where focus returns when it closes. */
+interface WhyNotQuestion {
+  /** A new value moves focus to the picker. */
+  readonly focusKey: number;
+  readonly origin?: HTMLElement;
+  readonly shiftId: string;
 }
 
 interface HoverState {
@@ -466,8 +490,8 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     | { readonly eventId: string; readonly items: readonly ContextMenuItem[] }
     | undefined
   >();
-  const openMenu = (event: SchedulerUiEvent, x: number, y: number): void => {
-    setMenu({ event, x, y });
+  const openMenu = (event: SchedulerUiEvent, x: number, y: number, origin?: HTMLElement): void => {
+    setMenu({ event, origin, x, y });
     setLoadedMenuItems(undefined);
     props.loadContextMenuItems?.(event).then(
       (items) =>
@@ -552,14 +576,17 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
   const [changesOnly, setChangesOnly] = React.useState(false);
   // Roster grid: the change list opened from its folded tab.
   const [changesOpen, setChangesOpen] = React.useState(false);
+  // "Why not…?" (E2, A2): the open question, if any.
+  const [whyNot, setWhyNot] = React.useState<WhyNotQuestion | undefined>();
   const proposalRunId = props.proposal?.runId;
   React.useEffect(() => {
-    // A new answer starts a fresh review.
+    // A new answer starts a fresh review; a question about the last roster closes.
     setDroppedChangeIds(new Set<string>());
     setReviewView("proposed");
     setPeek(false);
     setChangesOnly(false);
     setChangesOpen(false);
+    setWhyNot(undefined);
   }, [proposalRunId]);
   const toggleDropped = React.useCallback((change: ProposalChange): void => {
     setDroppedChangeIds((previous) => {
@@ -614,6 +641,98 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
         : undefined,
     [droppedChangeIds, props.proposal, withheldChangeIds],
   );
+  /*
+   * The Must report (design Pass 1 calls 2 and 6, DR2-Q1, RR3-D1), when
+   * an extension supplies one: the solver's counts right after Optimize;
+   * once a change is dropped or held back, the extension counts the
+   * roster as Apply would leave it, at once and with no call.
+   */
+  const boardExtension = useBoardExtension();
+  const review = boardExtension?.review;
+  const reviewPeriod = props.proposal?.window ?? props.window;
+  // Every item as it stands, and as Apply would leave it (the current roster when no proposal is open).
+  const currentAll = React.useMemo(
+    () => [...props.events, ...(props.unscheduledEvents ?? [])],
+    [props.events, props.unscheduledEvents],
+  );
+  const appliedAll = React.useMemo(
+    () => (proposalChanges ? applyProposalChanges(currentAll, applicableChanges) : currentAll),
+    [applicableChanges, currentAll, proposalChanges],
+  );
+  // E4, A4: preferences met over Optimize's window, now and as Apply would leave the roster.
+  const preferencesMet = boardExtension?.preferencesMet;
+  const preferenceFigures = React.useMemo(
+    () =>
+      preferencesMet && proposalChanges
+        ? {
+            now: preferencesMet({ events: currentAll, resources: props.resources, window: reviewPeriod }),
+            proposed: preferencesMet({ events: appliedAll, resources: props.resources, window: reviewPeriod }),
+          }
+        : undefined,
+    [appliedAll, currentAll, preferencesMet, proposalChanges, props.resources, reviewPeriod],
+  );
+  const mustReport = React.useMemo(() => {
+    if (!review || !props.proposal || !proposalChanges) {
+      return undefined;
+    }
+    return proposalMustReport(
+      props.proposal,
+      { dropped: droppedChangeIds, withheld: withheldChangeIds },
+      () =>
+        review.checkMust({
+          events: appliedAll,
+          resources: props.resources,
+          window: reviewPeriod,
+        }),
+    );
+  }, [
+    appliedAll,
+    droppedChangeIds,
+    proposalChanges,
+    props.proposal,
+    props.resources,
+    review,
+    reviewPeriod,
+    withheldChangeIds,
+  ]);
+  const unchecked = React.useMemo(
+    () =>
+      review && proposalChanges
+        ? review.unchecked({ resources: props.resources, window: reviewPeriod })
+        : undefined,
+    [proposalChanges, props.resources, review, reviewPeriod],
+  );
+  // Every shift the run answered for, by id: the reasons' rest gaps and the drill-down's times.
+  const proposalEventsById = React.useMemo(() => {
+    const byId = new Map<string, SchedulerUiEvent>();
+    for (const event of [...props.events, ...(props.unscheduledEvents ?? [])]) {
+      byId.set(event.id, event);
+    }
+    for (const event of props.proposal?.events ?? []) {
+      if (!byId.has(event.id)) {
+        byId.set(event.id, event);
+      }
+    }
+    return byId;
+  }, [props.events, props.proposal, props.unscheduledEvents]);
+  // The shifts Apply would leave open in the period the run solved, for Shifts filled.
+  const openShifts = React.useMemo(() => {
+    if (!props.proposal || !proposalChanges) {
+      return [];
+    }
+    const inPeriod = (event: SchedulerUiEvent): boolean =>
+      event.start >= reviewPeriod.start && event.start < reviewPeriod.end;
+    return openShiftsAfter(
+      { ...props.proposal, events: props.proposal.events.filter(inPeriod) },
+      proposalChanges.filter((change) => inPeriod(change.current)),
+      { dropped: droppedChangeIds, withheld: withheldChangeIds },
+    );
+  }, [droppedChangeIds, proposalChanges, props.proposal, reviewPeriod, withheldChangeIds]);
+  // A breakdown row opened into the change list; a new nonce moves focus to its heading.
+  const [drill, setDrill] = React.useState<{ readonly nonce: number; readonly row: MustRow } | undefined>();
+  React.useEffect(() => {
+    setDrill(undefined);
+  }, [props.proposal?.runId]);
   // F31 rework: the summary and the scorecard, as Apply would leave the
   // roster. The period the run solved counts, not the days on screen,
   // so the figures match the change list and what Apply writes.
@@ -682,10 +801,12 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     props.view === "roster" &&
     proposalChanges !== undefined &&
     proposalChanges.length > 0;
+  // The side panel on the Roster grid: the change list, or a "Why not…?" question on its own.
+  const rosterSidePanel = rosterReview || (props.view === "roster" && whyNot !== undefined);
   const [layoutWidth, setLayoutWidth] = React.useState(0);
   React.useLayoutEffect(() => {
     const layout = layoutRef.current;
-    if (!rosterReview || !layout) {
+    if (!rosterSidePanel || !layout) {
       return undefined;
     }
     const measure = (): void => setLayoutWidth(layout.clientWidth);
@@ -696,7 +817,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     const observer = new ResizeObserver(measure);
     observer.observe(layout);
     return () => observer.disconnect();
-  }, [rosterReview]);
+  }, [rosterSidePanel]);
   const rosterDayCount = React.useMemo(
     () =>
       props.view === "roster"
@@ -705,10 +826,11 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     [props.showWeekends, props.view, props.window],
   );
   // The change list's 240px and the layout's 12px gap, as styles.css sets them.
-  const changesFolded =
-    rosterReview &&
+  const sidePanelFolds =
+    rosterSidePanel &&
     layoutWidth > 0 &&
     layoutWidth - 240 - 12 < rosterPeopleWidthPx + rosterDayCount * rosterDayWidthPx;
+  const changesFolded = rosterReview && sidePanelFolds;
   React.useEffect(() => {
     if (!changesFolded) {
       setChangesOpen(false);
@@ -741,6 +863,35 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     props.solveState?.status === "queued" ||
     props.solveState?.status === "running";
   const solveSeconds = useElapsedSeconds(solving);
+  /*
+   * Design R14 (D22): a read the solve needs failed, so nothing was
+   * sent. The notice says so with Try again; while the retried solve
+   * reads again, Try again stays busy; once the solve is under way the
+   * notice closes.
+   */
+  const solveStatus = props.solveState?.status;
+  const readFailure =
+    solveStatus === "failed" && props.solveState?.reason === "read"
+      ? (props.solveState.message ?? "")
+      : undefined;
+  const [retryingRead, setRetryingRead] = React.useState(false);
+  const [lastReadFailure, setLastReadFailure] = React.useState("");
+  React.useEffect(() => {
+    if (readFailure !== undefined) {
+      setLastReadFailure(readFailure);
+    }
+  }, [readFailure]);
+  React.useEffect(() => {
+    if (solveStatus !== "queued") {
+      setRetryingRead(false);
+    }
+  }, [solveStatus]);
+  const readNotice =
+    readFailure !== undefined
+      ? { busy: false, message: readFailure }
+      : retryingRead && solveStatus === "queued"
+        ? { busy: true, message: lastReadFailure }
+        : undefined;
   const solveProgress: SolveProgress | undefined = solving
     ? {
         label:
@@ -751,6 +902,24 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
         seconds: solveSeconds,
       }
     : undefined;
+  /*
+   * Optimize gives way to the progress while a solve runs, so the button
+   * that had focus leaves the page. When the run ends - an answer, or a
+   * failed read's notice (design Pass 6: focus does not jump) - focus
+   * returns to the button, unless the planner has moved it since.
+   */
+  const solveButtonRef = React.useRef<HTMLButtonElement | null>(null);
+  const solveHadFocus = React.useRef(false);
+  React.useEffect(() => {
+    if (solving || !solveHadFocus.current) {
+      return;
+    }
+    solveHadFocus.current = false;
+    const active = document.activeElement;
+    if (!active || active === document.body) {
+      solveButtonRef.current?.focus();
+    }
+  }, [solving]);
   const extension = useBoardExtension();
   const boardState: BoardState = {
     anchor: props.anchor,
@@ -807,6 +976,21 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     }
     props.onSelectionChange?.([]);
   };
+  // A new item: the extension's own form when it has one, else the board's dialog.
+  const openDraft = React.useCallback(
+    (range: DragResult): void => {
+      if (extension?.createEvent) {
+        extension.createEvent({
+          end: range.end,
+          resource: props.resources.find((resource) => resource.id === range.resourceId),
+          start: range.start,
+        });
+        return;
+      }
+      setDraftRange(range);
+    },
+    [extension, props.resources],
+  );
   const handleDraftRange = React.useCallback(
     (result: DragResult): void => {
       // No creation handler means no create affordance: a dialog whose
@@ -815,9 +999,9 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       if (!canCreate) {
         return;
       }
-      setDraftRange(result);
+      openDraft(result);
     },
-    [canCreate],
+    [canCreate, openDraft],
   );
 
   const draftDialogEvent = React.useMemo<SchedulerUiEvent | undefined>(
@@ -977,8 +1161,16 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     }
     contextEvent.preventDefault();
     clearHover();
-    const local = toLocal(contextEvent.clientX, contextEvent.clientY);
-    openMenu(event, local.x, local.y);
+    const origin =
+      (contextEvent.target as HTMLElement | null)?.closest<HTMLElement>("[data-event-id]") ?? undefined;
+    // From the keyboard (the menu key, Shift+F10) the menu opens at the
+    // shift, not at a pointer that is somewhere else.
+    const keyboard = contextEvent.clientX === 0 && contextEvent.clientY === 0;
+    const rect = keyboard ? origin?.getBoundingClientRect() : undefined;
+    const local = rect
+      ? toLocal(rect.left, rect.bottom)
+      : toLocal(contextEvent.clientX, contextEvent.clientY);
+    openMenu(event, local.x, local.y, origin);
   };
 
   // Lane bars open the same context menu on a plain click: the ruled
@@ -997,7 +1189,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     }
     clearHover();
     const local = toLocal(clickEvent.clientX, clickEvent.clientY);
-    openMenu(event, local.x, local.y);
+    openMenu(event, local.x, local.y, target.closest<HTMLElement>("[data-event-id]") ?? undefined);
   };
 
   const handleMouseOver = (overEvent: React.MouseEvent<HTMLDivElement>): void => {
@@ -1056,6 +1248,10 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
 
   const buildMenuItems = (event: SchedulerUiEvent): readonly ContextMenuItem[] => {
     const items: ContextMenuItem[] = [];
+    // "Why not…?" on a shift that has not started (A2, DR2 call 1).
+    const whyNotItem: ContextMenuItem | undefined = askableShift(event)
+      ? { id: "why-not", label: strings.menuWhyNot, onSelect: () => openWhyNot(event.id, menu?.origin) }
+      : undefined;
     if (reviewing) {
       if (props.onOpenRecord) {
         const openRecord = leavingFullScreen(props.onOpenRecord);
@@ -1077,6 +1273,9 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           onSelect: () => toggleDropped(change),
         });
       }
+      if (whyNotItem) {
+        items.push(whyNotItem);
+      }
       return items;
     }
     if (props.onOpenRecord) {
@@ -1088,6 +1287,9 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       });
     }
     items.push({ id: "open", label: strings.menuOpen, onSelect: () => openDialog(event) });
+    if (whyNotItem) {
+      items.push(whyNotItem);
+    }
     if (
       canEdit &&
       props.onAssignEvent &&
@@ -1451,15 +1653,250 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     ) {
       start.setTime(props.window.start.getTime());
     }
-    setDraftRange({
+    openDraft({
       end: new Date(start.getTime() + 3_600_000),
       resourceId,
       start,
     });
   };
 
+  /*
+   * Design R10: what each change fixes or adds, from the run's analysis,
+   * on the reviewed changes whatever the planner drops (A14).
+   */
+  const nameOfResource = React.useCallback(
+    (resourceId: string): string => resourceNameById.get(resourceId) ?? resourceId,
+    [resourceNameById],
+  );
+  const changeReasons = React.useMemo(
+    () =>
+      proposalChanges && review
+        ? proposalReasons(proposalChanges, props.proposal?.analysis, {
+            eventsById: proposalEventsById,
+            nameOf: nameOfResource,
+            strings,
+            toInstant: props.toInstant,
+          })
+        : undefined,
+    [nameOfResource, proposalChanges, proposalEventsById, props.proposal, props.toInstant, review, strings],
+  );
+  const personFixes = React.useMemo(
+    () => (proposalChanges && review ? personFixCounts(proposalChanges, props.proposal?.analysis) : undefined),
+    [proposalChanges, props.proposal, review],
+  );
+
+  /*
+   * "Why not…?" (E2, A2; design DR2 calls 1 to 4, 11, 12, DR2-Q2, Pass
+   * 6): a question on a shift that has not started, from its menu or its
+   * change-list entry, about the roster as it would be applied (A14). It
+   * is answered at the top of the change list, or in the side panel on
+   * its own when no proposal is open. Each request carries the roster's
+   * version, so an answer for a roster that has changed since is never
+   * shown as current (S4-2). On the current roster the answer offers an
+   * assign or a swap; during review it offers nothing.
+   */
+  const whyNotExtension = boardExtension?.whyNot;
+  const askableShift = (event: SchedulerUiEvent): boolean =>
+    whyNotExtension !== undefined &&
+    !isGhostEvent(event) &&
+    event.undated !== true &&
+    (whyNotExtension.now === undefined || event.start >= whyNotExtension.now) &&
+    (!props.proposal || (event.start >= reviewPeriod.start && event.start < reviewPeriod.end));
+  const whyNotShift = whyNot ? appliedAll.find((event) => event.id === whyNot.shiftId) : undefined;
+  const whyNotWindow = whyNotShift
+    ? props.proposal
+      ? reviewPeriod
+      : props.periodConfig
+        ? periodContaining(props.periodConfig, whyNotShift.start)
+        : props.window
+    : undefined;
+  const whyNotOpen = whyNot !== undefined;
+  const rosterVersion = React.useMemo(
+    () => (whyNotOpen ? rosterVersionOf(appliedAll) : ""),
+    [appliedAll, whyNotOpen],
+  );
+  const rosterVersionRef = React.useRef(rosterVersion);
+  rosterVersionRef.current = rosterVersion;
+  const currentRosterVersion = React.useCallback(() => rosterVersionRef.current, []);
+  // A shift that left the board takes its question with it.
+  React.useEffect(() => {
+    if (whyNot && !whyNotShift) {
+      setWhyNot(undefined);
+    }
+  }, [whyNot, whyNotShift]);
+  const openWhyNot = (shiftId: string, origin?: HTMLElement): void => {
+    setWhyNot((previous) => ({ focusKey: (previous?.focusKey ?? 0) + 1, origin, shiftId }));
+    // A folded change list opens over the board.
+    if (changesFolded) {
+      setChangesOpen(true);
+    }
+  };
+  // Focus returns to the shift, or the change-list entry, the question came from.
+  const closeWhyNot = (): void => {
+    const question = whyNot;
+    setWhyNot(undefined);
+    if (!question) {
+      return;
+    }
+    // After the board has drawn the edit: a moved shift is a new element.
+    window.setTimeout(() => {
+      const back = question.origin?.isConnected
+        ? question.origin
+        : wrapperRef.current?.querySelector<HTMLElement>(`[data-event-id="${question.shiftId}"]`);
+      back?.focus();
+    }, 0);
+  };
+  const actOnWhyNot = (action: Extract<WhyNotAction, { kind: "assign" | "swap" }>): void => {
+    const changes = action.kind === "assign" ? [action.change] : [...action.changes];
+    if (action.kind === "swap" && whyNotExtension?.writeInOrder) {
+      // A swap writes its two moves in order and stops at the first that fails (RR3-F4).
+      whyNotExtension.writeInOrder(changes);
+    } else if (props.onEventsChange) {
+      props.onEventsChange(changes);
+    } else {
+      for (const change of changes) {
+        props.onEventChange?.(change);
+      }
+    }
+    closeWhyNot();
+  };
+  const whyNotPeople = React.useMemo(
+    () =>
+      whyNotShift
+        ? props.resources
+            .filter(
+              (resource) =>
+                resource.id !== props.unassignedResourceId &&
+                !(whyNotShift.status !== "needsCover" && resource.id === whyNotShift.resourceId),
+            )
+            .sort((first, second) => first.name.localeCompare(second.name))
+        : [],
+    [props.resources, props.unassignedResourceId, whyNotShift],
+  );
+  const canWrite = props.onEventsChange !== undefined || props.onEventChange !== undefined;
+  const whyNotActionFor =
+    whyNotShift && whyNotWindow && canEdit && canWrite
+      ? (picked: SchedulerResource): WhyNotAction =>
+          whyNotAction({
+            checkMust: review
+              ? (events) => review.checkMust({ events, resources: props.resources, window: whyNotWindow })
+              : undefined,
+            events: currentAll,
+            names: dateNamesFrom(strings),
+            nameOf: nameOfResource,
+            picked,
+            resources: props.resources,
+            shift: whyNotShift,
+            strings,
+            toInstant: props.toInstant,
+            validateChange: props.validateChange,
+          })
+      : undefined;
+  const personMark = boardExtension?.personMark;
+  const whyNotNode =
+    whyNot && whyNotShift && whyNotWindow && whyNotExtension ? (
+      <WhyNotGroup
+        actionFor={whyNotActionFor}
+        currentRosterVersion={currentRosterVersion}
+        extension={whyNotExtension}
+        focusKey={whyNot.focusKey}
+        key={whyNot.shiftId}
+        nameOf={nameOfResource}
+        onAct={actOnWhyNot}
+        onClose={closeWhyNot}
+        people={whyNotPeople}
+        personMark={
+          personMark
+            ? (resource) => personMark(resource, { resources: props.resources, window: whyNotWindow })
+            : undefined
+        }
+        review={
+          proposalChanges
+            ? {
+                isChange: applicableChanges.some((change) => change.current.id === whyNot.shiftId),
+              }
+            : undefined
+        }
+        roster={{ events: appliedAll, resources: props.resources, window: whyNotWindow }}
+        rosterVersion={rosterVersion}
+        shift={whyNotShift}
+        toInstant={props.toInstant}
+      />
+    ) : null;
+  // Bring shifts into view on the board and select them; the period the run solved comes first.
+  const focusShifts = (ids: readonly string[]): void => {
+    const shown = ids
+      .map((id) => proposalEventsById.get(id))
+      .filter((event): event is SchedulerUiEvent => event !== undefined);
+    const inPeriod = shown.filter(
+      (event) => event.start >= reviewPeriod.start && event.start < reviewPeriod.end,
+    );
+    const first = (inPeriod.length > 0 ? inPeriod : shown).reduce<SchedulerUiEvent | undefined>(
+      (earliest, event) => (!earliest || event.start < earliest.start ? event : earliest),
+      undefined,
+    );
+    if (first) {
+      props.onAnchorChange?.(first.start);
+      setScrollRequest((previous) => ({
+        date: first.start,
+        nonce: (previous?.nonce ?? 0) + 1,
+      }));
+    }
+    props.onSelectionChange?.(shown.map((event) => event.id));
+  };
+  // Design Pass 1 call 4: a breakdown row's shifts as a group at the top of the change list.
+  const drillMatches = drill && mustReport ? mustRowMatches(mustReport, drill.row) : undefined;
+  const drillDown: ProposalDrillDown | undefined =
+    drill && drillMatches
+      ? {
+          entries: drillDownEntries(drillMatches.matches, {
+            eventsById: proposalEventsById,
+            nameOf: nameOfResource,
+            names: dateNamesFrom(strings),
+            strings,
+            toInstant: props.toInstant,
+          }),
+          focusKey: drill.nonce,
+          heading: formatString(strings.drillGroup, {
+            count: String(drillMatches.matches.length),
+            rule: mustRowLabel(strings, drill.row),
+          }),
+          onClose: () => setDrill(undefined),
+          onFocusEntry: (entry) => focusShifts(entry.shiftIds),
+        }
+      : undefined;
+  const openMustRow = (row: MustRow): void => {
+    const opened = mustReport ? mustRowMatches(mustReport, row) : undefined;
+    if (!opened) {
+      return;
+    }
+    setDrill((previous) => ({ nonce: (previous?.nonce ?? 0) + 1, row }));
+    // A folded change list opens over the board.
+    if (changesFolded) {
+      setChangesOpen(true);
+    }
+    focusShifts([...new Set(opened.matches.flatMap((match) => match.shiftIds))]);
+  };
+
+  /*
+   * The bar's Must word: from the counts when there are counts, else the
+   * solver's verdict. "A clean report must mean clean" (eng D16, design
+   * Pass 1 call 7): kept says who was not checked, unless nobody on the
+   * board is checked (call 6: a board without agreements is not nagged).
+   */
+  const summaryMust: "broken" | "kept" | undefined = mustReport?.proposed
+    ? mustBreachTotal(mustReport.proposed) > 0
+      ? "broken"
+      : "kept"
+    : proposalMust;
+  const summaryUnchecked =
+    mustReport && unchecked && !unchecked.nobody && unchecked.count > 0 ? unchecked.count : undefined;
+
   // The change list's props, beside the grid or over it.
   const proposalPanelProps = {
+    canAskWhyNot: (change: ProposalChange): boolean => askableShift(change.current),
+    countsOnly: review ? props.proposal?.analysis?.countsOnly === true : false,
+    drillDown,
     entries: (proposalChanges ?? []).map((change) => {
       const booking = doubleBookings.get(change.current.id);
       return {
@@ -1477,6 +1914,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
             }
           : undefined,
         outOfDate: props.proposalOutOfDate?.get(change.current.id),
+        reason: changeReasons?.get(change.current.id),
       };
     }),
     onFocus: (change: ProposalChange): void => {
@@ -1487,6 +1925,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       }));
       props.onSelectionChange?.([change.current.id]);
     },
+    personFixes,
     // Keep all clears the drops; Keep none drops every change that could apply.
     onKeepAll: (keep: boolean): void => {
       setDroppedChangeIds(
@@ -1500,7 +1939,11 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       );
     },
     onToggleDrop: toggleDropped,
+    onWhyNot: whyNotExtension
+      ? (change: ProposalChange, origin: HTMLElement): void => openWhyNot(change.current.id, origin)
+      : undefined,
     resourceNameById,
+    whyNot: whyNotNode,
   };
 
   const toolbarAnchor = props.anchor;
@@ -1685,6 +2128,33 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           ) : null}
         </div>
       ) : null}
+      {readNotice ? (
+        <div
+          className="chrona-sched__horizon-notice chrona-sched__horizon-notice--warning chrona-sched__read-notice"
+          data-testid="read-notice"
+          role="alert"
+        >
+          <span className="chrona-sched__read-notice-text">
+            <Warning16Regular aria-hidden="true" className="chrona-sched__read-notice-icon" />
+            <span>{readNotice.message}</span>
+          </span>
+          {props.onRequestSolve ? (
+            <Button
+              appearance="secondary"
+              data-testid="read-notice-retry"
+              disabled={readNotice.busy}
+              icon={readNotice.busy ? <span aria-hidden="true" className="chrona-sched__spinner" /> : undefined}
+              onClick={() => {
+                setRetryingRead(true);
+                props.onRequestSolve?.();
+              }}
+              size="small"
+            >
+              {strings.tryAgain}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
       {props.onRequestSolve || props.solveState || props.entitlement ? (
         <div className="chrona-sched__solve-bar">
           {props.onRequestSolve && !hasHeader ? (
@@ -1694,7 +2164,11 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
               <button
                 className="chrona-sched__toolbar-primary chrona-sched__solve-button"
                 disabled={props.solveUnavailableReason !== undefined}
-                onClick={props.onRequestSolve}
+                onClick={(clickEvent) => {
+                  solveHadFocus.current = document.activeElement === clickEvent.currentTarget;
+                  props.onRequestSolve?.();
+                }}
+                ref={solveButtonRef}
                 type="button"
               >
                 {strings.solve}
@@ -1713,6 +2187,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
               allowance is shown; without one (paid tiers) the server's
               own message is the honest line. */}
           {props.solveState?.status === "failed" &&
+          props.solveState.reason !== "read" &&
           !(props.solveState.reason === "quota" && props.solveQuota) ? (
             <span className="chrona-sched__solve-error" role="alert">
               {formatString(strings.solveFailed, {
@@ -1882,20 +2357,26 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
                     </span>
                   </>
                 ) : null}
-                {proposalMust ? (
+                {summaryMust ? (
                   <>
                     <span aria-hidden="true">{" · "}</span>
                     <span
                       className={
-                        proposalMust === "broken"
+                        summaryMust === "broken"
                           ? "chrona-sched__proposal-note--block"
                           : undefined
                       }
                       data-testid="proposal-must"
                     >
-                      {proposalMust === "broken"
+                      {summaryMust === "broken"
                         ? strings.proposalMustBroken
-                        : strings.proposalMustKept}
+                        : summaryUnchecked === undefined
+                          ? strings.proposalMustKept
+                          : summaryUnchecked === 1
+                            ? strings.proposalMustKeptUncheckedOne
+                            : formatString(strings.proposalMustKeptUnchecked, {
+                                count: String(summaryUnchecked),
+                              })}
                     </span>
                   </>
                 ) : null}
@@ -2062,9 +2543,16 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           hidden={!scorecardOpen}
           id={scorecardId}
           must={proposalMust}
+          mustReport={mustReport}
+          nameOf={nameOfResource}
+          onFocusShift={(event) => focusShifts([event.id])}
+          onOpenRow={openMustRow}
+          openShifts={openShifts}
           peopleTotal={props.resources.length}
+          preferences={preferenceFigures}
           score={proposalFigures}
           search={props.proposal?.search}
+          unchecked={unchecked}
         />
       ) : null}
       <div className="chrona-sched__layout" ref={layoutRef}>
@@ -2090,6 +2578,23 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           </div>
         ) : proposalChanges && proposalChanges.length > 0 ? (
           <ProposalPanel {...proposalPanelProps} id={changesPanelId} />
+        ) : whyNotNode ? (
+          // No change list: the question has the side panel to itself, over the board when the days need the room.
+          sidePanelFolds ? (
+            <div className="chrona-sched__proposal-fold">
+              <aside
+                aria-label={strings.menuWhyNot}
+                className="chrona-sched__proposal-panel chrona-sched__proposal-panel--overlay"
+                data-testid="why-not-panel"
+              >
+                {whyNotNode}
+              </aside>
+            </div>
+          ) : (
+            <aside aria-label={strings.menuWhyNot} className="chrona-sched__proposal-panel" data-testid="why-not-panel">
+              {whyNotNode}
+            </aside>
+          )
         ) : null}
         {showPanel && boardUnscheduled ? (
           <UnscheduledPanel

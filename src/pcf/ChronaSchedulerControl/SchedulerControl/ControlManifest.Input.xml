@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="Chrona" constructor="SchedulerControl" version="0.0.89" display-name-key="Chrona Scheduler" description-key="Chrona scheduler: resource timeline, roster, and calendar views with drag scheduling" control-type="virtual" >
+  <control namespace="Chrona" constructor="SchedulerControl" version="0.0.92" display-name-key="Chrona Scheduler" description-key="Chrona scheduler: resource timeline, roster, and calendar views with drag scheduling" control-type="virtual" >
     <!--
       The standalone wedge control declares NO external services: it must
       install as a non-premium control. Optimizer connectivity arrives

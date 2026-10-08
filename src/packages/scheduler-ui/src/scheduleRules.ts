@@ -73,6 +73,12 @@ export const scheduleRuleOrder = {
 /** What a rule reads for one proposed change. */
 export interface ScheduleRuleContext {
   readonly event: SchedulerUiEvent | undefined;
+  /**
+   * Every scheduled event, as the host passed them. A rule that needs
+   * more than the proposed person's own (the other part of a split
+   * shift) looks here; most rules read personEvents only.
+   */
+  readonly events: readonly SchedulerUiEvent[];
   /** The proposed person's own events. */
   readonly personEvents: readonly SchedulerUiEvent[];
   readonly proposed: DragResult;
@@ -134,6 +140,126 @@ export function findBreakViolation(
     if (!worst || gapMinutes < worst.gapMinutes) {
       worst = { gapMinutes, neighborTitle: candidate.title };
     }
+  }
+  return worst;
+}
+
+/** Two shifts overlap: each starts before the other ends. Shifts that only touch do not. */
+export function shiftsOverlap(
+  first: { readonly end: Date; readonly start: Date },
+  second: { readonly end: Date; readonly start: Date },
+): boolean {
+  return first.start < second.end && first.end > second.start;
+}
+
+/** The parts of a shift the rest rule reads. */
+export type RestShift = Pick<SchedulerUiEvent, "end" | "id" | "split" | "start">;
+
+/**
+ * A person's shifts in order: by start, then end, then id. The solver's
+ * analysis and the benchmark's counting script order them the same way,
+ * so "consecutive" means one thing everywhere.
+ */
+export function compareShifts(first: RestShift, second: RestShift): number {
+  return (
+    first.start.getTime() - second.start.getTime() ||
+    first.end.getTime() - second.end.getTime() ||
+    (first.id < second.id ? -1 : first.id > second.id ? 1 : 0)
+  );
+}
+
+/**
+ * A person's minimum rest before work that starts at `laterStart`, in
+ * minutes: the rule in force when the later work starts (design R15).
+ * Undefined = no minimum for them then.
+ */
+export type MinimumRestAt = (laterStart: Date) => number | undefined;
+
+/** A rest gap shorter than the minimum in force before the later shift. */
+export interface RestShortfall {
+  /** The gap in whole minutes (rounded down). */
+  readonly gapMinutes: number;
+  readonly minimumMinutes: number;
+}
+
+/**
+ * Rest between two consecutive shifts of one person (`earlier` before
+ * `later` in compareShifts order), judged by the minimum in force when
+ * the later one starts. Undefined when the pair keeps the rule: the
+ * shifts overlap (the overlap rule's finding), they are parts of one
+ * split shift (F48: that gap is not rest), no minimum applies, or the
+ * gap reaches it. The gap is measured between the real moments the
+ * board dates stand for (toInstant), as the solver measures it.
+ */
+export function restShortfall(
+  earlier: RestShift,
+  later: RestShift,
+  minimumAt: MinimumRestAt,
+  toInstant?: (display: Date) => Date,
+): RestShortfall | undefined {
+  if (earlier.split && later.split && earlier.split.id === later.split.id) {
+    return undefined;
+  }
+  const moment = (date: Date): number => (toInstant ? toInstant(date) : date).getTime();
+  const gapMs = moment(later.start) - moment(earlier.end);
+  if (gapMs < 0) {
+    return undefined;
+  }
+  const minimumMinutes = minimumAt(later.start);
+  if (minimumMinutes === undefined || !(minimumMinutes > 0)) {
+    return undefined;
+  }
+  const gapMinutes = Math.floor(gapMs / 60000);
+  return gapMinutes < minimumMinutes ? { gapMinutes, minimumMinutes } : undefined;
+}
+
+/**
+ * Per-person rest for one proposed change (design R5b, R15): the
+ * proposed shift against the person's shift just before it and just
+ * after it, each pair judged by the minimum in force when its later
+ * shift starts. The shortest gap under its minimum wins. The board's
+ * own single-value check (findBreakViolation) is unchanged; this is
+ * the check for rules that differ by person and by date.
+ */
+export function findRestShortfall(
+  personEvents: readonly SchedulerUiEvent[],
+  excludeEventId: string | undefined,
+  proposed: RestShift,
+  minimumAt: MinimumRestAt,
+  toInstant?: (display: Date) => Date,
+): (RestShortfall & { readonly neighborTitle: string }) | undefined {
+  let before: SchedulerUiEvent | undefined;
+  let after: SchedulerUiEvent | undefined;
+  for (const candidate of personEvents) {
+    if (
+      candidate.id === excludeEventId ||
+      candidate.status === "needsCover" ||
+      candidate.undated === true
+    ) {
+      continue;
+    }
+    if (compareShifts(candidate, proposed) < 0) {
+      if (!before || compareShifts(candidate, before) > 0) {
+        before = candidate;
+      }
+    } else if (!after || compareShifts(candidate, after) < 0) {
+      after = candidate;
+    }
+  }
+  let worst: (RestShortfall & { readonly neighborTitle: string }) | undefined;
+  const consider = (
+    shortfall: RestShortfall | undefined,
+    neighbor: SchedulerUiEvent,
+  ): void => {
+    if (shortfall && (!worst || shortfall.gapMinutes < worst.gapMinutes)) {
+      worst = { ...shortfall, neighborTitle: neighbor.title };
+    }
+  };
+  if (before) {
+    consider(restShortfall(before, proposed, minimumAt, toInstant), before);
+  }
+  if (after) {
+    consider(restShortfall(proposed, after, minimumAt, toInstant), after);
   }
   return worst;
 }
@@ -253,8 +379,7 @@ export function evaluateScheduleRules(
       (candidate) =>
         candidate.id !== event?.id &&
         candidate.status !== "needsCover" &&
-        candidate.start < proposed.end &&
-        candidate.end > proposed.start,
+        shiftsOverlap(candidate, proposed),
     );
     if (overlaps) {
       found.push({
@@ -293,7 +418,7 @@ export function evaluateScheduleRules(
   }
 
   if (input.extraRules) {
-    const context: ScheduleRuleContext = { event, personEvents, proposed, target };
+    const context: ScheduleRuleContext = { event, events, personEvents, proposed, target };
     for (const rule of input.extraRules) {
       const result = rule.evaluate(context);
       if (result) {

@@ -56,9 +56,9 @@ Give the agent your environment's address and https://github.com/konfigure8/chro
 
 - Agents that take a URL, such as Claude Code or VS Code: add `https://mcp.chrona365.com/mcp` as an MCP server named Chrona Scheduler.
 - Copilot Studio: after the import, the connector **Chrona Scheduler** is in your environment. In the agent's **Tools** page select **Add a tool**, search for **Chrona Scheduler**, select it, then **Add to agent**. Without the import, add it by address: **Add a tool**, **New tool**, **Model Context Protocol**, the address above, authentication **None**.
-- If a data policy blocks custom connectors in your environment, an admin adds Chrona Scheduler to the policy's business data group; the server keeps no data.
+- If a data policy blocks custom connectors in your environment, an admin adds Chrona Scheduler to the policy's business data group; the server keeps none of your data, only a count of tool calls per day.
 
-When a tool asks for a description, use: Chrona Scheduler, the install guide, a mapping recipe for a table, and the install as ordered Dataverse Web API requests.
+When a tool asks for a description, use: Chrona Scheduler, the install guide, a mapping recipe for a table, the install as ordered Dataverse Web API requests, and agreement setup for Chrona Workforce Scheduler.
 
 ## What works before you connect
 

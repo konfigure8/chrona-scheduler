@@ -10,7 +10,7 @@ Every page below is plain Markdown. Read them in order for an install; each stan
 - [Install guide](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/install.md): import the solution, give people roles, bind the scheduler to a view, open it in an app, connect for Optimize.
 - [Bindings](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/bindings.md): every binding in the property pane, the three that matter, and what the rest are for.
 - [Layouts](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/layouts.md): the four layouts (timeline, roster grid, top-down, agenda), when each fits, and the view row setting that picks one.
-- [Where things are set up](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/configure.md): the property pane, the calendar and view configuration rows with every setting, the toolbar's per-user choices, the Workforce tables.
+- [Where things are set up](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/configure.md): the property pane, the calendar and view configuration rows with every setting, the toolbar's per-user choices, the Workforce tables and agreements.
 - [Questions](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/faq.md): what the platform shows along the way, removing the solution, languages, what Optimize sends.
 
 ## Chrona Workforce Mobile
@@ -19,7 +19,7 @@ Every page below is plain Markdown. Read them in order for an install; each stan
 
 ## Agent server
 
-- [Chrona MCP server](https://mcp.chrona365.com/): Model Context Protocol over Streamable HTTP at `https://mcp.chrona365.com/mcp`, no sign-in. Tools: `install_guide` (these pages by section or by question), `mapping_recipe` (a table's columns to the bindings and the calendar row), `generate_configuration` (the install and configuration as ordered Dataverse Web API requests, each naming the tool that sends it). It writes nothing; your Dataverse tools do.
+- [Chrona MCP server](https://mcp.chrona365.com/): Model Context Protocol over Streamable HTTP at `https://mcp.chrona365.com/mcp`, no sign-in. Tools: `install_guide` (these pages by section or by question), `mapping_recipe` (a table's columns to the bindings and the calendar row), `generate_configuration` (the install and configuration as ordered Dataverse Web API requests, each naming the tool that sends it), `generate_agreement` (for Chrona Workforce Scheduler: one agreement's rules as ordered Dataverse Web API requests, and a template that links a person, which your agent fills). It writes nothing; your Dataverse tools do.
 
 ## Download
 

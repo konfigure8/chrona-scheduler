@@ -13,8 +13,6 @@
  */
 import type { RulePolicy, SchedulerResource } from "@chrona/scheduler-ui";
 
-import type { ControlScenario, ScenarioConfig } from "./scenario";
-
 type Entity = ComponentFramework.WebApi.Entity;
 type WebApi = ComponentFramework.Context<unknown>["webAPI"];
 
@@ -71,7 +69,7 @@ export function mapCalendarPolicies(
   };
 }
 
-export interface HostConfig<TConfig extends ScenarioConfig = ScenarioConfig> {
+export interface HostConfig {
   /** F26: the resolved calendar row id - the scheduler identity every
    * solve session and F19 meter keys on. Absent = no calendar row. */
   readonly calendarId?: string;
@@ -96,8 +94,6 @@ export interface HostConfig<TConfig extends ScenarioConfig = ScenarioConfig> {
   /** resourceId -> IANA zone (per-resource timezone, section 7). */
   readonly resourceTimeZones: ReadonlyMap<string, string>;
   readonly policies: RulePolicies;
-  /** A scenario control's own rows, loaded with these settings. */
-  readonly scenario?: TConfig;
 }
 
 /** F38: the products a calendar can name, by its chr_product choice value. */
@@ -131,7 +127,7 @@ export function calendarsNamedLikeQuery(base: string): string {
   return `?$select=chr_name&$filter=startswith(chr_name,'${escapeODataLiteral(base)}')`;
 }
 
-export const emptyHostConfig: HostConfig<never> = {
+export const emptyHostConfig: HostConfig = {
   policies: defaultRulePolicies,
   product: "scheduler",
   resourceTimeZones: new Map(),
@@ -295,16 +291,14 @@ export async function safely<T>(fallback: T, run: () => Promise<T>): Promise<T> 
 }
 
 /**
- * Loads the full config surface: the calendar row, its people and, for a
- * scenario control, the scenario's own rows in the same pass. Never
+ * Loads the full config surface: the calendar row and its people. Never
  * throws: each capability degrades independently to its zero-config
  * default.
  */
-export async function loadHostConfig<TConfig extends ScenarioConfig>(
+export async function loadHostConfig(
   webApi: WebApi | undefined,
   calendarConfigId: string,
-  scenario?: Pick<ControlScenario<TConfig>, "loadConfig">,
-): Promise<HostConfig<TConfig>> {
+): Promise<HostConfig> {
   if (!webApi?.retrieveMultipleRecords) {
     return emptyHostConfig;
   }
@@ -323,10 +317,9 @@ export async function loadHostConfig<TConfig extends ScenarioConfig>(
     : undefined;
 
   const idColumn = mapping ? `${mapping.table}id` : undefined;
-  const [scenarioConfig, resourceRows] = await Promise.all([
-    scenario ? scenario.loadConfig(webApi, calendarEntity) : Promise.resolve(undefined),
+  const resourceRows: readonly Entity[] =
     mapping && idColumn
-      ? safely<readonly Entity[]>([], () => {
+      ? await safely<readonly Entity[]>([], () => {
           const columns = [
             idColumn,
             mapping.nameColumn,
@@ -339,8 +332,7 @@ export async function loadHostConfig<TConfig extends ScenarioConfig>(
           const filter = mapping.filter ? `&$filter=${mapping.filter}` : "";
           return retrieveAll(webApi, mapping.table, `?$select=${columns.join(",")}${filter}`);
         })
-      : Promise.resolve<readonly Entity[]>([]),
-  ]);
+      : [];
 
   let resources: readonly SchedulerResource[] | undefined;
   let timeZones: ReadonlyMap<string, string> = new Map();
@@ -349,8 +341,7 @@ export async function loadHostConfig<TConfig extends ScenarioConfig>(
       resourceRows,
       mapping,
       idColumn,
-      scenarioConfig?.resourceTags ?? new Map(),
-      scenarioConfig?.resourceNotes,
+      new Map(),
     );
     resources = mapped.resources;
     timeZones = mapped.timeZones;
@@ -367,7 +358,6 @@ export async function loadHostConfig<TConfig extends ScenarioConfig>(
     resourceMapping: mapping,
     resources,
     resourceTimeZones: timeZones,
-    scenario: scenarioConfig,
     timeZone: calendarEntity ? text(calendarEntity, "chr_timezone") : undefined,
   };
 }

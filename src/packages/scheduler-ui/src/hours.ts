@@ -20,3 +20,16 @@ export function assignedHours(
   }
   return Math.round(minutes / 60);
 }
+
+/**
+ * The capacity a row's hours are set against. Up to a week the weekly
+ * hours stand as they are; past a week they scale to the window's days,
+ * so a fortnight or a month of work does not read as overbooked.
+ */
+export function capacityForWindow(
+  weeklyHours: number,
+  window: { readonly end: Date; readonly start: Date },
+): number {
+  const days = Math.round(clockMinutesBetween(window.start, window.end) / (24 * 60));
+  return days <= 7 ? weeklyHours : Math.round((weeklyHours * days) / 7);
+}

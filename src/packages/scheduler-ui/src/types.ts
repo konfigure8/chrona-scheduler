@@ -13,6 +13,12 @@ export interface TimeWindow {
 }
 
 export interface SchedulerResource {
+  /**
+   * The agreement the person works under (SchedulerAgreement.id): its
+   * rules in force on a date limit their rest and days in a row.
+   * Absent = no agreement, so neither limit is checked for them.
+   */
+  readonly agreementId?: string;
   /** Weekly capacity in hours; shown as "assigned/capacity" when present. */
   readonly capacityHours?: number;
   /** Employer cost per hour in cents; activates the cost tier
@@ -64,11 +70,21 @@ export type SchedulerEventStatus = "assigned" | "needsCover";
  */
 export interface ShiftGap {
   readonly end: Date;
-  /** "Meal break", "Split" - shown on hover. */
+  /** "Meal break", "Tea" - shown on hover. */
   readonly label?: string;
-  /** Paid gaps count as worked time; no gap ever counts as coverage. */
+  /** Paid gaps count as worked time; every gap still counts as cover. */
   readonly paid?: boolean;
   readonly start: Date;
+}
+
+/**
+ * One part of a split shift (F48 Split shifts): a split is planned as one
+ * and stored as two shifts that share this id. "required" makes one person
+ * for both parts a must; "preferred" makes it a preference.
+ */
+export interface ShiftSplit {
+  readonly id: string;
+  readonly samePerson: "preferred" | "required";
 }
 
 export interface SchedulerUiEvent {
@@ -123,6 +139,8 @@ export interface SchedulerUiEvent {
    */
   readonly requiredTags?: readonly string[];
   readonly resourceId: string;
+  /** Set on each part of a split shift (F48 Split shifts). */
+  readonly split?: ShiftSplit;
   readonly start: Date;
   readonly status: SchedulerEventStatus;
   readonly title: string;
@@ -178,6 +196,46 @@ export type AvailabilityBandKind =
   | "preferred"
   | "unavailable"
   | "unpreferred";
+
+/** The working-time limits an agreement rule sets. */
+export type AgreementRuleKind = "daysInARow" | "minimumRest";
+
+/**
+ * One dated rule of an agreement, as the maker entered it. The host
+ * converts units at its boundary, as it does dates and times: a rest
+ * entered in hours arrives here in minutes (hours x 60).
+ */
+export interface SchedulerAgreementRule {
+  /**
+   * The rule's last day, inclusive: "YYYY-MM-DD" on the site's clock.
+   * Absent = no end.
+   */
+  readonly end?: string;
+  readonly kind: AgreementRuleKind;
+  /** Off rules stay with the agreement and never apply. */
+  readonly on: boolean;
+  /**
+   * The rule's first day: "YYYY-MM-DD" on the site's clock. Absent =
+   * always.
+   */
+  readonly start?: string;
+  /**
+   * minimumRest: whole minutes from the end of one shift to the start
+   * of the next. daysInARow: the most whole days a person may work in
+   * a row. A value of 0 or less sets no limit.
+   */
+  readonly value: number;
+}
+
+/**
+ * A named set of working-time rules people work under. Two rules of
+ * one kind in force on one date both hold, so the stricter wins; the
+ * rule in force when the later work starts applies.
+ */
+export interface SchedulerAgreement {
+  readonly id: string;
+  readonly rules: readonly SchedulerAgreementRule[];
+}
 
 /** Host-supplied per-resource availability span rendered as a row background. */
 export interface AvailabilityBand {

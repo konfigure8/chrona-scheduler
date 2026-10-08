@@ -2,8 +2,8 @@
  * Web API reads for the review (F31 rework). The freshness check reads
  * the same things when a solve starts and again when its answer lands
  * or Apply runs, and compares: the rows of the work-item table in the
- * solve's range, a scenario control's unavailable spans in it, and the
- * people's record versions. Each read degrades on its own to undefined
+ * solve's range and the people's record versions. Each read degrades on
+ * its own to undefined
  * (a table the user cannot read), and the check then skips that part
  * rather than guess.
  */

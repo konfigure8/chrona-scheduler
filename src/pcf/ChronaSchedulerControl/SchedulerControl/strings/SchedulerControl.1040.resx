@@ -889,7 +889,7 @@
     <value>Risorsa (righe)</value>
   </data>
   <data name="Prop_Resource_Desc" xml:space="preserve">
-    <value>Ricerca della persona o bene assegnato. Collegata: una riga per persona. Non collegata: calendario. Usa una ricerca, non Owner.</value>
+    <value>Ricerca della persona o bene assegnato. Collegata: una riga per persona. Non collegata: calendario. Usa una ricerca, non Proprietario.</value>
   </data>
   <data name="Prop_Status" xml:space="preserve">
     <value>Stato (facoltativo)</value>
@@ -992,5 +992,212 @@
   </data>
   <data name="Prop_Duration_Desc" xml:space="preserve">
     <value>Minuti occupati da una riga senza data quando viene rilasciata nel calendario. Senza associazione, un'ora.</value>
+  </data>
+  <data name="scoreNotCounted" xml:space="preserve">
+    <value>Non conteggiato stavolta</value>
+  </data>
+  <data name="mustBreakdownTitle" xml:space="preserve">
+    <value>Regole obbligatorie</value>
+  </data>
+  <data name="mustRowRest" xml:space="preserve">
+    <value>Riposo tra turni</value>
+  </data>
+  <data name="mustRowDaysInARow" xml:space="preserve">
+    <value>Giorni consecutivi</value>
+  </data>
+  <data name="mustRowSkills" xml:space="preserve">
+    <value>Competenze</value>
+  </data>
+  <data name="mustRowOnLeave" xml:space="preserve">
+    <value>Assente o non disponibile</value>
+  </data>
+  <data name="mustRowOther" xml:space="preserve">
+    <value>Altre regole obbligatorie</value>
+  </data>
+  <data name="mustKindOverlap" xml:space="preserve">
+    <value>Doppia assegnazione</value>
+  </data>
+  <data name="mustKindMaximumHours" xml:space="preserve">
+    <value>Ore max</value>
+  </data>
+  <data name="mustKindSplitParts" xml:space="preserve">
+    <value>Turno spezzato</value>
+  </data>
+  <data name="mustKindUnlisted" xml:space="preserve">
+    <value>Altre</value>
+  </data>
+  <data name="mustRowSummary" xml:space="preserve">
+    <value>{rule}: {now} ora, {proposed} nella proposta</value>
+  </data>
+  <data name="mustRowOpen" xml:space="preserve">
+    <value>{rule}: {now} ora, {proposed} nella proposta. Mostra turni</value>
+  </data>
+  <data name="mustUncheckedOne" xml:space="preserve">
+    <value>Non verificato per 1 persona</value>
+  </data>
+  <data name="mustUnchecked" xml:space="preserve">
+    <value>Non verificato per {count} persone</value>
+  </data>
+  <data name="mustNoAgreementOne" xml:space="preserve">
+    <value>1 persona non ha un accordo: riposo e limiti di giorni non verificati.</value>
+  </data>
+  <data name="mustNoAgreement" xml:space="preserve">
+    <value>{count} persone non hanno un accordo: riposo e limiti di giorni non verificati.</value>
+  </data>
+  <data name="mustNoAgreementNobody" xml:space="preserve">
+    <value>Nessuno ha un accordo: riposo e limiti di giorni non verificati.</value>
+  </data>
+  <data name="proposalMustKeptUncheckedOne" xml:space="preserve">
+    <value>Regole obbligatorie rispettate · non verificato per 1 persona</value>
+  </data>
+  <data name="proposalMustKeptUnchecked" xml:space="preserve">
+    <value>Regole obbligatorie rispettate · non verificato per {count} persone</value>
+  </data>
+  <data name="drillGroup" xml:space="preserve">
+    <value>{rule} ({count})</value>
+  </data>
+  <data name="drillMore" xml:space="preserve">
+    <value>e altri {count}</value>
+  </data>
+  <data name="reasonFixesRest" xml:space="preserve">
+    <value>Corregge il riposo di {name} ({hours} h)</value>
+  </data>
+  <data name="reasonFixesDaysInARow" xml:space="preserve">
+    <value>Corregge i giorni consecutivi di {name}</value>
+  </data>
+  <data name="reasonFixesSkill" xml:space="preserve">
+    <value>Corregge una competenza mancante</value>
+  </data>
+  <data name="reasonFixesMust" xml:space="preserve">
+    <value>Corregge una regola obbligatoria violata</value>
+  </data>
+  <data name="reasonAddsRest" xml:space="preserve">
+    <value>Crea un riposo breve per {name} ({hours} h)</value>
+  </data>
+  <data name="reasonAddsMust" xml:space="preserve">
+    <value>Viola una regola obbligatoria</value>
+  </data>
+  <data name="reasonUnpreferred" xml:space="preserve">
+    <value>{name} preferisce non lavorare in quell'orario</value>
+  </data>
+  <data name="reasonAvoidsUnpreferred" xml:space="preserve">
+    <value>Evita gli orari non preferiti di {name}</value>
+  </data>
+  <data name="reasonFillsOpen" xml:space="preserve">
+    <value>Copre un turno non assegnato</value>
+  </data>
+  <data name="reasonPersonFixesOne" xml:space="preserve">
+    <value>Corregge 1 violazione</value>
+  </data>
+  <data name="reasonPersonFixes" xml:space="preserve">
+    <value>Corregge {count} violazioni</value>
+  </data>
+  <data name="countsOnlyNote" xml:space="preserve">
+    <value>Turni numerosi: solo conteggi. I motivi non sono mostrati.</value>
+  </data>
+  <data name="tryAgain" xml:space="preserve">
+    <value>Riprova</value>
+  </data>
+  <data name="menuWhyNot" xml:space="preserve">
+    <value>Perché non…?</value>
+  </data>
+  <data name="whyNotPerson" xml:space="preserve">
+    <value>Persona</value>
+  </data>
+  <data name="whyNotPlaceholder" xml:space="preserve">
+    <value>Digita un nome</value>
+  </data>
+  <data name="whyNotNoMatch" xml:space="preserve">
+    <value>Nessun risultato</value>
+  </data>
+  <data name="whyNotNow" xml:space="preserve">
+    <value>ora {name}</value>
+  </data>
+  <data name="whyNotChecking" xml:space="preserve">
+    <value>Verifica di {name}…</value>
+  </data>
+  <data name="whyNotVerdictMustOne" xml:space="preserve">
+    <value>{name} violerebbe 1 regola obbligatoria</value>
+  </data>
+  <data name="whyNotVerdictMust" xml:space="preserve">
+    <value>{name} violerebbe {count} regole obbligatorie</value>
+  </data>
+  <data name="whyNotVerdictShould" xml:space="preserve">
+    <value>{name} rispetta tutte le regole obbligatorie ma si adatta peggio</value>
+  </data>
+  <data name="whyNotVerdictEqual" xml:space="preserve">
+    <value>{name} si adatta altrettanto bene.</value>
+  </data>
+  <data name="whyNotVerdictEqualReview" xml:space="preserve">
+    <value>{name} si adatta altrettanto bene. L'ottimizzazione ha dovuto scegliere.</value>
+  </data>
+  <data name="whyNotVerdictBetter" xml:space="preserve">
+    <value>{name} si adatta meglio.</value>
+  </data>
+  <data name="whyNotTakingOff" xml:space="preserve">
+    <value>{name} perde il turno</value>
+  </data>
+  <data name="whyNotPrefers" xml:space="preserve">
+    <value>{name} preferisce lavorare in quell'orario</value>
+  </data>
+  <data name="ruleSpreadOfShifts" xml:space="preserve">
+    <value>Distribuzione dei turni</value>
+  </data>
+  <data name="ruleMinimumHours" xml:space="preserve">
+    <value>Ore minime</value>
+  </data>
+  <data name="whyNotLessEven" xml:space="preserve">
+    <value>{rule}: meno equilibrata</value>
+  </data>
+  <data name="whyNotMoreEven" xml:space="preserve">
+    <value>{rule}: più equilibrata</value>
+  </data>
+  <data name="whyNotWorse" xml:space="preserve">
+    <value>{rule}: peggio</value>
+  </data>
+  <data name="whyNotBetter" xml:space="preserve">
+    <value>{rule}: meglio</value>
+  </data>
+  <data name="whyNotNoAgreement" xml:space="preserve">
+    <value>{name} non ha un accordo: riposo e limiti di giorni non verificati.</value>
+  </data>
+  <data name="whyNotUnavailable" xml:space="preserve">
+    <value>Impossibile verificare ora</value>
+  </data>
+  <data name="whyNotRetryIn" xml:space="preserve">
+    <value>Impossibile verificare ora. Riprova tra {seconds} s.</value>
+  </data>
+  <data name="whyNotRosterChanged" xml:space="preserve">
+    <value>I turni sono cambiati.</value>
+  </data>
+  <data name="whyNotAskAgain" xml:space="preserve">
+    <value>Chiedi di nuovo</value>
+  </data>
+  <data name="whyNotAssign" xml:space="preserve">
+    <value>Assegna {name}</value>
+  </data>
+  <data name="whyNotSwap" xml:space="preserve">
+    <value>Scambia {name} e {other}</value>
+  </data>
+  <data name="whyNotTakes" xml:space="preserve">
+    <value>{name} prende {shift}</value>
+  </data>
+  <data name="whyNotLeftOpen" xml:space="preserve">
+    <value>{shift} di {name} resterebbe scoperto</value>
+  </data>
+  <data name="whyNotInReview" xml:space="preserve">
+    <value>Per usare {name}, scarta questa modifica e agisci dopo Applica.</value>
+  </data>
+  <data name="scorePreferences" xml:space="preserve">
+    <value>Preferenze rispettate</value>
+  </data>
+  <data name="scorePreferencesValue" xml:space="preserve">
+    <value>{met} su {total}</value>
+  </data>
+  <data name="scorePreferencesNone" xml:space="preserve">
+    <value>Nessuna preferenza inserita</value>
+  </data>
+  <data name="preferencesUnmetTitle" xml:space="preserve">
+    <value>Preferenze non rispettate</value>
   </data>
 </root>

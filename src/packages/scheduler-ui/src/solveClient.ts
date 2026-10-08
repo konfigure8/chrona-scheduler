@@ -11,18 +11,28 @@
  * A run reviewed AFTER a navigation has no map in memory; `hashProblem`
  * lets the host prove the rebuilt problem is byte-identical to what
  * the server hashed, so the rebuilt map is the right one.
+ *
+ * "Why not…?" (`checkCandidate`) is one request and one answer: no run,
+ * no queue, no poll. Each check keeps the version of the roster it was
+ * built from (in the browser; it never goes on the wire), and an answer
+ * for a roster that has changed since is dropped, so a shown answer
+ * always belongs to the roster on screen.
  */
-import type { ScheduleProblemV2 } from "./schedulingContract";
+import type { ScheduleCandidate, ScheduleCandidateCheck, ScheduleProblemV2 } from "./schedulingContract";
 import type { ScheduleProposal } from "./solve";
 import {
+  buildCandidateRequest,
   buildSolveRequest,
   proposalFromSolution,
+  readCandidateCheck,
   solutionFromPoll,
   type SolvePollResponse,
   type SolveSubmitResponse,
 } from "./solveTransport";
 import {
+  redactCandidate,
   redactProblemForTenant,
+  unredactCandidateCheck,
   unredactSolution,
   type RedactedProblem,
   type ResourcePlaceholderKey,
@@ -305,6 +315,174 @@ export async function followRun(options: FollowRunOptions): Promise<ScheduleProp
     await wait(1000, options.signal);
   }
   throw new Error("Solve timed out");
+}
+
+/**
+ * Which roster a request was built from: any value the host changes
+ * whenever the roster as it would be applied changes (an edit, a
+ * dropped or held-back change, a new proposal).
+ */
+export type RosterVersion = number | string;
+
+/**
+ * "Why not…?" could not be answered now: the per-tenant limit (429), a
+ * busy or stalled solver (503, 504), or no answer at all (status
+ * absent). Asking again later can succeed; on 429 the API says when.
+ */
+export class CandidateCheckUnavailableError extends Error {
+  constructor(
+    readonly status: number | undefined,
+    readonly retryAfterSeconds: number | undefined,
+  ) {
+    super(`Candidate check unavailable${status === undefined ? "" : ` (HTTP ${status})`}`);
+  }
+}
+
+export interface CandidateCheckOptions {
+  /** F39: the calendar's name. */
+  readonly calendarName?: string;
+  /** The person and the shift to check, in the board's ids. */
+  readonly candidate: ScheduleCandidate;
+  /** The version of the roster on screen now; read when the answer arrives. */
+  readonly currentRosterVersion: () => RosterVersion;
+  /** Bench/dev only: headers the local API's tenant-header bypass needs. */
+  readonly extraHeaders?: Record<string, string>;
+  readonly fetchImpl?: typeof fetch;
+  /** The roster as it would be applied: the current one plus the kept changes. */
+  readonly problem: ScheduleProblemV2;
+  /** The version of the roster `problem` was built from. */
+  readonly rosterVersion: RosterVersion;
+  /** Names the request in the API's log (X-Request-Id). */
+  readonly runToken: string;
+  readonly session: SolveSession;
+  /** Aborting it stops the request with SolveCancelledError. */
+  readonly signal?: AbortSignal;
+  /** F38: the calendar's product. */
+  readonly solutionType?: string;
+  /** Envelope tenant id; the session token's tenant wins on the server. */
+  readonly tenantId?: string;
+}
+
+/**
+ * "answered": the check, on the board's ids. "rosterChanged": the
+ * roster changed while the request was out, so its answer was dropped.
+ */
+export type CandidateCheckResult =
+  | { readonly check: ScheduleCandidateCheck; readonly status: "answered" }
+  | { readonly status: "rosterChanged" };
+
+const CANDIDATE_UNAVAILABLE = new Set([429, 502, 503, 504]);
+
+/** Retry-After in seconds, from seconds or an HTTP date; undefined when absent or unreadable. */
+function retryAfterSeconds(value: string | null): number | undefined {
+  const text = value?.trim();
+  if (!text) {
+    return undefined;
+  }
+  if (/^\d+$/.test(text)) {
+    return Number(text);
+  }
+  const at = Date.parse(text);
+  return Number.isFinite(at) ? Math.max(0, Math.ceil((at - Date.now()) / 1000)) : undefined;
+}
+
+/**
+ * "Why not…?": check one person on one shift of the roster as it would
+ * be applied. The problem and the candidate are redacted (F23) and the
+ * answer is mapped back with the same map. An answer that arrives after
+ * the roster changed is dropped (`rosterChanged`), whether it is a
+ * check or a failure.
+ */
+export async function checkCandidate(options: CandidateCheckOptions): Promise<CandidateCheckResult> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const changed = (): boolean => options.currentRosterVersion() !== options.rosterVersion;
+  const redaction = await redactProblemForTenant(options.problem, options.session.resourcePlaceholders);
+  const request = buildCandidateRequest(redaction.problem, redactCandidate(options.candidate, redaction), {
+    calendarName: options.calendarName,
+    resourceKeyScheme: redaction.resourceKeyScheme,
+    solutionType: options.solutionType,
+    tenantId: options.tenantId ?? "session",
+  });
+  let response: Response;
+  try {
+    response = await fetchOrCancelled(
+      fetchImpl,
+      `${options.session.apiBaseUrl}/api/solve/analyze`,
+      {
+        body: JSON.stringify(request),
+        headers: {
+          ...authHeaders(options.session, options.runToken, "analyze", options.extraHeaders),
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+      },
+      options.signal,
+    );
+  } catch (error) {
+    if (error instanceof SolveCancelledError) {
+      throw error;
+    }
+    if (changed()) {
+      return { status: "rosterChanged" };
+    }
+    throw new CandidateCheckUnavailableError(undefined, undefined);
+  }
+  const body: unknown = await response.json().catch(() => undefined);
+  if (options.signal?.aborted) {
+    throw new SolveCancelledError("Candidate check cancelled");
+  }
+  // The version is read once the whole answer is in, so none slips past it.
+  if (changed()) {
+    return { status: "rosterChanged" };
+  }
+  if (CANDIDATE_UNAVAILABLE.has(response.status)) {
+    throw new CandidateCheckUnavailableError(response.status, retryAfterSeconds(response.headers.get("retry-after")));
+  }
+  if (!response.ok) {
+    const failure = body !== null && typeof body === "object" ? (body as { code?: string; message?: string }) : {};
+    throwForStatus(response, failure, "Candidate check");
+  }
+  const check = readCandidateCheck(body);
+  if (!check) {
+    throw new Error("Candidate check returned an unreadable answer");
+  }
+  return { check: unredactCandidateCheck(check, redaction), status: "answered" };
+}
+
+/**
+ * A "Why not…?" answer as the board shows it, or why there is none:
+ * - answered: the check;
+ * - rosterChanged: the roster changed while the request was out;
+ * - readFailed: the host could not read what the check needs (the
+ *   shifts before the period, the agreements), so nothing was sent;
+ * - unavailable: the API or the solver could not answer now; on a rate
+ *   limit (429) the API says when to try again.
+ */
+export type CandidateAnswer =
+  | { readonly check: ScheduleCandidateCheck; readonly status: "answered" }
+  | { readonly message: string; readonly status: "readFailed" }
+  | { readonly retryAfterSeconds?: number; readonly status: "unavailable" }
+  | { readonly status: "rosterChanged" };
+
+/**
+ * checkCandidate for the board: every failure becomes "unavailable", the
+ * board's own "Could not check this now" (lane E: 429, 503 and 504; a
+ * refused or unreadable answer too). An expired session and a
+ * cancellation still throw, so the host can mint a session and ask
+ * again, or drop the answer.
+ */
+export async function askCandidate(options: CandidateCheckOptions): Promise<CandidateAnswer> {
+  try {
+    return await checkCandidate(options);
+  } catch (error) {
+    if (error instanceof SolveSessionExpiredError || error instanceof SolveCancelledError) {
+      throw error;
+    }
+    if (error instanceof CandidateCheckUnavailableError && error.status === 429 && error.retryAfterSeconds !== undefined) {
+      return { retryAfterSeconds: error.retryAfterSeconds, status: "unavailable" };
+    }
+    return { status: "unavailable" };
+  }
 }
 
 /** Record that the planner reviewed (or discarded) a run - telemetry only. */

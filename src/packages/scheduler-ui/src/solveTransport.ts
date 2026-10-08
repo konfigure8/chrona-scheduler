@@ -8,15 +8,29 @@
  * server-side in the solver bridge. The v0 POC wire is retired; its
  * final recordings live in e2e/recordings/v0/ as the equivalence
  * evidence the retirement was proven against.
+ *
+ * /api/solve/analyze answers "Why not…?" at once: the same envelope
+ * with one candidate (a person on a shift) in place of a run, and the
+ * rule matches the move adds and removes in place of a roster. It
+ * queues nothing and starts no run.
  */
 import type { SolveCapability } from "./capabilities";
 import type { ResourceKeyScheme } from "./redaction";
 import type { ScheduleProposal, SolveRunStatus } from "./solve";
 import { isPinned } from "./locks";
-import type {
-  ScheduleProblemV2,
-  ScheduleSolutionV2,
-  SolveSearch,
+import {
+  isMustRule,
+  isShouldRule,
+  type CandidateFit,
+  type MustBreachCounts,
+  type ScheduleCandidate,
+  type ScheduleCandidateCheck,
+  type ScheduleProblemV2,
+  type ScheduleRosterCheck,
+  type ScheduleRuleMatch,
+  type ScheduleSolutionV2,
+  type ScheduleSolveAnalysis,
+  type SolveSearch,
 } from "./schedulingContract";
 import type { SchedulerUiEvent, TimeWindow } from "./types";
 
@@ -68,10 +82,12 @@ export function buildSolveRequest(
 
 /**
  * The solved result: contract assignments, and from F40 Three-level
- * score whether a Must rule broke and the work left undone. An older
- * API leaves those out.
+ * score whether a Must rule broke and the work left undone, with the
+ * rule checks before and after. An older API leaves those out.
  */
 export interface SolveResultV2 {
+  /** Read through solutionFromPoll, which drops an unreadable one whole. */
+  readonly analysis?: ScheduleSolveAnalysis;
   readonly assignments: readonly {
     readonly resourceId: string | null;
     readonly shiftId: string;
@@ -106,6 +122,125 @@ function isSearch(search: unknown): search is SolveSearch {
   );
 }
 
+const asRecord = (value: unknown): Readonly<Record<string, unknown>> | undefined =>
+  value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+
+const isCount = (value: unknown): value is number =>
+  typeof value === "number" && Number.isInteger(value) && value >= 0;
+
+const isText = (value: unknown): value is string => typeof value === "string";
+
+const isTextList = (value: unknown): value is readonly string[] =>
+  Array.isArray(value) && value.every(isText);
+
+const OTHER_NAMED = ["maximumHours", "overlap", "splitParts"] as const;
+
+/**
+ * Must counts, whole or not at all. An "other" Must rule this board
+ * does not name yet counts as unlisted, so the total stays whole.
+ */
+function readMustBreaches(value: unknown): MustBreachCounts | undefined {
+  const record = asRecord(value);
+  const other = asRecord(record?.other);
+  if (!record || !other) {
+    return undefined;
+  }
+  const { daysInARow, onLeaveOrUnavailable, restBetweenShifts, skills } = record;
+  const { maximumHours, overlap, splitParts } = other;
+  if (
+    !isCount(daysInARow) ||
+    !isCount(onLeaveOrUnavailable) ||
+    !isCount(restBetweenShifts) ||
+    !isCount(skills) ||
+    !isCount(maximumHours) ||
+    !isCount(overlap) ||
+    !isCount(splitParts)
+  ) {
+    return undefined;
+  }
+  let unlisted = 0;
+  for (const [rule, count] of Object.entries(other)) {
+    if (!isCount(count)) {
+      return undefined;
+    }
+    if (!(OTHER_NAMED as readonly string[]).includes(rule)) {
+      unlisted += count;
+    }
+  }
+  return {
+    daysInARow,
+    onLeaveOrUnavailable,
+    other: { maximumHours, overlap, splitParts, unlisted },
+    restBetweenShifts,
+    skills,
+  };
+}
+
+/** One readable match of a rule this board names; anything else is left out. */
+function readMatch(value: unknown): ScheduleRuleMatch | undefined {
+  const record = asRecord(value);
+  const rule = record?.rule;
+  const shiftIds = record?.shiftIds;
+  const resourceId = record?.resourceId;
+  const days = record?.days;
+  if (
+    !isText(rule) ||
+    !(isMustRule(rule) || isShouldRule(rule)) ||
+    !isTextList(shiftIds) ||
+    (resourceId !== undefined && !isText(resourceId)) ||
+    (days !== undefined && !isTextList(days))
+  ) {
+    return undefined;
+  }
+  return {
+    ...(isTextList(days) ? { days } : {}),
+    ...(isText(resourceId) ? { resourceId } : {}),
+    rule,
+    shiftIds,
+  };
+}
+
+function readMatches(value: unknown): readonly ScheduleRuleMatch[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+  return value
+    .map(readMatch)
+    .filter((match): match is ScheduleRuleMatch => match !== undefined);
+}
+
+function readRosterCheck(value: unknown, countsOnly: boolean): ScheduleRosterCheck | undefined {
+  const record = asRecord(value);
+  const mustBreaches = readMustBreaches(record?.mustBreaches);
+  if (!record || !mustBreaches || !isCount(record.openShifts)) {
+    return undefined;
+  }
+  // Counts only: no roster carries matches, whatever came with it.
+  const matches = countsOnly ? undefined : readMatches(record.matches);
+  return { ...(matches ? { matches } : {}), mustBreaches, openShifts: record.openShifts };
+}
+
+/**
+ * A run's rule checks, whole or not at all: a missing or unreadable
+ * count drops the analysis, so the board shows no counts rather than
+ * a wrong one, and never a zero for a count it did not get.
+ */
+export function readSolveAnalysis(value: unknown): ScheduleSolveAnalysis | undefined {
+  const record = asRecord(value);
+  if (!record) {
+    return undefined;
+  }
+  const countsOnly = record.countsOnly === true;
+  const current = readRosterCheck(record.current, countsOnly);
+  const proposed = readRosterCheck(record.proposed, countsOnly);
+  if (!current || !proposed) {
+    return undefined;
+  }
+  return { ...(countsOnly ? { countsOnly: true } : {}), current, proposed };
+}
+
 /** Lift a poll result into the canonical solution. */
 export function solutionFromPoll(
   runId: string,
@@ -113,7 +248,9 @@ export function solutionFromPoll(
   result: SolveResultV2 | undefined,
   error?: string,
 ): ScheduleSolutionV2 {
+  const analysis = readSolveAnalysis(result?.analysis);
   return {
+    ...(analysis ? { analysis } : {}),
     assignments: result?.assignments ?? [],
     error,
     ...(result?.feasible !== undefined ? { feasible: result.feasible } : {}),
@@ -179,10 +316,76 @@ export function proposalFromSolution(
     }
   }
   return {
+    ...(solution.analysis ? { analysis: solution.analysis } : {}),
     events,
     ...(solution.feasible !== undefined ? { feasible: solution.feasible } : {}),
     runId: solution.runId,
     ...(solution.search ? { search: solution.search } : {}),
     ...(options.window ? { window: options.window } : {}),
   };
+}
+
+/** The "Why not…?" request: the solve envelope with one candidate. */
+export interface ChronaCandidateRequest {
+  /** F39: the calendar's name. Display only. */
+  readonly calendarName?: string;
+  /** The person and the shift to check, in the problem's ids. */
+  readonly candidate: ScheduleCandidate;
+  /** The roster as it would be applied: the current one plus the kept changes. */
+  readonly problem: ScheduleProblemV2;
+  readonly problemType: "rostering";
+  /** F38: stable resource placeholders, as on a solve. */
+  readonly resourceKeyScheme?: ResourceKeyScheme;
+  /** F38: the calendar's product. */
+  readonly solutionType: string;
+  readonly tenantId: string;
+}
+
+export interface CandidateRequestOptions {
+  readonly calendarName?: string;
+  readonly resourceKeyScheme?: ResourceKeyScheme;
+  /** The calendar's product; `workforce-scheduling` when absent. */
+  readonly solutionType?: string;
+  readonly tenantId: string;
+}
+
+/** Wrap a canonical problem and its candidate in the API's routing envelope. */
+export function buildCandidateRequest(
+  problem: ScheduleProblemV2,
+  candidate: ScheduleCandidate,
+  options: CandidateRequestOptions,
+): ChronaCandidateRequest {
+  return {
+    ...(options.calendarName ? { calendarName: options.calendarName } : {}),
+    candidate,
+    problem,
+    problemType: "rostering",
+    ...(options.resourceKeyScheme ? { resourceKeyScheme: options.resourceKeyScheme } : {}),
+    solutionType: options.solutionType ?? "workforce-scheduling",
+    tenantId: options.tenantId,
+  };
+}
+
+/** The /api/solve/analyze answer: a candidate check in the problem's ids. */
+export interface CandidateResponseV2 extends ScheduleCandidateCheck {
+  readonly contractVersion: "2";
+}
+
+const FITS: ReadonlySet<string> = new Set<CandidateFit>(["better", "equal", "worse"]);
+
+const isFit = (value: unknown): value is CandidateFit => isText(value) && FITS.has(value);
+
+/**
+ * A candidate check, or undefined when the answer cannot be read.
+ * Matches of rules this board does not name are left out.
+ */
+export function readCandidateCheck(value: unknown): ScheduleCandidateCheck | undefined {
+  const record = asRecord(value);
+  const fit = record?.fit;
+  const added = readMatches(record?.added);
+  const removed = readMatches(record?.removed);
+  if (!isFit(fit) || !added || !removed) {
+    return undefined;
+  }
+  return { added, fit, removed };
 }

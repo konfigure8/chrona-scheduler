@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { App, type AppProps } from "./App";
+import { App } from "./App";
 import { DATASET_PAGE_SIZE, pagingStep } from "./dataverseData";
 import type { IInputs, IOutputs } from "./generated/ManifestTypes";
 
@@ -23,15 +23,6 @@ export class SchedulerControl
   /** Row count at which the last next-page request went out; one request per page. */
   private requestedPageAt = -1;
 
-  /** A scenario control's part and demo board; the generic scheduler has neither. */
-  protected scenarioParts(
-    _context: ComponentFramework.Context<IInputs>,
-  ): Pick<AppProps, "Preview" | "scenario"> {
-    return {};
-  }
-
-  private parts: Pick<AppProps, "Preview" | "scenario"> = {};
-
   public init(
     context: ComponentFramework.Context<IInputs>,
     _notifyOutputChanged: () => void,
@@ -40,8 +31,6 @@ export class SchedulerControl
     // The platform owns the viewport: the control renders into whatever
     // it is allocated (form section, subgrid, custom page region).
     context.mode.trackContainerResize(true);
-    // Fixed for the control's lifetime: the host calls a scenario's hooks on every render.
-    this.parts = this.scenarioParts(context);
     // The whole view, not the first page (see pagingStep).
     const paging = context.parameters.workItems?.paging;
     if (paging && paging.pageSize < DATASET_PAGE_SIZE) {
@@ -81,7 +70,6 @@ export class SchedulerControl
         },
       },
       React.createElement(App, {
-        ...this.parts,
         context,
         dataFingerprint: fingerprint,
         rowCapReached: step.capReached,

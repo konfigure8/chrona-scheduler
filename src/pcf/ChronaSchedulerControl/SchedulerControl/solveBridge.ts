@@ -32,7 +32,7 @@ export class SolveBridgeError extends Error {
   }
 }
 
-export const CONTROL_VERSION = "0.0.89";
+export const CONTROL_VERSION = "0.0.92";
 
 export function resolveClientUrl(context: unknown): string {
   const page = (context as { page?: { getClientUrl?: () => string } }).page;

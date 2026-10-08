@@ -15,7 +15,7 @@
     "start": "pcf-scripts start",
     "start:watch": "pcf-scripts start watch",
     "test:pcf": "playwright test",
-    "test:unit": "tsc -p unit/tsconfig.json && node out-unit/unit/configLoader.spec.js && node out-unit/unit/solveBridge.spec.js && node out-unit/unit/dataverseData.spec.js && node out-unit/unit/strings.spec.js && node out-unit/unit/settingsDialog.spec.js && node out-unit/unit/hostNotifications.spec.js && node out-unit/unit/solveReads.spec.js"
+    "test:unit": "tsc -p unit/tsconfig.json && node out-unit/unit/configLoader.spec.js && node out-unit/unit/solveBridge.spec.js && node out-unit/unit/dataverseData.spec.js && node out-unit/unit/strings.spec.js && node out-unit/unit/settingsDialog.spec.js && node out-unit/unit/hostNotifications.spec.js && node out-unit/unit/solveReads.spec.js && node out-unit/unit/solveProblem.spec.js"
   },
   "dependencies": {
     "@chrona/scheduler-ui": "workspace:*",

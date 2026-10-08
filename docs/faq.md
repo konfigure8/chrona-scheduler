@@ -56,7 +56,7 @@ The scheduler says so and Optimize returns the next day. Scheduling itself keeps
 
 ## Languages
 
-Chrona Scheduler supports English, German, French, Spanish, Portuguese, Dutch and Italian. Download the current package from [GitHub releases](https://github.com/konfigure8/chrona-scheduler/releases).
+Chrona Scheduler supports English, German, French, Spanish, Portuguese, Brazilian Portuguese, Dutch and Italian. Download the current package from [GitHub releases](https://github.com/konfigure8/chrona-scheduler/releases).
 
 | Language | Language ID in the solution |
 | --- | --- |
@@ -64,11 +64,12 @@ Chrona Scheduler supports English, German, French, Spanish, Portuguese, Dutch an
 | German | 1031 |
 | French | 1036 |
 | Spanish | 3082 |
-| Portuguese | 2070 (Portugal), 1046 (Brazil) |
+| Portuguese | 2070 |
+| Brazilian Portuguese | 1046 |
 | Dutch | 1043 |
 | Italian | 1040 |
 
-The user's Power Apps language selects available scheduler text. Dataverse installs translated table and view labels only for languages enabled in the environment. The Portuguese locales use the same wording.
+The user's Power Apps language selects available scheduler text. Dataverse installs translated table and view labels only for languages enabled in the environment.
 
 ## Removing the solution
 

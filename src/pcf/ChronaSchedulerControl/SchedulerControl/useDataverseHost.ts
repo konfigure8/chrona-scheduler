@@ -37,7 +37,6 @@ import {
   markEntitlementFailure,
   planUsageUrl,
   refreshEntitlement,
-  scenarioCapability,
   toEntitlementDisplay,
   type EntitlementSession,
   type EntitlementSnapshot,
@@ -50,7 +49,6 @@ import {
   type FreshnessData,
   idleSolveState,
   markRunReviewed,
-  problemFromSchedule,
   redactProblemForTenant,
   runSolve,
   SolveCancelledError,
@@ -136,6 +134,7 @@ import {
   solveClickAction,
 } from "./solveBridge";
 import { resolveControlStrings } from "./controlStrings";
+import { buildSolveProblem } from "./solveProblem";
 import {
   readPersonVersions,
   readShiftRows,
@@ -168,12 +167,6 @@ import {
   UNASSIGNED_RESOURCE_ID,
 } from "./dataverseData";
 import type { IInputs } from "./generated/ManifestTypes";
-import type {
-  ControlScenario,
-  ScenarioBoard,
-  ScenarioConfig,
-  ScenarioData,
-} from "./scenario";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** The longest a save waits for the names a person's bind needs. */
@@ -243,23 +236,10 @@ function userWeekStart(context: ComponentFramework.Context<IInputs>): number {
 const ENTITLEMENT_TICK_MS = 60 * 1000;
 const ENTITLEMENT_RETRY_MS = 5 * 60 * 1000;
 
-/** The generic scheduler has no scenario: no spans, rules, tags or extension. */
-const noScenarioData: ScenarioData = {
-  bands: [],
-  capabilities: { availability: false, roles: false },
-  decorations: [],
-  extraRules: [],
-};
-const noScenarioBoard: ScenarioBoard = {};
-
-export function useDataverseScheduleHost<
-  TConfig extends ScenarioConfig = ScenarioConfig,
-  TData extends ScenarioData = ScenarioData,
->(
+export function useDataverseScheduleHost(
   context: ComponentFramework.Context<IInputs>,
   dataFingerprint: string,
   rowCapReached = false,
-  scenario?: ControlScenario<TConfig, TData>,
 ): DataverseHostResult {
   const workItems = context.parameters.workItems;
   const viewId = workItems.getViewId?.() || "default";
@@ -299,7 +279,7 @@ export function useDataverseScheduleHost<
   const calendarConfigId =
     context.parameters.calendarConfigId?.raw?.trim() ?? "";
   const [hostConfig, setHostConfig] =
-    React.useState<HostConfig<TConfig>>(emptyHostConfig);
+    React.useState<HostConfig>(emptyHostConfig);
   // The calendar id the loaded settings belong to: current once it matches.
   const [configLoadedFor, setConfigLoadedFor] = React.useState<string | undefined>();
   /*
@@ -316,7 +296,7 @@ export function useDataverseScheduleHost<
   const [calendarConfigRevision, setCalendarConfigRevision] = React.useState(0);
   React.useEffect(() => {
     let cancelled = false;
-    loadHostConfig(context.webAPI, effectiveCalendarConfigId, scenario)
+    loadHostConfig(context.webAPI, effectiveCalendarConfigId)
       .then((config) => {
         if (!cancelled) {
           setHostConfig(config);
@@ -635,11 +615,6 @@ export function useDataverseScheduleHost<
   );
 
   const showWeekends = viewConfig.showWeekends ?? true;
-  // A scenario control's data for the board, the rules and the solve.
-  const scenarioParts = scenario
-    ? { data: scenario.useData({ config: hostConfig.scenario, context, toDisplay }), scenario }
-    : undefined;
-  const scenarioData: ScenarioData = scenarioParts?.data ?? noScenarioData;
   const decorations = React.useMemo<readonly RowDecoration[]>(() => {
     const collected: RowDecoration[] = [];
     if (
@@ -657,9 +632,8 @@ export function useDataverseScheduleHost<
         ),
       );
     }
-    collected.push(...scenarioData.decorations);
     return collected;
-  }, [window, viewConfig, showWeekends, scenarioData.decorations]);
+  }, [window, viewConfig, showWeekends]);
 
   /*
    * Metadata for the lookup rebind, cached once: the referenced
@@ -1159,21 +1133,16 @@ export function useDataverseScheduleHost<
   const displayEvents = React.useMemo(
     () =>
       events.map((event) => {
-        const tags = scenarioData.eventTags?.(event.id);
-        const tagged =
-          tags && tags.length > 0
-            ? { ...event, requiredTags: tags }
-            : event;
         // The maker's "Color by" tints the row; the board stays neutral without it.
-        const color = eventColorFor(tagged, viewConfig.colorBy, scenarioData.tagColors);
-        const decorated = color ? { ...tagged, color } : tagged;
+        const color = eventColorFor(event, viewConfig.colorBy, undefined);
+        const decorated = color ? { ...event, color } : event;
         return {
           ...decorated,
           end: toDisplay(decorated.end),
           start: toDisplay(decorated.start),
         };
       }),
-    [events, scenarioData, toDisplay, viewConfig.colorBy],
+    [events, toDisplay, viewConfig.colorBy],
   );
   // Undated rows wait in the panel only: never on the board, in rules, counts or an optimization.
   const datedEvents = React.useMemo(
@@ -1241,7 +1210,6 @@ export function useDataverseScheduleHost<
           event,
           events: datedEvents,
           eventsByResource: ruleIndex,
-          extraRules: scenarioData.extraRules,
           proposed,
           resources: hostConfig.resources ?? mapped.resources,
           strings: ruleStrings,
@@ -1255,7 +1223,6 @@ export function useDataverseScheduleHost<
       mapped.resources,
       ruleIndex,
       ruleStrings,
-      scenarioData.extraRules,
       toStored,
       viewConfig,
     ],
@@ -1308,16 +1275,16 @@ export function useDataverseScheduleHost<
         decorations,
         events: scheduled,
         mapped: {
-          availability: scenarioData.capabilities.availability,
+          availability: false,
           cost: hostConfig.resourceMapping?.costColumn !== undefined,
           hours: hostConfig.resourceMapping?.capacityColumn !== undefined,
           locks: hasColumn(workItems, "pinned"),
-          roles: scenarioData.capabilities.roles,
+          roles: false,
         },
         resources: hostConfig.resources ?? mapped.resources,
         unscheduledEvents: unscheduled,
       }),
-    [decorations, hostConfig, mapped.resources, scenarioData.capabilities, scheduled, unscheduled, workItems],
+    [decorations, hostConfig, mapped.resources, scheduled, unscheduled, workItems],
   );
   const solveCapabilities = React.useMemo(
     () => activeCapabilities(capabilityTiers),
@@ -1358,10 +1325,9 @@ export function useDataverseScheduleHost<
    * that arrives beside the solve token is cached to its hard expiry
    * under the versioned key seam, keyed by environment and calendar,
    * and refreshed control-direct with itself as the bearer. Claims
-   * drive what is offered: `solve` keeps Optimize, the scenario
-   * capability keeps Generate; a lapsed claim withdraws both and a
-   * day of silence pauses the optimizer. No claims = the control as
-   * it was before claims existed.
+   * drive what is offered: `solve` keeps Optimize; a lapsed claim
+   * withdraws it and a day of silence pauses the optimizer. No claims
+   * = the control as it was before claims existed.
    */
   const environmentHost = React.useMemo(() => {
     try {
@@ -1528,10 +1494,6 @@ export function useDataverseScheduleHost<
     [entitlementClock, entitlementSnapshot],
   );
   const solveAllowed = entitlementAllows(entitlementStatus, CAPABILITY_SOLVE);
-  const scenarioAllowed = entitlementAllows(
-    entitlementStatus,
-    scenarioCapability(entitlementStatus?.session.solutionType ?? scenario?.product ?? hostConfig.product),
-  );
 
   /*
    * F31 rework: a solve plans the roster period holding the anchor or,
@@ -1628,15 +1590,13 @@ export function useDataverseScheduleHost<
       await resolveTables();
       const shiftTable = shiftTableRef.current;
       const personTable = personTableRef.current;
-      // Only a scenario control has unavailable spans to read.
-      const [rows, bands, personVersions] = await Promise.all([
+      const [rows, personVersions] = await Promise.all([
         shiftTable ? readShiftRows(webApi, shiftTable, range) : Promise.resolve(undefined),
-        scenario?.readBands ? scenario.readBands(webApi, range) : Promise.resolve(undefined),
         personTable && personIds.length > 0
           ? readPersonVersions(webApi, personTable.entity, personTable.idColumn, personIds)
           : Promise.resolve(undefined),
       ]);
-      return { bands, personVersions, rows };
+      return { personVersions, rows };
     },
     [context.webAPI, resolveTables],
   );
@@ -1899,18 +1859,7 @@ export function useDataverseScheduleHost<
           solveRunIdRef.current = runId;
         },
         signal: controller.signal,
-        problem: problemFromSchedule({
-          events,
-          now,
-          resources,
-          // The wire carries real moments and the site's zone (ruled 2026-10-02).
-          timeZone: solverZone(toStored(solveWindow.start)),
-          toInstant: toStored,
-          unavailability: scenarioData.bands.filter(
-            (band) => band.end > solveWindow.start && band.start < solveWindow.end,
-          ),
-          window: solveWindow,
-        }),
+        problem: buildSolveProblem({ events, now, resources, window: solveWindow }, { solverZone, toStored }),
         runToken: Date.now().toString(36),
         session: active,
         solutionType: hostConfig.product,
@@ -1926,7 +1875,6 @@ export function useDataverseScheduleHost<
       hostConfig.resources,
       mapped.resources,
       readFreshness,
-      scenarioData.bands,
       solveCapabilities,
       solveEventsFor,
       solveRangeFor,
@@ -2033,9 +1981,8 @@ export function useDataverseScheduleHost<
     } catch {
       // The lookup is a courtesy: the calendar is still created under the table's name.
     }
-    // F38: a calendar this control creates names its product: a scenario control's, else the free scheduler's.
-    const product =
-      scenario?.product === "workforce-scheduling" ? PRODUCT_CHOICE.workforce : PRODUCT_CHOICE.scheduler;
+    // F38: a calendar this control creates names the free scheduler's product.
+    const product = PRODUCT_CHOICE.scheduler;
     // A new calendar takes the maker's zone: the browser's, when it runs at their Power Apps offset.
     const makerZone = browserTimeZone();
     const now = new Date();
@@ -2220,16 +2167,12 @@ export function useDataverseScheduleHost<
             const solveWindow = solveWindowNow();
             const events = solveEventsFor(solveWindow);
             const resources = hostConfig.resources ?? mapped.resources;
-            // History as the run saw it: what had started when it was submitted.
-            const problem = problemFromSchedule({
-              events,
-              now: toDisplay(new Date(latestRun.createdAt)),
-              resources,
-              unavailability: scenarioData.bands.filter(
-                (band) => band.end > solveWindow.start && band.start < solveWindow.end,
-              ),
-              window: solveWindow,
-            });
+            // History as the run saw it: what had started when it was submitted. The same
+            // builder as a new run, so an unchanged schedule hashes the same.
+            const problem = buildSolveProblem(
+              { events, now: toDisplay(new Date(latestRun.createdAt)), resources, window: solveWindow },
+              { solverZone, toStored },
+            );
             const range = solveRangeFor(solveWindow);
             setResumeDismissed(latestRun.runId);
             const controller = new AbortController();
@@ -2271,26 +2214,6 @@ export function useDataverseScheduleHost<
         }
       : undefined;
 
-  // A scenario control's board extension and its writes.
-  const scenarioBoard =
-    scenarioParts?.scenario.useBoard({
-      config: hostConfig.scenario,
-      context,
-      data: scenarioParts.data,
-      hostConfig,
-      localOnlyNote: LOCAL_ONLY_NOTE,
-      notify,
-      patchRecord,
-      periodConfig,
-      scenarioAllowed,
-      scheduled,
-      setEvents,
-      store,
-      toStored,
-      unscheduled,
-      window,
-      workItems,
-    }) ?? noScenarioBoard;
   const surfaceProps: Omit<SchedulerSurfaceProps, "view"> = {
     anchor,
     announcement: message,
@@ -2344,12 +2267,9 @@ export function useDataverseScheduleHost<
     solveState: session ? solveState : undefined,
     solveCapabilities:
       solveCapabilities.length > 0 ? solveCapabilities : undefined,
-    extension: scenarioBoard.extension,
     config: { ...defaultTimelineConfig, ...zoomForInterval(interval, zoomByInterval, dayZoom) },
     decorations: decorations.length > 0 ? decorations : undefined,
     events: scheduled,
-    availableTags: scenarioData.availableTags,
-    tagMode: scenarioData.tagMode,
     initialScrollHour: viewConfig.workingStartHour ?? 6,
     interval,
     now: toDisplay(new Date()),
@@ -2417,7 +2337,6 @@ export function useDataverseScheduleHost<
       if (provenanceName) {
         payload[provenanceName] = "manual";
       }
-      Object.assign(payload, scenarioBoard.createPayload?.(draft));
       // An item keeps one tag: the draft's first.
       const tag = draft.requiredTags?.[0];
       try {
@@ -2468,7 +2387,6 @@ export function useDataverseScheduleHost<
     },
     onEventClick: (event) =>
       setMessage(formatString(messages.msgSelected, { title: event.title })),
-    onRequiredTagsChange: scenarioBoard.onRequiredTagsChange,
     onIntervalChange: setIntervalState,
     onResourceColumnWidthChange: (width) => {
       setResourceColumnWidth(width);
@@ -2555,7 +2473,6 @@ export function useDataverseScheduleHost<
     showWeekends,
     slotMinutes,
     strings: controlStrings.surface,
-    tagColors: scenarioData.tagColors,
     // The site's city on the toolbar; the zone in full and its offset in the tooltip.
     timeZoneDetail:
       displayZone === "user" || formatTimeZoneCity(displayZone) === "UTC"

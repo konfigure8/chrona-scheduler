@@ -55,7 +55,7 @@ import { VerticalSplitter } from "./Splitter";
 import { tagClassName, tagPillStyle, type TagColorMap } from "./tagColors";
 import { computeVisibleEntryRange } from "./rowVirtualization";
 import { useBoardExtension } from "./extension";
-import { assignedHours } from "./hours";
+import { assignedHours, capacityForWindow } from "./hours";
 import { packEventLanes, type TimelineRowLayout } from "./timelineLayout";
 import {
   isSameDay,
@@ -237,7 +237,10 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
   const selectionAnchorRef = React.useRef<string | undefined>(undefined);
 
   const drag = useDragController();
-  const fit = useBoardExtension()?.fit;
+  const boardExtension = useBoardExtension();
+  const fit = boardExtension?.fit;
+  // A mark after a person's name, such as a scenario's glyph with its reason.
+  const personMark = boardExtension?.personMark;
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
   const pointerMovedRef = React.useRef(false);
   const pointerDownLeftRef = React.useRef(0);
@@ -1457,10 +1460,11 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
               >
                 <span className="chrona-sched__resource-name">
                   {row.resource.name}
+                  {personMark?.(row.resource, { resources, window: timeWindow })}
                   {row.resource.capacityHours !== undefined ? (
                     <span className="chrona-sched__resource-load">
                       {assignedHours(events, row.resource.id, timeWindow)}/
-                      {row.resource.capacityHours}h
+                      {capacityForWindow(row.resource.capacityHours, timeWindow)}h
                     </span>
                   ) : null}
                 </span>

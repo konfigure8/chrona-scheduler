@@ -202,6 +202,97 @@ export interface SchedulerStrings {
   readonly scoreSearchNote: string;
   readonly scoreSearchNoteOne: string;
   readonly scoreSearchUnit: string;
+  /** The Must tile without counts or a verdict: the run was not analysed. */
+  readonly scoreNotCounted: string;
+  /** The Must tile's breakdown (design Pass 1 call 2, DR2 call 6). */
+  readonly mustBreakdownTitle: string;
+  readonly mustRowRest: string;
+  readonly mustRowDaysInARow: string;
+  readonly mustRowSkills: string;
+  readonly mustRowOnLeave: string;
+  readonly mustRowOther: string;
+  /** The kinds "Other Must rules" names. */
+  readonly mustKindOverlap: string;
+  readonly mustKindMaximumHours: string;
+  readonly mustKindSplitParts: string;
+  readonly mustKindUnlisted: string;
+  /** A breakdown row read in full: plain, and as a button that opens its shifts. */
+  readonly mustRowSummary: string;
+  readonly mustRowOpen: string;
+  /** People whose rest and day limits are not checked (no agreement). */
+  readonly mustUncheckedOne: string;
+  readonly mustUnchecked: string;
+  readonly mustNoAgreementOne: string;
+  readonly mustNoAgreement: string;
+  readonly mustNoAgreementNobody: string;
+  readonly proposalMustKeptUncheckedOne: string;
+  readonly proposalMustKeptUnchecked: string;
+  /** The change list's group of a breakdown row's shifts, capped. */
+  readonly drillGroup: string;
+  readonly drillMore: string;
+  /** One reason line per change (design R10, Pass 1 call 5). */
+  readonly reasonFixesRest: string;
+  readonly reasonFixesDaysInARow: string;
+  readonly reasonFixesSkill: string;
+  readonly reasonFixesMust: string;
+  readonly reasonAddsRest: string;
+  readonly reasonAddsMust: string;
+  readonly reasonUnpreferred: string;
+  readonly reasonAvoidsUnpreferred: string;
+  readonly reasonFillsOpen: string;
+  readonly reasonPersonFixesOne: string;
+  readonly reasonPersonFixes: string;
+  /** Above the size limit the run is counted, not explained (RR2-D8). */
+  readonly countsOnlyNote: string;
+  /** Asks again for what failed. */
+  readonly tryAgain: string;
+  /** "Why not…?" (E2, A2; design DR2 calls 1 to 4, 11, 12): the shift menu's item, the change list's button and the group's heading. */
+  readonly menuWhyNot: string;
+  /** The picker's visible label. */
+  readonly whyNotPerson: string;
+  readonly whyNotPlaceholder: string;
+  readonly whyNotNoMatch: string;
+  /** The shift's person on the roster as it would be applied. */
+  readonly whyNotNow: string;
+  readonly whyNotChecking: string;
+  /** The verdict, first in the answer. */
+  readonly whyNotVerdictMustOne: string;
+  readonly whyNotVerdictMust: string;
+  readonly whyNotVerdictShould: string;
+  readonly whyNotVerdictEqual: string;
+  /** In review: Optimize picked one of two as good fits. */
+  readonly whyNotVerdictEqualReview: string;
+  readonly whyNotVerdictBetter: string;
+  /** The lines for the person taken off the shift. */
+  readonly whyNotTakingOff: string;
+  /** Preferred time, missed or given; unpreferred time reads as reasonUnpreferred. */
+  readonly whyNotPrefers: string;
+  /** Should rules by name, with a direction word and never a count (design DR2 call 4). */
+  readonly ruleSpreadOfShifts: string;
+  readonly ruleMinimumHours: string;
+  readonly whyNotLessEven: string;
+  readonly whyNotMoreEven: string;
+  readonly whyNotWorse: string;
+  readonly whyNotBetter: string;
+  readonly whyNotNoAgreement: string;
+  /** 429, 503, 504 or no answer; on a rate limit, when to try again. */
+  readonly whyNotUnavailable: string;
+  readonly whyNotRetryIn: string;
+  /** The roster changed while the answer was out or on screen (S4-2, DR2 call 11). */
+  readonly whyNotRosterChanged: string;
+  readonly whyNotAskAgain: string;
+  /** What the answer offers on the current roster (DR2-Q2). */
+  readonly whyNotAssign: string;
+  readonly whyNotSwap: string;
+  readonly whyNotTakes: string;
+  readonly whyNotLeftOpen: string;
+  /** In review there is no action (DR2-Q2). */
+  readonly whyNotInReview: string;
+  /** The Preferences met tile (E4, A4; design DR2 call 7) and the Stats menu's stat. */
+  readonly scorePreferences: string;
+  readonly scorePreferencesValue: string;
+  readonly scorePreferencesNone: string;
+  readonly preferencesUnmetTitle: string;
   readonly proposalCheckFoundMany: string;
   readonly proposalCheckFoundOne: string;
   readonly proposalDoubleBookingMany: string;
@@ -466,6 +557,75 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   scoreSearchNote: "{better} improvements · {seconds} s",
   scoreSearchNoteOne: "1 improvement · {seconds} s",
   scoreSearchUnit: "versions",
+  scoreNotCounted: "Not counted this run",
+  mustBreakdownTitle: "Must rules",
+  mustRowRest: "Rest between shifts",
+  mustRowDaysInARow: "Days in a row",
+  mustRowSkills: "Skills",
+  mustRowOnLeave: "On leave or unavailable",
+  mustRowOther: "Other Must rules",
+  mustKindOverlap: "Double booking",
+  mustKindMaximumHours: "Max hours",
+  mustKindSplitParts: "Split parts",
+  mustKindUnlisted: "Other",
+  mustRowSummary: "{rule}: {now} now, {proposed} proposed",
+  mustRowOpen: "{rule}: {now} now, {proposed} proposed. Show shifts",
+  mustUncheckedOne: "Not checked for 1 person",
+  mustUnchecked: "Not checked for {count} people",
+  mustNoAgreementOne: "1 person has no agreement: rest and day limits not checked.",
+  mustNoAgreement: "{count} people have no agreement: rest and day limits not checked.",
+  mustNoAgreementNobody: "No one has an agreement: rest and day limits not checked.",
+  proposalMustKeptUncheckedOne: "Must rules kept · not checked for 1 person",
+  proposalMustKeptUnchecked: "Must rules kept · not checked for {count} people",
+  drillGroup: "{rule} ({count})",
+  drillMore: "and {count} more",
+  reasonFixesRest: "Fixes {name}'s rest ({hours} h)",
+  reasonFixesDaysInARow: "Fixes {name}'s days in a row",
+  reasonFixesSkill: "Fixes a skill gap",
+  reasonFixesMust: "Fixes a Must rule break",
+  reasonAddsRest: "Adds a short rest for {name} ({hours} h)",
+  reasonAddsMust: "Adds a Must rule break",
+  reasonUnpreferred: "{name} prefers not to work then",
+  reasonAvoidsUnpreferred: "Avoids {name}'s unpreferred time",
+  reasonFillsOpen: "Fills an open shift",
+  reasonPersonFixesOne: "Fixes 1 rule break",
+  reasonPersonFixes: "Fixes {count} rule breaks",
+  countsOnlyNote: "Large roster: counts only. Reasons are not shown.",
+  tryAgain: "Try again",
+  menuWhyNot: "Why not…?",
+  whyNotPerson: "Person",
+  whyNotPlaceholder: "Type a name",
+  whyNotNoMatch: "No match",
+  whyNotNow: "now {name}",
+  whyNotChecking: "Checking {name}…",
+  whyNotVerdictMustOne: "{name} would break 1 Must rule",
+  whyNotVerdictMust: "{name} would break {count} Must rules",
+  whyNotVerdictShould: "{name} keeps every Must rule but fits less well",
+  whyNotVerdictEqual: "{name} fits as well.",
+  whyNotVerdictEqualReview: "{name} fits as well. Optimize had to pick one.",
+  whyNotVerdictBetter: "{name} fits better.",
+  whyNotTakingOff: "Taking it off {name}",
+  whyNotPrefers: "{name} prefers to work then",
+  ruleSpreadOfShifts: "Spread of shifts",
+  ruleMinimumHours: "Minimum hours",
+  whyNotLessEven: "{rule}: less even",
+  whyNotMoreEven: "{rule}: more even",
+  whyNotWorse: "{rule}: worse",
+  whyNotBetter: "{rule}: better",
+  whyNotNoAgreement: "{name} has no agreement: rest and day limits not checked.",
+  whyNotUnavailable: "Could not check this now",
+  whyNotRetryIn: "Could not check this now. Try again in {seconds} s.",
+  whyNotRosterChanged: "The roster changed.",
+  whyNotAskAgain: "Ask again",
+  whyNotAssign: "Assign {name}",
+  whyNotSwap: "Swap {name} and {other}",
+  whyNotTakes: "{name} takes {shift}",
+  whyNotLeftOpen: "{name}'s {shift} would be left open",
+  whyNotInReview: "To use {name}, drop this change and act after Apply.",
+  scorePreferences: "Preferences met",
+  scorePreferencesValue: "{met} of {total}",
+  scorePreferencesNone: "No preferences entered",
+  preferencesUnmetTitle: "Preferences not met",
   proposalCheckFoundMany: "{count} changes went out of date. Check them, then apply again.",
   proposalCheckFoundOne: "1 change went out of date. Check it, then apply again.",
   proposalDoubleBookingMany: "{count} double bookings",

@@ -889,7 +889,7 @@
     <value>Resource (banen)</value>
   </data>
   <data name="Prop_Resource_Desc" xml:space="preserve">
-    <value>Lookup naar toegewezen persoon of object. Gekoppeld: baan per persoon. Niet gekoppeld: kalender. Gebruik een lookup, niet Owner.</value>
+    <value>Opzoekkolom naar toegewezen persoon of object. Gekoppeld: baan per persoon. Niet gekoppeld: kalender. Gebruik een opzoekkolom, niet Eigenaar.</value>
   </data>
   <data name="Prop_Status" xml:space="preserve">
     <value>Status (optioneel)</value>
@@ -943,7 +943,7 @@
     <value>Sjabloon (optioneel)</value>
   </data>
   <data name="Prop_Template_Desc" xml:space="preserve">
-    <value>Lookup naar het bronsjabloon van de rij (Chrona Workforce Scheduler).</value>
+    <value>Opzoekkolom naar het bronsjabloon van de rij (Chrona Workforce Scheduler).</value>
   </data>
   <data name="Prop_Origin" xml:space="preserve">
     <value>Generatiebron (optioneel)</value>
@@ -955,7 +955,7 @@
     <value>Rol</value>
   </data>
   <data name="Prop_Role_Desc" xml:space="preserve">
-    <value>Lookup naar de vereiste rol. Personen worden op hun rollen afgestemd.</value>
+    <value>Opzoekkolom naar de vereiste rol. Personen worden op hun rollen afgestemd.</value>
   </data>
   <data name="Prop_Subgroup" xml:space="preserve">
     <value>Subgroep</value>
@@ -992,5 +992,212 @@
   </data>
   <data name="Prop_Duration_Desc" xml:space="preserve">
     <value>Minuten die een rij zonder datum inneemt na het neerzetten in de planner. Niet gekoppeld: één uur.</value>
+  </data>
+  <data name="scoreNotCounted" xml:space="preserve">
+    <value>Deze keer niet geteld</value>
+  </data>
+  <data name="mustBreakdownTitle" xml:space="preserve">
+    <value>Verplichte regels</value>
+  </data>
+  <data name="mustRowRest" xml:space="preserve">
+    <value>Rusttijd tussen diensten</value>
+  </data>
+  <data name="mustRowDaysInARow" xml:space="preserve">
+    <value>Dagen op rij</value>
+  </data>
+  <data name="mustRowSkills" xml:space="preserve">
+    <value>Vaardigheden</value>
+  </data>
+  <data name="mustRowOnLeave" xml:space="preserve">
+    <value>Afwezig of niet beschikbaar</value>
+  </data>
+  <data name="mustRowOther" xml:space="preserve">
+    <value>Overige verplichte regels</value>
+  </data>
+  <data name="mustKindOverlap" xml:space="preserve">
+    <value>Dubbele boeking</value>
+  </data>
+  <data name="mustKindMaximumHours" xml:space="preserve">
+    <value>Max. uren</value>
+  </data>
+  <data name="mustKindSplitParts" xml:space="preserve">
+    <value>Gebroken dienst</value>
+  </data>
+  <data name="mustKindUnlisted" xml:space="preserve">
+    <value>Overige</value>
+  </data>
+  <data name="mustRowSummary" xml:space="preserve">
+    <value>{rule}: {now} nu, {proposed} in het voorstel</value>
+  </data>
+  <data name="mustRowOpen" xml:space="preserve">
+    <value>{rule}: {now} nu, {proposed} in het voorstel. Diensten tonen</value>
+  </data>
+  <data name="mustUncheckedOne" xml:space="preserve">
+    <value>Niet gecontroleerd voor 1 persoon</value>
+  </data>
+  <data name="mustUnchecked" xml:space="preserve">
+    <value>Niet gecontroleerd voor {count} personen</value>
+  </data>
+  <data name="mustNoAgreementOne" xml:space="preserve">
+    <value>1 persoon heeft geen overeenkomst: rusttijd en daglimieten niet gecontroleerd.</value>
+  </data>
+  <data name="mustNoAgreement" xml:space="preserve">
+    <value>{count} personen hebben geen overeenkomst: rusttijd en daglimieten niet gecontroleerd.</value>
+  </data>
+  <data name="mustNoAgreementNobody" xml:space="preserve">
+    <value>Niemand heeft een overeenkomst: rusttijd en daglimieten niet gecontroleerd.</value>
+  </data>
+  <data name="proposalMustKeptUncheckedOne" xml:space="preserve">
+    <value>Verplichte regels nageleefd · niet gecontroleerd voor 1 persoon</value>
+  </data>
+  <data name="proposalMustKeptUnchecked" xml:space="preserve">
+    <value>Verplichte regels nageleefd · niet gecontroleerd voor {count} personen</value>
+  </data>
+  <data name="drillGroup" xml:space="preserve">
+    <value>{rule} ({count})</value>
+  </data>
+  <data name="drillMore" xml:space="preserve">
+    <value>en nog {count}</value>
+  </data>
+  <data name="reasonFixesRest" xml:space="preserve">
+    <value>Herstelt de rusttijd van {name} ({hours} u)</value>
+  </data>
+  <data name="reasonFixesDaysInARow" xml:space="preserve">
+    <value>Herstelt de dagen op rij van {name}</value>
+  </data>
+  <data name="reasonFixesSkill" xml:space="preserve">
+    <value>Herstelt een ontbrekende vaardigheid</value>
+  </data>
+  <data name="reasonFixesMust" xml:space="preserve">
+    <value>Herstelt een overtreden verplichte regel</value>
+  </data>
+  <data name="reasonAddsRest" xml:space="preserve">
+    <value>Geeft {name} een korte rusttijd ({hours} u)</value>
+  </data>
+  <data name="reasonAddsMust" xml:space="preserve">
+    <value>Overtreedt een verplichte regel</value>
+  </data>
+  <data name="reasonUnpreferred" xml:space="preserve">
+    <value>{name} werkt dan liever niet</value>
+  </data>
+  <data name="reasonAvoidsUnpreferred" xml:space="preserve">
+    <value>Vermijdt niet-voorkeurstijd van {name}</value>
+  </data>
+  <data name="reasonFillsOpen" xml:space="preserve">
+    <value>Vult een open dienst</value>
+  </data>
+  <data name="reasonPersonFixesOne" xml:space="preserve">
+    <value>Herstelt 1 overtreding</value>
+  </data>
+  <data name="reasonPersonFixes" xml:space="preserve">
+    <value>Herstelt {count} overtredingen</value>
+  </data>
+  <data name="countsOnlyNote" xml:space="preserve">
+    <value>Groot rooster: alleen aantallen. Redenen worden niet getoond.</value>
+  </data>
+  <data name="tryAgain" xml:space="preserve">
+    <value>Opnieuw proberen</value>
+  </data>
+  <data name="menuWhyNot" xml:space="preserve">
+    <value>Waarom niet…?</value>
+  </data>
+  <data name="whyNotPerson" xml:space="preserve">
+    <value>Persoon</value>
+  </data>
+  <data name="whyNotPlaceholder" xml:space="preserve">
+    <value>Typ een naam</value>
+  </data>
+  <data name="whyNotNoMatch" xml:space="preserve">
+    <value>Geen resultaat</value>
+  </data>
+  <data name="whyNotNow" xml:space="preserve">
+    <value>nu {name}</value>
+  </data>
+  <data name="whyNotChecking" xml:space="preserve">
+    <value>{name} controleren…</value>
+  </data>
+  <data name="whyNotVerdictMustOne" xml:space="preserve">
+    <value>{name} zou 1 verplichte regel overtreden</value>
+  </data>
+  <data name="whyNotVerdictMust" xml:space="preserve">
+    <value>{name} zou {count} verplichte regels overtreden</value>
+  </data>
+  <data name="whyNotVerdictShould" xml:space="preserve">
+    <value>{name} houdt zich aan alle verplichte regels, maar past minder goed</value>
+  </data>
+  <data name="whyNotVerdictEqual" xml:space="preserve">
+    <value>{name} past even goed.</value>
+  </data>
+  <data name="whyNotVerdictEqualReview" xml:space="preserve">
+    <value>{name} past even goed. De optimalisatie moest kiezen.</value>
+  </data>
+  <data name="whyNotVerdictBetter" xml:space="preserve">
+    <value>{name} past beter.</value>
+  </data>
+  <data name="whyNotTakingOff" xml:space="preserve">
+    <value>{name} verliest de dienst</value>
+  </data>
+  <data name="whyNotPrefers" xml:space="preserve">
+    <value>{name} werkt dan graag</value>
+  </data>
+  <data name="ruleSpreadOfShifts" xml:space="preserve">
+    <value>Spreiding van diensten</value>
+  </data>
+  <data name="ruleMinimumHours" xml:space="preserve">
+    <value>Minimumuren</value>
+  </data>
+  <data name="whyNotLessEven" xml:space="preserve">
+    <value>{rule}: minder gelijkmatig</value>
+  </data>
+  <data name="whyNotMoreEven" xml:space="preserve">
+    <value>{rule}: gelijkmatiger</value>
+  </data>
+  <data name="whyNotWorse" xml:space="preserve">
+    <value>{rule}: slechter</value>
+  </data>
+  <data name="whyNotBetter" xml:space="preserve">
+    <value>{rule}: beter</value>
+  </data>
+  <data name="whyNotNoAgreement" xml:space="preserve">
+    <value>{name} heeft geen overeenkomst: rusttijd en daglimieten niet gecontroleerd.</value>
+  </data>
+  <data name="whyNotUnavailable" xml:space="preserve">
+    <value>Kan nu niet controleren</value>
+  </data>
+  <data name="whyNotRetryIn" xml:space="preserve">
+    <value>Kan nu niet controleren. Probeer het over {seconds} s opnieuw.</value>
+  </data>
+  <data name="whyNotRosterChanged" xml:space="preserve">
+    <value>Het rooster is gewijzigd.</value>
+  </data>
+  <data name="whyNotAskAgain" xml:space="preserve">
+    <value>Opnieuw vragen</value>
+  </data>
+  <data name="whyNotAssign" xml:space="preserve">
+    <value>{name} toewijzen</value>
+  </data>
+  <data name="whyNotSwap" xml:space="preserve">
+    <value>{name} en {other} ruilen</value>
+  </data>
+  <data name="whyNotTakes" xml:space="preserve">
+    <value>{name} neemt {shift}</value>
+  </data>
+  <data name="whyNotLeftOpen" xml:space="preserve">
+    <value>{shift} van {name} zou open blijven</value>
+  </data>
+  <data name="whyNotInReview" xml:space="preserve">
+    <value>Voor {name}: verwerp deze wijziging en handel na Toepassen.</value>
+  </data>
+  <data name="scorePreferences" xml:space="preserve">
+    <value>Vervulde voorkeuren</value>
+  </data>
+  <data name="scorePreferencesValue" xml:space="preserve">
+    <value>{met} van {total}</value>
+  </data>
+  <data name="scorePreferencesNone" xml:space="preserve">
+    <value>Geen voorkeuren ingevoerd</value>
+  </data>
+  <data name="preferencesUnmetTitle" xml:space="preserve">
+    <value>Niet vervulde voorkeuren</value>
   </data>
 </root>

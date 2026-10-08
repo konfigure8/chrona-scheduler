@@ -619,3 +619,40 @@ changeListPerPerson();
   }
   console.log("pin tests passed");
 }
+
+/*
+ * F48 Split shifts: a shift's rostered gaps travel as breaks, at real
+ * moments, and each part of a split names its split. Without either,
+ * the shift carries neither field.
+ */
+{
+  const window = { end: at(24), start: at(0) };
+  const lunch: SchedulerUiEvent = {
+    end: at(14),
+    gaps: [{ end: at(11), label: "Tea", paid: true, start: at(10) }, { end: at(13), start: at(12) }],
+    id: "lunch",
+    resourceId: "mia",
+    split: { id: "split-1", samePerson: "required" },
+    start: at(9),
+    status: "assigned",
+    title: "Lunch",
+  };
+  const later = (display: Date): Date => new Date(display.getTime() + 60 * 60 * 1000);
+  const problem = problemFromSchedule({
+    events: [lunch, assigned],
+    resources: people,
+    toInstant: later,
+    window,
+  });
+  const byId = new Map(problem.shifts.map((shift) => [shift.id, shift]));
+  const breaks = byId.get("lunch")?.breaks ?? [];
+  assertEqual(breaks.length, 2);
+  assertEqual(breaks[0]?.start, "2027-02-01T11:00:00.000Z");
+  assertEqual(breaks[0]?.paid, true);
+  assertEqual(breaks[1]?.paid, false);
+  assertEqual(byId.get("lunch")?.split?.id, "split-1");
+  assertEqual(byId.get("lunch")?.split?.samePerson, "required");
+  assertEqual("breaks" in (byId.get(assigned.id) ?? {}), false);
+  assertEqual("split" in (byId.get(assigned.id) ?? {}), false);
+  console.log("split and break tests passed");
+}

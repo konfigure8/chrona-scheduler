@@ -1,17 +1,24 @@
 /**
  * F23 Payload redaction (ruled 2026-09-01): no personal data leaves
  * the browser. Every v2 problem is redacted at the contract boundary
- * before it becomes a wire request - resources re-keyed p-1..p-n and
- * work items w-1..w-n in given order, names and titles dropped to
- * their pseudonyms (re-keying also scrubs name-derived ids like
- * "r-alex") - and the id-maps stay HERE so solutions can be mapped
- * back locally. Skills stay plain tags and cost/contract facts stay
- * in the payload (both ruled; the conversion ledger discloses them),
- * and so does the site's time zone.
+ * before it becomes a wire request - resources re-keyed p-1..p-n,
+ * work items w-1..w-n and agreements a-1..a-n in given order, names
+ * and titles dropped to their pseudonyms (re-keying also scrubs
+ * name-derived ids like "r-alex") - and the id-maps stay HERE so
+ * solutions, rule matches and candidate checks can be mapped back
+ * locally. Skills stay plain tags and cost/contract facts stay in the
+ * payload (both ruled; the conversion ledger discloses them), and so
+ * do agreement rules, the history mark and the site's time zone.
+ * Preferred and unpreferred time travel as times on the pseudonym;
+ * that of a person the problem does not hold stays home.
  * The solver never needed names, so nothing functional changes.
  */
 import type {
+  ScheduleCandidate,
+  ScheduleCandidateCheck,
   ScheduleProblemV2,
+  ScheduleRosterCheck,
+  ScheduleRuleMatch,
   ScheduleSolutionV2,
 } from "./schedulingContract";
 
@@ -107,10 +114,49 @@ function redactWith(
   const toRealShiftId = new Map<string, string>();
   const pseudoResource = (realId: string): string =>
     resourcePseudonyms.get(realId) ?? realId;
+  // Agreements are record ids: re-keyed in given order, then any id a person
+  // names that the problem does not hold (it limits nothing; its real id stays home).
+  const agreementPseudonyms = new Map<string, string>();
+  const pseudoAgreement = (realId: string): string => {
+    const known = agreementPseudonyms.get(realId);
+    if (known) {
+      return known;
+    }
+    const pseudonym = `a-${agreementPseudonyms.size + 1}`;
+    agreementPseudonyms.set(realId, pseudonym);
+    return pseudonym;
+  };
+  const agreements = problem.agreements?.map((agreement) => ({
+    id: pseudoAgreement(agreement.id),
+    rules: agreement.rules,
+  }));
+  const timePreferences = problem.timePreferences
+    ?.filter((band) => resourcePseudonyms.has(band.resourceId))
+    .map((band) => ({
+      end: band.end,
+      kind: band.kind,
+      resourceId: pseudoResource(band.resourceId),
+      start: band.start,
+    }));
+  // F48 Split shifts: the parts of a split share a pseudonym in place of their id.
+  const splitPseudonyms = new Map<string, string>();
+  const pseudoSplit = (realId: string): string => {
+    const known = splitPseudonyms.get(realId);
+    if (known) {
+      return known;
+    }
+    const pseudonym = `s-${splitPseudonyms.size + 1}`;
+    splitPseudonyms.set(realId, pseudonym);
+    return pseudonym;
+  };
   return {
     problem: {
+      ...(agreements ? { agreements } : {}),
       contractVersion: "2",
       resources: problem.resources.map((resource) => ({
+        ...(resource.agreementId !== undefined
+          ? { agreementId: pseudoAgreement(resource.agreementId) }
+          : {}),
         ...(resource.contract ? { contract: resource.contract } : {}),
         ...(resource.costCentsPerHour !== undefined
           ? { costCentsPerHour: resource.costCentsPerHour }
@@ -131,13 +177,20 @@ function redactWith(
                 },
               }
             : {}),
+          // Breaks are times only: unpaid ones come off paid hours (F48 Split shifts).
+          ...(shift.breaks && shift.breaks.length > 0 ? { breaks: shift.breaks } : {}),
           end: shift.end,
+          ...(shift.history === true ? { history: true } : {}),
           id: pseudonym,
           requiredSkills: shift.requiredSkills,
+          ...(shift.split
+            ? { split: { id: pseudoSplit(shift.split.id), samePerson: shift.split.samePerson } }
+            : {}),
           start: shift.start,
           title: pseudonym,
         };
       }),
+      ...(timePreferences ? { timePreferences } : {}),
       unavailability: problem.unavailability.map((band) => ({
         end: band.end,
         resourceId: pseudoResource(band.resourceId),
@@ -161,8 +214,18 @@ export function unredactSolution(
   solution: ScheduleSolutionV2,
   redaction: RedactedProblem,
 ): ScheduleSolutionV2 {
+  const { analysis } = solution;
   return {
     ...solution,
+    ...(analysis
+      ? {
+          analysis: {
+            ...analysis,
+            current: unredactRosterCheck(analysis.current, redaction),
+            proposed: unredactRosterCheck(analysis.proposed, redaction),
+          },
+        }
+      : {}),
     assignments: solution.assignments.map((assignment) => ({
       resourceId:
         assignment.resourceId === null
@@ -172,5 +235,64 @@ export function unredactSolution(
       shiftId:
         redaction.toRealShiftId.get(assignment.shiftId) ?? assignment.shiftId,
     })),
+  };
+}
+
+function unredactRosterCheck(
+  check: ScheduleRosterCheck,
+  redaction: RedactedProblem,
+): ScheduleRosterCheck {
+  return check.matches
+    ? { ...check, matches: check.matches.map((match) => unredactMatch(match, redaction)) }
+    : check;
+}
+
+/** A rule match on the real person and shifts; unknown ids pass through. */
+function unredactMatch(match: ScheduleRuleMatch, redaction: RedactedProblem): ScheduleRuleMatch {
+  return {
+    ...match,
+    ...(match.resourceId !== undefined
+      ? { resourceId: redaction.toRealResourceId.get(match.resourceId) ?? match.resourceId }
+      : {}),
+    shiftIds: match.shiftIds.map((shiftId) => redaction.toRealShiftId.get(shiftId) ?? shiftId),
+  };
+}
+
+/** The pseudonym a map gives a real id, or undefined when it has none. */
+function pseudonymOf(toReal: ReadonlyMap<string, string>, realId: string): string | undefined {
+  for (const [pseudonym, real] of toReal) {
+    if (real === realId) {
+      return pseudonym;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Put a "Why not…?" candidate in the redacted problem's ids. A person
+ * or shift the problem does not hold has no pseudonym, so the check is
+ * refused here rather than send a real id.
+ */
+export function redactCandidate(
+  candidate: ScheduleCandidate,
+  redaction: RedactedProblem,
+): ScheduleCandidate {
+  const resourceId = pseudonymOf(redaction.toRealResourceId, candidate.resourceId);
+  const shiftId = pseudonymOf(redaction.toRealShiftId, candidate.shiftId);
+  if (resourceId === undefined || shiftId === undefined) {
+    throw new Error("The candidate's person or shift is not in the problem.");
+  }
+  return { resourceId, shiftId };
+}
+
+/** Map a candidate check's rule matches back to the real schedule. */
+export function unredactCandidateCheck(
+  check: ScheduleCandidateCheck,
+  redaction: RedactedProblem,
+): ScheduleCandidateCheck {
+  return {
+    added: check.added.map((match) => unredactMatch(match, redaction)),
+    fit: check.fit,
+    removed: check.removed.map((match) => unredactMatch(match, redaction)),
   };
 }

@@ -58,7 +58,40 @@ The last button on the toolbar shows the board on the whole screen. Select it ag
 
 ## 5. With Chrona Workforce Scheduler
 
-The scenario solution adds its own tables, each with a page in its app: skills, roles and the skills a role needs, the roles and skills of people, availability types and availability, demand and demand drivers, and work item templates with their spans. The scheduler reads them for role matching, availability bands, the coverage strip, generation and the optimizer's rules.
+The scenario solution adds its own tables, each with a page in its app: skills, roles and the skills a role needs, the roles and skills of people, availability types and availability, agreements and their rules, demand and demand drivers, and work item templates with their spans. The scheduler reads them for role matching, availability bands and preferred times, rest and day limits, the coverage strip, generation and the optimizer's rules.
+
+### Agreements
+
+An agreement holds the rostering rules of an award, an enterprise agreement or your own policy. Each person works under one agreement. Roles play no part.
+
+Set agreements up on the app's **Agreements** page, with the **Chrona Workforce Admin** role. Turn on auditing before the first rule: see [Install Chrona Workforce Scheduler](https://chrona365.com/docs/workforce/install).
+
+1. Add an agreement and give it a **Name**.
+2. In its **Rules** grid, add one row for each rule:
+
+| Column | What it holds | When empty |
+| --- | --- | --- |
+| Rule | **Minimum rest (hours)** between shifts, or **Days in a row**. | Required. |
+| Value | The hours of rest (halves are fine), or the most days worked in a row (a whole number). Above 0. | Required. |
+| On | Only rules that are on count. | On. |
+| Effective start | The rule's first day, in the site's time zone. | Always. |
+| Effective end | The rule's last day. On or after the start. | No end. |
+
+3. In its **People** grid, add the people who work under it. You can also set **Agreement** on a person, beside **Hours per week**.
+
+How the rules apply:
+
+- Both rules are Must rules. Optimize does not break them to fill a shift: the shift stays open instead.
+- When two rules of one type are in force on the same day, both hold, and the stricter one wins: the longer rest, the fewer days.
+- The rule in force when the later work starts applies. Rest before a shift uses the minimum in force when that shift starts. Each day of a run uses the limit in force that day.
+- To stop a rule, set its **Effective end**. Switching it off changes past periods too.
+- Rest and days in a row also count the shifts before the roster period, as far back as the longest rule needs.
+- A person with no agreement, or with no rule in force, is not checked for rest or days in a row. The board marks each such person, unless no one has an agreement.
+- A deactivated agreement counts as no agreement.
+- Dataverse refuses to delete an agreement while people work under it. Move them to another agreement first.
+- A change by hand that breaks a rule gets a warning on the board. The board does not block it.
+
+With an agent: the `generate_agreement` tool of the Chrona Model Context Protocol (MCP) server turns your rules into the requests that create the agreement and its rules. Your agent links the people with its own Dataverse tools, so no person data reaches Chrona.
 
 ## Editing the rows without an app
 

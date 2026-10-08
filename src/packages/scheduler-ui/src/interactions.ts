@@ -227,7 +227,7 @@ export function computeDragResult(
     return {
       end: event.end,
       resourceId: event.resourceId,
-      start: clampResizeStart(event, boundedStart),
+      start: clampResizeStart(event, boundedStart, geometry.snapMinutes),
     };
   }
 
@@ -237,7 +237,7 @@ export function computeDragResult(
       ? new Date(event.start.getTime() + minimumDurationMs)
       : end;
   return {
-    end: clampResizeEnd(event, boundedEnd),
+    end: clampResizeEnd(event, boundedEnd, geometry.snapMinutes),
     resourceId: event.resourceId,
     start: event.start,
   };

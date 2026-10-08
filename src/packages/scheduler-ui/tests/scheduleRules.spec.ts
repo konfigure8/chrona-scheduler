@@ -1,9 +1,14 @@
 import {
   buildEventsByResource,
+  compareShifts,
   defaultRulesConfig,
   evaluateScheduleRules,
   findBreakViolation,
+  findRestShortfall,
+  restShortfall,
   scheduleRuleOrder,
+  shiftsOverlap,
+  type MinimumRestAt,
   type SchedulerRulesConfig,
 } from "../src/scheduleRules";
 import type { SchedulerResource, SchedulerUiEvent } from "../src/types";
@@ -167,10 +172,148 @@ function indexedEvaluationHandlesCandidateLoopsAtStressScale(): void {
   }
 }
 
+/*
+ * Per-person rest (design R5b, R15; engineering T9): the minimum comes
+ * from the person and from the date the later shift starts. The board's
+ * own single-value check is untouched (R11(b)).
+ */
+const restDay = (date: number, hour: number, minute = 0): Date => new Date(2026, 6, date, hour, minute);
+const restShift = (
+  id: string,
+  resourceId: string,
+  start: Date,
+  end: Date,
+  split?: SchedulerUiEvent["split"],
+): SchedulerUiEvent => ({ end, id, resourceId, start, split, status: "assigned", title: id });
+
+function perPersonRestWarnsOnlyThatPerson(): void {
+  // Casey works under a 10-hour minimum; Dana under none.
+  const minimumFor = (resourceId: string): MinimumRestAt => () => (resourceId === "r-1" ? 600 : undefined);
+  const roster = [
+    restShift("c-1", "r-1", restDay(6, 7), restDay(6, 15)),
+    restShift("d-1", "r-2", restDay(6, 7), restDay(6, 15)),
+  ];
+  const proposed = { end: restDay(7, 8), id: "new", start: restDay(7, 0) };
+  const casey = findRestShortfall(roster.filter((event) => event.resourceId === "r-1"), undefined, proposed, minimumFor("r-1"));
+  assertEqual(casey?.gapMinutes, 540);
+  assertEqual(casey?.minimumMinutes, 600);
+  assertEqual(casey?.neighborTitle, "c-1");
+  const dana = findRestShortfall(roster.filter((event) => event.resourceId === "r-2"), undefined, proposed, minimumFor("r-2"));
+  assertEqual(dana, undefined);
+}
+
+function restIsJudgedAtTheLaterShiftsStart(): void {
+  // An 11-hour rule from 1 July (R15): nine hours before a shift starting 30 June pass,
+  // nine hours before a shift starting 1 July do not.
+  const elevenFromJuly: MinimumRestAt = (laterStart) => (laterStart >= new Date(2026, 6, 1) ? 660 : undefined);
+  const june30 = restShift("a-1", "r-1", new Date(2026, 5, 30, 6), new Date(2026, 5, 30, 14));
+  assertEqual(
+    findRestShortfall([june30], undefined, { end: restDay(1, 3), id: "x", start: new Date(2026, 5, 30, 23) }, elevenFromJuly),
+    undefined,
+  );
+  const lateJune30 = restShift("a-2", "r-1", new Date(2026, 5, 30, 14), new Date(2026, 5, 30, 22));
+  assertEqual(
+    findRestShortfall([lateJune30], undefined, { end: restDay(1, 15), id: "y", start: restDay(1, 7) }, elevenFromJuly)?.gapMinutes,
+    540,
+  );
+}
+
+function restLooksAtTheNeighboursOnly(): void {
+  const tenHours: MinimumRestAt = () => 600;
+  // A shift between the proposal and a later one: only the nearest pair is rest.
+  const roster = [
+    restShift("e-1", "r-1", restDay(6, 7), restDay(6, 11)),
+    restShift("e-2", "r-1", restDay(6, 13), restDay(6, 14)),
+  ];
+  const nearest = findRestShortfall(roster, undefined, { end: restDay(6, 21), id: "p", start: restDay(6, 20) }, tenHours);
+  assertEqual(nearest?.neighborTitle, "e-2");
+  assertEqual(nearest?.gapMinutes, 360);
+  // Exactly the minimum keeps the rule; one minute under breaks it.
+  assertEqual(
+    findRestShortfall(roster, undefined, { end: restDay(7, 8), id: "q", start: restDay(7, 0) }, tenHours),
+    undefined,
+  );
+  assertEqual(
+    findRestShortfall(roster, undefined, { end: restDay(7, 8), id: "q", start: restDay(6, 23, 59) }, tenHours)?.gapMinutes,
+    599,
+  );
+  // The moved shift never pairs with itself, and an open shift is nobody's.
+  assertEqual(findRestShortfall(roster, "e-2", { end: restDay(6, 21), id: "e-2", start: restDay(6, 20) }, tenHours)?.neighborTitle, "e-1");
+  const open = { ...restShift("o-1", "r-1", restDay(6, 16), restDay(6, 18)), status: "needsCover" as const };
+  assertEqual(findRestShortfall([open], undefined, { end: restDay(6, 21), id: "p", start: restDay(6, 20) }, tenHours), undefined);
+}
+
+function splitPartsAreNotRestAndOverlapIsNotRest(): void {
+  const tenHours: MinimumRestAt = () => 600;
+  const split = { id: "s-1", samePerson: "required" as const };
+  const morning = restShift("m", "r-1", restDay(6, 7), restDay(6, 11), split);
+  assertEqual(restShortfall(morning, restShift("e", "r-1", restDay(6, 15), restDay(6, 19), split), tenHours), undefined);
+  assertEqual(restShortfall(morning, restShift("f", "r-1", restDay(6, 15), restDay(6, 19)), tenHours)?.gapMinutes, 240);
+  // Overlapping shifts are the overlap rule's finding.
+  assertEqual(restShortfall(morning, restShift("g", "r-1", restDay(6, 10), restDay(6, 12)), tenHours), undefined);
+  // The gap is measured between the real moments the board dates stand for.
+  const anHourAhead = (display: Date): Date => new Date(display.getTime() - 60 * 60_000);
+  const later = restShift("h", "r-1", restDay(6, 20), restDay(6, 22));
+  assertEqual(restShortfall(morning, later, tenHours, anHourAhead)?.gapMinutes, 540);
+}
+
+function shiftOrderAndOverlap(): void {
+  const early = restShift("b", "r-1", restDay(6, 7), restDay(6, 15));
+  const same = restShift("a", "r-1", restDay(6, 7), restDay(6, 15));
+  const touching = restShift("c", "r-1", restDay(6, 15), restDay(6, 23));
+  assertEqual(compareShifts(same, early) < 0, true);
+  assertEqual(compareShifts(touching, early) > 0, true);
+  assertEqual(shiftsOverlap(early, touching), false);
+  assertEqual(shiftsOverlap(early, same), true);
+}
+
+function theFreeBoardsSingleValueBehavesAsToday(): void {
+  // One minimum for everyone, every neighbour, the break wording: unchanged (R11(b)).
+  const roster = [shift("e-1", "r-1", 6, 14), shift("e-2", "r-2", 6, 14)];
+  for (const resourceId of ["r-1", "r-2"]) {
+    const results = evaluateScheduleRules({
+      config,
+      event: undefined,
+      events: roster,
+      proposed: { end: day(16), resourceId, start: day(14, 30) },
+      resources,
+    });
+    assertEqual(results.map((result) => result.reason).join(" | "), "Break under 60 min (30 min gap)");
+  }
+}
+
+function extraRulesSeeEveryEvent(): void {
+  let seen = 0;
+  evaluateScheduleRules({
+    config,
+    event: undefined,
+    events,
+    extraRules: [
+      {
+        evaluate: (context) => {
+          seen = context.events.length;
+          return undefined;
+        },
+        order: 0,
+      },
+    ],
+    proposed: { end: day(16), resourceId: "r-1", start: day(15) },
+    resources,
+  });
+  assertEqual(seen, events.length);
+}
+
 indexedEvaluationHandlesCandidateLoopsAtStressScale();
 breakUnderMinimumWarnsWithTheGap();
 extraRulesTakeTheirPlaceInTheOrder();
 backToBackCountsAsZeroGapAndOverlapIsNotABreak();
 minimumBreakZeroMeansOff();
+perPersonRestWarnsOnlyThatPerson();
+restIsJudgedAtTheLaterShiftsStart();
+restLooksAtTheNeighboursOnly();
+splitPartsAreNotRestAndOverlapIsNotRest();
+shiftOrderAndOverlap();
+theFreeBoardsSingleValueBehavesAsToday();
+extraRulesSeeEveryEvent();
 
 console.log("scheduleRules tests passed");

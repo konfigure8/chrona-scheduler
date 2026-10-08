@@ -993,4 +993,211 @@
   <data name="Prop_Duration_Desc" xml:space="preserve">
     <value>Minutes an undated row fills when dropped on the board. Unbound, one hour.</value>
   </data>
+  <data name="scoreNotCounted" xml:space="preserve">
+    <value>Not counted this run</value>
+  </data>
+  <data name="mustBreakdownTitle" xml:space="preserve">
+    <value>Must rules</value>
+  </data>
+  <data name="mustRowRest" xml:space="preserve">
+    <value>Rest between shifts</value>
+  </data>
+  <data name="mustRowDaysInARow" xml:space="preserve">
+    <value>Days in a row</value>
+  </data>
+  <data name="mustRowSkills" xml:space="preserve">
+    <value>Skills</value>
+  </data>
+  <data name="mustRowOnLeave" xml:space="preserve">
+    <value>On leave or unavailable</value>
+  </data>
+  <data name="mustRowOther" xml:space="preserve">
+    <value>Other Must rules</value>
+  </data>
+  <data name="mustKindOverlap" xml:space="preserve">
+    <value>Double booking</value>
+  </data>
+  <data name="mustKindMaximumHours" xml:space="preserve">
+    <value>Max hours</value>
+  </data>
+  <data name="mustKindSplitParts" xml:space="preserve">
+    <value>Split parts</value>
+  </data>
+  <data name="mustKindUnlisted" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="mustRowSummary" xml:space="preserve">
+    <value>{rule}: {now} now, {proposed} proposed</value>
+  </data>
+  <data name="mustRowOpen" xml:space="preserve">
+    <value>{rule}: {now} now, {proposed} proposed. Show shifts</value>
+  </data>
+  <data name="mustUncheckedOne" xml:space="preserve">
+    <value>Not checked for 1 person</value>
+  </data>
+  <data name="mustUnchecked" xml:space="preserve">
+    <value>Not checked for {count} people</value>
+  </data>
+  <data name="mustNoAgreementOne" xml:space="preserve">
+    <value>1 person has no agreement: rest and day limits not checked.</value>
+  </data>
+  <data name="mustNoAgreement" xml:space="preserve">
+    <value>{count} people have no agreement: rest and day limits not checked.</value>
+  </data>
+  <data name="mustNoAgreementNobody" xml:space="preserve">
+    <value>No one has an agreement: rest and day limits not checked.</value>
+  </data>
+  <data name="proposalMustKeptUncheckedOne" xml:space="preserve">
+    <value>Must rules kept · not checked for 1 person</value>
+  </data>
+  <data name="proposalMustKeptUnchecked" xml:space="preserve">
+    <value>Must rules kept · not checked for {count} people</value>
+  </data>
+  <data name="drillGroup" xml:space="preserve">
+    <value>{rule} ({count})</value>
+  </data>
+  <data name="drillMore" xml:space="preserve">
+    <value>and {count} more</value>
+  </data>
+  <data name="reasonFixesRest" xml:space="preserve">
+    <value>Fixes {name}'s rest ({hours} h)</value>
+  </data>
+  <data name="reasonFixesDaysInARow" xml:space="preserve">
+    <value>Fixes {name}'s days in a row</value>
+  </data>
+  <data name="reasonFixesSkill" xml:space="preserve">
+    <value>Fixes a skill gap</value>
+  </data>
+  <data name="reasonFixesMust" xml:space="preserve">
+    <value>Fixes a Must rule break</value>
+  </data>
+  <data name="reasonAddsRest" xml:space="preserve">
+    <value>Adds a short rest for {name} ({hours} h)</value>
+  </data>
+  <data name="reasonAddsMust" xml:space="preserve">
+    <value>Adds a Must rule break</value>
+  </data>
+  <data name="reasonUnpreferred" xml:space="preserve">
+    <value>{name} prefers not to work then</value>
+  </data>
+  <data name="reasonAvoidsUnpreferred" xml:space="preserve">
+    <value>Avoids {name}'s unpreferred time</value>
+  </data>
+  <data name="reasonFillsOpen" xml:space="preserve">
+    <value>Fills an open shift</value>
+  </data>
+  <data name="reasonPersonFixesOne" xml:space="preserve">
+    <value>Fixes 1 rule break</value>
+  </data>
+  <data name="reasonPersonFixes" xml:space="preserve">
+    <value>Fixes {count} rule breaks</value>
+  </data>
+  <data name="countsOnlyNote" xml:space="preserve">
+    <value>Large roster: counts only. Reasons are not shown.</value>
+  </data>
+  <data name="tryAgain" xml:space="preserve">
+    <value>Try again</value>
+  </data>
+  <data name="menuWhyNot" xml:space="preserve">
+    <value>Why not…?</value>
+  </data>
+  <data name="whyNotPerson" xml:space="preserve">
+    <value>Person</value>
+  </data>
+  <data name="whyNotPlaceholder" xml:space="preserve">
+    <value>Type a name</value>
+  </data>
+  <data name="whyNotNoMatch" xml:space="preserve">
+    <value>No match</value>
+  </data>
+  <data name="whyNotNow" xml:space="preserve">
+    <value>now {name}</value>
+  </data>
+  <data name="whyNotChecking" xml:space="preserve">
+    <value>Checking {name}…</value>
+  </data>
+  <data name="whyNotVerdictMustOne" xml:space="preserve">
+    <value>{name} would break 1 Must rule</value>
+  </data>
+  <data name="whyNotVerdictMust" xml:space="preserve">
+    <value>{name} would break {count} Must rules</value>
+  </data>
+  <data name="whyNotVerdictShould" xml:space="preserve">
+    <value>{name} keeps every Must rule but fits less well</value>
+  </data>
+  <data name="whyNotVerdictEqual" xml:space="preserve">
+    <value>{name} fits as well.</value>
+  </data>
+  <data name="whyNotVerdictEqualReview" xml:space="preserve">
+    <value>{name} fits as well. Optimize had to pick one.</value>
+  </data>
+  <data name="whyNotVerdictBetter" xml:space="preserve">
+    <value>{name} fits better.</value>
+  </data>
+  <data name="whyNotTakingOff" xml:space="preserve">
+    <value>Taking it off {name}</value>
+  </data>
+  <data name="whyNotPrefers" xml:space="preserve">
+    <value>{name} prefers to work then</value>
+  </data>
+  <data name="ruleSpreadOfShifts" xml:space="preserve">
+    <value>Spread of shifts</value>
+  </data>
+  <data name="ruleMinimumHours" xml:space="preserve">
+    <value>Minimum hours</value>
+  </data>
+  <data name="whyNotLessEven" xml:space="preserve">
+    <value>{rule}: less even</value>
+  </data>
+  <data name="whyNotMoreEven" xml:space="preserve">
+    <value>{rule}: more even</value>
+  </data>
+  <data name="whyNotWorse" xml:space="preserve">
+    <value>{rule}: worse</value>
+  </data>
+  <data name="whyNotBetter" xml:space="preserve">
+    <value>{rule}: better</value>
+  </data>
+  <data name="whyNotNoAgreement" xml:space="preserve">
+    <value>{name} has no agreement: rest and day limits not checked.</value>
+  </data>
+  <data name="whyNotUnavailable" xml:space="preserve">
+    <value>Could not check this now</value>
+  </data>
+  <data name="whyNotRetryIn" xml:space="preserve">
+    <value>Could not check this now. Try again in {seconds} s.</value>
+  </data>
+  <data name="whyNotRosterChanged" xml:space="preserve">
+    <value>The roster changed.</value>
+  </data>
+  <data name="whyNotAskAgain" xml:space="preserve">
+    <value>Ask again</value>
+  </data>
+  <data name="whyNotAssign" xml:space="preserve">
+    <value>Assign {name}</value>
+  </data>
+  <data name="whyNotSwap" xml:space="preserve">
+    <value>Swap {name} and {other}</value>
+  </data>
+  <data name="whyNotTakes" xml:space="preserve">
+    <value>{name} takes {shift}</value>
+  </data>
+  <data name="whyNotLeftOpen" xml:space="preserve">
+    <value>{name}'s {shift} would be left open</value>
+  </data>
+  <data name="whyNotInReview" xml:space="preserve">
+    <value>To use {name}, drop this change and act after Apply.</value>
+  </data>
+  <data name="scorePreferences" xml:space="preserve">
+    <value>Preferences met</value>
+  </data>
+  <data name="scorePreferencesValue" xml:space="preserve">
+    <value>{met} of {total}</value>
+  </data>
+  <data name="scorePreferencesNone" xml:space="preserve">
+    <value>No preferences entered</value>
+  </data>
+  <data name="preferencesUnmetTitle" xml:space="preserve">
+    <value>Preferences not met</value>
+  </data>
 </root>

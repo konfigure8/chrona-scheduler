@@ -106,7 +106,7 @@ import { columnLogicalName, resolveColumn } from "../SchedulerControl/dataverseD
 
 console.log("configLoader tests passed");
 
-// The generic scheduler reads only its own settings; a scenario loads in the same pass.
+// The scheduler reads only its own settings.
 {
   const calendar = { chr_chronaschedulercalendarid: "C-1", chr_name: "Bookings", chr_resourcetable: "systemuser", chr_resourcenamecolumn: "fullname", chr_timezone: " Australia/Perth " };
   const fakeWebApi = (calls: string[]) =>
@@ -123,18 +123,7 @@ console.log("configLoader tests passed");
     const loaded = await loadHostConfig(fakeWebApi(calls), "C-1");
     assert.equal(loaded.calendarName, "Bookings", "F39: every solve carries the calendar's name");
     assert.equal(loaded.timeZone, "Australia/Perth", "the board shows the calendar's time zone (ruled 2026-10-02)");
-    assert.equal(loaded.scenario, undefined);
-    assert.deepEqual(calls, ["chr_chronaschedulercalendar", "systemuser"], "no scenario table is read");
-    const scenarioCalendars: unknown[] = [];
-    const tagged = await loadHostConfig(fakeWebApi([]), "C-1", {
-      loadConfig: async (_webApi, entity) => {
-        scenarioCalendars.push(entity);
-        return { resourceTags: new Map([["u-1", ["Barista"]]]) };
-      },
-    });
-    assert.equal(scenarioCalendars.length, 1, "the scenario loads once, with the calendar row");
-    assert.deepEqual(tagged.resources?.[0]?.tags, ["Barista"], "the scenario's tags reach the board's people");
-    assert.ok(tagged.scenario?.resourceTags, "the scenario's rows ride on the host config");
-    console.log("loader scenario tests passed");
+    assert.deepEqual(calls, ["chr_chronaschedulercalendar", "systemuser"], "no other table is read");
+    console.log("loader tests passed");
   })().catch((error) => { console.error(error); process.exit(1); });
 }

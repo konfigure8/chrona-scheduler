@@ -9,7 +9,14 @@
  * local path.
  */
 import type { RulePolicy } from "./scheduleRules";
-import type { SolveSearch } from "./schedulingContract";
+import {
+  isMustRule,
+  type MustBreachCounts,
+  type MustRuleName,
+  type ScheduleRuleMatch,
+  type ScheduleSolveAnalysis,
+  type SolveSearch,
+} from "./schedulingContract";
 import { clockMinutesBetween } from "./timeZone";
 import type { SchedulerUiEvent, TimeWindow } from "./types";
 
@@ -20,8 +27,11 @@ export interface SolveState {
   readonly message?: string;
   /** "quota" = the server refused with 402 quota_exceeded (F19: the
    * daily free solve limit). The surface renders the calm quota
-   * notice for this instead of the red failure line. */
-  readonly reason?: "quota";
+   * notice for this instead of the red failure line. "read" = the host
+   * could not read what the solve needs, so nothing was sent (design
+   * R14, D22): the surface renders `message` as a warning notice with
+   * Try again, which asks for the solve again. */
+  readonly reason?: "quota" | "read";
   readonly status: "failed" | "idle" | "queued" | "running";
 }
 
@@ -50,6 +60,11 @@ export const idleSolveState: SolveState = { status: "idle" };
 
 /** A solver answer mapped into UI events (complete schedule slice). */
 export interface ScheduleProposal {
+  /**
+   * The run's rule checks, on the real ids: counts and matches for the
+   * roster before and after. Absent when the run was not analysed.
+   */
+  readonly analysis?: ScheduleSolveAnalysis;
   readonly events: readonly SchedulerUiEvent[];
   /** F40 Three-level score: the whole proposal breaks no Must rule. Absent when the answer does not say. */
   readonly feasible?: boolean;
@@ -195,18 +210,18 @@ export function previewProposal(
 }
 
 /**
- * Shifts left open if the planner applies the proposal as it stands
- * now (F40 Three-level score): a kept change counts as proposed, a
- * dropped or withheld one as it is today, so the count follows Drop
- * and Keep.
+ * The shifts left open if the planner applies the proposal as it
+ * stands now (F40 Three-level score): a kept change counts as proposed,
+ * a dropped or withheld one as it is today, so the list follows Drop
+ * and Keep. Earliest first.
  */
-export function openShiftCount(
+export function openShiftsAfter(
   proposal: ScheduleProposal,
   changes: readonly ProposalChange[],
   options: ProposalPreviewOptions = {},
-): number {
+): readonly SchedulerUiEvent[] {
   const changeById = new Map(changes.map((change) => [change.current.id, change]));
-  let open = 0;
+  const open: SchedulerUiEvent[] = [];
   for (const event of proposal.events) {
     const change = changeById.get(event.id);
     const kept =
@@ -215,10 +230,19 @@ export function openShiftCount(
       !options.withheld?.has(event.id);
     const shown = change ? (kept ? change.proposed : change.current) : event;
     if (shown.status === "needsCover") {
-      open += 1;
+      open.push(shown);
     }
   }
-  return open;
+  return open.sort((first, second) => first.start.getTime() - second.start.getTime());
+}
+
+/** How many shifts openShiftsAfter leaves open. */
+export function openShiftCount(
+  proposal: ScheduleProposal,
+  changes: readonly ProposalChange[],
+  options: ProposalPreviewOptions = {},
+): number {
+  return openShiftsAfter(proposal, changes, options).length;
 }
 
 /**
@@ -237,6 +261,118 @@ export function proposalMustRules(
     return undefined;
   }
   return proposal.feasible ? "kept" : "broken";
+}
+
+/** The Must report's rows, top to bottom (design DR2 call 6). */
+export type MustRow = "daysInARow" | "onLeaveOrUnavailable" | "other" | "restBetweenShifts" | "skills";
+
+export const MUST_ROWS: readonly MustRow[] = [
+  "restBetweenShifts",
+  "daysInARow",
+  "skills",
+  "onLeaveOrUnavailable",
+  "other",
+];
+
+/** The row a Must rule's matches count in: the four named rows, else "Other Must rules". */
+export function mustRowOf(rule: MustRuleName): MustRow {
+  return rule === "restBetweenShifts" ||
+    rule === "daysInARow" ||
+    rule === "skills" ||
+    rule === "onLeaveOrUnavailable"
+    ? rule
+    : "other";
+}
+
+/** A row's count in one roster's counts. */
+export function mustRowCount(counts: MustBreachCounts, row: MustRow): number {
+  if (row === "other") {
+    const { other } = counts;
+    return other.overlap + other.maximumHours + other.splitParts + other.unlisted;
+  }
+  return counts[row];
+}
+
+/**
+ * The Must tile and its breakdown (design Pass 1 calls 2 and 6, A11,
+ * DR2-Q1, RR3-D1): the counts for the roster as it stands and as Apply
+ * would leave it, with the rule matches behind them. Right after an
+ * Optimize they are the solver's; once the planner drops or holds back
+ * a change, the board's own count of the roster as it would be applied
+ * replaces the proposed side, at once and with no call.
+ */
+export interface MustReport {
+  /** The run was too large to explain: counts only, no matches to open. */
+  readonly countsOnly: boolean;
+  /** The roster as it stands; absent when the run was not analysed. */
+  readonly now?: MustBreachCounts;
+  readonly nowMatches?: readonly ScheduleRuleMatch[];
+  /** The roster as Apply would leave it; absent = not counted. */
+  readonly proposed?: MustBreachCounts;
+  readonly proposedMatches?: readonly ScheduleRuleMatch[];
+  /** "board": counted on the board after a hold-back. */
+  readonly source: "board" | "solver";
+}
+
+export function proposalMustReport(
+  proposal: ScheduleProposal,
+  options: ProposalPreviewOptions = {},
+  recount?: () => { readonly matches: readonly ScheduleRuleMatch[]; readonly mustBreaches: MustBreachCounts },
+): MustReport {
+  const { analysis } = proposal;
+  const countsOnly = analysis?.countsOnly === true;
+  const now = analysis?.current.mustBreaches;
+  const nowMatches = countsOnly ? undefined : analysis?.current.matches;
+  const heldBack = (options.dropped?.size ?? 0) > 0 || (options.withheld?.size ?? 0) > 0;
+  if (!heldBack) {
+    return {
+      countsOnly,
+      ...(now ? { now } : {}),
+      ...(nowMatches ? { nowMatches } : {}),
+      ...(analysis ? { proposed: analysis.proposed.mustBreaches } : {}),
+      ...(!countsOnly && analysis?.proposed.matches ? { proposedMatches: analysis.proposed.matches } : {}),
+      source: "solver",
+    };
+  }
+  const board = recount?.();
+  return {
+    countsOnly,
+    ...(now ? { now } : {}),
+    ...(nowMatches ? { nowMatches } : {}),
+    ...(board ? { proposed: board.mustBreaches } : {}),
+    ...(board && !countsOnly ? { proposedMatches: board.matches } : {}),
+    source: "board",
+  };
+}
+
+/**
+ * The matches a breakdown row opens to: what Apply would leave broken,
+ * or, when the proposal leaves the row clean, what it fixes. Undefined
+ * when the row has nothing to open (zero, counts only, or no matches).
+ */
+export function mustRowMatches(
+  report: MustReport,
+  row: MustRow,
+): { readonly matches: readonly ScheduleRuleMatch[]; readonly roster: "now" | "proposed" } | undefined {
+  if (report.countsOnly) {
+    return undefined;
+  }
+  const pick = (
+    counts: MustBreachCounts | undefined,
+    matches: readonly ScheduleRuleMatch[] | undefined,
+    roster: "now" | "proposed",
+  ) => {
+    if (!counts || mustRowCount(counts, row) === 0 || !matches) {
+      return undefined;
+    }
+    const own = matches.filter((match) => isMustRule(match.rule) && mustRowOf(match.rule) === row);
+    return own.length > 0 ? { matches: own, roster } : undefined;
+  };
+  const proposed = report.proposed;
+  if (proposed && mustRowCount(proposed, row) > 0) {
+    return pick(proposed, report.proposedMatches, "proposed");
+  }
+  return pick(report.now, report.nowMatches, "now");
 }
 
 /** The proposal's figures against today's roster (F31 rework scorecard). */

@@ -10,18 +10,13 @@ import {
 
 import { F0Preview } from "./F0Preview";
 import type { IInputs } from "./generated/ManifestTypes";
-import type { ControlScenario } from "./scenario";
 import { useDataverseScheduleHost } from "./useDataverseHost";
 
 export interface AppProps {
   readonly context: ComponentFramework.Context<IInputs>;
   readonly dataFingerprint: string;
-  /** The demo board for `calendarConfigId = "demo"`; default the generic one. */
-  readonly Preview?: React.ComponentType<{ readonly theme?: Partial<SchedulerTheme> }>;
   /** Rows beyond the dataset cap stayed unloaded; the surface says so. */
   readonly rowCapReached: boolean;
-  /** A scenario control's part; absent for the generic scheduler. */
-  readonly scenario?: ControlScenario;
 }
 
 /**
@@ -54,7 +49,6 @@ function DataverseApp(props: AppProps): JSX.Element {
     props.context,
     props.dataFingerprint,
     props.rowCapReached,
-    props.scenario,
   );
   const theme = useHostTheme(props.context);
   return (
@@ -96,10 +90,8 @@ function AppBody(props: AppProps): JSX.Element {
         context={props.context}
         dataFingerprint={props.dataFingerprint}
         rowCapReached={props.rowCapReached}
-        scenario={props.scenario}
       />
     );
   }
-  const Preview = props.Preview ?? F0Preview;
-  return <Preview theme={useHostTheme(props.context)} />;
+  return <F0Preview theme={useHostTheme(props.context)} />;
 }

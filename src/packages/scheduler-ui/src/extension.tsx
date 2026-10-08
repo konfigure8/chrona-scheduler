@@ -1,7 +1,10 @@
 import * as React from "react";
 
+import type { TimelineChange } from "./interactions";
 import type { RosterDay } from "./rosterLayout";
+import type { MustBreachCounts, ScheduleCandidate, ScheduleRuleMatch } from "./schedulingContract";
 import type { SolveProgress } from "./solve";
+import type { CandidateAnswer, RosterVersion } from "./solveClient";
 import type { SchedulerStrings } from "./stringResources";
 import type {
   SchedulerResource,
@@ -28,6 +31,14 @@ export interface BoardState {
 }
 
 type Slot = (board: BoardState) => React.ReactNode;
+
+/** A new item the board hands its host: from New event, or a range drawn on the grid. */
+export interface CreateRequest {
+  readonly end: Date;
+  /** The row it was drawn on; absent on the unassigned row. */
+  readonly resource?: SchedulerResource;
+  readonly start: Date;
+}
 
 /** A column right of the Roster grid's last day: its short label and full name. */
 export interface RosterStatColumn {
@@ -132,13 +143,135 @@ export interface RosterExtension {
   readonly personDetail?: (resource: SchedulerResource) => React.ReactNode;
 }
 
+/** A roster and its people, as the review hands it to an extension. */
+export interface ReviewRoster {
+  /** The roster as Apply would leave it: every shift at its kept place. */
+  readonly events: readonly SchedulerUiEvent[];
+  readonly resources: readonly SchedulerResource[];
+  /** The period the run solved. */
+  readonly window: TimeWindow;
+}
+
+/** One roster's Must rows, counted on the board, with the matches behind them. */
+export interface BoardMustCheck {
+  readonly matches: readonly ScheduleRuleMatch[];
+  readonly mustBreaches: MustBreachCounts;
+}
+
+/** The people a Must report leaves unchecked. */
+export interface UncheckedPeople {
+  /** People on the board whose limits are not checked. */
+  readonly count: number;
+  /** Nobody on the board is checked, so the board does not use the limits. */
+  readonly nobody: boolean;
+}
+
+/**
+ * The review's Must report, as an extension supplies it. With it the
+ * scorecard counts each Must row and opens to the shifts behind it;
+ * without it the board says only whether the solver kept the Must
+ * rules.
+ */
+export interface ReviewExtension {
+  /**
+   * Counts every Must row on a roster at once, with no call: after the
+   * planner holds back a change, it stands in for the solver's counts.
+   */
+  readonly checkMust: (roster: ReviewRoster) => BoardMustCheck;
+  /** Who the report does not check in a period, and whether anyone is. */
+  readonly unchecked: (roster: Omit<ReviewRoster, "events">) => UncheckedPeople;
+}
+
+/** What the board asks an extension for "Why not…?". */
+export interface WhyNotRequest {
+  /** The person and the shift, in the board's ids. */
+  readonly candidate: ScheduleCandidate;
+  /** The roster's version now; read when the answer arrives (S4-2). */
+  readonly currentRosterVersion: () => RosterVersion;
+  /** The roster as it would be applied: the current one plus the kept changes. */
+  readonly events: readonly SchedulerUiEvent[];
+  readonly resources: readonly SchedulerResource[];
+  /** The version of the roster `events` is. */
+  readonly rosterVersion: RosterVersion;
+  /** Fires when the planner closes the question or asks another. */
+  readonly signal: AbortSignal;
+  /** The open proposal's period, else the roster period holding the shift. */
+  readonly window: TimeWindow;
+}
+
+/** The answer, or why there is none: it never throws. */
+export type WhyNotAnswer = CandidateAnswer;
+
+/**
+ * "Why not…?" (E2, A2): the planner picks a person for a shift and the
+ * extension asks the solver what that would add and remove. The board
+ * shows the answer in the change list, verdict first, and on the
+ * current roster offers an assign or a swap its own Must checks pass.
+ */
+export interface WhyNotExtension {
+  readonly ask: (request: WhyNotRequest) => Promise<WhyNotAnswer>;
+  /**
+   * A Must match the move adds, in the extension's words (such as the
+   * agreement's limit); undefined = the board's own words.
+   */
+  readonly describe?: (match: ScheduleRuleMatch, roster: ReviewRoster) => string | undefined;
+  /** Shifts that started before this are history: no question about them. Absent = none. */
+  readonly now?: Date;
+  /** Whether a person's rest and day limits go unchecked in the period. */
+  readonly unchecked?: (resource: SchedulerResource, roster: Omit<ReviewRoster, "events">) => boolean;
+  /**
+   * Writes a swap's two moves as one undo step, one after the other, and
+   * stops at the first that fails, saying so (design RR3-F4): a half-done
+   * swap is never silent. Absent = the board's onEventsChange.
+   */
+  readonly writeInOrder?: (changes: readonly TimelineChange[]) => void;
+}
+
+/** A preferred or unpreferred band a roster does not keep. */
+export interface PreferenceMiss {
+  readonly end: Date;
+  readonly kind: "preferred" | "unpreferred";
+  readonly resourceId: string;
+  readonly start: Date;
+}
+
+/** How many of the rostered people's preferences a roster keeps, and which it does not (E4, A4). */
+export interface PreferencesMet {
+  readonly met: number;
+  readonly total: number;
+  /** Earliest first. */
+  readonly unmet: readonly PreferenceMiss[];
+}
+
 /**
  * A scenario package adds its own content to the board through these
  * slots. Without an extension the board renders none of it.
  */
 export interface BoardExtension {
+  /**
+   * The host's own form for a new item, opened instead of the board's
+   * dialog. Absent = the board's dialog.
+   */
+  readonly createEvent?: (request: CreateRequest) => void;
   /** How people fit items. Absent = everyone fits everything. */
   readonly fit?: FitExtension;
+  /**
+   * A mark after a person's name on their row, such as a glyph with its
+   * reason; `roster` is the people and the period the view shows.
+   */
+  readonly personMark?: (
+    resource: SchedulerResource,
+    roster: Omit<ReviewRoster, "events">,
+  ) => React.ReactNode;
+  /**
+   * Preferences met on a roster (E4, A4): the review's tile counts
+   * Optimize's window now and as Apply would leave it. Absent = no tile.
+   */
+  readonly preferencesMet?: (roster: ReviewRoster) => PreferencesMet;
+  /** The review's Must report. Absent = the solver's verdict only. */
+  readonly review?: ReviewExtension;
+  /** "Why not…?" on a shift and on a change. Absent = no question. */
+  readonly whyNot?: WhyNotExtension;
   /**
    * Under the toolbar. When it renders, it takes the place of the
    * board's period bar and of its Optimize entry.

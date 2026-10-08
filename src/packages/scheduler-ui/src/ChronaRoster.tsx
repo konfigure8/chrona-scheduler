@@ -10,7 +10,12 @@ import {
 } from "./interactions";
 import { chipCode, chipStartTime } from "./compactChip";
 import { dateNamesFrom } from "./dateNames";
-import type { RosterExtension, RosterGroup, RosterStatColumn } from "./extension";
+import {
+  useBoardExtension,
+  type RosterExtension,
+  type RosterGroup,
+  type RosterStatColumn,
+} from "./extension";
 import {
   buildRosterDays,
   layoutOpenRow,
@@ -204,6 +209,8 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
     window,
   } = props;
   const strings = useSchedulerStrings();
+  // A mark after a person's name, such as a scenario's glyph with its reason.
+  const personMark = useBoardExtension()?.personMark;
   const days = buildRosterDays(window, showWeekends, dateNamesFrom(strings));
   // The review marks each change with a ring and a dot, and Hold to
   // compare shows where it was, so the grid shows no ghosts.
@@ -389,6 +396,19 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
     </tr>
   );
 
+  // The name, then the extension's mark; a long name gives way, never the mark.
+  const renderName = (resource: SchedulerResource): JSX.Element => {
+    const mark = personMark?.(resource, { resources, window });
+    return mark === undefined || mark === null || mark === false ? (
+      <div className="chrona-sched__roster-name">{resource.name}</div>
+    ) : (
+      <div className="chrona-sched__roster-name chrona-sched__roster-name--marked">
+        <span className="chrona-sched__roster-name-text">{resource.name}</span>
+        {mark}
+      </div>
+    );
+  };
+
   const renderPersonRow = (row: RosterRowLayout): JSX.Element => {
     const statValues =
       shownStats.length > 0
@@ -397,9 +417,7 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
     return (
       <tr key={row.resource.id}>
         <td className="chrona-sched__roster-resource">
-          <div className="chrona-sched__roster-name">
-            {row.resource.name}
-          </div>
+          {renderName(row.resource)}
           {extension?.personDetail?.(row.resource)}
         </td>
         {row.cells.map((cell, dayIndex) => {
