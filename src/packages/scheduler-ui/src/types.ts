@@ -198,40 +198,78 @@ export type AvailabilityBandKind =
   | "unpreferred";
 
 /**
- * The working-time limits and overtime terms an agreement rule sets.
- * The solver checks rest and days in a row; the overtime terms stay on
- * the board, which works out wages and overtime with them (E6 / F54).
+ * The working-time limits and the overtime an agreement rule sets, one
+ * kind per rule type the maker picks. The solver checks rest and days
+ * in a row; the other kinds stay on the board until the solver takes
+ * them (release 2, R2.11).
  */
-export type AgreementRuleKind = "daysInARow" | "minimumRest" | "overtimeAfter" | "overtimeRate";
+export type AgreementRuleKind =
+  | "averageHours"
+  | "daysInARow"
+  | "daysOff"
+  | "maximumHours"
+  | "minimumHours"
+  | "minimumRest"
+  | "overtime"
+  | "weeklyRest";
+
+/** Must: a limit a roster keeps. Should: a cost a roster weighs. */
+export type AgreementRuleLevel = "must" | "should";
+
+/**
+ * The stretch a rule counts over: a day, a week from the board's week
+ * start, a fortnight, a calendar month, or the view's roster period. On
+ * the site's clock.
+ */
+export type AgreementRulePeriod = "day" | "fortnight" | "month" | "rosterPeriod" | "week";
 
 /**
  * One dated rule of an agreement, as the maker entered it. The host
- * converts units at its boundary, as it does dates and times: a rest
- * or a week's hours entered in hours arrive here in minutes (hours x 60).
+ * converts units at its boundary, as it does dates and times: hours
+ * entered in hours arrive here in minutes (hours x 60).
  */
 export interface SchedulerAgreementRule {
+  /** The agreement clause the rule comes from, as the maker wrote it. Absent = none. */
+  readonly clause?: string;
   /**
    * The rule's last day, inclusive: "YYYY-MM-DD" on the site's clock.
    * Absent = no end.
    */
   readonly end?: string;
   readonly kind: AgreementRuleKind;
+  /** Absent = must. Minimum hours and overtime are always should. */
+  readonly level?: AgreementRuleLevel;
   /** Off rules stay with the agreement and never apply. */
   readonly on: boolean;
+  /**
+   * maximumHours, minimumHours, daysOff and overtime: the stretch the
+   * value counts over. Absent = week. The other kinds carry none.
+   */
+  readonly period?: AgreementRulePeriod;
+  /**
+   * overtime: what an hour past the value pays, as a percentage of the
+   * person's hourly rate (150 = time and a half). Absent = not set.
+   */
+  readonly rate?: number;
   /**
    * The rule's first day: "YYYY-MM-DD" on the site's clock. Absent =
    * always.
    */
   readonly start?: string;
   /**
-   * minimumRest: whole minutes from the end of one shift to the start
-   * of the next. daysInARow: the most whole days a person may work in
-   * a row. overtimeAfter: the whole minutes a person works in a week
-   * before overtime pays. overtimeRate: what an overtime hour pays, as
-   * a percentage of the base rate (150 = time and a half). A value of 0
-   * or less sets no limit.
+   * Above 0; a value of 0 or less sets no limit. minimumRest: whole
+   * minutes from the end of one shift to the start of the next.
+   * daysInARow: the most days a person may work in a row.
+   * maximumHours and minimumHours: the most and the fewest minutes
+   * worked in each period. daysOff: the fewest days off in each period.
+   * overtime: the minutes worked in each period before its rate pays;
+   * each overtime rule is one tier. weeklyRest: the minutes off in one
+   * stretch in every window of weeks. averageHours: the most minutes a
+   * week, on average over each window of weeks.
    */
   readonly value: number;
+  /** weeklyRest and averageHours: the weeks of each window, 1 to 52. Absent = 1. */
+  readonly weeks?: number;
 }
 
 /**

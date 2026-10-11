@@ -18,7 +18,8 @@
  * and after, and the check of one person on one shift. Generation,
  * hourly demand and further agreement rules for the solver are
  * additive later, when their product rungs are designed independently;
- * the overtime terms stay on the board (A5).
+ * the other rule kinds and every should rule stay on the board until
+ * then (A5).
  *
  * Dates are ISO-8601 strings with explicit offsets: the contract is
  * a wire format, and hosts own timezone conversion at their
@@ -30,8 +31,11 @@
 import { isPinned } from "./locks";
 import type {
   AgreementRuleKind,
+  AgreementRuleLevel,
+  AgreementRulePeriod,
   AvailabilityBand,
   SchedulerAgreement,
+  SchedulerAgreementRule,
   SchedulerResource,
   SchedulerUiEvent,
 } from "./types";
@@ -40,17 +44,46 @@ import { maxHoursPerWindow } from "./windowHours";
 /** Contract polarity per Docs/domain_model.md section 1. */
 export type ResourceContractType = "casual" | "fixed" | "minMax";
 
-/** The agreement rules the solver checks; the overtime terms stay on the board (A5). */
-export type SolverRuleKind = Extract<AgreementRuleKind, "daysInARow" | "minimumRest">;
+/** The agreement rules the solver checks: every kind (release 2, R2.11). */
+export type SolverRuleKind = AgreementRuleKind;
 
 const SOLVER_RULE_KINDS: ReadonlySet<AgreementRuleKind> = new Set<SolverRuleKind>([
+  "averageHours",
   "daysInARow",
+  "daysOff",
+  "maximumHours",
+  "minimumHours",
   "minimumRest",
+  "overtime",
+  "weeklyRest",
 ]);
+
+/** The kinds the board checks itself, for its warnings and its count after a hold-back. */
+const BOARD_CHECKED_KINDS: ReadonlySet<AgreementRuleKind> = new Set<AgreementRuleKind>(["daysInARow", "minimumRest"]);
 
 /** True for a rule kind the solver checks. */
 export function isSolverRuleKind(kind: AgreementRuleKind): kind is SolverRuleKind {
   return SOLVER_RULE_KINDS.has(kind);
+}
+
+/** The kinds that only ever weigh as a cost, as in Timefold's contracts. */
+const ALWAYS_SHOULD: ReadonlySet<AgreementRuleKind> = new Set<AgreementRuleKind>(["minimumHours", "overtime"]);
+
+/**
+ * A rule's level as it holds: minimum hours and overtime are always
+ * should; any other rule is must unless the maker set should.
+ */
+export function ruleLevel(rule: Pick<SchedulerAgreementRule, "kind" | "level">): AgreementRuleLevel {
+  return ALWAYS_SHOULD.has(rule.kind) ? "should" : (rule.level ?? "must");
+}
+
+/**
+ * True for a rule the board itself holds as a limit: rest or days in a
+ * row at the must level. The solver checks every kind at both levels;
+ * the board's hand-edit warnings and its own Must count check these.
+ */
+export function isBoardCheckedRule(rule: Pick<SchedulerAgreementRule, "kind" | "level">): boolean {
+  return BOARD_CHECKED_KINDS.has(rule.kind) && ruleLevel(rule) === "must";
 }
 
 /**
@@ -60,15 +93,42 @@ export function isSolverRuleKind(kind: AgreementRuleKind): kind is SolverRuleKin
 export interface ScheduleContractAgreementRule {
   /** The rule's last day, inclusive, "YYYY-MM-DD". Absent = no end. */
   readonly end?: string;
+  /**
+   * Timefold's shift tag filter (F55 Tag model): the rule counts only
+   * the shifts with these tags, or all but them, matching all (the
+   * default) or any. Absent until shifts carry tags; never both lists.
+   */
+  readonly excludeShiftTags?: readonly string[];
+  readonly includeShiftTags?: readonly string[];
   readonly kind: SolverRuleKind;
+  /** "should" for a Should rule (Timefold PREFERRED). Absent = must (REQUIRED). */
+  readonly level?: "should";
+  /** The period a period rule counts over. Absent = week. */
+  readonly period?: AgreementRulePeriod;
+  /** overtime: what an hour past the value pays, a percentage of the person's rate. */
+  readonly rate?: number;
+  readonly shiftTagMatches?: "all" | "any";
   /** The rule's first day, "YYYY-MM-DD". Absent = always. */
   readonly start?: string;
   /**
-   * Above 0. minimumRest: minutes from the end of one shift to the
-   * start of the next. daysInARow: the most days a person may work in
-   * a row.
+   * Above 0, in the units SchedulerAgreementRule.value names: minutes,
+   * or days for days in a row and days off.
    */
   readonly value: number;
+  /** weeklyRest and averageHours: the weeks of each window. Absent = 1. */
+  readonly weeks?: number;
+  /** A Should rule's weight (Timefold weight). Absent = 1. */
+  readonly weight?: number;
+}
+
+/**
+ * How the agreement rules count periods: the board's first day of the
+ * week, and a day a fortnight starts on (the view's roster period
+ * anchor, when the view counts in fortnights).
+ */
+export interface ScheduleContractPeriods {
+  readonly fortnightStart?: string;
+  readonly weekStart: "friday" | "monday" | "saturday" | "sunday" | "thursday" | "tuesday" | "wednesday";
 }
 
 /**
@@ -179,6 +239,8 @@ export interface ScheduleProblemV2 {
   /** The agreements the resources name. Absent = none. */
   readonly agreements?: readonly ScheduleContractAgreement[];
   readonly contractVersion: "2";
+  /** How the agreement rules count periods. Absent = weeks from Monday. */
+  readonly periods?: ScheduleContractPeriods;
   /** F24 Repair mode. Absent = a plan run: any shift that is not pinned may change, at no cost. */
   readonly repair?: ScheduleContractRepair;
   readonly resources: readonly ScheduleContractResource[];
@@ -412,6 +474,8 @@ export interface ProblemFromScheduleInput {
    */
   readonly agreements?: readonly SchedulerAgreement[];
   readonly events: readonly SchedulerUiEvent[];
+  /** How the agreement rules count periods; sent only when a rule counts over one. */
+  readonly periods?: ScheduleContractPeriods;
   /**
    * A planner plans ahead and does not change history (F31 rework):
    * an assigned shift that started before this instant travels
@@ -474,24 +538,32 @@ export function problemFromSchedule(
       !(now && event.status === "needsCover" && event.start < now) &&
       !(event.status === "needsCover" && isPinned(event)),
   );
-  // Off rules, rules without a limit and the overtime terms (A5) stay home;
-  // the rest go as entered.
+  // Off rules and rules without a limit stay home; the rest go as
+  // entered, in Timefold's shape: a Should rule with its level, a period
+  // rule with its period, a rolling rule with its weeks, overtime with
+  // its rate.
   const agreements = (input.agreements ?? []).map((agreement) => ({
     id: agreement.id,
-    rules: agreement.rules.flatMap((rule) => {
+    rules: agreement.rules.flatMap((rule): ScheduleContractAgreementRule[] => {
       const { kind } = rule;
       return rule.on && isSolverRuleKind(kind) && Number.isFinite(rule.value) && rule.value > 0
         ? [
             {
               ...(rule.end ? { end: rule.end } : {}),
               kind,
+              ...(ruleLevel(rule) === "should" ? { level: "should" as const } : {}),
+              ...(rule.period ? { period: rule.period } : {}),
+              ...(rule.rate !== undefined ? { rate: rule.rate } : {}),
               ...(rule.start ? { start: rule.start } : {}),
               value: rule.value,
+              ...(rule.weeks !== undefined ? { weeks: rule.weeks } : {}),
             },
           ]
         : [];
     }),
   }));
+  const countsPeriods = agreements.some((agreement) =>
+    agreement.rules.some((rule) => !BOARD_CHECKED_KINDS.has(rule.kind)));
   const bands = input.unavailability ?? [];
   const timePreferences = bands
     .filter(
@@ -507,6 +579,7 @@ export function problemFromSchedule(
   return {
     ...(agreements.length > 0 ? { agreements } : {}),
     contractVersion: "2",
+    ...(countsPeriods && input.periods ? { periods: input.periods } : {}),
     ...(input.repair ? { repair: repairOnTheWire(input.repair) } : {}),
     resources: input.resources.map((resource) => ({
       ...(resource.agreementId !== undefined ? { agreementId: resource.agreementId } : {}),

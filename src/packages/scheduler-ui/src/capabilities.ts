@@ -10,9 +10,9 @@ import type { SchedulerResource, SchedulerUiEvent } from "./types";
  *   assignment   title/start/end + a resource population - fill open
  *                work, eliminate double-booking, move any unlocked item
  *   locks        lock/pinned mapped - honor "don't move this" facts
- *   roles        required tags + resource tags resolved (roles resolve
- *                to skill tags at the adapter boundary) - qualified
- *                people only, work moved to better fits
+ *   roles        required tags + resource tags resolved (a Workforce
+ *                role travels by its name) - qualified people only,
+ *                work moved to better fits
  *   availability unavailability bands - never place work on someone
  *                unavailable
  *   hours        capacity mapped - keep everyone inside their hours

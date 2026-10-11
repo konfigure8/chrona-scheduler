@@ -317,6 +317,23 @@ export interface MustReport {
   readonly source: "board" | "solver";
 }
 
+/**
+ * What Apply leaves in the period the run solved, as the review counts
+ * it, handed to the host with the changes so it can keep the period's
+ * outcome. The Must counts, the preferences and the unchecked people
+ * are there when an extension counts them.
+ */
+export interface AppliedOutcome {
+  readonly mustBreaches?: MustBreachCounts;
+  /** The shifts Apply leaves open in the period. */
+  readonly openShifts: number;
+  readonly preferences?: { readonly met: number; readonly total: number };
+  /** The people whose rules the period leaves unchecked. */
+  readonly unchecked?: number;
+  /** The period the run solved, in board dates. */
+  readonly window: { readonly end: Date; readonly start: Date };
+}
+
 export function proposalMustReport(
   proposal: ScheduleProposal,
   options: ProposalPreviewOptions = {},

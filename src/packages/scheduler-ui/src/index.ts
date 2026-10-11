@@ -251,6 +251,7 @@ export {
   proposalMustReport,
   proposalMustRules,
   proposalScore,
+  type AppliedOutcome,
   type MustReport,
   type MustRow,
   type ProposalChange,
@@ -333,10 +334,12 @@ export {
 } from "./capabilities";
 export {
   isMustRule,
+  isBoardCheckedRule,
   isShouldRule,
   isSolverRuleKind,
   mustBreachTotal,
   problemFromSchedule,
+  ruleLevel,
   type CandidateFit,
   type MustBreachCounts,
   type MustRuleName,
@@ -347,6 +350,7 @@ export {
   type ScheduleCandidateCheck,
   type ScheduleContractAgreement,
   type ScheduleContractAgreementRule,
+  type ScheduleContractPeriods,
   type ScheduleContractRepair,
   type ScheduleContractResource,
   type ScheduleContractShift,

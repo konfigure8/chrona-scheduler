@@ -8,8 +8,9 @@
  * solutions, rule matches and candidate checks can be mapped back
  * locally. Skills stay plain tags and cost/contract facts stay in the
  * payload (both ruled; the conversion ledger discloses them), and so
- * do agreement rules, the history mark, the site's time zone and the
- * repair intent with its change charge (F24 Repair mode). A repair's
+ * do agreement rules, how they count periods, the history mark, the
+ * site's time zone and the repair intent with its change charge (F24
+ * Repair mode). A repair's
  * current person is each shift's assignment, re-keyed like any other.
  * Preferred and unpreferred time travel as times on the pseudonym;
  * that of a person the problem does not hold stays home.
@@ -155,6 +156,8 @@ function redactWith(
     problem: {
       ...(agreements ? { agreements } : {}),
       contractVersion: "2",
+      // How the agreement rules count periods: a weekday and a date, not personal data.
+      ...(problem.periods ? { periods: problem.periods } : {}),
       // F24 Repair mode: an intent and a charge, not personal data.
       ...(problem.repair ? { repair: problem.repair } : {}),
       resources: problem.resources.map((resource) => ({

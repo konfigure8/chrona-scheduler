@@ -62,6 +62,7 @@ import {
   proposalMustReport,
   proposalMustRules,
   proposalScore,
+  type AppliedOutcome,
   type MustRow,
   type ProposalChange,
   type ProposalDoubleBooking,
@@ -190,9 +191,14 @@ export interface SchedulerSurfaceProps {
   readonly solveUnavailableReason?: string;
   /** Stops the wait for a running solve; renders Cancel while solving. */
   readonly onCancelSolve?: () => void;
-  /** The kept changes to write, none dropped or withheld; the host clears the proposal. */
+  /**
+   * The kept changes to write, none dropped or withheld, and what Apply
+   * leaves in the period as the review counts it; the host clears the
+   * proposal.
+   */
   readonly onPublishProposal?: (
     changes: readonly ProposalChange[],
+    outcome: AppliedOutcome,
   ) => void;
   readonly onDiscardProposal?: () => void;
   readonly config: TimelineConfig;
@@ -728,6 +734,19 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       { dropped: droppedChangeIds, withheld: withheldChangeIds },
     );
   }, [droppedChangeIds, proposalChanges, props.proposal, reviewPeriod, withheldChangeIds]);
+  // What Apply leaves in the period, handed to the host with the changes (F53 saved counts).
+  const appliedOutcome = React.useMemo<AppliedOutcome>(
+    () => ({
+      ...(mustReport?.proposed ? { mustBreaches: mustReport.proposed } : {}),
+      openShifts: openShifts.length,
+      ...(preferenceFigures
+        ? { preferences: { met: preferenceFigures.proposed.met, total: preferenceFigures.proposed.total } }
+        : {}),
+      ...(unchecked ? { unchecked: unchecked.count } : {}),
+      window: reviewPeriod,
+    }),
+    [mustReport, openShifts, preferenceFigures, reviewPeriod, unchecked],
+  );
   // A breakdown row opened into the change list; a new nonce moves focus to its heading.
   const [drill, setDrill] = React.useState<{ readonly nonce: number; readonly row: MustRow } | undefined>();
   React.useEffect(() => {
@@ -2495,7 +2514,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
               className="chrona-sched__toolbar-primary chrona-sched__proposal-apply"
               data-testid="proposal-apply"
               disabled={applicableChanges.length === 0}
-              onClick={() => props.onPublishProposal?.(applicableChanges)}
+              onClick={() => props.onPublishProposal?.(applicableChanges, appliedOutcome)}
               type="button"
             >
               {/* What the planner reviews is what Apply writes: it names the count. */}

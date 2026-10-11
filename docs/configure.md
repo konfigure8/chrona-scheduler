@@ -58,7 +58,7 @@ The last button on the toolbar shows the board on the whole screen. Select it ag
 
 ## 5. With Chrona Workforce Scheduler
 
-The scenario solution adds its own tables, each with a page in its app: skills, roles and the skills a role needs, the roles and skills of people, availability types and availability, agreements and their rules, demand and demand drivers, and work item templates with their spans. The scheduler reads them for role matching, availability bands and preferred times, rest and day limits, the coverage strip, generation and the optimizer's rules.
+The scenario solution adds its own tables, each with a page in its app: skills, roles and the skills a role needs, the roles and skills of people, availability types and availability, agreements and their rules, demand and demand drivers, and work item templates with their spans. The scheduler reads them for role matching, availability bands and preferred times, agreement rules, the coverage strip, generation and the optimizer's rules.
 
 ### Agreements
 
@@ -71,25 +71,48 @@ Set agreements up on the app's **Agreements** page, with the **Chrona Workforce 
 
 | Column | What it holds | When empty |
 | --- | --- | --- |
-| Rule | **Minimum rest (hours)** between shifts, or **Days in a row**. | Required. |
-| Value | The hours of rest (halves are fine), or the most days worked in a row (a whole number). Above 0. | Required. |
+| Rule | One of the eight rules below. | Required. |
+| Value | Hours, or whole days for **Days in a row** and **Days off**. Above 0. | Required. |
+| Must or Should | **Must** always holds: Optimize leaves a shift open rather than break it. **Should** gives way when the roster is better for it. | Must. **Minimum hours** and **Overtime** are always Should. |
+| Period | For **Maximum hours**, **Minimum hours**, **Days off** and **Overtime**: Day, Week, Fortnight, Month or Roster period. | Week. |
+| Over (weeks) | For **Weekly rest** and **Average hours**: how many weeks each window runs, 1 to 52. | 1. |
+| Rate (%) | For **Overtime**: what an hour past the value pays, as a percentage of the person's **Hourly rate**. 150 is time and a half. | No overtime cost. |
+| Clause | The clause of the award or agreement the rule comes from, such as 21.3. | None. |
 | On | Only rules that are on count. | On. |
 | Effective start | The rule's first day, in the site's time zone. | Always. |
 | Effective end | The rule's last day. On or after the start. | No end. |
 
-3. In its **People** grid, add the people who work under it. You can also set **Agreement** on a person, beside **Hours per week**.
+The rules:
+
+| Rule | Value | What it limits |
+| --- | --- | --- |
+| Minimum rest (hours) | Hours | The rest between two shifts. |
+| Days in a row | Days | The most days worked in a row. |
+| Maximum hours | Hours | The most hours worked in each period. |
+| Minimum hours | Hours | The fewest hours worked in each period. |
+| Days off | Days | The fewest days off in each period. A day off is a day on which no shift starts. Not per day. |
+| Overtime | Hours | The hours worked in each period before the rate pays. Add one row for each step, such as 38 hours at 150% and 48 hours at 200%. |
+| Weekly rest | Hours | The hours off in one stretch in every window, such as 24 hours in every week. |
+| Average hours | Hours | The most hours a week, on average, over each window, such as 38 hours over 26 weeks. |
+
+3. In its **People** grid, add the people who work under it. You can also set **Agreement** on a person, beside **Hours per week** and **Hourly rate**.
 
 How the rules apply:
 
-- Both rules are Must rules. Optimize does not break them to fill a shift: the shift stays open instead.
-- When two rules of one type are in force on the same day, both hold, and the stricter one wins: the longer rest, the fewer days.
+- Optimize keeps every Must rule, and leaves a shift open rather than break one. It keeps each Should rule where it can.
+- Periods are counted on the site's clock. A week starts on the first day of the week in each person's Power Apps regional settings. A fortnight starts on the view's **Period starts on** date when the view's **Period** is a fortnight. A month is a calendar month. **Roster period** is the period Optimize plans.
+- A period that ends after the period Optimize plans is counted up to that end. **Days off** and **Minimum hours** are reduced in proportion to the days counted.
+- **Weekly rest** and **Average hours** look at every window of weeks, one week after another.
+- **Overtime** costs the hours past each step at the step's rate above the person's **Hourly rate**. A person with no rate costs nothing extra. Optimize weighs the cost with the other Should rules.
+- When two rules of one type are in force on the same day, both hold.
 - The rule in force when the later work starts applies. Rest before a shift uses the minimum in force when that shift starts. Each day of a run uses the limit in force that day.
 - To stop a rule, set its **Effective end**. Switching it off changes past periods too.
-- Rest and days in a row also count the shifts before the roster period, as far back as the longest rule needs.
-- A person with no agreement, or with no rule in force, is not checked for rest or days in a row. The board marks each such person, unless no one has an agreement.
+- The rules also count the shifts before the roster period, as far back as the longest rule needs: its rest, its run of days, the start of its period or its window.
+- A person with no agreement, or with no rule in force, is not checked. The board marks each such person, unless no one has an agreement.
 - A deactivated agreement counts as no agreement.
 - Dataverse refuses to delete an agreement while people work under it. Move them to another agreement first.
-- A change by hand that breaks a rule gets a warning on the board. The board does not block it.
+- In the review, broken **Maximum hours** and **Average hours** rules count as maximum hours, and broken **Days off** and **Weekly rest** rules count as other Must rules.
+- A change by hand that breaks a Must rest or days in a row rule gets a warning on the board. The board does not block it.
 
 With an agent: the `generate_agreement` tool of the Chrona Model Context Protocol (MCP) server turns your rules into the requests that create the agreement and its rules. Your agent links the people with its own Dataverse tools, so no person data reaches Chrona.
 
