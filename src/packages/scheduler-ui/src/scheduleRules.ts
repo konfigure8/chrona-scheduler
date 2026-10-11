@@ -331,24 +331,34 @@ export function evaluateScheduleRules(
     config.workingStartHour !== undefined &&
     config.workingEndHour !== undefined
   ) {
-    const startHour =
-      proposed.start.getHours() + proposed.start.getMinutes() / 60;
-    const endDate = new Date(proposed.end.getTime() - 1);
-    const endHour = endDate.getHours() + endDate.getMinutes() / 60;
-    const sameDay = proposed.start.toDateString() === endDate.toDateString();
-    const inside =
-      sameDay &&
-      startHour >= config.workingStartHour &&
-      endHour < config.workingEndHour;
+    // Each day's window runs from start to end; an end past 24 runs into the
+    // next morning, so a shift fits its own day's window or the one before.
+    const workingStart = config.workingStartHour;
+    const workingEnd = config.workingEndHour;
+    const inside = [0, -1].some((offset) => {
+      const dayStart = new Date(proposed.start.getTime());
+      dayStart.setHours(0, 0, 0, 0);
+      dayStart.setDate(dayStart.getDate() + offset);
+      const opens = new Date(dayStart.getTime());
+      opens.setHours(0, Math.round(workingStart * 60), 0, 0);
+      const closes = new Date(dayStart.getTime());
+      closes.setHours(0, Math.round(workingEnd * 60), 0, 0);
+      return proposed.start.getTime() >= opens.getTime() && proposed.end.getTime() <= closes.getTime();
+    });
     if (!inside) {
       const pad = (value: number): string => String(value).padStart(2, "0");
+      // 24:00 reads as the end of the day; later ends read as next morning's clock.
+      const clock = (hours: number): string => {
+        const minutes = Math.round((hours > 24 ? hours - 24 : hours) * 60);
+        return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
+      };
       found.push({
         order: scheduleRuleOrder.workingHours,
         result: {
           kind: config.workingHoursPolicy,
           reason: formatString(strings.outsideHours, {
-            end: `${pad(config.workingEndHour)}:00`,
-            start: `${pad(config.workingStartHour)}:00`,
+            end: clock(workingEnd),
+            start: clock(workingStart),
           }),
           scope: "item",
         },

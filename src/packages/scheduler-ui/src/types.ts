@@ -197,13 +197,17 @@ export type AvailabilityBandKind =
   | "unavailable"
   | "unpreferred";
 
-/** The working-time limits an agreement rule sets. */
-export type AgreementRuleKind = "daysInARow" | "minimumRest";
+/**
+ * The working-time limits and overtime terms an agreement rule sets.
+ * The solver checks rest and days in a row; the overtime terms stay on
+ * the board, which works out wages and overtime with them (E6 / F54).
+ */
+export type AgreementRuleKind = "daysInARow" | "minimumRest" | "overtimeAfter" | "overtimeRate";
 
 /**
  * One dated rule of an agreement, as the maker entered it. The host
  * converts units at its boundary, as it does dates and times: a rest
- * entered in hours arrives here in minutes (hours x 60).
+ * or a week's hours entered in hours arrive here in minutes (hours x 60).
  */
 export interface SchedulerAgreementRule {
   /**
@@ -222,7 +226,10 @@ export interface SchedulerAgreementRule {
   /**
    * minimumRest: whole minutes from the end of one shift to the start
    * of the next. daysInARow: the most whole days a person may work in
-   * a row. A value of 0 or less sets no limit.
+   * a row. overtimeAfter: the whole minutes a person works in a week
+   * before overtime pays. overtimeRate: what an overtime hour pays, as
+   * a percentage of the base rate (150 = time and a half). A value of 0
+   * or less sets no limit.
    */
   readonly value: number;
 }

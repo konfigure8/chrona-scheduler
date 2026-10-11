@@ -39,8 +39,9 @@ export interface ChronaSolveRequest {
   readonly calendarName?: string;
   /** Active constraint tiers (F22 deliverable 2, Q4-B): informational
    * envelope metadata - telemetry and a future objective-weight hook,
-   * never interpreted against the problem body. The same slot carries
-   * F24's mode signal later. */
+   * never interpreted against the problem body. F24's repair intent
+   * changes what the solver does, so it travels in the problem
+   * (ScheduleProblemV2.repair), not here. */
   readonly capabilities?: readonly SolveCapability[];
   readonly problem: ScheduleProblemV2;
   readonly problemType: "rostering";
@@ -139,7 +140,9 @@ const OTHER_NAMED = ["maximumHours", "overlap", "splitParts"] as const;
 
 /**
  * Must counts, whole or not at all. An "other" Must rule this board
- * does not name yet counts as unlisted, so the total stays whole.
+ * does not name yet counts as unlisted, so the total stays whole. An
+ * API from before the site rule (F63 Person sites) sends no site
+ * count: none.
  */
 function readMustBreaches(value: unknown): MustBreachCounts | undefined {
   const record = asRecord(value);
@@ -148,12 +151,14 @@ function readMustBreaches(value: unknown): MustBreachCounts | undefined {
     return undefined;
   }
   const { daysInARow, onLeaveOrUnavailable, restBetweenShifts, skills } = record;
+  const site = record.site ?? 0;
   const { maximumHours, overlap, splitParts } = other;
   if (
     !isCount(daysInARow) ||
     !isCount(onLeaveOrUnavailable) ||
     !isCount(restBetweenShifts) ||
     !isCount(skills) ||
+    !isCount(site) ||
     !isCount(maximumHours) ||
     !isCount(overlap) ||
     !isCount(splitParts)
@@ -174,6 +179,7 @@ function readMustBreaches(value: unknown): MustBreachCounts | undefined {
     onLeaveOrUnavailable,
     other: { maximumHours, overlap, splitParts, unlisted },
     restBetweenShifts,
+    site,
     skills,
   };
 }

@@ -24,7 +24,7 @@ export interface RowDecoration {
 }
 
 export interface WorkingWindow {
-  /** Hour of day work ends (exclusive), 0-24. */
+  /** Hour of day work ends (exclusive), 0-48: past 24 runs into the next day. */
   readonly endHour: number;
   /** Hour of day work starts (inclusive), 0-24. */
   readonly startHour: number;
@@ -32,9 +32,18 @@ export interface WorkingWindow {
 
 const millisecondsPerDay = 86_400_000;
 
+/** The day's moment that many hours in, by the clock (daylight saving safe). */
+function atHour(dayStart: Date, hours: number): Date {
+  const moment = new Date(dayStart.getTime());
+  moment.setHours(0, Math.round(hours * 60), 0, 0);
+  return moment;
+}
+
 /**
  * Shades hours outside the working window for every day in the window,
- * and whole weekend days when weekends are marked non-working.
+ * and whole weekend days when weekends are marked non-working. A window
+ * that ends past midnight keeps the next morning working until it ends,
+ * unless the day it started on is a non-working weekend day.
  */
 export function buildNonWorkingDecorations(
   window: TimeWindow,
@@ -49,6 +58,10 @@ export function buildNonWorkingDecorations(
     const dayStart = new Date(cursor.getTime());
     const dayEnd = new Date(cursor.getTime() + millisecondsPerDay);
     const isWeekend = dayStart.getDay() === 0 || dayStart.getDay() === 6;
+    const dayBefore = (dayStart.getDay() + 6) % 7;
+    const dayBeforeOff = weekendsNonWorking && (dayBefore === 0 || dayBefore === 6);
+    // Hours of this morning that the previous day's window still covers.
+    const spill = workingWindow && !dayBeforeOff ? Math.max(0, workingWindow.endHour - 24) : 0;
 
     if (weekendsNonWorking && isWeekend) {
       decorations.push({
@@ -58,19 +71,16 @@ export function buildNonWorkingDecorations(
         start: dayStart,
       });
     } else if (workingWindow) {
-      if (workingWindow.startHour > 0) {
-        const morningEnd = new Date(dayStart.getTime());
-        morningEnd.setHours(workingWindow.startHour, 0, 0, 0);
+      if (workingWindow.startHour > spill) {
         decorations.push({
-          end: morningEnd,
+          end: atHour(dayStart, workingWindow.startHour),
           kind: "nonWorking",
           label: "Non-working time",
-          start: dayStart,
+          start: atHour(dayStart, spill),
         });
       }
       if (workingWindow.endHour < 24) {
-        const eveningStart = new Date(dayStart.getTime());
-        eveningStart.setHours(workingWindow.endHour, 0, 0, 0);
+        const eveningStart = atHour(dayStart, workingWindow.endHour);
         decorations.push({
           end: dayEnd,
           kind: "nonWorking",

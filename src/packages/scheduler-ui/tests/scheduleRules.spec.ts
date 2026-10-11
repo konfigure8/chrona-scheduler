@@ -304,7 +304,28 @@ function extraRulesSeeEveryEvent(): void {
 }
 
 indexedEvaluationHandlesCandidateLoopsAtStressScale();
+function overnightWorkingHoursHoldShiftsAcrossMidnight(): void {
+  const overnight: SchedulerRulesConfig = { ...config, minimumBreakMinutes: 0, workingEndHour: 29, workingStartHour: 9 };
+  const reasons = (start: Date, end: Date): string =>
+    evaluateScheduleRules({ config: overnight, event: undefined, events: [], proposed: { end, resourceId: "r-1", start }, resources })
+      .map((result) => result.reason)
+      .join(" | ");
+  // 22:00 to 03:00 the next day and 01:00 to 04:00 (the previous day's window) fit.
+  assertEqual(reasons(day(22), day(27)), "");
+  assertEqual(reasons(day(1), day(4)), "");
+  // 06:00 to 08:00 falls in the gap; the reason reads the clock.
+  assertEqual(reasons(day(6), day(8)), "Outside working hours (09:00-05:00)");
+  // A same-day window keeps today's behaviour.
+  assertEqual(
+    evaluateScheduleRules({ config, event: undefined, events: [], proposed: { end: day(23), resourceId: "r-1", start: day(21) }, resources })
+      .map((result) => result.reason)
+      .join(" | "),
+    "Outside working hours (06:00-22:00)",
+  );
+}
+
 breakUnderMinimumWarnsWithTheGap();
+overnightWorkingHoursHoldShiftsAcrossMidnight();
 extraRulesTakeTheirPlaceInTheOrder();
 backToBackCountsAsZeroGapAndOverlapIsNotABreak();
 minimumBreakZeroMeansOff();

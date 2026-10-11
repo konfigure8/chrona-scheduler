@@ -264,21 +264,24 @@ export function proposalMustRules(
 }
 
 /** The Must report's rows, top to bottom (design DR2 call 6). */
-export type MustRow = "daysInARow" | "onLeaveOrUnavailable" | "other" | "restBetweenShifts" | "skills";
+export type MustRow = "daysInARow" | "onLeaveOrUnavailable" | "other" | "restBetweenShifts" | "site" | "skills";
 
+/** The site row (F63 Person sites) shows only when a roster breaks it: a board with no sites never does. */
 export const MUST_ROWS: readonly MustRow[] = [
   "restBetweenShifts",
   "daysInARow",
   "skills",
+  "site",
   "onLeaveOrUnavailable",
   "other",
 ];
 
-/** The row a Must rule's matches count in: the four named rows, else "Other Must rules". */
+/** The row a Must rule's matches count in: the named rows, else "Other Must rules". */
 export function mustRowOf(rule: MustRuleName): MustRow {
   return rule === "restBetweenShifts" ||
     rule === "daysInARow" ||
     rule === "skills" ||
+    rule === "site" ||
     rule === "onLeaveOrUnavailable"
     ? rule
     : "other";

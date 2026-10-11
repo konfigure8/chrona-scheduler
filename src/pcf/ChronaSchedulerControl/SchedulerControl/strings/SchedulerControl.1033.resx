@@ -478,7 +478,7 @@
     <value>Next</value>
   </data>
   <data name="noticeBlocked" xml:space="preserve">
-    <value>Blocked: {reason}</value>
+    <value>Not allowed: {reason}</value>
   </data>
   <data name="noticeWarning" xml:space="preserve">
     <value>Note: {reason}</value>
@@ -1005,6 +1005,9 @@
   <data name="mustRowDaysInARow" xml:space="preserve">
     <value>Days in a row</value>
   </data>
+  <data name="mustRowSite" xml:space="preserve">
+    <value>Wrong site</value>
+  </data>
   <data name="mustRowSkills" xml:space="preserve">
     <value>Skills</value>
   </data>
@@ -1064,6 +1067,9 @@
   </data>
   <data name="reasonFixesDaysInARow" xml:space="preserve">
     <value>Fixes {name}'s days in a row</value>
+  </data>
+  <data name="reasonFixesSite" xml:space="preserve">
+    <value>Fixes a wrong site</value>
   </data>
   <data name="reasonFixesSkill" xml:space="preserve">
     <value>Fixes a skill gap</value>

@@ -8,7 +8,9 @@
  * solutions, rule matches and candidate checks can be mapped back
  * locally. Skills stay plain tags and cost/contract facts stay in the
  * payload (both ruled; the conversion ledger discloses them), and so
- * do agreement rules, the history mark and the site's time zone.
+ * do agreement rules, the history mark, the site's time zone and the
+ * repair intent with its change charge (F24 Repair mode). A repair's
+ * current person is each shift's assignment, re-keyed like any other.
  * Preferred and unpreferred time travel as times on the pseudonym;
  * that of a person the problem does not hold stays home.
  * The solver never needed names, so nothing functional changes.
@@ -153,6 +155,8 @@ function redactWith(
     problem: {
       ...(agreements ? { agreements } : {}),
       contractVersion: "2",
+      // F24 Repair mode: an intent and a charge, not personal data.
+      ...(problem.repair ? { repair: problem.repair } : {}),
       resources: problem.resources.map((resource) => ({
         ...(resource.agreementId !== undefined
           ? { agreementId: pseudoAgreement(resource.agreementId) }
@@ -163,6 +167,8 @@ function redactWith(
           : {}),
         id: pseudoResource(resource.id),
         name: pseudoResource(resource.id),
+        // F63 Person sites: the host sends sites as tokens, never a site's id or name.
+        ...(resource.sites ? { sites: resource.sites } : {}),
         skills: resource.skills,
       })),
       shifts: problem.shifts.map((shift, index) => {
@@ -183,6 +189,7 @@ function redactWith(
           ...(shift.history === true ? { history: true } : {}),
           id: pseudonym,
           requiredSkills: shift.requiredSkills,
+          ...(shift.site ? { site: shift.site } : {}),
           ...(shift.split
             ? { split: { id: pseudoSplit(shift.split.id), samePerson: shift.split.samePerson } }
             : {}),

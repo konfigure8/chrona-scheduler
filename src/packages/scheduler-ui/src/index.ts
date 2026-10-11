@@ -334,6 +334,7 @@ export {
 export {
   isMustRule,
   isShouldRule,
+  isSolverRuleKind,
   mustBreachTotal,
   problemFromSchedule,
   type CandidateFit,
@@ -346,6 +347,7 @@ export {
   type ScheduleCandidateCheck,
   type ScheduleContractAgreement,
   type ScheduleContractAgreementRule,
+  type ScheduleContractRepair,
   type ScheduleContractResource,
   type ScheduleContractShift,
   type ScheduleContractTimePreference,
@@ -358,6 +360,7 @@ export {
   type ScheduleSolutionV2,
   type ScheduleSolveAnalysis,
   type ShouldRuleName,
+  type SolverRuleKind,
   type SolveSearch,
 } from "./schedulingContract";
 export {

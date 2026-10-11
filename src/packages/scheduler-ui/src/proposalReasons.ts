@@ -66,6 +66,8 @@ export function mustRuleLabel(rule: ScheduleRuleMatch["rule"], strings: Schedule
       return strings.mustRowDaysInARow;
     case "skills":
       return strings.mustRowSkills;
+    case "site":
+      return strings.mustRowSite;
     case "onLeaveOrUnavailable":
       return strings.mustRowOnLeave;
     case "overlap":
@@ -93,6 +95,9 @@ function fixText(match: ScheduleRuleMatch, context: ReasonContext): string {
   }
   if (match.rule === "skills") {
     return strings.reasonFixesSkill;
+  }
+  if (match.rule === "site") {
+    return strings.reasonFixesSite;
   }
   return strings.reasonFixesMust;
 }
@@ -294,6 +299,7 @@ function mustRowOfRule(match: ScheduleRuleMatch): "named" | "other" {
   return match.rule === "restBetweenShifts" ||
     match.rule === "daysInARow" ||
     match.rule === "skills" ||
+    match.rule === "site" ||
     match.rule === "onLeaveOrUnavailable"
     ? "named"
     : "other";

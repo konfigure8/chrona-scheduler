@@ -478,7 +478,7 @@
     <value>Weiter</value>
   </data>
   <data name="noticeBlocked" xml:space="preserve">
-    <value>Blockiert: {reason}</value>
+    <value>Nicht zulässig: {reason}</value>
   </data>
   <data name="noticeWarning" xml:space="preserve">
     <value>Hinweis: {reason}</value>
@@ -1005,6 +1005,9 @@
   <data name="mustRowDaysInARow" xml:space="preserve">
     <value>Tage in Folge</value>
   </data>
+  <data name="mustRowSite" xml:space="preserve">
+    <value>Falscher Standort</value>
+  </data>
   <data name="mustRowSkills" xml:space="preserve">
     <value>Fähigkeiten</value>
   </data>
@@ -1064,6 +1067,9 @@
   </data>
   <data name="reasonFixesDaysInARow" xml:space="preserve">
     <value>Behebt die Tage in Folge von {name}</value>
+  </data>
+  <data name="reasonFixesSite" xml:space="preserve">
+    <value>Behebt einen falschen Standort</value>
   </data>
   <data name="reasonFixesSkill" xml:space="preserve">
     <value>Behebt eine fehlende Fähigkeit</value>

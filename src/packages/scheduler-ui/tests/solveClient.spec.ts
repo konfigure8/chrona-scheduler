@@ -66,6 +66,7 @@ const noBreaches: MustBreachCounts = {
   onLeaveOrUnavailable: 0,
   other: { maximumHours: 0, overlap: 0, splitParts: 0, unlisted: 0 },
   restBetweenShifts: 0,
+  site: 0,
   skills: 0,
 };
 
@@ -314,6 +315,25 @@ const run = async (): Promise<void> => {
     assert.equal(countsOnly?.countsOnly, true);
     assert.equal(countsOnly?.current.matches, undefined);
     assert.equal(countsOnly?.current.mustBreaches.skills, 0, "a counted zero is a zero");
+    // F63 Person sites: the site count reads as it comes; an API from before the rule sends none.
+    const beforeSites: Record<string, unknown> = { ...noBreaches };
+    delete beforeSites.site;
+    const sited = solutionFromPoll("run-s", "succeeded", {
+      analysis: {
+        current: { ...roster, mustBreaches: beforeSites },
+        proposed: {
+          matches: [{ resourceId: "p-1", rule: "site", shiftIds: ["w-1"] }],
+          mustBreaches: { ...noBreaches, site: 1 },
+          openShifts: 0,
+        },
+      },
+      assignments: [],
+      contractVersion: "2",
+    } as never).analysis;
+    assert.equal(sited?.current.mustBreaches.site, 0, "no site count = none");
+    assert.equal(sited?.proposed.mustBreaches.site, 1);
+    assert.equal(sited?.proposed.matches?.[0]?.rule, "site");
+    assert.equal(mustBreachTotal(sited?.proposed.mustBreaches ?? noBreaches), 1);
   }
 
   // "Why not…?": one request, redacted, answered at once and mapped back.

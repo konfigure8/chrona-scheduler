@@ -117,7 +117,29 @@ function assertEqual<T>(actual: T, expected: T): void {
   }
 }
 
+function overnightWindowKeepsTheNextMorningWorking(): void {
+  // 09:00 to 05:00 the next day: only 05:00-09:00 is non-working on a day after a working day.
+  const days: TimeWindow = { end: new Date(2026, 7, 19, 0, 0), start: new Date(2026, 7, 17, 0, 0) };
+  const shaded = buildNonWorkingDecorations(days, { endHour: 29, startHour: 9 }, false);
+  assertEqual(shaded.length, 2);
+  assertEqual(shaded[0]?.start.getHours(), 5);
+  assertEqual(shaded[0]?.end.getHours(), 9);
+  assertEqual(shaded[1]?.start.getDate(), 18);
+  assertEqual(shaded[1]?.start.getHours(), 5);
+  // After a non-working Sunday, Monday morning is non-working from midnight.
+  const afterWeekend = buildNonWorkingDecorations(
+    { end: new Date(2026, 7, 18, 0, 0), start: new Date(2026, 7, 17, 0, 0) },
+    { endHour: 29, startHour: 9 },
+    true,
+  );
+  assertEqual(afterWeekend[0]?.start.getHours(), 0);
+  // A quarter-hour start lands on its minute.
+  const quarter = buildNonWorkingDecorations(days, { endHour: 17, startHour: 8.25 }, false);
+  assertEqual(quarter[0]?.end.getMinutes(), 15);
+}
+
 buildsLegendFromPresentKindsOnly();
+overnightWindowKeepsTheNextMorningWorking();
 shadesOutsideWorkingWindow();
 shadesWholeWeekendDaysWhenNonWorking();
 filtersByResource();

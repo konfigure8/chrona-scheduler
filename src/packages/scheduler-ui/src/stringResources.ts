@@ -209,6 +209,8 @@ export interface SchedulerStrings {
   readonly mustRowRest: string;
   readonly mustRowDaysInARow: string;
   readonly mustRowSkills: string;
+  /** F63 Person sites: a person on a shift at a site they do not work at. */
+  readonly mustRowSite: string;
   readonly mustRowOnLeave: string;
   readonly mustRowOther: string;
   /** The kinds "Other Must rules" names. */
@@ -234,6 +236,7 @@ export interface SchedulerStrings {
   readonly reasonFixesRest: string;
   readonly reasonFixesDaysInARow: string;
   readonly reasonFixesSkill: string;
+  readonly reasonFixesSite: string;
   readonly reasonFixesMust: string;
   readonly reasonAddsRest: string;
   readonly reasonAddsMust: string;
@@ -497,7 +500,7 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   needsCover: "Needs cover",
   newEvent: "New event",
   next: "Next",
-  noticeBlocked: "Blocked: {reason}",
+  noticeBlocked: "Not allowed: {reason}",
   noticeWarning: "Note: {reason}",
   pinnedNotice: "Pinned - unpin to make changes.",
   previous: "Previous",
@@ -562,6 +565,7 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   mustRowRest: "Rest between shifts",
   mustRowDaysInARow: "Days in a row",
   mustRowSkills: "Skills",
+  mustRowSite: "Wrong site",
   mustRowOnLeave: "On leave or unavailable",
   mustRowOther: "Other Must rules",
   mustKindOverlap: "Double booking",
@@ -582,6 +586,7 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   reasonFixesRest: "Fixes {name}'s rest ({hours} h)",
   reasonFixesDaysInARow: "Fixes {name}'s days in a row",
   reasonFixesSkill: "Fixes a skill gap",
+  reasonFixesSite: "Fixes a wrong site",
   reasonFixesMust: "Fixes a Must rule break",
   reasonAddsRest: "Adds a short rest for {name} ({hours} h)",
   reasonAddsMust: "Adds a Must rule break",

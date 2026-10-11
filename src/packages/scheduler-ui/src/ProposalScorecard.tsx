@@ -193,6 +193,8 @@ export function mustRowLabel(strings: SchedulerStrings, row: MustRow): string {
       return strings.mustRowDaysInARow;
     case "skills":
       return strings.mustRowSkills;
+    case "site":
+      return strings.mustRowSite;
     case "onLeaveOrUnavailable":
       return strings.mustRowOnLeave;
     default:
@@ -358,6 +360,9 @@ export function ProposalScorecard(props: ProposalScorecardProps): JSX.Element {
             const label = mustRowLabel(strings, row);
             const nowCount = now ? mustRowCount(now, row) : undefined;
             const proposedCount = mustRowCount(proposed, row);
+            if (row === "site" && proposedCount === 0 && !nowCount) {
+              return null;
+            }
             const nowText = nowCount === undefined ? "—" : String(nowCount);
             const kinds =
               row === "other"

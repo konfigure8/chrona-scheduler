@@ -478,7 +478,7 @@
     <value>Volgende</value>
   </data>
   <data name="noticeBlocked" xml:space="preserve">
-    <value>Geblokkeerd: {reason}</value>
+    <value>Niet toegestaan: {reason}</value>
   </data>
   <data name="noticeWarning" xml:space="preserve">
     <value>Let op: {reason}</value>
@@ -1005,6 +1005,9 @@
   <data name="mustRowDaysInARow" xml:space="preserve">
     <value>Dagen op rij</value>
   </data>
+  <data name="mustRowSite" xml:space="preserve">
+    <value>Verkeerde locatie</value>
+  </data>
   <data name="mustRowSkills" xml:space="preserve">
     <value>Vaardigheden</value>
   </data>
@@ -1064,6 +1067,9 @@
   </data>
   <data name="reasonFixesDaysInARow" xml:space="preserve">
     <value>Herstelt de dagen op rij van {name}</value>
+  </data>
+  <data name="reasonFixesSite" xml:space="preserve">
+    <value>Herstelt een verkeerde locatie</value>
   </data>
   <data name="reasonFixesSkill" xml:space="preserve">
     <value>Herstelt een ontbrekende vaardigheid</value>

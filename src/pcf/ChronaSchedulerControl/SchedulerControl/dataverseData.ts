@@ -868,6 +868,19 @@ const LAYOUT_CHOICE: Readonly<Record<number, MakerLayout>> = {
   4: "agenda",
 };
 
+/**
+ * The view row's working end, in hours. An end that is not after the start
+ * runs past midnight, as business hours read: 09:00 to 05:00 ends at 05:00
+ * the next day. The end list's "next day" choices say so directly.
+ */
+export function workingEndHour(startMinutes: unknown, endMinutes: unknown): number | undefined {
+  if (typeof endMinutes !== "number") {
+    return undefined;
+  }
+  const start = typeof startMinutes === "number" ? startMinutes : 0;
+  return (endMinutes <= start ? endMinutes + 1440 : endMinutes) / 60;
+}
+
 export function layoutFromChoice(value: unknown): MakerLayout | undefined {
   return typeof value === "number" ? LAYOUT_CHOICE[value] : undefined;
 }

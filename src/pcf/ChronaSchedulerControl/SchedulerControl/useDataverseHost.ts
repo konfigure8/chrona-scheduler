@@ -149,6 +149,7 @@ import {
   eventColorFor,
   isChoiceColumn,
   layoutFromChoice,
+  workingEndHour,
   type MakerLayout,
   STATUS_CHOICE,
   buildProvenance,
@@ -434,10 +435,7 @@ export function useDataverseScheduleHost(
               typeof row.chr_slotminutes === "number"
                 ? row.chr_slotminutes
                 : undefined,
-            workingEndHour:
-              typeof row.chr_workingend === "number"
-                ? row.chr_workingend / 60
-                : undefined,
+            workingEndHour: workingEndHour(row.chr_workingstart, row.chr_workingend),
             workingStartHour:
               typeof row.chr_workingstart === "number"
                 ? row.chr_workingstart / 60

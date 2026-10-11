@@ -19,6 +19,7 @@ import {
   GROUP_PALETTE,
   groupColor,
   layoutFromChoice,
+  workingEndHour,
   representationFor,
   UNASSIGNED_RESOURCE_ID,
 } from "../SchedulerControl/dataverseData";
@@ -88,6 +89,13 @@ assert.equal(representationFor(false, "day", "timeline"), "day");
 assert.equal(layoutFromChoice(2), "roster");
 assert.equal(layoutFromChoice(4), "agenda");
 assert.equal(layoutFromChoice(9), undefined);
+// An end not after the start runs past midnight; "next day" choices already do.
+assert.equal(workingEndHour(540, 1020), 17);
+assert.equal(workingEndHour(540, 300), 29);
+assert.equal(workingEndHour(540, 540), 33);
+assert.equal(workingEndHour(1080, 1740), 29);
+assert.equal(workingEndHour(undefined, 300), 5);
+assert.equal(workingEndHour(540, undefined), undefined);
 assert.equal(layoutFromChoice(null), undefined);
 // Color by: the role's colour, a stable palette colour per group, the warning wash for cover.
 assert.equal(colorByFromChoice(2), "role");

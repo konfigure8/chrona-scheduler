@@ -12,12 +12,13 @@
  * (minimum rest and days in a row, dated), unavailability and
  * preferred or unpreferred time, shifts with times/required
  * skills/assignment/pinned/history, their breaks and split parts (F48
- * Split shifts), the run result we already expose, and the rule
- * checks behind it: breach counts and the rule matches that explain a
- * roster, before and after, and the check of one person on one shift.
- * Generation, hourly demand, disruption policies and further
- * agreement rules are additive later, when their product rungs are
- * designed independently.
+ * Split shifts), the repair intent and its change charge (F24 Repair
+ * mode), the run result we already expose, and the rule checks behind
+ * it: breach counts and the rule matches that explain a roster, before
+ * and after, and the check of one person on one shift. Generation,
+ * hourly demand and further agreement rules for the solver are
+ * additive later, when their product rungs are designed independently;
+ * the overtime terms stay on the board (A5).
  *
  * Dates are ISO-8601 strings with explicit offsets: the contract is
  * a wire format, and hosts own timezone conversion at their
@@ -39,6 +40,19 @@ import { maxHoursPerWindow } from "./windowHours";
 /** Contract polarity per Docs/domain_model.md section 1. */
 export type ResourceContractType = "casual" | "fixed" | "minMax";
 
+/** The agreement rules the solver checks; the overtime terms stay on the board (A5). */
+export type SolverRuleKind = Extract<AgreementRuleKind, "daysInARow" | "minimumRest">;
+
+const SOLVER_RULE_KINDS: ReadonlySet<AgreementRuleKind> = new Set<SolverRuleKind>([
+  "daysInARow",
+  "minimumRest",
+]);
+
+/** True for a rule kind the solver checks. */
+export function isSolverRuleKind(kind: AgreementRuleKind): kind is SolverRuleKind {
+  return SOLVER_RULE_KINDS.has(kind);
+}
+
 /**
  * One rule of an agreement that is switched on and sets a limit. Its
  * dates are calendar days read on the problem's clock (timeZone).
@@ -46,7 +60,7 @@ export type ResourceContractType = "casual" | "fixed" | "minMax";
 export interface ScheduleContractAgreementRule {
   /** The rule's last day, inclusive, "YYYY-MM-DD". Absent = no end. */
   readonly end?: string;
-  readonly kind: AgreementRuleKind;
+  readonly kind: SolverRuleKind;
   /** The rule's first day, "YYYY-MM-DD". Absent = always. */
   readonly start?: string;
   /**
@@ -83,6 +97,11 @@ export interface ScheduleContractResource {
   readonly costCentsPerHour?: number;
   readonly id: string;
   readonly name: string;
+  /**
+   * The sites the person works at (F63 Person sites). Absent or empty =
+   * none: the person takes only shifts with no site.
+   */
+  readonly sites?: readonly string[];
   readonly skills: readonly string[];
 }
 
@@ -109,6 +128,8 @@ export interface ScheduleContractShift {
   readonly history?: boolean;
   readonly id: string;
   readonly requiredSkills: readonly string[];
+  /** The shift's site (F63 Person sites): only someone who works there takes it. Absent = no site. */
+  readonly site?: string;
   /**
    * One part of a split shift (F48 Split shifts): parts share the id.
    * The gap between parts is not rest; "required" makes one person for
@@ -139,10 +160,27 @@ export interface ScheduleContractTimePreference {
   readonly start: string;
 }
 
+/**
+ * F24 Repair mode: keep the roster as it stands and change as few
+ * shifts as the work needs. Each shift's assignment is its current
+ * person; the absent person stays on their shift, with their absence
+ * as unavailability, and a run that moves them off counts a change.
+ */
+export interface ScheduleContractRepair {
+  /**
+   * What changing a shift's person costs, in whole cents for each paid
+   * hour of the shift, 0 or more. Absent = a change costs nothing: a
+   * blank setting sends no charge, never a default (ruled 2026-10-09).
+   */
+  readonly changeCentsPerHour?: number;
+}
+
 export interface ScheduleProblemV2 {
   /** The agreements the resources name. Absent = none. */
   readonly agreements?: readonly ScheduleContractAgreement[];
   readonly contractVersion: "2";
+  /** F24 Repair mode. Absent = a plan run: any shift that is not pinned may change, at no cost. */
+  readonly repair?: ScheduleContractRepair;
   readonly resources: readonly ScheduleContractResource[];
   readonly shifts: readonly ScheduleContractShift[];
   /** Preferred and unpreferred time per person. Absent = none. */
@@ -183,6 +221,7 @@ export type MustRuleName =
   | "onLeaveOrUnavailable"
   | "overlap"
   | "restBetweenShifts"
+  | "site"
   | "skills"
   | "splitParts"
   | "unlisted";
@@ -203,6 +242,7 @@ const MUST_RULES: ReadonlySet<string> = new Set<MustRuleName>([
   "onLeaveOrUnavailable",
   "overlap",
   "restBetweenShifts",
+  "site",
   "skills",
   "splitParts",
   "unlisted",
@@ -252,6 +292,8 @@ export interface MustBreachCounts {
    * one split shift are not a pair.
    */
   readonly restBetweenShifts: number;
+  /** One per assigned shift at a site its person does not work at (F63 Person sites). */
+  readonly site: number;
   /** One per assigned shift whose person lacks a required skill. */
   readonly skills: number;
 }
@@ -263,6 +305,7 @@ export function mustBreachTotal(counts: MustBreachCounts): number {
     counts.restBetweenShifts +
     counts.daysInARow +
     counts.skills +
+    counts.site +
     counts.onLeaveOrUnavailable +
     other.overlap +
     other.maximumHours +
@@ -382,6 +425,11 @@ export interface ProblemFromScheduleInput {
    * default - only an item whose lock forbids reassignment is pinned;
    * everything else is movable. */
   readonly pinAssigned?: boolean;
+  /**
+   * F24 Repair mode (an Operate-mode run), with the calendar's change
+   * charge in cents per hour as the host read it. Absent = a plan run.
+   */
+  readonly repair?: ScheduleContractRepair;
   readonly resources: readonly SchedulerResource[];
   /** The site's time zone, passed on to the solver (ScheduleProblemV2.timeZone). */
   readonly timeZone?: string;
@@ -401,6 +449,18 @@ export interface ProblemFromScheduleInput {
   readonly window: { readonly end: Date; readonly start: Date };
 }
 
+/**
+ * The repair intent as it goes on the wire: the charge as whole cents
+ * when it is a number, 0 or more; anything else sends no charge, never
+ * a default.
+ */
+function repairOnTheWire(repair: ScheduleContractRepair): ScheduleContractRepair {
+  const charge = repair.changeCentsPerHour;
+  return charge !== undefined && Number.isFinite(charge) && charge >= 0
+    ? { changeCentsPerHour: Math.round(charge) }
+    : {};
+}
+
 /** Build a v2 problem from the UI's schedule state (host boundary). */
 export function problemFromSchedule(
   input: ProblemFromScheduleInput,
@@ -414,17 +474,23 @@ export function problemFromSchedule(
       !(now && event.status === "needsCover" && event.start < now) &&
       !(event.status === "needsCover" && isPinned(event)),
   );
-  // Off rules and rules without a limit stay home; the rest go as entered.
+  // Off rules, rules without a limit and the overtime terms (A5) stay home;
+  // the rest go as entered.
   const agreements = (input.agreements ?? []).map((agreement) => ({
     id: agreement.id,
-    rules: agreement.rules
-      .filter((rule) => rule.on && Number.isFinite(rule.value) && rule.value > 0)
-      .map((rule) => ({
-        ...(rule.end ? { end: rule.end } : {}),
-        kind: rule.kind,
-        ...(rule.start ? { start: rule.start } : {}),
-        value: rule.value,
-      })),
+    rules: agreement.rules.flatMap((rule) => {
+      const { kind } = rule;
+      return rule.on && isSolverRuleKind(kind) && Number.isFinite(rule.value) && rule.value > 0
+        ? [
+            {
+              ...(rule.end ? { end: rule.end } : {}),
+              kind,
+              ...(rule.start ? { start: rule.start } : {}),
+              value: rule.value,
+            },
+          ]
+        : [];
+    }),
   }));
   const bands = input.unavailability ?? [];
   const timePreferences = bands
@@ -441,6 +507,7 @@ export function problemFromSchedule(
   return {
     ...(agreements.length > 0 ? { agreements } : {}),
     contractVersion: "2",
+    ...(input.repair ? { repair: repairOnTheWire(input.repair) } : {}),
     resources: input.resources.map((resource) => ({
       ...(resource.agreementId !== undefined ? { agreementId: resource.agreementId } : {}),
       ...(resource.capacityHours !== undefined

@@ -4,19 +4,23 @@ import { englishDateNames } from "../src/dateNames";
 import {
   DRILL_DOWN_LIMIT,
   drillDownEntries,
+  matchFixText,
+  mustRuleLabel,
   personFixCounts,
   proposalReasons,
 } from "../src/proposalReasons";
-import type {
-  MustBreachCounts,
-  ScheduleRuleMatch,
-  ScheduleSolveAnalysis,
+import {
+  mustBreachTotal,
+  type MustBreachCounts,
+  type ScheduleRuleMatch,
+  type ScheduleSolveAnalysis,
 } from "../src/schedulingContract";
 import {
   diffProposal,
   MUST_ROWS,
   mustRowCount,
   mustRowMatches,
+  mustRowOf,
   openShiftCount,
   openShiftsAfter,
   proposalMustReport,
@@ -55,6 +59,7 @@ const zero: MustBreachCounts = {
   onLeaveOrUnavailable: 0,
   other: { maximumHours: 0, overlap: 0, splitParts: 0, unlisted: 0 },
   restBetweenShifts: 0,
+  site: 0,
   skills: 0,
 };
 const counts = (patch: Partial<Omit<MustBreachCounts, "other">> & { other?: Partial<MustBreachCounts["other"]> }): MustBreachCounts => ({
@@ -104,12 +109,14 @@ function rowsAddUpToTheTotal(): void {
     onLeaveOrUnavailable: 3,
     other: { maximumHours: 1, overlap: 4, splitParts: 5, unlisted: 6 },
     restBetweenShifts: 7,
+    site: 9,
     skills: 8,
   });
   assert.deepEqual(
     MUST_ROWS.map((row) => mustRowCount(all, row)),
-    [7, 2, 8, 3, 16],
+    [7, 2, 8, 9, 3, 16],
   );
+  assert.equal(mustBreachTotal(all), 45);
 }
 
 function aFreshProposalShowsTheSolversCounts(): void {
@@ -202,6 +209,26 @@ function eachChangeGetsOneReason(): void {
   });
 }
 
+/** F63 Person sites: a shift at a site its person does not work at is its own rule, row and reason. */
+function aWrongSiteIsItsOwnRule(): void {
+  const wrongSite: ScheduleRuleMatch = { resourceId: "sam", rule: "site", shiftIds: ["d2"] };
+  assert.equal(mustRowOf("site"), "site");
+  assert.equal(mustRuleLabel("site", defaultSchedulerStrings), "Wrong site");
+  assert.equal(matchFixText(wrongSite, context), "Fixes a wrong site");
+  const sited: ScheduleProposal = {
+    ...proposal,
+    analysis: {
+      current: { matches: [wrongSite], mustBreaches: counts({ site: 1 }), openShifts: 1 },
+      proposed: { matches: [], mustBreaches: zero, openShifts: 0 },
+    },
+  };
+  const report = proposalMustReport(sited);
+  assert.equal(mustRowCount(report.now ?? zero, "site"), 1);
+  assert.equal(mustRowCount(report.now ?? zero, "skills"), 0, "not a missing skill");
+  // The proposal leaves the row clean, so it opens to what it fixes.
+  assert.deepEqual(mustRowMatches(report, "site"), { matches: [wrongSite], roster: "now" });
+}
+
 function personLinesCountTheirFixes(): void {
   // Both of Ava's changes are hers; the one rest fix counts once.
   const fixes = personFixCounts(changes, analysis);
@@ -243,6 +270,7 @@ aFreshProposalShowsTheSolversCounts();
 aHoldBackRecountsOnTheBoard();
 countsOnlyOpensNothing();
 eachChangeGetsOneReason();
+aWrongSiteIsItsOwnRule();
 personLinesCountTheirFixes();
 theOpenShiftsFollowDropAndKeep();
 drillDownEntriesNameWhoAndWhen();
