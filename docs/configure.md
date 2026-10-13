@@ -100,7 +100,7 @@ The rules:
 How the rules apply:
 
 - Optimize keeps every Must rule, and leaves a shift open rather than break one. It keeps each Should rule where it can.
-- Periods are counted on the site's clock. A week starts on the first day of the week in each person's Power Apps regional settings. A fortnight starts on the view's **Period starts on** date when the view's **Period** is a fortnight. A month is a calendar month. **Roster period** is the period Optimize plans.
+- Periods are counted on the site's clock. When the roster **Period** is a week or a fortnight, weeks start on the day of its **Period starts on** date and fortnights on that date, so a week or fortnight rule lines up with the roster. Otherwise a week starts on the first day of the week in the Power Apps regional settings of the person who runs Optimize. A month is a calendar month. **Roster period** is the period Optimize plans.
 - A period that ends after the period Optimize plans is counted up to that end. **Days off** and **Minimum hours** are reduced in proportion to the days counted.
 - **Weekly rest** and **Average hours** look at every window of weeks, one week after another.
 - **Overtime** costs the hours past each step at the step's rate above the person's **Hourly rate**. A person with no rate costs nothing extra. Optimize weighs the cost with the other Should rules.
