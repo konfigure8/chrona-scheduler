@@ -162,6 +162,25 @@ function Score(props: ScoreProps): JSX.Element {
   );
 }
 
+/**
+ * What the run left open, and why: "5 already ended, left open".
+ * Open shifts that had ended, and pinned ones, stay out of a solve;
+ * the review says so, so no open work goes unexplained.
+ */
+export function leftOpenNotes(
+  strings: SchedulerStrings,
+  score: Pick<ProposalScore, "leftEnded" | "leftPinned">,
+): readonly string[] {
+  return [
+    ...(score.leftEnded > 0
+      ? [formatString(strings.proposalLeftEnded, { count: String(score.leftEnded) })]
+      : []),
+    ...(score.leftPinned > 0
+      ? [formatString(strings.proposalLeftPinned, { count: String(score.leftPinned) })]
+      : []),
+  ];
+}
+
 /** A large count in the browser's own short form: 1.2M, 1,2 Mio. */
 const compactCount = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 1,
@@ -554,6 +573,7 @@ export function ProposalScorecard(props: ProposalScorecardProps): JSX.Element {
                 }
               : undefined
           }
+          attention={leftOpenNotes(strings, score).join(" · ") || undefined}
           icon={<Shifts16Regular aria-hidden="true" className="chrona-sched__score-icon" />}
           label={strings.scoreFilled}
           {...deltaNote(strings, gained, false)}

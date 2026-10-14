@@ -211,28 +211,32 @@ assertEqual(agreedRedaction.problem.shifts[1]?.history, undefined, "a shift to c
 assertEqual("agreements" in redaction.problem, false, "no agreements, no key");
 assertEqual("timePreferences" in redaction.problem, false, "no preferences, no key");
 
-// F24 Repair mode: the intent and its change charge travel as they are, and each
-// shift's current person - its assignment - is re-keyed like any assignee.
+// F24 Repair mode: the intent travels as it is, and each shift's current
+// person - its assignment - is re-keyed like any assignee.
 const repairing = problemFromSchedule({
   events,
-  repair: { changeCentsPerHour: 3750 },
+  repair: true,
   resources,
   window: { end: at(24), start: at(0) },
 });
 const repairRedaction = redactProblem(repairing);
 assertEqual(repairing.shifts[0]?.assignment?.resourceId, "r-alex", "the current person is the assignment");
-assertEqual(repairRedaction.problem.repair?.changeCentsPerHour, 3750, "the change charge kept");
+assertEqual(repairRedaction.problem.repair, true, "the repair intent kept");
 assertEqual(repairRedaction.problem.shifts[0]?.assignment?.resourceId, "p-1", "the current person re-keyed like the assignee");
 assertEqual(repairRedaction.problem.shifts[0]?.assignment?.pinned, false, "still free to change");
 for (const leak of ["r-alex", "r-riley", "Alex Chen", "Morning shift"]) {
   assertEqual(JSON.stringify(repairRedaction.problem).includes(leak), false, `repair leak ${leak}`);
 }
 assertEqual("repair" in redaction.problem, false, "a plan run carries no repair key");
-assertEqual(
-  JSON.stringify(redactProblem(problemFromSchedule({ events, repair: {}, resources, window: { end: at(24), start: at(0) } })).problem.repair),
-  "{}",
-  "a blank charge stays blank through redaction",
-);
+// F24: an on-call shift's mark travels through redaction; it is not personal data.
+const onCallRedaction = redactProblem(problemFromSchedule({
+  events: events.map((event, index) => (index === 0 ? { ...event, onCall: true } : event)),
+  repair: true,
+  resources,
+  window: { end: at(24), start: at(0) },
+}));
+assertEqual(onCallRedaction.problem.shifts[0]?.onCall, true, "the on-call mark kept");
+assertEqual(onCallRedaction.problem.shifts[1]?.onCall, undefined, "an ordinary shift carries none");
 
 // The run's rule checks map back to the real person and shifts; days and
 // counts stay as they are, and unknown ids pass through.

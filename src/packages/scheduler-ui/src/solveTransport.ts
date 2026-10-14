@@ -1,13 +1,16 @@
 /**
- * The v2 wire for /api/solve (PLAN: solver boundary doctrine). The
- * canonical contract IS the wire: the problem travels verbatim
- * inside the API's routing envelope, and the result is the
+ * The v2 wire (PLAN: solver boundary doctrine). The canonical contract
+ * IS the wire: the problem travels verbatim, and the result is the
  * contract's assignments with the run's outcome (F40: whether a Must
  * rule broke and what is left open). No vendor or solver-mechanics
  * shape appears here - the translation to the Timefold model happens
- * server-side in the solver bridge. The v0 POC wire is retired; its
- * final recordings live in e2e/recordings/v0/ as the equivalence
- * evidence the retirement was proven against.
+ * server-side in the solver bridge.
+ *
+ * Runs go through each product's API, version 1 (F61 Product APIs,
+ * R2.15): Timefold's run lifecycle - submit, read, stop - with the
+ * problem as `modelInput` and the run's length as
+ * `config.run.termination.spentLimit`. /api/solve stays for controls
+ * released before it.
  *
  * /api/solve/analyze answers "Why not…?" at once: the same envelope
  * with one candidate (a person on a shift) in place of a run, and the
@@ -33,6 +36,76 @@ import {
   type SolveSearch,
 } from "./schedulingContract";
 import type { SchedulerUiEvent, TimeWindow } from "./types";
+
+/** F61 Product APIs: each product's API, version 1. */
+const PRODUCT_API_PATHS: Readonly<Record<string, string>> = {
+  scheduler: "/api/scheduler/v1",
+  "workforce-scheduling": "/api/workforce-scheduling/v1",
+};
+
+/**
+ * The path of the product's v1 API. A calendar that names no product is
+ * the recorded wire's `workforce-scheduling`, as `buildSolveRequest`
+ * reads it; a product without its own API is the free scheduler's.
+ */
+export function productApiPath(solutionType: string | undefined): string {
+  return PRODUCT_API_PATHS[solutionType ?? "workforce-scheduling"] ?? "/api/scheduler/v1";
+}
+
+/** A run as a product's v1 API takes it: Timefold's model request on Chrona's contract. */
+export interface ProductRunRequest {
+  readonly config: {
+    /** F39 and F38: the calendar's name and how its people are keyed. */
+    readonly context: { readonly calendarName?: string; readonly resourceKeyScheme?: ResourceKeyScheme };
+    /** The run's length, as an ISO-8601 duration. */
+    readonly run: { readonly termination: { readonly spentLimit: string } };
+  };
+  readonly modelInput: ScheduleProblemV2;
+}
+
+export interface ProductRunOptions {
+  readonly calendarName?: string;
+  readonly resourceKeyScheme?: ResourceKeyScheme;
+  readonly solverSeconds: number;
+}
+
+/** Wrap a canonical problem as a product API's run request. */
+export function buildProductRunRequest(problem: ScheduleProblemV2, options: ProductRunOptions): ProductRunRequest {
+  return {
+    config: {
+      context: {
+        ...(options.calendarName ? { calendarName: options.calendarName } : {}),
+        ...(options.resourceKeyScheme ? { resourceKeyScheme: options.resourceKeyScheme } : {}),
+      },
+      run: { termination: { spentLimit: `PT${Math.max(1, Math.trunc(options.solverSeconds))}S` } },
+    },
+    modelInput: problem,
+  };
+}
+
+/** Timefold's run states, as a product's v1 API reports them. */
+export type ProductRunStatus =
+  | "SOLVING_ACTIVE"
+  | "SOLVING_COMPLETED"
+  | "SOLVING_FAILED"
+  | "SOLVING_INCOMPLETE"
+  | "SOLVING_SCHEDULED";
+
+/** A run's lifecycle, as Timefold's metadata. */
+export interface ProductRunMetadata {
+  readonly failureMessage?: string;
+  readonly id: string;
+  readonly solverStatus: ProductRunStatus;
+}
+
+/**
+ * A run and its roster: the result once the run has one. A stopped run
+ * (SOLVING_INCOMPLETE) carries the best roster found so far, or none.
+ */
+export interface ProductRunResponse {
+  readonly metadata: ProductRunMetadata;
+  readonly modelOutput?: SolveResultV2 | null;
+}
 
 export interface ChronaSolveRequest {
   /** F39: the calendar's name, for Plan and billing's breakdown by calendar. Display only. */

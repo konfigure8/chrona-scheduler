@@ -167,6 +167,7 @@ export interface SchedulerStrings {
   readonly proposalApplyAll: string;
   readonly proposalApplySome: string;
   readonly proposalReviewHint: string;
+  readonly proposalStoppedHint: string;
   readonly proposalShowCurrent: string;
   readonly proposalShowProposed: string;
   /** Roster grid review: shows today's roster while held. */
@@ -186,6 +187,10 @@ export interface SchedulerStrings {
   readonly proposalSummaryChangeOne: string;
   readonly proposalSummaryChanges: string;
   readonly proposalFilled: string;
+  /** Open shifts in the period that had ended when Solve ran: it leaves them open. */
+  readonly proposalLeftEnded: string;
+  /** Pinned open shifts in the period: Solve leaves them open. */
+  readonly proposalLeftPinned: string;
   readonly scorecardLabel: string;
   readonly scoreFilled: string;
   readonly scoreMustBroken: string;
@@ -332,6 +337,10 @@ export interface SchedulerStrings {
   readonly openChronaAccount: string;
   readonly solveQuotaUpgrade: string;
   readonly solveSolving: string;
+  readonly solveStop: string;
+  readonly solveStopping: string;
+  readonly solveStoppedNothing: string;
+  readonly solveStopFailed: string;
   readonly timeScale: string;
   readonly timeScaleLeast: string;
   readonly timeScaleMinutes: string;
@@ -528,6 +537,7 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   proposalApplyAll: "Apply all {count}",
   proposalApplySome: "Apply {kept} of {count}",
   proposalReviewHint: "Reviewing a proposal. Apply or discard to edit.",
+  proposalStoppedHint: "Stopped early: the best roster so far. Apply or discard to edit.",
   proposalShowCurrent: "Current",
   proposalShowProposed: "Proposed",
   proposalHoldCompare: "Hold to compare",
@@ -544,6 +554,8 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   proposalSummaryChangeOne: "1 change",
   proposalSummaryChanges: "{count} changes",
   proposalFilled: "{filled} of {total} shifts filled",
+  proposalLeftEnded: "{count} already ended, left open",
+  proposalLeftPinned: "{count} pinned, left open",
   scorecardLabel: "Against today's roster",
   scoreFilled: "Shifts filled",
   scoreMustBroken: "Must rules broken",
@@ -644,7 +656,7 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   proposalReasonStarted: "Already started",
   proposalReasonUnavailable: "{person} is now unavailable at this time",
   solvePeriodPassed: "This period has passed",
-  solveQueued: "Queued...",
+  solveQueued: "Queued…",
   solveElapsed: "{seconds} s",
   requiredSkills: "Required skills",
   resizeResources: "Resize the resources column",
@@ -667,7 +679,11 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   resumeFollow: "Follow",
   resumeDiscard: "Discard",
   openChronaAccount: "Open Chrona account",
-  solveSolving: "Optimizing...",
+  solveSolving: "Optimizing…",
+  solveStop: "Stop and review",
+  solveStopping: "Stopping…",
+  solveStoppedNothing: "Stopped before a roster was found. Nothing changed. Run it again and let it finish.",
+  solveStopFailed: "Couldn't stop the run. It carries on, and its roster opens when it ends.",
   timeScale: "Time scale",
   timeScaleLeast: "{count} minutes - least space for details",
   timeScaleMinutes: "{count} minutes",

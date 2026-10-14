@@ -12,7 +12,7 @@
  * (minimum rest and days in a row, dated), unavailability and
  * preferred or unpreferred time, shifts with times/required
  * skills/assignment/pinned/history, their breaks and split parts (F48
- * Split shifts), the repair intent and its change charge (F24 Repair
+ * Split shifts), on-call shifts and the repair intent (F24 Repair
  * mode), the run result we already expose, and the rule checks behind
  * it: breach counts and the rule matches that explain a roster, before
  * and after, and the check of one person on one shift. Generation,
@@ -51,6 +51,7 @@ const SOLVER_RULE_KINDS: ReadonlySet<AgreementRuleKind> = new Set<SolverRuleKind
   "averageHours",
   "daysInARow",
   "daysOff",
+  "disruption",
   "maximumHours",
   "minimumHours",
   "minimumRest",
@@ -67,11 +68,11 @@ export function isSolverRuleKind(kind: AgreementRuleKind): kind is SolverRuleKin
 }
 
 /** The kinds that only ever weigh as a cost, as in Timefold's contracts. */
-const ALWAYS_SHOULD: ReadonlySet<AgreementRuleKind> = new Set<AgreementRuleKind>(["minimumHours", "overtime"]);
+const ALWAYS_SHOULD: ReadonlySet<AgreementRuleKind> = new Set<AgreementRuleKind>(["disruption", "minimumHours", "overtime"]);
 
 /**
- * A rule's level as it holds: minimum hours and overtime are always
- * should; any other rule is must unless the maker set should.
+ * A rule's level as it holds: minimum hours, overtime and disruption
+ * are always should; any other rule is must unless the maker set should.
  */
 export function ruleLevel(rule: Pick<SchedulerAgreementRule, "kind" | "level">): AgreementRuleLevel {
   return ALWAYS_SHOULD.has(rule.kind) ? "should" : (rule.level ?? "must");
@@ -112,7 +113,7 @@ export interface ScheduleContractAgreementRule {
   readonly start?: string;
   /**
    * Above 0, in the units SchedulerAgreementRule.value names: minutes,
-   * or days for days in a row and days off.
+   * days for days in a row and days off, or the weight for disruption.
    */
   readonly value: number;
   /** weeklyRest and averageHours: the weeks of each window. Absent = 1. */
@@ -187,6 +188,12 @@ export interface ScheduleContractShift {
    */
   readonly history?: boolean;
   readonly id: string;
+  /**
+   * F24 Repair mode: an on-call shift, Timefold's backup capacity. Not
+   * required work: left open it costs a Should rule. Absent = an
+   * ordinary shift.
+   */
+  readonly onCall?: true;
   readonly requiredSkills: readonly string[];
   /** The shift's site (F63 Person sites): only someone who works there takes it. Absent = no site. */
   readonly site?: string;
@@ -221,19 +228,14 @@ export interface ScheduleContractTimePreference {
 }
 
 /**
- * F24 Repair mode: keep the roster as it stands and change as few
- * shifts as the work needs. Each shift's assignment is its current
- * person; the absent person stays on their shift, with their absence
- * as unavailability, and a run that moves them off counts a change.
+ * F24 Repair mode, Timefold's real-time planning: keep the roster as it
+ * stands. Each shift's assignment is its current person; the absent
+ * person stays on their shift, with their absence as unavailability.
+ * The API pins every assigned shift the absence leaves alone, so only
+ * the shifts it uncovers and on-call shifts can move, and the people's
+ * disruption rules count what moves.
  */
-export interface ScheduleContractRepair {
-  /**
-   * What changing a shift's person costs, in whole cents for each paid
-   * hour of the shift, 0 or more. Absent = a change costs nothing: a
-   * blank setting sends no charge, never a default (ruled 2026-10-09).
-   */
-  readonly changeCentsPerHour?: number;
-}
+export type ScheduleContractRepair = true;
 
 export interface ScheduleProblemV2 {
   /** The agreements the resources name. Absent = none. */
@@ -241,7 +243,7 @@ export interface ScheduleProblemV2 {
   readonly contractVersion: "2";
   /** How the agreement rules count periods. Absent = weeks from Monday. */
   readonly periods?: ScheduleContractPeriods;
-  /** F24 Repair mode. Absent = a plan run: any shift that is not pinned may change, at no cost. */
+  /** F24 Repair mode. Absent = a plan run: any shift that is not pinned may change. */
   readonly repair?: ScheduleContractRepair;
   readonly resources: readonly ScheduleContractResource[];
   readonly shifts: readonly ScheduleContractShift[];
@@ -480,19 +482,12 @@ export interface ProblemFromScheduleInput {
    * A planner plans ahead and does not change history (F31 rework):
    * an assigned shift that started before this instant travels
    * pinned and marked as history, and still counts toward the
-   * window's totals; an open one that started before it stays out.
+   * window's totals; an open one that ended before it stays out, and
+   * an open one still running is planned like any other.
    * Absent = no history.
    */
   readonly now?: Date;
-  /** Override: pin EVERY existing assignment. Absent = the ruled
-   * default (F22 deliverable 2, Q1-A): pinning is a choice, not a
-   * default - only an item whose lock forbids reassignment is pinned;
-   * everything else is movable. */
-  readonly pinAssigned?: boolean;
-  /**
-   * F24 Repair mode (an Operate-mode run), with the calendar's change
-   * charge in cents per hour as the host read it. Absent = a plan run.
-   */
+  /** F24 Repair mode (an Operate-mode run). Absent = a plan run. */
   readonly repair?: ScheduleContractRepair;
   readonly resources: readonly SchedulerResource[];
   /** The site's time zone, passed on to the solver (ScheduleProblemV2.timeZone). */
@@ -513,29 +508,19 @@ export interface ProblemFromScheduleInput {
   readonly window: { readonly end: Date; readonly start: Date };
 }
 
-/**
- * The repair intent as it goes on the wire: the charge as whole cents
- * when it is a number, 0 or more; anything else sends no charge, never
- * a default.
- */
-function repairOnTheWire(repair: ScheduleContractRepair): ScheduleContractRepair {
-  const charge = repair.changeCentsPerHour;
-  return charge !== undefined && Number.isFinite(charge) && charge >= 0
-    ? { changeCentsPerHour: Math.round(charge) }
-    : {};
-}
-
 /** Build a v2 problem from the UI's schedule state (host boundary). */
 export function problemFromSchedule(
   input: ProblemFromScheduleInput,
 ): ScheduleProblemV2 {
   const now = input.now;
   const wire = (date: Date): string => (input.toInstant ? input.toInstant(date) : date).toISOString();
-  // An open shift that has started is history nobody worked: it stays out.
-  // So does a pinned open shift: the solver leaves a pin alone, so it stays open.
+  // An open shift that has ended is history nobody worked: it stays out.
+  // One still running goes in like any other (Matt 2026-10-13: a sick call
+  // or an accident on the way leaves it empty, and someone covers it now).
+  // A pinned open shift stays out too: the solver leaves a pin alone.
   const shifts = input.events.filter(
     (event) =>
-      !(now && event.status === "needsCover" && event.start < now) &&
+      !(now && event.status === "needsCover" && event.end <= now) &&
       !(event.status === "needsCover" && isPinned(event)),
   );
   // Off rules and rules without a limit stay home; the rest go as
@@ -580,7 +565,7 @@ export function problemFromSchedule(
     ...(agreements.length > 0 ? { agreements } : {}),
     contractVersion: "2",
     ...(countsPeriods && input.periods ? { periods: input.periods } : {}),
-    ...(input.repair ? { repair: repairOnTheWire(input.repair) } : {}),
+    ...(input.repair ? { repair: true as const } : {}),
     resources: input.resources.map((resource) => ({
       ...(resource.agreementId !== undefined ? { agreementId: resource.agreementId } : {}),
       ...(resource.capacityHours !== undefined
@@ -616,8 +601,8 @@ export function problemFromSchedule(
                 event.start < input.window.start ||
                 event.start >= input.window.end ||
                 (now !== undefined && event.start < now) ||
-                // The override adds pins; it never takes one away.
-                input.pinAssigned === true ||
+                // Pinning is a choice (F22 deliverable 2, Q1-A): only a planner's pin
+                // pins. In a repair the API pins what the absence leaves alone (F24).
                 isPinned(event),
               resourceId: event.resourceId,
             },
@@ -632,9 +617,11 @@ export function problemFromSchedule(
           }
         : {}),
       end: wire(event.end),
-      // A shift that has started is history: no breach made only of history counts.
-      ...(now !== undefined && event.start < now ? { history: true } : {}),
+      // An assigned shift that has started is history: no breach made only of
+      // history counts. A running open shift is a decision, not history.
+      ...(now !== undefined && event.start < now && event.status !== "needsCover" ? { history: true } : {}),
       id: event.id,
+      ...(event.onCall ? { onCall: true as const } : {}),
       requiredSkills: event.requiredTags ?? [],
       ...(event.split ? { split: { id: event.split.id, samePerson: event.split.samePerson } } : {}),
       start: wire(event.start),

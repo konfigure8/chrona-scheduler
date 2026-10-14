@@ -32,7 +32,7 @@ export class SolveBridgeError extends Error {
   }
 }
 
-export const CONTROL_VERSION = "0.0.106";
+export const CONTROL_VERSION = "0.0.113";
 
 export function resolveClientUrl(context: unknown): string {
   const page = (context as { page?: { getClientUrl?: () => string } }).page;
@@ -94,6 +94,16 @@ export function classifyFailure(status: number, message: string): SessionFailure
     return "noPrivilege";
   }
   return "other";
+}
+
+/**
+ * Whether the cached claims still stand after a session fails. An
+ * environment that has not run Connect, or no longer has its connection
+ * row, holds none: the board forgets them and offers Connect, never a
+ * paused optimizer. A Chrona outage or a missing privilege keeps them.
+ */
+export function keepsCachedClaims(failure: SessionFailure): boolean {
+  return failure !== "notConnected";
 }
 
 /**

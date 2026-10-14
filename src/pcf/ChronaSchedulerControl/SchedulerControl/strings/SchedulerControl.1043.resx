@@ -379,7 +379,7 @@
     <value>Chrona gekoppeld. Eerste optimalisatie wordt gestart…</value>
   </data>
   <data name="msgCreateFailed" xml:space="preserve">
-    <value>{title} aanmaken mislukt (ontbreken verplichte kolommen?)</value>
+    <value>{title} aanmaken mislukt (ontbrekende verplichte kolommen?)</value>
   </data>
   <data name="msgCreated" xml:space="preserve">
     <value>{title} aangemaakt</value>
@@ -406,7 +406,7 @@
     <value>Herkomst</value>
   </data>
   <data name="fieldPublishState" xml:space="preserve">
-    <value>Publicatie</value>
+    <value>Publicatiestatus</value>
   </data>
   <data name="fieldStatus" xml:space="preserve">
     <value>Status</value>
@@ -445,7 +445,7 @@
     <value>Optimaliseren vereist de rol Chrona Scheduler User.</value>
   </data>
   <data name="msgSolveNoCalendar" xml:space="preserve">
-    <value>Deze weergave heeft nog geen Chrona-agenda, dus optimaliseren kan niet.</value>
+    <value>Deze weergave heeft nog geen Chrona-kalender, dus optimaliseren kan niet.</value>
   </data>
   <data name="msgUndid" xml:space="preserve">
     <value>Wijziging ongedaan gemaakt</value>
@@ -555,6 +555,9 @@
   <data name="proposalReviewHint" xml:space="preserve">
     <value>Voorstel bekijken. Pas toe of verwerp om te bewerken.</value>
   </data>
+  <data name="proposalStoppedHint" xml:space="preserve">
+    <value>Voortijdig gestopt: het beste rooster tot nu toe. Pas toe of verwerp om te bewerken.</value>
+  </data>
   <data name="proposalShowCurrent" xml:space="preserve">
     <value>Huidig</value>
   </data>
@@ -603,8 +606,14 @@
   <data name="proposalFilled" xml:space="preserve">
     <value>{filled} van {total} diensten bezet</value>
   </data>
+  <data name="proposalLeftEnded" xml:space="preserve">
+    <value>{count} al afgelopen, open gelaten</value>
+  </data>
+  <data name="proposalLeftPinned" xml:space="preserve">
+    <value>{count} vastgezet, open gelaten</value>
+  </data>
   <data name="scorecardLabel" xml:space="preserve">
-    <value>Ten opzichte van het huidige rooster</value>
+    <value>T.o.v. huidig rooster</value>
   </data>
   <data name="scoreFilled" xml:space="preserve">
     <value>Bezette diensten</value>
@@ -774,6 +783,18 @@
   <data name="solveSolving" xml:space="preserve">
     <value>Optimaliseren…</value>
   </data>
+  <data name="solveStop" xml:space="preserve">
+    <value>Stoppen en bekijken</value>
+  </data>
+  <data name="solveStopping" xml:space="preserve">
+    <value>Stoppen…</value>
+  </data>
+  <data name="solveStoppedNothing" xml:space="preserve">
+    <value>Gestopt voordat er een rooster was gevonden. Er is niets veranderd. Start opnieuw en laat de optimalisatie afmaken.</value>
+  </data>
+  <data name="solveStopFailed" xml:space="preserve">
+    <value>De optimalisatie kon niet worden gestopt. Die loopt door en het rooster opent zodra die klaar is.</value>
+  </data>
   <data name="start" xml:space="preserve">
     <value>Begin</value>
   </data>
@@ -856,7 +877,7 @@
     <value>Werkitems</value>
   </data>
   <data name="Prop_CalendarConfig" xml:space="preserve">
-    <value>Configuratie (optioneel)</value>
+    <value>Kalenderconfiguratie (optioneel)</value>
   </data>
   <data name="Prop_CalendarConfig_Desc" xml:space="preserve">
     <value>ID of naam van een Chrona Scheduler-kalender. Leeg: Connect maakt er een voor deze weergave.</value>
@@ -916,7 +937,7 @@
     <value>Tekst die samen geplande rijen koppelt.</value>
   </data>
   <data name="Prop_PublishState" xml:space="preserve">
-    <value>Publicatie (optioneel)</value>
+    <value>Publicatiestatus (optioneel)</value>
   </data>
   <data name="Prop_PublishState_Desc" xml:space="preserve">
     <value>Tekst- of keuzekolom voor de levenscyclus, zoals concept of gepubliceerd.</value>
@@ -1012,7 +1033,7 @@
     <value>Vaardigheden</value>
   </data>
   <data name="mustRowOnLeave" xml:space="preserve">
-    <value>Afwezig of niet beschikbaar</value>
+    <value>Met verlof of niet beschikbaar</value>
   </data>
   <data name="mustRowOther" xml:space="preserve">
     <value>Overige verplichte regels</value>
@@ -1192,7 +1213,7 @@
     <value>{shift} van {name} zou open blijven</value>
   </data>
   <data name="whyNotInReview" xml:space="preserve">
-    <value>Voor {name}: verwerp deze wijziging en handel na Toepassen.</value>
+    <value>Om {name} in te zetten: verwerp deze wijziging en wijzig na Toepassen.</value>
   </data>
   <data name="scorePreferences" xml:space="preserve">
     <value>Vervulde voorkeuren</value>

@@ -1,4 +1,5 @@
 import {
+  colorSchemeOf,
   fluentDarkTheme,
   fluentLightTheme,
   themeToCssVariables,
@@ -17,8 +18,8 @@ function mapsTokensToCssVariables(): void {
 function presetsCoverEveryToken(): void {
   const lightVariables = themeToCssVariables(fluentLightTheme);
   const darkVariables = themeToCssVariables(fluentDarkTheme);
-  assertEqual(Object.keys(lightVariables).length, 31);
-  assertEqual(Object.keys(darkVariables).length, 31);
+  assertEqual(Object.keys(lightVariables).length, 35);
+  assertEqual(Object.keys(darkVariables).length, 35);
   // Fluent's own dark neutrals: Background1 is the canvas, Background2
   // sits under it. hostTheme.spec asserts both presets against the
   // real @fluentui/react-theme package.
@@ -49,7 +50,18 @@ function assertEqual<T>(actual: T, expected: T): void {
   }
 }
 
+// Native fields and pickers follow a dark host: the scheme comes from the background.
+function readsTheSchemeFromTheBackground(): void {
+  assertEqual(colorSchemeOf(fluentDarkTheme.background), "dark");
+  assertEqual(colorSchemeOf(fluentLightTheme.background), "light");
+  assertEqual(colorSchemeOf("#fff"), "light");
+  assertEqual(colorSchemeOf("rgb(41, 41, 41)"), "dark");
+  assertEqual(colorSchemeOf("var(--x)"), undefined);
+  assertEqual(colorSchemeOf(undefined), undefined);
+}
+
 mapsTokensToCssVariables();
 presetsCoverEveryToken();
+readsTheSchemeFromTheBackground();
 
 console.log("theme tests passed");

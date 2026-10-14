@@ -15,6 +15,9 @@
   --csui-stroke-strong: #d1d1d1;
   --csui-text: #242424;
   --csui-text-soft: #616161;
+  --csui-disabled-bg: #f0f0f0;
+  --csui-disabled-stroke: #e0e0e0;
+  --csui-disabled-text: #bdbdbd;
   --csui-brand: #0f6cbd;
   --csui-brand-bg: #ebf3fc;
   --csui-brand-fg: #0f6cbd;
@@ -49,6 +52,8 @@
   --csui-today-bg: color-mix(in srgb, var(--csui-text) 4%, transparent);
   /* Fluent shadow2: faint elevation for cards and containers. */
   --csui-shadow: 0 0 2px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.14);
+  /* Fluent colorNeutralShadowAmbient: the colour of a soft edge shadow. */
+  --csui-shadow-ambient: rgba(0, 0, 0, 0.12);
   /* Fluent shadow16: menus, hover cards, and other flyouts. */
   --csui-shadow-flyout: 0 0 2px rgba(0, 0, 0, 0.12),
     0 8px 16px rgba(0, 0, 0, 0.14);
@@ -516,9 +521,43 @@
   text-align: center;
 }
 
-.chrona-sched__dialog-primary:disabled {
-  cursor: default;
-  opacity: 0.5;
+/* A notice inside a confirm dialog is the MessageBar idiom: inset like the
+ * fields, left aligned, a status glyph, the title semibold, the body in text colour. */
+.chrona-sched__confirm-dialog .chrona-sched__dialog-warn,
+.chrona-sched__confirm-dialog .chrona-sched__dialog-info,
+.chrona-sched__confirm-dialog .chrona-sched__dialog-block {
+  align-items: flex-start;
+  display: flex;
+  font-size: 14px;
+  gap: 8px;
+  line-height: 20px;
+  margin: 0 16px 8px;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.chrona-sched__notice-glyph {
+  flex: none;
+  margin-top: 2px;
+}
+
+.chrona-sched__notice-text {
+  color: var(--csui-text);
+  min-width: 0;
+}
+
+.chrona-sched__notice-text strong {
+  display: block;
+  font-weight: 600;
+}
+
+/* Fluent's disabled recipe for every dialog button, the primary included. */
+.chrona-sched__dialog-actions button:disabled,
+.chrona-sched__dialog-actions .chrona-sched__dialog-primary:disabled {
+  background: var(--csui-disabled-bg);
+  border-color: var(--csui-disabled-stroke);
+  color: var(--csui-disabled-text);
+  cursor: not-allowed;
 }
 
 .chrona-sched__dialog-info {
@@ -784,16 +823,20 @@
   padding: 0 0 10px;
 }
 
+/* Fluent's medium button: 32 px high, so a bar keeps one height whatever it holds. */
 .chrona-sched__toolbar-primary {
   background: var(--csui-brand);
   border: 1px solid var(--csui-brand);
   border-radius: 4px;
+  box-sizing: border-box;
   color: var(--csui-on-brand);
   cursor: pointer;
   font: inherit;
   font-size: 14px;
   font-weight: 600;
-  padding: 6px 14px;
+  line-height: 20px;
+  min-height: 32px;
+  padding: 5px 12px;
 }
 
 /* Flat navigation: text Today, bare chevrons, flat date. */
@@ -811,6 +854,16 @@
 
 .chrona-sched__toolbar-button:hover {
   background: var(--csui-surface-hover);
+}
+
+/* A subtle button that waits (Mark absent while a proposal is under review): disabled foreground, no hover. */
+.chrona-sched__toolbar-button:disabled {
+  color: var(--csui-disabled-text);
+  cursor: not-allowed;
+}
+
+.chrona-sched__toolbar-button:disabled:hover {
+  background: transparent;
 }
 
 /*
@@ -1155,11 +1208,16 @@
   margin-top: 1px;
 }
 
+/* The actions stay in sight on a short board: the content scrolls under them. */
 .chrona-sched__conversion-buttons {
   align-items: center;
+  background: #ffffff;
+  bottom: -28px;
   display: flex;
   gap: 8px;
-  margin-top: 24px;
+  margin: 12px 0 -28px;
+  padding: 12px 0 28px;
+  position: sticky;
 }
 
 .chrona-sched__conversion-spacer {
@@ -1557,8 +1615,10 @@
 
 .chrona-sched__dialog-field input,
 .chrona-sched__dialog-field select {
+  background: var(--csui-bg);
   border: 1px solid var(--csui-stroke-strong);
   border-radius: 4px;
+  color: var(--csui-text);
   font: inherit;
   padding: 6px 8px;
 }
@@ -2287,24 +2347,34 @@
  */
 
 .chrona-sched__roster {
+  --chrona-roster-day: 66px;
+  --chrona-roster-head: 37px;
+  --chrona-roster-people: 196px;
   background: var(--csui-bg);
   border: 1px solid var(--csui-stroke);
   border-radius: var(--csui-radius);
+  /* A narrow host gets its own stats layout (below). */
+  container-type: inline-size;
   max-height: 100%;
   overflow: auto;
+  /*
+   * The names, the day headers and the stats stay put over the grid's
+   * edges, so a chip that takes focus scrolls clear of them.
+   */
+  scroll-padding: var(--chrona-roster-head)
+    calc(var(--chrona-roster-stats, 0) * var(--chrona-roster-day)) 0
+    var(--chrona-roster-people);
   width: 100%;
 }
 
 /*
  * The table keeps its own width: day columns never stretch, so a short
- * period leaves room on the right (for the stats columns to come).
+ * period leaves room on the right.
  * Fixed layout takes the column widths from the header row, so no
  * chip (a flag, a long code) can widen a day; the grid sets the column
  * count (the days, then the stats), and the width follows.
  */
 .chrona-sched__roster-table {
-  --chrona-roster-day: 66px;
-  --chrona-roster-people: 196px;
   border-collapse: separate;
   border-spacing: 0;
   font-size: 12px;
@@ -2393,8 +2463,10 @@
   z-index: 2;
 }
 
-.chrona-sched__roster-table tr:hover td.chrona-sched__roster-resource {
-  background: var(--csui-surface);
+/* A row's hover lights its name and its stats together; the days keep their colours. */
+.chrona-sched__roster-table tr:hover td.chrona-sched__roster-resource,
+.chrona-sched__roster-table tr:hover td.chrona-sched__roster-stat {
+  background: var(--csui-surface-hover);
 }
 
 /* Full screen: the board paints its own ground over the whole screen. */
@@ -2453,14 +2525,52 @@
   font-weight: 600;
 }
 
-/* Workforce: the stats right of the last day, after a divider. */
+/*
+ * Workforce: the stats right of the last day, after a divider. Each
+ * cell is pinned by the stats to its right, so on a period wider than
+ * the board the stats stay at its right edge and the days scroll under
+ * them, as the names stay at the left.
+ */
+.chrona-sched__roster-table .chrona-sched__roster-stat {
+  position: sticky;
+  right: calc(var(--chrona-roster-stats-after, 0) * var(--chrona-roster-day));
+}
+
 .chrona-sched__roster-table td.chrona-sched__roster-stat {
+  background: var(--csui-bg);
   font-variant-numeric: tabular-nums;
   text-align: center;
+  z-index: 2;
+}
+
+.chrona-sched__roster-table thead th.chrona-sched__roster-stat {
+  z-index: 4;
 }
 
 .chrona-sched__roster-table .chrona-sched__roster-stat--first {
   border-left: 2px solid var(--csui-stroke-strong);
+}
+
+/* While days lie under the stats, a soft shadow on the divider says so. */
+.chrona-sched__roster--days-under .chrona-sched__roster-table .chrona-sched__roster-stat--first {
+  box-shadow: -4px 0 4px -2px var(--csui-shadow-ambient);
+}
+
+/*
+ * A narrow host (a form column, a phone): the names, four stats and
+ * four days need 724px. Below that the stats follow the last day and
+ * scroll with the days, so the names and the days keep the room.
+ */
+@container (max-width: 723px) {
+  .chrona-sched__roster-table td.chrona-sched__roster-stat {
+    position: static;
+  }
+
+  /* The header stays at the top, as the days' do, and passes under the names' header. */
+  .chrona-sched__roster-table thead th.chrona-sched__roster-stat {
+    right: auto;
+    z-index: 3;
+  }
 }
 
 .chrona-sched__roster-name {
@@ -2593,8 +2703,11 @@
 .chrona-sched__solve-bar {
   align-items: center;
   display: flex;
+  /* An item that does not fit moves to the next line whole, rather than breaking inside itself. */
+  flex-wrap: wrap;
   gap: 8px;
   padding: 2px 0;
+  row-gap: 4px;
 }
 .chrona-sched__solve-button:disabled,
 .chrona-sched__proposal-apply:disabled {
@@ -3255,6 +3368,13 @@
 
 .chrona-sched__proposal-head .chrona-sched__unscheduled-title {
   margin: 0;
+  min-width: 0;
+}
+
+/* Keep all / Keep none keeps its line; only the title wraps. */
+.chrona-sched__proposal-head > button {
+  flex: none;
+  white-space: nowrap;
 }
 
 .chrona-sched__proposal-caption {
@@ -3498,6 +3618,47 @@
   align-items: center;
   display: inline-flex;
   gap: 8px;
+  /* The Solve button's height: the bar keeps its height while a run goes. */
+  min-height: 32px;
+  /* Spinner, phase and both endings stay together on one line; the bar's other text wraps instead. */
+  flex: none;
+}
+
+.chrona-sched__solve-progress-group > button {
+  flex: none;
+  white-space: nowrap;
+}
+
+/* Every phase in one cell: the label keeps the widest one's room. */
+.chrona-sched__solve-phase {
+  display: inline-grid;
+}
+
+.chrona-sched__solve-phase > * {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+
+.chrona-sched__solve-phase-off {
+  visibility: hidden;
+}
+
+/* Stop and review keeps the work: a Fluent secondary button beside the subtle Cancel. */
+.chrona-sched__toolbar-button.chrona-sched__solve-stop {
+  background: var(--csui-bg);
+  border: 1px solid var(--csui-stroke-strong);
+  border-radius: 4px;
+  min-height: 32px;
+  padding: 5px 12px;
+}
+
+.chrona-sched__toolbar-button.chrona-sched__solve-stop:hover {
+  background: var(--csui-surface-hover);
+}
+
+.chrona-sched__toolbar-button.chrona-sched__solve-stop:disabled {
+  background: var(--csui-disabled-bg);
+  border-color: var(--csui-disabled-stroke);
 }
 
 .chrona-sched__solve-progress {
@@ -3510,9 +3671,10 @@
 
 .chrona-sched__spinner {
   animation: chrona-sched-spin 0.9s linear infinite;
-  border: 2px solid color-mix(in srgb, var(--csui-brand) 25%, transparent);
+  /* Fluent's Spinner: the track in the brand stroke, the arc in the brand foreground, host-themed. */
+  border: 2px solid var(--csui-brand-stroke);
   border-radius: 50%;
-  border-top-color: var(--csui-brand);
+  border-top-color: var(--csui-brand-fg);
   box-sizing: border-box;
   display: inline-block;
   flex: none;
@@ -3523,4 +3685,7 @@
 .chrona-sched__solve-elapsed {
   color: var(--csui-text-soft);
   font-variant-numeric: tabular-nums;
+  /* Room for "100 s": the count does not push the buttons. */
+  min-width: 5ch;
+  text-align: end;
 }

@@ -231,39 +231,45 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
   );
 
   /*
-   * The stats take the room right of the last day, one day wide each:
-   * measured on the grid's own box (the control sizes to its
-   * container), from the widths the stylesheet sets.
+   * Every picked stat shows, one day wide, after the last day. When the
+   * period is wider than the board, the stats stay at its right edge
+   * and the days scroll under them: each cell is pinned by the stats
+   * to its right (see styles.css).
    */
+  const shownStats = stats ?? [];
+  const statCell = (index: number): { className: string; style: React.CSSProperties } => ({
+    className:
+      index === 0
+        ? "chrona-sched__roster-stat chrona-sched__roster-stat--first"
+        : "chrona-sched__roster-stat",
+    style: { ["--chrona-roster-stats-after" as string]: shownStats.length - 1 - index } as React.CSSProperties,
+  });
+
+  // While days lie under the stats, the board marks it, and the divider casts a shadow.
   const rootRef = React.useRef<HTMLDivElement | null>(null);
-  const [statRoom, setStatRoom] = React.useState(0);
-  const statCount = stats?.length ?? 0;
-  React.useLayoutEffect(() => {
+  const markDaysUnder = React.useCallback((): void => {
     const root = rootRef.current;
-    if (!root || statCount === 0) {
+    const firstStat = root?.querySelector("thead .chrona-sched__roster-stat--first");
+    const lastDay = firstStat?.previousElementSibling;
+    root?.classList.toggle(
+      "chrona-sched__roster--days-under",
+      Boolean(
+        firstStat &&
+          lastDay &&
+          firstStat.getBoundingClientRect().left < lastDay.getBoundingClientRect().right - 1,
+      ),
+    );
+  }, []);
+  React.useLayoutEffect(() => {
+    markDaysUnder();
+    const root = rootRef.current;
+    if (!root || typeof ResizeObserver === "undefined") {
       return undefined;
     }
-    const measure = (): void => {
-      const table = root.querySelector(".chrona-sched__roster-table");
-      const style = table ? getComputedStyle(table) : undefined;
-      const day = parseFloat(style?.getPropertyValue("--chrona-roster-day") ?? "") || rosterDayWidthPx;
-      const people =
-        parseFloat(style?.getPropertyValue("--chrona-roster-people") ?? "") || rosterPeopleWidthPx;
-      setStatRoom(Math.max(0, Math.floor((root.clientWidth - people - days.length * day) / day)));
-    };
-    measure();
-    if (typeof ResizeObserver === "undefined") {
-      return undefined;
-    }
-    const observer = new ResizeObserver(measure);
+    const observer = new ResizeObserver(markDaysUnder);
     observer.observe(root);
     return () => observer.disconnect();
-  }, [days.length, statCount]);
-  const shownStats = (stats ?? []).slice(0, statRoom);
-  const statClass = (index: number): string =>
-    index === 0
-      ? "chrona-sched__roster-stat chrona-sched__roster-stat--first"
-      : "chrona-sched__roster-stat";
+  }, [days.length, markDaysUnder, shownStats.length]);
 
   // The open row is nobody: a move there cannot break a person's rule.
   const dropVerdict = (event: SchedulerUiEvent, result: DragResult): ChangeVerdict =>
@@ -391,7 +397,7 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
         );
       })}
       {shownStats.map((stat, index) => (
-        <td className={statClass(index)} key={stat.id} />
+        <td {...statCell(index)} key={stat.id} />
       ))}
     </tr>
   );
@@ -416,7 +422,7 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
         : {};
     return (
       <tr key={row.resource.id}>
-        <td className="chrona-sched__roster-resource">
+        <td className="chrona-sched__roster-resource" data-resource-id={row.resource.id}>
           {renderName(row.resource)}
           {extension?.personDetail?.(row.resource)}
         </td>
@@ -452,7 +458,7 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
           );
         })}
         {shownStats.map((stat, index) => (
-          <td className={statClass(index)} key={stat.id}>
+          <td {...statCell(index)} key={stat.id}>
             {statValues[stat.id]}
           </td>
         ))}
@@ -482,7 +488,7 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
               <td key={days[dayIndex]?.start.getTime() ?? dayIndex}>{cell}</td>
             ))}
             {shownStats.map((stat, index) => (
-              <td className={statClass(index)} key={stat.id} />
+              <td {...statCell(index)} key={stat.id} />
             ))}
           </tr>
         ) : null}
@@ -499,7 +505,13 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
   }
 
   return (
-    <div className="chrona-sched__roster" ref={rootRef}>
+    <div
+      className="chrona-sched__roster"
+      onScroll={shownStats.length > 0 ? markDaysUnder : undefined}
+      ref={rootRef}
+      // The stats' width, so a focused chip scrolls clear of them (see styles.css).
+      style={{ ["--chrona-roster-stats" as string]: shownStats.length } as React.CSSProperties}
+    >
       <table
         className="chrona-sched__roster-table"
         // The column count sizes the fixed-layout table (see styles.css).
@@ -528,7 +540,7 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
               </th>
             ))}
             {shownStats.map((stat, index) => (
-              <th className={statClass(index)} key={stat.id} title={stat.title}>
+              <th {...statCell(index)} key={stat.id} title={stat.title}>
                 {stat.label}
               </th>
             ))}

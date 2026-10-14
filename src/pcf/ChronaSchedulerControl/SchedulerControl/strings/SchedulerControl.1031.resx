@@ -115,7 +115,7 @@
     <value>Mehr erfahren</value>
   </data>
   <data name="conversionLockLine" xml:space="preserve">
-    <value>Kostenlos. Keine Kreditkarte. Nichts wird gesendet, bis Sie verbinden. Ein Beispiellauf ändert nie Ihren Zeitplan.</value>
+    <value>Kostenlos. Keine Kreditkarte. Nichts wird gesendet, bis Sie verbinden. Ein Beispiellauf ändert nie Ihren Plan.</value>
   </data>
   <data name="conversionNotNow" xml:space="preserve">
     <value>Nicht jetzt</value>
@@ -211,7 +211,7 @@
     <value>Chrona-Abonnement abgelaufen. Optimieren und Generieren sind pausiert, bis die Abrechnung geklärt ist.</value>
   </data>
   <data name="entitlementPaused" xml:space="preserve">
-    <value>Optimierer pausiert seit {since}. Chrona ist nicht erreichbar; die Planung arbeitet wie gewohnt.</value>
+    <value>Optimierer pausiert seit {since}. Chrona ist nicht erreichbar; die Planung funktioniert wie gewohnt.</value>
   </data>
   <data name="entitlementPlanUsage" xml:space="preserve">
     <value>Plan und Nutzung</value>
@@ -555,6 +555,9 @@
   <data name="proposalReviewHint" xml:space="preserve">
     <value>Vorschlag in Prüfung. Übernehmen oder verwerfen, um zu bearbeiten.</value>
   </data>
+  <data name="proposalStoppedHint" xml:space="preserve">
+    <value>Vorzeitig gestoppt: der bisher beste Dienstplan. Übernehmen oder verwerfen, um zu bearbeiten.</value>
+  </data>
   <data name="proposalShowCurrent" xml:space="preserve">
     <value>Aktuell</value>
   </data>
@@ -602,6 +605,12 @@
   </data>
   <data name="proposalFilled" xml:space="preserve">
     <value>{filled} von {total} Schichten besetzt</value>
+  </data>
+  <data name="proposalLeftEnded" xml:space="preserve">
+    <value>{count} bereits beendet, offen gelassen</value>
+  </data>
+  <data name="proposalLeftPinned" xml:space="preserve">
+    <value>{count} angeheftet, offen gelassen</value>
   </data>
   <data name="scorecardLabel" xml:space="preserve">
     <value>Gegenüber dem aktuellen Dienstplan</value>
@@ -691,7 +700,7 @@
     <value>Dieser Zeitraum ist vorbei</value>
   </data>
   <data name="solveQueued" xml:space="preserve">
-    <value>In der Warteschlange...</value>
+    <value>Wartet…</value>
   </data>
   <data name="solveElapsed" xml:space="preserve">
     <value>{seconds} s</value>
@@ -763,7 +772,7 @@
     <value>Optimierung fehlgeschlagen: {message}</value>
   </data>
   <data name="solveQuotaExhausted" xml:space="preserve">
-    <value>Die kostenlosen Optimierungen für heute sind aufgebraucht. Morgen gibt es mehr — oder upgraden Sie für unbegrenzte Läufe.</value>
+    <value>Die kostenlosen Optimierungen für heute sind aufgebraucht. Morgen gibt es mehr — oder wechseln Sie auf unbegrenzte Optimierungen.</value>
   </data>
   <data name="solveQuotaRemaining" xml:space="preserve">
     <value>{remaining} von {limit} kostenlosen Optimierungen heute übrig</value>
@@ -772,7 +781,19 @@
     <value>Upgrade</value>
   </data>
   <data name="solveSolving" xml:space="preserve">
-    <value>Wird optimiert...</value>
+    <value>Wird optimiert…</value>
+  </data>
+  <data name="solveStop" xml:space="preserve">
+    <value>Stoppen und prüfen</value>
+  </data>
+  <data name="solveStopping" xml:space="preserve">
+    <value>Wird gestoppt…</value>
+  </data>
+  <data name="solveStoppedNothing" xml:space="preserve">
+    <value>Gestoppt, bevor ein Dienstplan gefunden wurde. Nichts geändert. Erneut starten und zu Ende laufen lassen.</value>
+  </data>
+  <data name="solveStopFailed" xml:space="preserve">
+    <value>Die Optimierung ließ sich nicht stoppen. Sie läuft weiter, und ihr Dienstplan öffnet sich, wenn sie fertig ist.</value>
   </data>
   <data name="start" xml:space="preserve">
     <value>Beginn</value>
@@ -781,13 +802,13 @@
     <value>Zeitskala</value>
   </data>
   <data name="timeScaleLeast" xml:space="preserve">
-    <value>{count} Minuten - wenigste Detailfläche</value>
+    <value>{count} Minuten - am wenigsten Platz für Details</value>
   </data>
   <data name="timeScaleMinutes" xml:space="preserve">
     <value>{count} Minuten</value>
   </data>
   <data name="timeScaleMost" xml:space="preserve">
-    <value>{count} Minuten - meiste Detailfläche</value>
+    <value>{count} Minuten - am meisten Platz für Details</value>
   </data>
   <data name="timeScaleShort" xml:space="preserve">
     <value>{count} Min.</value>
@@ -955,7 +976,7 @@
     <value>Rolle</value>
   </data>
   <data name="Prop_Role_Desc" xml:space="preserve">
-    <value>Die Suche, die die Rolle einer Zeile nennt; Personen werden über ihre Rollen zugeordnet.</value>
+    <value>Die Suchspalte, die die Rolle einer Zeile nennt; Personen werden über ihre Rollen zugeordnet.</value>
   </data>
   <data name="Prop_Subgroup" xml:space="preserve">
     <value>Untergruppe</value>
@@ -991,7 +1012,7 @@
     <value>Dauer (optional)</value>
   </data>
   <data name="Prop_Duration_Desc" xml:space="preserve">
-    <value>Minuten, die eine Zeile ohne Datum nach dem Ablegen im Planer belegt. Ohne Bindung eine Stunde.</value>
+    <value>Minuten, die eine Zeile ohne Datum nach dem Ablegen im Planer belegt. Ungebunden eine Stunde.</value>
   </data>
   <data name="scoreNotCounted" xml:space="preserve">
     <value>Diesmal nicht gezählt</value>

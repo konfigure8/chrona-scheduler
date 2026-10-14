@@ -111,22 +111,10 @@ const event = (
   );
   assertEqual(pinnedById.get("free"), false, "unpinned is movable");
   assertEqual(pinnedById.get("pinned-spelling"), true, "a pin pins");
-
-  const pinAll = problemFromSchedule({
-    events,
-    pinAssigned: true,
-    resources,
-    window: { end: at(24), start: at(0) },
-  });
-  assertEqual(
-    pinAll.shifts.every((shift) => shift.assignment?.pinned === true),
-    true,
-    "explicit override pins everything",
-  );
 }
 
 // Planning-horizon doctrine: context outside the window travels pinned
-// and never changes, whatever its lock and whatever the override says.
+// and never changes, whatever its lock.
 {
   const resources: SchedulerResource[] = [{ id: "r-a", name: "A" }];
   const window = { end: at(24), start: at(0) };
@@ -137,15 +125,13 @@ const event = (
     event("night-before", { end: at(6), start: dayBefore }),
     event("day-after", { end: new Date(Date.UTC(2026, 7, 18, 17)), start: dayAfter }),
   ];
-  for (const pinAssigned of [undefined, false]) {
-    const problem = problemFromSchedule({ events, pinAssigned, resources, window });
-    const pinnedById = new Map(
-      problem.shifts.map((shift) => [shift.id, shift.assignment?.pinned]),
-    );
-    assertEqual(pinnedById.get("inside"), false, "inside the window stays movable");
-    assertEqual(pinnedById.get("night-before"), true, "the night before is pinned context");
-    assertEqual(pinnedById.get("day-after"), true, "the day after is pinned context");
-  }
+  const problem = problemFromSchedule({ events, resources, window });
+  const pinnedById = new Map(
+    problem.shifts.map((shift) => [shift.id, shift.assignment?.pinned]),
+  );
+  assertEqual(pinnedById.get("inside"), false, "inside the window stays movable");
+  assertEqual(pinnedById.get("night-before"), true, "the night before is pinned context");
+  assertEqual(pinnedById.get("day-after"), true, "the day after is pinned context");
 }
 
 // Hours and cost reach the wire (the ledger says they do): weekly

@@ -9,8 +9,8 @@
  * locally. Skills stay plain tags and cost/contract facts stay in the
  * payload (both ruled; the conversion ledger discloses them), and so
  * do agreement rules, how they count periods, the history mark, the
- * site's time zone and the repair intent with its change charge (F24
- * Repair mode). A repair's
+ * site's time zone, on-call shifts and the repair intent (F24 Repair
+ * mode). A repair's
  * current person is each shift's assignment, re-keyed like any other.
  * Preferred and unpreferred time travel as times on the pseudonym;
  * that of a person the problem does not hold stays home.
@@ -191,6 +191,8 @@ function redactWith(
           end: shift.end,
           ...(shift.history === true ? { history: true } : {}),
           id: pseudonym,
+          // F24: an on-call mark is a fact about the shift, not about a person.
+          ...(shift.onCall === true ? { onCall: true as const } : {}),
           requiredSkills: shift.requiredSkills,
           ...(shift.site ? { site: shift.site } : {}),
           ...(shift.split

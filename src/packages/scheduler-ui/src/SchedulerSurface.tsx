@@ -73,7 +73,7 @@ import {
   type SolveState,
 } from "./solve";
 import { ProposalPanel, type ProposalDrillDown } from "./ProposalPanel";
-import { mustRowLabel, ProposalScorecard } from "./ProposalScorecard";
+import { leftOpenNotes, mustRowLabel, ProposalScorecard } from "./ProposalScorecard";
 import { drillDownEntries, personFixCounts, proposalReasons } from "./proposalReasons";
 import { mustBreachTotal } from "./schedulingContract";
 import { WhyNotGroup } from "./WhyNotGroup";
@@ -81,7 +81,7 @@ import { rosterVersionOf, whyNotAction, type WhyNotAction } from "./whyNot";
 import { SolveProgressIndicator, useElapsedSeconds } from "./SolveProgress";
 import { SchedulerLegend } from "./SchedulerLegend";
 import { SchedulerToolbar } from "./SchedulerToolbar";
-import { themeToCssVariables, type SchedulerTheme } from "./theme";
+import { colorSchemeOf, themeToCssVariables, type SchedulerTheme } from "./theme";
 import {
   SchedulerStringsProvider,
   formatString,
@@ -189,8 +189,10 @@ export interface SchedulerSurfaceProps {
   readonly onRequestSolve?: () => void;
   /** Why Optimize cannot run here, such as a period that has passed. */
   readonly solveUnavailableReason?: string;
-  /** Stops the wait for a running solve; renders Cancel while solving. */
+  /** Cancel (F41 Live solve): ends a running solve and keeps nothing. Renders Cancel while solving. */
   readonly onCancelSolve?: () => void;
+  /** Stop and review (F41 Live solve): ends a running solve; the board reviews the best roster found so far. */
+  readonly onStopSolve?: () => void;
   /**
    * The kept changes to write, none dropped or withheld, and what Apply
    * leaves in the period as the review counts it; the host clears the
@@ -492,6 +494,10 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     null,
   );
   const [menu, setMenu] = React.useState<MenuState | undefined>();
+  // A person's menu, from their name: the extension's items only.
+  const [personMenu, setPersonMenu] = React.useState<
+    { readonly items: readonly ContextMenuItem[]; readonly x: number; readonly y: number } | undefined
+  >();
   const [loadedMenuItems, setLoadedMenuItems] = React.useState<
     | { readonly eventId: string; readonly items: readonly ContextMenuItem[] }
     | undefined
@@ -880,7 +886,9 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
   /* A running solve shows as progress with Cancel; the board stays live. */
   const solving =
     props.solveState?.status === "queued" ||
-    props.solveState?.status === "running";
+    props.solveState?.status === "running" ||
+    props.solveState?.status === "stopping";
+  const stopping = props.solveState?.status === "stopping";
   const solveSeconds = useElapsedSeconds(solving);
   /*
    * Design R14 (D22): a read the solve needs failed, so nothing was
@@ -913,12 +921,16 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
         : undefined;
   const solveProgress: SolveProgress | undefined = solving
     ? {
-        label:
-          props.solveState?.status === "queued"
+        label: stopping
+          ? strings.solveStopping
+          : props.solveState?.status === "queued"
             ? strings.solveQueued
             : strings.solveSolving,
         onCancel: props.onCancelSolve,
+        onStop: props.onStopSolve,
+        phases: [strings.solveQueued, strings.solveSolving, strings.solveStopping],
         seconds: solveSeconds,
+        stopping,
       }
     : undefined;
   /*
@@ -939,6 +951,19 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       solveButtonRef.current?.focus();
     }
   }, [solving]);
+  /*
+   * F41 Stop and review: the planner asked to review, so when the stopped
+   * run's roster opens, focus goes to its review rather than back to Solve.
+   */
+  const proposedTabRef = React.useRef<HTMLButtonElement | null>(null);
+  // Each board names its own hint, so two boards on one page never read each other's.
+  const stoppedHintId = React.useRef(`chrona-stopped-hint-${Math.random().toString(36).slice(2)}`).current;
+  const stoppedRunId = props.proposal?.stopped ? props.proposal.runId : undefined;
+  React.useEffect(() => {
+    if (stoppedRunId) {
+      proposedTabRef.current?.focus();
+    }
+  }, [stoppedRunId]);
   const extension = useBoardExtension();
   const boardState: BoardState = {
     anchor: props.anchor,
@@ -1171,11 +1196,31 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     [clearHover, props],
   );
 
+  // A person's name opens the extension's items for them, such as marking them absent.
+  const openPersonMenu = (contextEvent: React.MouseEvent<HTMLDivElement>): void => {
+    const cell = (contextEvent.target as HTMLElement | null)?.closest<HTMLElement>("[data-resource-id]");
+    const resource = cell ? resourcesById.get(cell.dataset.resourceId ?? "") : undefined;
+    const items = resource ? (boardExtension?.personMenu?.(resource) ?? []) : [];
+    if (!cell || items.length === 0) {
+      return;
+    }
+    contextEvent.preventDefault();
+    clearHover();
+    const keyboard = contextEvent.clientX === 0 && contextEvent.clientY === 0;
+    const rect = keyboard ? cell.getBoundingClientRect() : undefined;
+    const local = rect ? toLocal(rect.left, rect.bottom) : toLocal(contextEvent.clientX, contextEvent.clientY);
+    setPersonMenu({ items, x: local.x, y: local.y });
+  };
+
   const handleContextMenu = (
     contextEvent: React.MouseEvent<HTMLDivElement>,
   ): void => {
     const event = findEvent(contextEvent.target);
-    if (!event || isGhostEvent(event)) {
+    if (!event) {
+      openPersonMenu(contextEvent);
+      return;
+    }
+    if (isGhostEvent(event)) {
       return;
     }
     contextEvent.preventDefault();
@@ -1309,6 +1354,8 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     if (whyNotItem) {
       items.push(whyNotItem);
     }
+    // An extension's own items for the shift, such as marking its person absent.
+    items.push(...(boardExtension?.shiftMenu?.(event) ?? []));
     if (
       canEdit &&
       props.onAssignEvent &&
@@ -1473,7 +1520,9 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
   const panelAllowed =
     (props.view === "timeline" || props.view === "topDown") &&
     props.unscheduledEvents !== undefined;
-  const showPanel = panelAllowed && (props.unscheduledPanelVisible ?? true);
+  // While a proposal is reviewed with nothing left open, the empty panel gives its width to the board.
+  const nothingOpen = (boardUnscheduled?.length ?? 0) + (props.undatedEvents?.length ?? 0) === 0;
+  const showPanel = panelAllowed && (props.unscheduledPanelVisible ?? true) && !(reviewing && nothingOpen);
 
   const renderView = (): JSX.Element => {
     if (props.view === "roster") {
@@ -1912,8 +1961,37 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     mustReport && unchecked && !unchecked.nobody && unchecked.count > 0 ? unchecked.count : undefined;
 
   // The change list's props, beside the grid or over it.
+  const focusChange = (change: ProposalChange): void => {
+    props.onAnchorChange?.(change.proposed.start);
+    setScrollRequest((previous) => ({
+      date: change.proposed.start,
+      nonce: (previous?.nonce ?? 0) + 1,
+    }));
+    props.onSelectionChange?.([change.current.id]);
+  };
+  // An extension's groups (such as a repair's covers) come first, and own their changes.
+  const changeGroups = proposalChanges
+    ? boardExtension?.changeGroups?.({
+        changes: proposalChanges.map((change) => ({ change, dropped: droppedChangeIds.has(change.current.id) })),
+        onFocus: focusChange,
+        resourceNameById,
+        setDropped: (changeIds, dropped) =>
+          setDroppedChangeIds((previous) => {
+            const next = new Set(previous);
+            for (const id of changeIds) {
+              if (dropped) {
+                next.add(id);
+              } else {
+                next.delete(id);
+              }
+            }
+            return next;
+          }),
+      })
+    : undefined;
   const proposalPanelProps = {
     canAskWhyNot: (change: ProposalChange): boolean => askableShift(change.current),
+    claimed: changeGroups?.claimed,
     countsOnly: review ? props.proposal?.analysis?.countsOnly === true : false,
     drillDown,
     entries: (proposalChanges ?? []).map((change) => {
@@ -1936,14 +2014,8 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
         reason: changeReasons?.get(change.current.id),
       };
     }),
-    onFocus: (change: ProposalChange): void => {
-      props.onAnchorChange?.(change.proposed.start);
-      setScrollRequest((previous) => ({
-        date: change.proposed.start,
-        nonce: (previous?.nonce ?? 0) + 1,
-      }));
-      props.onSelectionChange?.([change.current.id]);
-    },
+    lead: changeGroups?.node,
+    onFocus: focusChange,
     personFixes,
     // Keep all clears the drops; Keep none drops every change that could apply.
     onKeepAll: (keep: boolean): void => {
@@ -2376,6 +2448,16 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
                     </span>
                   </>
                 ) : null}
+                {proposalFigures
+                  ? leftOpenNotes(strings, proposalFigures).map((note) => (
+                      <React.Fragment key={note}>
+                        <span aria-hidden="true">{" · "}</span>
+                        <span className="chrona-sched__proposal-note--warn" data-testid="proposal-left-open">
+                          {note}
+                        </span>
+                      </React.Fragment>
+                    ))
+                  : null}
                 {summaryMust ? (
                   <>
                     <span aria-hidden="true">{" · "}</span>
@@ -2457,8 +2539,10 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
               <button
                 aria-selected={reviewView === "proposed"}
                 className="chrona-sched__mode-tab"
+                aria-describedby={props.proposal?.stopped ? stoppedHintId : undefined}
                 data-testid="review-proposed"
                 onClick={() => setReviewView("proposed")}
+                ref={proposedTabRef}
                 role="tab"
                 type="button"
               >
@@ -2506,8 +2590,15 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
               />
             </>
           ) : null}
-          <span className="chrona-sched__proposal-hint">
-            {strings.proposalReviewHint}
+          {/* A stopped run's proposal is the best roster it found by then (R2.15). */}
+          {/* Focus lands on Proposed after a stop; the tab names this hint, so it is read out. */}
+          <span
+            className="chrona-sched__proposal-hint"
+            data-testid="proposal-hint"
+            id={props.proposal?.stopped ? stoppedHintId : undefined}
+            role={props.proposal?.stopped ? "status" : undefined}
+          >
+            {props.proposal?.stopped ? strings.proposalStoppedHint : strings.proposalReviewHint}
           </span>
           {props.onPublishProposal ? (
             <button
@@ -2701,6 +2792,9 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           y={menu.y}
         />
       ) : null}
+      {personMenu ? (
+        <ContextMenu items={personMenu.items} onClose={() => setPersonMenu(undefined)} x={personMenu.x} y={personMenu.y} />
+      ) : null}
       {hover && !menu && !dialogEvent ? (
         <EventHoverCard
           anchor={hover.anchor}
@@ -2821,7 +2915,16 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           decorations={props.decorations}
           events={props.events}
           onClose={() => setConversionOpen(false)}
-          onConnect={conversion.onConnect}
+          // The click closes the dialog at once: the run's progress, or
+          // the reason it could not start, shows on the board.
+          onConnect={
+            conversion.onConnect
+              ? () => {
+                  setConversionOpen(false);
+                  conversion.onConnect?.();
+                }
+              : undefined
+          }
           onLearnMore={conversion.onLearnMore}
           portalUrl={conversion.portalUrl}
           resources={props.resources}
@@ -2890,7 +2993,11 @@ export function SchedulerSurface(props: SchedulerSurfaceProps): JSX.Element {
     <div
       className="chrona-sched"
       ref={rootRef}
-      style={props.theme ? themeToCssVariables(props.theme) : undefined}
+      style={
+        props.theme
+          ? { ...themeToCssVariables(props.theme), colorScheme: colorSchemeOf(props.theme.background) }
+          : undefined
+      }
     >
       <FullScreenProvider value={fullScreen}>
         <DragProvider>

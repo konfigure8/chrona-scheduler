@@ -4,6 +4,7 @@ import {
   ghostIdOf,
   isGhostEvent,
   openShiftCount,
+  openShiftsLeftOut,
   previewProposal,
   proposalDoubleBookings,
   proposalMustRules,
@@ -389,9 +390,68 @@ function scorecardFollowsKeepAndPeriod(): void {
     search: { betterRostersFound: -1, rostersChecked: 5, solvingMillis: 10 },
   });
   assertEqual(malformed.search, undefined);
+
+  // Open shifts the run left out stay open: they count as unfilled, by reason.
+  const left = proposalScore({ ...proposal, leftOpen: { ended: 2, pinned: 1 } }, changes, {}, period);
+  assertEqual(left.total, 6);
+  assertEqual(left.filledProposed, 3);
+  assertEqual(left.filledNow, 2);
+  assertEqual(left.leftEnded, 2);
+  assertEqual(left.leftPinned, 1);
+  // A run that says nothing leaves nothing out.
+  assertEqual(all.leftEnded, 0);
+  assertEqual(all.leftPinned, 0);
   console.log("scorecard tests passed");
 }
 scorecardFollowsKeepAndPeriod();
+
+/*
+ * Matt 2026-10-13: open shifts that had ended, or are pinned, stay out of
+ * a solve; one still running goes in (a sick call or an accident on the
+ * way). The counts match what problemFromSchedule leaves out, so "No
+ * changes proposed" never hides open work.
+ */
+function openShiftsLeftOutMatchesTheProblem(): void {
+  const shift = (id: string, start: number, extra: Partial<SchedulerUiEvent> = {}): SchedulerUiEvent => ({
+    end: at(start + 4),
+    id,
+    resourceId: "open",
+    start: at(start),
+    status: "needsCover",
+    title: id,
+    ...extra,
+  });
+  const window = { end: at(20), start: at(6) };
+  const now = at(10);
+  const events = [
+    shift("ended", 6),
+    shift("ended-pinned", 6, { pinned: true }),
+    shift("running", 8),
+    shift("pinned", 12, { pinned: true }),
+    shift("open", 13),
+    shift("before-window", 2),
+    shift("assigned", 7, { resourceId: "mia", status: "assigned" }),
+  ];
+  const left = openShiftsLeftOut(events, window, now);
+  // An open shift that ended stays out, pinned or not; one still running is planned.
+  assertEqual(left.ended, 2);
+  assertEqual(left.pinned, 1);
+  const problem = problemFromSchedule({ events, now, resources: [], window });
+  const sent = problem.shifts.map((s) => s.id);
+  for (const id of ["ended", "ended-pinned", "pinned"]) {
+    assertEqual(sent.includes(id), false);
+  }
+  assertEqual(sent.includes("open"), true);
+  const running = problem.shifts.find((s) => s.id === "running");
+  // The running shift goes in open, a decision rather than history.
+  assertEqual(running?.assignment, undefined);
+  assertEqual(running?.history, undefined);
+  // No clock, no history.
+  assertEqual(openShiftsLeftOut(events, window, undefined).ended, 0);
+  console.log("left-out open shift tests passed");
+}
+
+openShiftsLeftOutMatchesTheProblem();
 
 /*
  * F31 rework, above 24 changes: one line per person, with their shifts
@@ -553,7 +613,8 @@ changeListPerPerson();
 /*
  * F31 rework: a planner does not change history. With "now", an
  * assigned shift in the window that started travels pinned (it still
- * counts toward the window), and an open one that started stays out.
+ * counts toward the window), and an open one that ended stays out; an
+ * open one still running is planned (Matt 2026-10-13).
  */
 {
   const window = { end: at(24), start: at(0) };
@@ -567,8 +628,9 @@ changeListPerPerson();
   };
   const later: SchedulerUiEvent = { ...started, end: at(20), id: "later", start: at(16) };
   const pastOpen: SchedulerUiEvent = { ...uncovered, end: at(9), id: "past-open", start: at(7) };
+  const runningOpen: SchedulerUiEvent = { ...uncovered, end: at(12), id: "running-open", start: at(8) };
   const problem = problemFromSchedule({
-    events: [started, later, pastOpen, uncovered],
+    events: [started, later, pastOpen, runningOpen, uncovered],
     now: at(9),
     resources: people,
     window,
@@ -578,6 +640,10 @@ changeListPerPerson();
   assertEqual(byId.get("later")?.assignment?.pinned, false);
   assertEqual(byId.has("past-open"), false);
   assertEqual(byId.has("shift-1"), true);
+  // An open shift still running is planned: someone covers it now.
+  assertEqual(byId.has("running-open"), true);
+  assertEqual(byId.get("running-open")?.history, undefined);
+  assertEqual(byId.get("started")?.history, true);
   const noHistory = problemFromSchedule({
     events: [started, pastOpen],
     resources: people,
@@ -591,7 +657,7 @@ changeListPerPerson();
 /*
  * A pin is a pin (Matt 2026-09-30): the solver leaves a pinned shift
  * alone. A pinned open shift stays out, so it stays open; a pinned
- * assigned one travels pinned, whatever the override says.
+ * assigned one travels pinned.
  */
 {
   const window = { end: at(24), start: at(0) };
@@ -605,18 +671,15 @@ changeListPerPerson();
     status: "assigned",
     title: "Pinned",
   };
-  for (const pinAssigned of [undefined, false]) {
-    const problem = problemFromSchedule({
-      events: [pinnedOpen, pinnedAssigned, uncovered],
-      pinAssigned,
-      resources: people,
-      window,
-    });
-    const byId = new Map(problem.shifts.map((shift) => [shift.id, shift]));
-    assertEqual(byId.has("pinned-open"), false);
-    assertEqual(byId.get("pinned-assigned")?.assignment?.pinned, true);
-    assertEqual(byId.has(uncovered.id), true);
-  }
+  const problem = problemFromSchedule({
+    events: [pinnedOpen, pinnedAssigned, uncovered],
+    resources: people,
+    window,
+  });
+  const byId = new Map(problem.shifts.map((shift) => [shift.id, shift]));
+  assertEqual(byId.has("pinned-open"), false);
+  assertEqual(byId.get("pinned-assigned")?.assignment?.pinned, true);
+  assertEqual(byId.has(uncovered.id), true);
   console.log("pin tests passed");
 }
 

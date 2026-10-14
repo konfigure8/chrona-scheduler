@@ -6,6 +6,7 @@ import {
   connectEnvironment,
   CONTROL_VERSION,
   fetchSolveSession,
+  keepsCachedClaims,
   resolveClientUrl,
   SolveBridgeError,
   solveClickAction,
@@ -43,6 +44,10 @@ assert.equal(resolveClientUrl({}), origin);
 assert.equal(classifyFailure(400, "Chrona is not connected in this environment. An administrator runs Connect first."), "notConnected");
 assert.equal(classifyFailure(403, "Principal user is missing prvCreatechr_chronasolveaccess privilege"), "noPrivilege");
 assert.equal(classifyFailure(400, "Access is denied."), "noPrivilege");
+// No connection row: the cached claims are stale, so the board offers Connect.
+assert.equal(keepsCachedClaims("notConnected"), false);
+assert.equal(keepsCachedClaims("noPrivilege"), true);
+assert.equal(keepsCachedClaims("other"), true);
 assert.equal(classifyFailure(500, "Something else"), "other");
 
 const run = async (): Promise<void> => {

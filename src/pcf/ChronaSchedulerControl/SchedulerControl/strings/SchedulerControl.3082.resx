@@ -403,7 +403,7 @@
     <value>Lote</value>
   </data>
   <data name="fieldProvenance" xml:space="preserve">
-    <value>Origen</value>
+    <value>Procedencia</value>
   </data>
   <data name="fieldPublishState" xml:space="preserve">
     <value>Publicación</value>
@@ -555,6 +555,9 @@
   <data name="proposalReviewHint" xml:space="preserve">
     <value>Revisando propuesta. Aplica o descarta para editar.</value>
   </data>
+  <data name="proposalStoppedHint" xml:space="preserve">
+    <value>Detenido antes de tiempo: el mejor cuadrante hasta ahora. Aplica o descarta para editar.</value>
+  </data>
   <data name="proposalShowCurrent" xml:space="preserve">
     <value>Actual</value>
   </data>
@@ -602,6 +605,12 @@
   </data>
   <data name="proposalFilled" xml:space="preserve">
     <value>{filled} de {total} turnos cubiertos</value>
+  </data>
+  <data name="proposalLeftEnded" xml:space="preserve">
+    <value>Ya terminados, sin cubrir: {count}</value>
+  </data>
+  <data name="proposalLeftPinned" xml:space="preserve">
+    <value>Fijados, sin cubrir: {count}</value>
   </data>
   <data name="scorecardLabel" xml:space="preserve">
     <value>Frente al cuadrante actual</value>
@@ -688,7 +697,7 @@
     <value>{person} ahora no está disponible a esta hora</value>
   </data>
   <data name="solvePeriodPassed" xml:space="preserve">
-    <value>Este período ya pasó</value>
+    <value>Este periodo ya pasó</value>
   </data>
   <data name="solveQueued" xml:space="preserve">
     <value>En cola…</value>
@@ -697,7 +706,7 @@
     <value>{seconds} s</value>
   </data>
   <data name="reasonMinimumBreak" xml:space="preserve">
-    <value>Descanso menor de {minimum} min (intervalo: {gap} min)</value>
+    <value>Descanso inferior a {minimum} min ({gap} min)</value>
   </data>
   <data name="reasonOutsideGroup" xml:space="preserve">
     <value>Fuera de {group}</value>
@@ -773,6 +782,18 @@
   </data>
   <data name="solveSolving" xml:space="preserve">
     <value>Optimizando…</value>
+  </data>
+  <data name="solveStop" xml:space="preserve">
+    <value>Detener y revisar</value>
+  </data>
+  <data name="solveStopping" xml:space="preserve">
+    <value>Deteniendo…</value>
+  </data>
+  <data name="solveStoppedNothing" xml:space="preserve">
+    <value>Detenido antes de encontrar un cuadrante. No ha cambiado nada. Vuelve a ejecutarlo y deja que termine.</value>
+  </data>
+  <data name="solveStopFailed" xml:space="preserve">
+    <value>No se pudo detener la ejecución. Sigue en curso y su cuadrante se abrirá al terminar.</value>
   </data>
   <data name="start" xml:space="preserve">
     <value>Inicio</value>
@@ -1192,7 +1213,7 @@
     <value>{shift} de {name} quedaría abierto</value>
   </data>
   <data name="whyNotInReview" xml:space="preserve">
-    <value>Para usar a {name}, descarta este cambio y actúa tras Aplicar.</value>
+    <value>Para usar a {name}, descarta este cambio y hazlo después de Aplicar.</value>
   </data>
   <data name="scorePreferences" xml:space="preserve">
     <value>Preferencias cumplidas</value>

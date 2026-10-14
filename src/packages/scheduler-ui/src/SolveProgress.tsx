@@ -24,15 +24,18 @@ export function useElapsedSeconds(active: boolean): number {
 
 /**
  * The Fluent Spinner idiom while a solve runs (F31): a brand ring,
- * the phase, the elapsed seconds, and Cancel. It stands in for the
- * Solve or Optimize button for the duration; the board stays live
- * around it.
+ * the phase, the elapsed seconds, and the run's two endings (F41 Live
+ * solve): Stop and review ends the run and opens the best roster found
+ * so far; Cancel ends it and keeps nothing. It stands in for the Solve
+ * or Optimize button for the duration; the board stays live around it.
  */
 export function SolveProgressIndicator(props: {
   readonly progress: SolveProgress;
 }): JSX.Element {
   const strings = useSchedulerStrings();
   const { progress } = props;
+  // All phases share one cell, so the label keeps the widest one's room and the buttons stay put.
+  const phases = [...new Set([...(progress.phases ?? []), progress.label])];
   return (
     <span className="chrona-sched__solve-progress-group">
       <span
@@ -42,13 +45,34 @@ export function SolveProgressIndicator(props: {
         role="status"
       >
         <span aria-hidden="true" className="chrona-sched__spinner" />
-        <span>{progress.label}</span>
+        <span className="chrona-sched__solve-phase">
+          {phases.map((phase) => (
+            <span
+              aria-hidden={phase !== progress.label}
+              className={phase === progress.label ? undefined : "chrona-sched__solve-phase-off"}
+              key={phase}
+            >
+              {phase}
+            </span>
+          ))}
+        </span>
         <span className="chrona-sched__solve-elapsed">
           {formatString(strings.solveElapsed, {
             seconds: String(progress.seconds),
           })}
         </span>
       </span>
+      {progress.onStop ? (
+        <button
+          className="chrona-sched__toolbar-button chrona-sched__solve-stop"
+          data-testid="solve-stop"
+          disabled={progress.stopping}
+          onClick={progress.onStop}
+          type="button"
+        >
+          {strings.solveStop}
+        </button>
+      ) : null}
       {progress.onCancel ? (
         <button
           className="chrona-sched__toolbar-button chrona-sched__solve-cancel"

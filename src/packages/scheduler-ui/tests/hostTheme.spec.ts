@@ -58,7 +58,8 @@ const dark = webDarkTheme as unknown as Record<string, string>;
   assertEqual(theme.stroke, light.colorNeutralStroke2, "stroke");
   assertEqual(theme.warning, light.colorStatusWarningForeground1, "warning");
   assertEqual(theme.shadow, light.shadow2, "shadow");
-  assertEqual(Object.keys(theme).length, 31, "all tokens mapped");
+  assertEqual(theme.shadowAmbient, light.colorNeutralShadowAmbient, "shadowAmbient");
+  assertEqual(Object.keys(theme).length, 35, "all tokens mapped");
 }
 
 // Dark: distinct values, and the neutral relationship Fluent defines

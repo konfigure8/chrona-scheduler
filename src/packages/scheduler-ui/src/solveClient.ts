@@ -1,10 +1,12 @@
 /**
- * The solve client (F26 stage 3): submit, poll, map the answer back.
- * Moved here from the harness so the PCF control can use it. It talks
- * to the solver API directly with a SOLVE SESSION (Q3 option C): the
- * host obtains the session - base URL, short-lived bearer token, the
- * tier's seconds bounds, quota state, the calendar's latest run - and
- * this client never sees the environment key.
+ * The solve client (F26 stage 3): submit, follow, stop, map the answer
+ * back. It talks to the solver API directly with a SOLVE SESSION (Q3
+ * option C): the host obtains the session - base URL, short-lived
+ * bearer token, the tier's seconds bounds, quota state, the calendar's
+ * latest run - and this client never sees the environment key. Runs go
+ * through the calendar's product API, version 1 (F61 Product APIs,
+ * R2.15); Stop ends a run there and the board reviews the best roster
+ * found so far.
  *
  * F23 still applies: the problem is redacted before it becomes a wire
  * request, and the answer is unredacted with the request's own map.
@@ -22,12 +24,13 @@ import type { ScheduleCandidate, ScheduleCandidateCheck, ScheduleProblemV2 } fro
 import type { ScheduleProposal } from "./solve";
 import {
   buildCandidateRequest,
-  buildSolveRequest,
+  buildProductRunRequest,
+  productApiPath,
   proposalFromSolution,
   readCandidateCheck,
   solutionFromPoll,
-  type SolvePollResponse,
-  type SolveSubmitResponse,
+  type ProductRunMetadata,
+  type ProductRunResponse,
 } from "./solveTransport";
 import {
   redactCandidate,
@@ -102,6 +105,15 @@ export class SolveSessionExpiredError extends Error {}
 
 /** The planner cancelled the wait: the host stops following the run. */
 export class SolveCancelledError extends Error {}
+
+/** The run was stopped before it found a roster: there is nothing to review. */
+export class SolveStoppedError extends Error {}
+
+/**
+ * HTTP 409 run_not_stoppable: the run was started through /api/solve
+ * by an earlier control, so only that control's wait can be cancelled.
+ */
+export class SolveNotStoppableError extends Error {}
 
 export interface SolveRunOptions {
   readonly capabilities?: readonly SolveCapability[];
@@ -219,17 +231,14 @@ function throwForStatus(response: Response, body: { code?: string; message?: str
 export async function runSolve(options: SolveRunOptions): Promise<ScheduleProposal> {
   const fetchImpl = options.fetchImpl ?? fetch;
   const redaction = await redactProblemForTenant(options.problem, options.session.resourcePlaceholders);
-  const request = buildSolveRequest(redaction.problem, {
+  const request = buildProductRunRequest(redaction.problem, {
     calendarName: options.calendarName,
-    capabilities: options.capabilities,
     resourceKeyScheme: redaction.resourceKeyScheme,
-    solutionType: options.solutionType,
     solverSeconds: clampSolverSeconds(options.session, options.solverSeconds),
-    tenantId: options.tenantId ?? "session",
   });
   const submitResponse = await fetchOrCancelled(
     fetchImpl,
-    `${options.session.apiBaseUrl}/api/solve`,
+    `${runsUrl(options.session, options.solutionType)}`,
     {
       body: JSON.stringify(request),
       headers: {
@@ -244,26 +253,32 @@ export async function runSolve(options: SolveRunOptions): Promise<SchedulePropos
   if (!submitResponse.ok) {
     throwForStatus(submitResponse, await readError(submitResponse), "Submit");
   }
-  const submitted = (await submitResponse.json()) as SolveSubmitResponse;
-  if (!submitted.runId) {
-    throw new Error("Submit returned no runId");
+  const submitted = (await submitResponse.json()) as Partial<ProductRunMetadata>;
+  if (!submitted.id) {
+    throw new Error("Submit returned no run id");
   }
-  options.onSubmitted?.(submitted.runId);
+  options.onSubmitted?.(submitted.id);
   options.onStatus?.("queued");
-  await wait(Math.max(1, submitted.pollAfterSeconds ?? 2) * 1000, options.signal);
+  await wait(2000, options.signal);
   return followRun({
     currentEvents: options.currentEvents,
     extraHeaders: options.extraHeaders,
     fetchImpl,
     onStatus: options.onStatus,
     redaction,
-    runId: submitted.runId,
+    runId: submitted.id,
     runToken: options.runToken,
     session: options.session,
     signal: options.signal,
+    solutionType: options.solutionType,
     unassignedResourceId: options.unassignedResourceId,
     window: options.window,
   });
+}
+
+/** The product API's runs: `{apiBaseUrl}/api/{product}/v1/schedules`. */
+function runsUrl(session: SolveSession, solutionType: string | undefined): string {
+  return `${session.apiBaseUrl}${productApiPath(solutionType)}/schedules`;
 }
 
 export interface FollowRunOptions {
@@ -278,43 +293,94 @@ export interface FollowRunOptions {
   readonly session: SolveSession;
   /** Aborting it stops the polling with SolveCancelledError. */
   readonly signal?: AbortSignal;
+  /** The calendar's product: which product API holds the run. */
+  readonly solutionType?: string;
   /** The host's resource id for "nobody": an empty answer takes the person off (F40). */
   readonly unassignedResourceId?: string;
   /** The period the run solved, on the board's clock; the proposal carries it. */
   readonly window?: TimeWindow;
 }
 
-/** Poll an existing run (fresh or resumed) until it answers. */
+/**
+ * Follow an existing run (fresh or resumed) until it answers. A run that
+ * was stopped answers with the best roster found so far (the proposal
+ * says it stopped early), or SolveStoppedError when it found none.
+ */
 export async function followRun(options: FollowRunOptions): Promise<ScheduleProposal> {
   const fetchImpl = options.fetchImpl ?? fetch;
   for (let attempt = 0; attempt < 600; attempt += 1) {
     const pollResponse = await fetchOrCancelled(
       fetchImpl,
-      `${options.session.apiBaseUrl}/api/solve/${encodeURIComponent(options.runId)}`,
+      `${runsUrl(options.session, options.solutionType)}/${encodeURIComponent(options.runId)}`,
       { headers: authHeaders(options.session, options.runToken, "poll", options.extraHeaders) },
       options.signal,
     );
     if (!pollResponse.ok) {
       throwForStatus(pollResponse, await readError(pollResponse), "Poll");
     }
-    const poll = (await pollResponse.json()) as SolvePollResponse;
-    if (poll.status === "succeeded") {
+    const run = (await pollResponse.json()) as ProductRunResponse;
+    const status = run.metadata?.solverStatus;
+    const stopped = status === "SOLVING_INCOMPLETE";
+    if (status === "SOLVING_COMPLETED" || (stopped && run.modelOutput)) {
       const solution = unredactSolution(
-        solutionFromPoll(options.runId, "succeeded", poll.result),
+        solutionFromPoll(options.runId, "succeeded", run.modelOutput ?? undefined),
         options.redaction,
       );
-      return proposalFromSolution(solution, options.currentEvents, {
+      const proposal = proposalFromSolution(solution, options.currentEvents, {
         unassignedResourceId: options.unassignedResourceId,
         window: options.window,
       });
+      return stopped ? { ...proposal, stopped: true } : proposal;
     }
-    if (poll.status === "failed") {
-      throw new Error(poll.error ?? "Solve failed");
+    if (stopped) {
+      throw new SolveStoppedError("The run was stopped before it found a roster.");
     }
-    options.onStatus?.(poll.status === "queued" ? "queued" : "running");
+    if (status === "SOLVING_FAILED") {
+      throw new Error(run.metadata.failureMessage ?? "Solve failed");
+    }
+    options.onStatus?.(status === "SOLVING_SCHEDULED" ? "queued" : "running");
     await wait(1000, options.signal);
   }
   throw new Error("Solve timed out");
+}
+
+export interface StopRunOptions {
+  /**
+   * F41 Cancel: the run stops and keeps nothing, so it ends without a
+   * roster and is not counted. Without it, Stop keeps the best roster.
+   */
+  readonly discard?: boolean;
+  /** Bench/dev only: headers the local API's tenant-header bypass needs. */
+  readonly extraHeaders?: Record<string, string>;
+  readonly fetchImpl?: typeof fetch;
+  readonly runId: string;
+  readonly session: SolveSession;
+  /** The calendar's product: which product API holds the run. */
+  readonly solutionType?: string;
+}
+
+/**
+ * Stop a run (Timefold's terminate). The run ends within a second or two
+ * and keeps the best roster found so far; the run's follower reads it as
+ * it reads any answer. With `discard` (F41 Cancel) it keeps nothing. A
+ * run that already ended needs nothing; a run an earlier control started
+ * through /api/solve cannot be stopped here.
+ */
+export async function stopRun(options: StopRunOptions): Promise<void> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const url = `${runsUrl(options.session, options.solutionType)}/${encodeURIComponent(options.runId)}${options.discard ? "?discard=true" : ""}`;
+  const response = await fetchImpl(url, {
+    headers: authHeaders(options.session, options.runId, "stop", options.extraHeaders),
+    method: "DELETE",
+  });
+  if (response.ok || response.status === 404) {
+    return;
+  }
+  const body = await readError(response);
+  if (response.status === 409 && body.code === "run_not_stoppable") {
+    throw new SolveNotStoppableError(body.message ?? "This run cannot be stopped.");
+  }
+  throwForStatus(response, body, "Stop");
 }
 
 /**

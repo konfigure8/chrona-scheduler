@@ -127,6 +127,12 @@ export interface SchedulerUiEvent {
    */
   readonly pinned?: boolean;
   /**
+   * F24 Repair mode: an on-call shift, Timefold's backup capacity. Its
+   * person steps in when someone calls in sick; it is not required
+   * work. Absent = an ordinary shift.
+   */
+  readonly onCall?: boolean;
+  /**
    * Provenance of a generated shift (domain model 6.4): the
    * reconciliation identity (template, date, slot). Hand-created
    * shifts have none and are invisible to generation.
@@ -207,6 +213,7 @@ export type AgreementRuleKind =
   | "averageHours"
   | "daysInARow"
   | "daysOff"
+  | "disruption"
   | "maximumHours"
   | "minimumHours"
   | "minimumRest"
@@ -237,7 +244,7 @@ export interface SchedulerAgreementRule {
    */
   readonly end?: string;
   readonly kind: AgreementRuleKind;
-  /** Absent = must. Minimum hours and overtime are always should. */
+  /** Absent = must. Minimum hours, overtime and disruption are always should. */
   readonly level?: AgreementRuleLevel;
   /** Off rules stay with the agreement and never apply. */
   readonly on: boolean;
@@ -265,7 +272,9 @@ export interface SchedulerAgreementRule {
    * overtime: the minutes worked in each period before its rate pays;
    * each overtime rule is one tier. weeklyRest: the minutes off in one
    * stretch in every window of weeks. averageHours: the most minutes a
-   * week, on average over each window of weeks.
+   * week, on average over each window of weeks. disruption (F24 Repair
+   * mode, Timefold's disruption rule): the weight of each shift a person
+   * loses or gains in a repair.
    */
   readonly value: number;
   /** weeklyRest and averageHours: the weeks of each window, 1 to 52. Absent = 1. */

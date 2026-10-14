@@ -45,8 +45,8 @@ Table **Chrona Scheduler View** (`chr_chronaschedulerview`), keyed by the view's
 | Working start | `chr_workingstart` | Start of the working day, picked from a list; earlier hours are shaded. | No shading. |
 | Working end | `chr_workingend` | End of the working day, picked from a list; later hours are shaded. | No shading. |
 | Show weekends | `chr_showweekends` | Whether weekends are shown by default. | Shown. |
-| Period | `chr_periodunit` | The roster period: week, fortnight or month. The Roster grid shows a whole period at a time. | The Roster grid shows the week. |
-| Period starts on | `chr_periodanchor` | The first day of the first roster period; periods repeat from here. | Needed with Period. |
+| Period | `chr_periodunit` | The roster period: week, fortnight or month. The Roster grid shows a whole period at a time. In Chrona Workforce Scheduler, the calendar's site sets it. | The Roster grid shows the week. |
+| Period starts on | `chr_periodanchor` | The first day of the first roster period; periods repeat from here. In Chrona Workforce Scheduler, the calendar's site sets it. | Needed with Period. |
 
 ## 4. The toolbar, per person
 
@@ -59,6 +59,16 @@ The last button on the toolbar shows the board on the whole screen. Select it ag
 ## 5. With Chrona Workforce Scheduler
 
 The scenario solution adds its own tables, each with a page in its app: skills, roles and the skills a role needs, the roles and skills of people, availability types and availability, agreements and their rules, demand and demand drivers, and work item templates with their spans. The scheduler reads them for role matching, availability bands and preferred times, agreement rules, the coverage strip, generation and the optimizer's rules.
+
+### Sites
+
+Each calendar belongs to a site, and the site sets what every calendar at it shares:
+
+| Setting | Column | What it does | If empty |
+| --- | --- | --- | --- |
+| Time zone | `chr_timezone` | The site's time zone. Its calendars and shifts take it. | Required. |
+| Period | `chr_periodunit` | The roster period: week, fortnight or month. The Roster grid, Generate and Optimize plan by it on every calendar at the site. | The Roster grid shows the week. |
+| Period starts on | `chr_periodanchor` | The first day of the first roster period; periods repeat from here. Rotating templates count their **Cycle week** from it. | Needed with Period. |
 
 ### Agreements
 
@@ -100,7 +110,7 @@ The rules:
 How the rules apply:
 
 - Optimize keeps every Must rule, and leaves a shift open rather than break one. It keeps each Should rule where it can.
-- Periods are counted on the site's clock. When the roster **Period** is a week or a fortnight, weeks start on the day of its **Period starts on** date and fortnights on that date, so a week or fortnight rule lines up with the roster. Otherwise a week starts on the first day of the week in the Power Apps regional settings of the person who runs Optimize. A month is a calendar month. **Roster period** is the period Optimize plans.
+- Periods are counted on the site's clock. When the site's roster **Period** is a week or a fortnight, weeks start on the day of its **Period starts on** date and fortnights on that date, so a week or fortnight rule lines up with the roster. Otherwise a week starts on the first day of the week in the Power Apps regional settings of the person who runs Optimize. A month is a calendar month. **Roster period** is the period Optimize plans.
 - A period that ends after the period Optimize plans is counted up to that end. **Days off** and **Minimum hours** are reduced in proportion to the days counted.
 - **Weekly rest** and **Average hours** look at every window of weeks, one week after another.
 - **Overtime** costs the hours past each step at the step's rate above the person's **Hourly rate**. A person with no rate costs nothing extra. Optimize weighs the cost with the other Should rules.

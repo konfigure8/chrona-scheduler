@@ -49,9 +49,12 @@ import {
   type FreshnessData,
   idleSolveState,
   markRunReviewed,
+  openShiftsLeftOut,
   redactProblemForTenant,
   runSolve,
   SolveCancelledError,
+  SolveStoppedError,
+  stopRun,
   SolveInFlightError,
   SolveQuotaExceededError,
   SolveSessionExpiredError,
@@ -130,6 +133,7 @@ import {
   connectEnvironment,
   fetchSolveSession,
   resolveClientUrl,
+  keepsCachedClaims,
   SolveBridgeError,
   solveClickAction,
 } from "./solveBridge";
@@ -1416,6 +1420,10 @@ export function useDataverseScheduleHost(
       setSession(undefined);
       const failure = error instanceof SolveBridgeError ? error.failure : "other";
       setSessionFailure(failure);
+      if (!keepsCachedClaims(failure)) {
+        entitlementCache.clear();
+        setEntitlementSnapshot(undefined);
+      }
       if (failure === "other") {
         notify(
           "error",
@@ -1426,7 +1434,7 @@ export function useDataverseScheduleHost(
       }
       return undefined;
     }
-  }, [adoptEntitlement, clientUrl, context.webAPI, hostConfig.calendarId, hostConfig.defaultSolverSeconds, messages]);
+  }, [adoptEntitlement, clientUrl, context.webAPI, entitlementCache, hostConfig.calendarId, hostConfig.defaultSolverSeconds, messages]);
 
   React.useEffect(() => {
     void mintSession();
@@ -1793,21 +1801,71 @@ export function useDataverseScheduleHost(
 
   // A Solve click that came before the calendar's settings loaded (see requestSolve).
   const [solvePending, setSolvePending] = React.useState(false);
-  const cancelSolve = React.useCallback((): void => {
+  /*
+   * Each Solve or sample-run click takes a ticket. The click shows its
+   * progress at once, while the session and the reads arrive (Matt
+   * 2026-10-13: a click that shows nothing reads as broken); Cancel
+   * takes a new ticket, so a start still waiting stops where it is.
+   */
+  const solveTicketRef = React.useRef(0);
+  /*
+   * Stops waiting: a start still reading stops where it is. A run that
+   * cannot be stopped (an earlier control started it through
+   * /api/solve) finishes on the server; reviewed keeps it out of the
+   * resume prompt.
+   */
+  const cancelWait = React.useCallback((): void => {
+    solveTicketRef.current += 1;
     setSolvePending(false);
     solveAbortRef.current?.abort();
     solveAbortRef.current = undefined;
-    // The server finishes the run regardless; reviewed keeps it out
-    // of the resume prompt.
     markReviewed(solveRunIdRef.current);
     setResumeDismissed(solveRunIdRef.current);
     solveRunIdRef.current = undefined;
     setSolveState(idleSolveState);
   }, [markReviewed]);
+  /*
+   * Stop and review (F41 Live solve, R2.15): a submitted run is stopped
+   * where it runs, on the calendar's product API; its follower then reads
+   * the best roster found so far, which opens for review like any answer.
+   * Before the run is submitted, the wait is cancelled; a stop that is
+   * refused or lost leaves the run going, and the board says so.
+   */
+  const stopSolve = React.useCallback((): void => {
+    const runId = solveRunIdRef.current;
+    if (!runId || !session) {
+      cancelWait();
+      return;
+    }
+    setSolveState({ status: "stopping" });
+    stopRun({ runId, session, solutionType: hostConfig.product }).catch(() => {
+      // Refused or lost: the run goes on, and its roster opens when it ends.
+      setSolveState((previous) => (previous.status === "stopping" ? { status: "running" } : previous));
+      notify("warning", surfaceStrings.solveStopFailed);
+    });
+  }, [cancelWait, hostConfig.product, notify, session, surfaceStrings]);
+  // Cancel (F41): the run stops on the server and keeps nothing, so it is not counted; the board lets go at once.
+  const cancelSolve = React.useCallback((): void => {
+    const runId = solveRunIdRef.current;
+    if (runId && session) {
+      stopRun({ discard: true, runId, session, solutionType: hostConfig.product }).catch(() => undefined);
+    }
+    cancelWait();
+  }, [cancelWait, hostConfig.product, session]);
+  // The follower's reports leave "stopping" alone until the run's answer arrives.
+  const followStatus = React.useCallback((status: "queued" | "running"): void => {
+    setSolveState((previous) => (previous.status === "stopping" ? previous : { status }));
+  }, []);
 
   const failSolve = React.useCallback((error: unknown): void => {
     if (error instanceof SolveCancelledError) {
       setSolveState(idleSolveState);
+      return;
+    }
+    // Stopped before it found a roster: nothing to review, and the board says so.
+    if (error instanceof SolveStoppedError) {
+      setSolveState(idleSolveState);
+      notify("info", surfaceStrings.solveStoppedNothing);
       return;
     }
     if (error instanceof SolveInFlightError) {
@@ -1822,13 +1880,16 @@ export function useDataverseScheduleHost(
       reason: error instanceof SolveQuotaExceededError ? "quota" : undefined,
       status: "failed",
     });
-  }, [mintSession]);
+  }, [mintSession, notify, surfaceStrings]);
 
   const runWithSession = React.useCallback(
-    async (active: SolveSession): Promise<void> => {
+    async (active: SolveSession, current: () => boolean = () => true): Promise<void> => {
       const solveWindow = solveWindowNow();
       const now = toDisplay(new Date());
       if (solveWindow.end <= now) {
+        // Nothing in the period can change: say so, never a silent click.
+        setSolveState(idleSolveState);
+        notify("warning", surfaceStrings.solvePeriodPassed);
         return;
       }
       const events = solveEventsFor(solveWindow);
@@ -1845,6 +1906,10 @@ export function useDataverseScheduleHost(
           resources.map((resource) => resource.id),
         ),
       };
+      // Cancelled while the reads ran: nothing is sent.
+      if (!current()) {
+        return;
+      }
       const controller = new AbortController();
       solveAbortRef.current = controller;
       solveRunIdRef.current = undefined;
@@ -1852,7 +1917,7 @@ export function useDataverseScheduleHost(
         capabilities: solveCapabilities.length > 0 ? solveCapabilities : undefined,
         currentEvents: events,
         unassignedResourceId: UNASSIGNED_RESOURCE_ID,
-        onStatus: (status) => setSolveState({ status }),
+        onStatus: followStatus,
         onSubmitted: (runId) => {
           solveRunIdRef.current = runId;
         },
@@ -1864,7 +1929,8 @@ export function useDataverseScheduleHost(
         calendarName: hostConfig.calendarName,
         window: solveWindow,
       });
-      applySolved(solved);
+      // The open shifts the problem left out stay open; the review says why.
+      applySolved({ ...solved, leftOpen: openShiftsLeftOut(events, solveWindow, now) });
     },
     [
       applySolved,
@@ -1872,12 +1938,14 @@ export function useDataverseScheduleHost(
       hostConfig.product,
       hostConfig.resources,
       mapped.resources,
+      notify,
       readFreshness,
       solveCapabilities,
       solveEventsFor,
       solveRangeFor,
-      solveWindowNow,
       solverZone,
+      solveWindowNow,
+      surfaceStrings,
       toDisplay,
       toStored,
     ],
@@ -1900,26 +1968,38 @@ export function useDataverseScheduleHost(
       notify("warning", messages.msgSolveNoCalendar);
       return;
     }
+    const ticket = ++solveTicketRef.current;
+    const current = (): boolean => ticket === solveTicketRef.current;
+    setSolveState({ status: "queued" });
     const start = async (): Promise<void> => {
       const active = session ?? (await mintSession());
+      if (!current()) {
+        return;
+      }
       if (!active) {
+        // The session could not start; the board says why (a notice, or Connect).
+        setSolveState(idleSolveState);
         return;
       }
       try {
-        await runWithSession(active);
+        await runWithSession(active, current);
       } catch (error) {
-        if (error instanceof SolveSessionExpiredError) {
+        if (error instanceof SolveSessionExpiredError && current()) {
           // One refresh, then the same request under the new token.
           const fresh = await mintSession();
-          if (fresh) {
-            await runWithSession(fresh);
+          if (fresh && current()) {
+            await runWithSession(fresh, current);
             return;
           }
         }
         throw error;
       }
     };
-    void start().catch(failSolve);
+    void start().catch((error: unknown) => {
+      if (current()) {
+        failSolve(error);
+      }
+    });
   }, [
     failSolve,
     hostConfig.calendarId,
@@ -2094,15 +2174,26 @@ export function useDataverseScheduleHost(
   /* Q6-A: "Try a free sample run" IS the consent. Connect (admin
    * privilege), then the first free solve on the redacted payload. */
   const connectAndSample = React.useCallback((): void => {
+    // The sample run's progress shows at once, as a Solve click's does.
+    const ticket = ++solveTicketRef.current;
+    const current = (): boolean => ticket === solveTicketRef.current;
+    setSolveState({ status: "queued" });
+    const stop = (level: NoticeLevel, text: string): void => {
+      setSolveState(idleSolveState);
+      notify(level, text);
+    };
     const start = async (): Promise<void> => {
       try {
         await connectEnvironment(clientUrl);
       } catch (error) {
-        if (error instanceof SolveBridgeError && error.failure === "noPrivilege") {
-          notify("warning", messages.msgConnectAdminOnly);
+        if (!current()) {
           return;
         }
-        notify(
+        if (error instanceof SolveBridgeError && error.failure === "noPrivilege") {
+          stop("warning", messages.msgConnectAdminOnly);
+          return;
+        }
+        stop(
           "error",
           formatString(messages.msgConnectFailed, {
             message: error instanceof Error ? error.message : String(error),
@@ -2115,29 +2206,40 @@ export function useDataverseScheduleHost(
         try {
           calendarId = await ensureCalendarConfiguration();
         } catch (error) {
-          notify(
-            "error",
-            formatString(messages.msgConnectFailed, {
-              message: error instanceof Error ? error.message : String(error),
-            }),
-          );
+          if (current()) {
+            stop(
+              "error",
+              formatString(messages.msgConnectFailed, {
+                message: error instanceof Error ? error.message : String(error),
+              }),
+            );
+          }
           return;
         }
       }
       const fresh = await mintSession(calendarId);
-      if (fresh) {
-        // F38 rule C: an account paying for any product has no daily limit; say so rather than print a number.
-        notify(
-          "success",
-          fresh.quota.dailySolveLimit < Number.MAX_SAFE_INTEGER
-            ? formatString(messages.msgConnected, { limit: fresh.quota.dailySolveLimit })
-            : messages.msgConnectedUnlimited,
-        );
-        await runWithSession(fresh);
+      if (!current()) {
+        return;
       }
+      if (!fresh) {
+        setSolveState(idleSolveState);
+        return;
+      }
+      // F38 rule C: an account paying for any product has no daily limit; say so rather than print a number.
+      notify(
+        "success",
+        fresh.quota.dailySolveLimit < Number.MAX_SAFE_INTEGER
+          ? formatString(messages.msgConnected, { limit: fresh.quota.dailySolveLimit })
+          : messages.msgConnectedUnlimited,
+      );
+      await runWithSession(fresh, current);
     };
-    void start().catch(failSolve);
-  }, [clientUrl, ensureCalendarConfiguration, failSolve, hostConfig.calendarId, messages, mintSession, runWithSession]);
+    void start().catch((error: unknown) => {
+      if (current()) {
+        failSolve(error);
+      }
+    });
+  }, [clientUrl, ensureCalendarConfiguration, failSolve, hostConfig.calendarId, messages, mintSession, notify, runWithSession]);
 
   /* Resume-or-discard (F26): the session's latest run, when it is not
    * this page's own and not yet dealt with. Review rebuilds the
@@ -2194,12 +2296,13 @@ export function useDataverseScheduleHost(
                 return followRun({
                   currentEvents: events,
                   unassignedResourceId: UNASSIGNED_RESOURCE_ID,
-                  onStatus: (status) => setSolveState({ status }),
+                  onStatus: followStatus,
                   redaction,
                   runId: latestRun.runId,
                   runToken: Date.now().toString(36),
                   session,
                   signal: controller.signal,
+                  solutionType: hostConfig.product,
                   window: solveWindow,
                 }).then((solved) => {
                   applySolved(solved);
@@ -2231,6 +2334,7 @@ export function useDataverseScheduleHost(
           }
         : undefined,
     onCancelSolve: cancelSolve,
+    onStopSolve: stopSolve,
     onDiscardProposal: discardProposal,
     onPublishProposal: publishProposal,
     // Optimize is offered from the claims: with a live session, or with

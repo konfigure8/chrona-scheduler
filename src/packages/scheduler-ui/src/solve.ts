@@ -8,6 +8,7 @@
  * scripts/smoke-sql-backed-solve.ps1 is the level-0 proof of the
  * local path.
  */
+import { isPinned } from "./locks";
 import type { RulePolicy } from "./scheduleRules";
 import {
   isMustRule,
@@ -32,7 +33,8 @@ export interface SolveState {
    * R14, D22): the surface renders `message` as a warning notice with
    * Try again, which asks for the solve again. */
   readonly reason?: "quota" | "read";
-  readonly status: "failed" | "idle" | "queued" | "running";
+  /** "stopping": Stop was pressed; the run ends and hands back its best roster. */
+  readonly status: "failed" | "idle" | "queued" | "running" | "stopping";
 }
 
 /** Server-reported free-tier solve allowance (F19: the client only
@@ -58,6 +60,14 @@ export interface ResumeRunDisplay {
 
 export const idleSolveState: SolveState = { status: "idle" };
 
+/** Open shifts a solve leaves out of the solver's problem, by reason. */
+export interface OpenShiftsLeftOut {
+  /** Pinned open shifts that had not ended: the solver leaves a pin alone. */
+  readonly pinned: number;
+  /** Open shifts that had ended: history nobody worked. */
+  readonly ended: number;
+}
+
 /** A solver answer mapped into UI events (complete schedule slice). */
 export interface ScheduleProposal {
   /**
@@ -68,9 +78,17 @@ export interface ScheduleProposal {
   readonly events: readonly SchedulerUiEvent[];
   /** F40 Three-level score: the whole proposal breaks no Must rule. Absent when the answer does not say. */
   readonly feasible?: boolean;
+  /**
+   * Open shifts in the period that the run left out, so they stay open:
+   * ones that had ended when it ran, and pinned ones. The review
+   * counts them as unfilled and says why. Absent = the host does not say.
+   */
+  readonly leftOpen?: OpenShiftsLeftOut;
   readonly runId: string;
   /** What the search did to find it; absent when the answer does not say. */
   readonly search?: SolveSearch;
+  /** The run was stopped: this is the best roster it found so far. */
+  readonly stopped?: boolean;
   /**
    * The period the run solved. The scorecard counts the shifts that
    * start in it, so its figures match the change list and Apply.
@@ -403,9 +421,13 @@ export interface ProposalScore {
   readonly filledProposed: number;
   /** Changes Apply would write: the proposal less drops and withheld changes. */
   readonly kept: number;
+  /** Open shifts in the period the run left out because they are pinned. */
+  readonly leftPinned: number;
+  /** Open shifts in the period the run left out because they had ended. */
+  readonly leftEnded: number;
   /** People whose shifts the kept changes touch. */
   readonly peopleAffected: number;
-  /** Shifts the solver answered for in the period. */
+  /** Shifts in the period: the ones the solver answered for and the open ones it left out. */
   readonly total: number;
 }
 
@@ -438,14 +460,45 @@ export function proposalScore(
       }
     }
   }
-  const total = scoped.events.length;
+  const answered = scoped.events.length;
+  // The open shifts the run left out stay open, so they count as unfilled.
+  const leftEnded = proposal.leftOpen?.ended ?? 0;
+  const leftPinned = proposal.leftOpen?.pinned ?? 0;
   return {
-    filledNow: total - openShiftCount(scoped, scopedChanges, { dropped: allDropped }),
-    filledProposed: total - openShiftCount(scoped, scopedChanges, options),
+    filledNow: answered - openShiftCount(scoped, scopedChanges, { dropped: allDropped }),
+    filledProposed: answered - openShiftCount(scoped, scopedChanges, options),
     kept: kept.length,
+    leftEnded,
+    leftPinned,
     peopleAffected: people.size,
-    total,
+    total: answered + leftEnded + leftPinned,
   };
+}
+
+/**
+ * The open shifts a solve of `window` leaves out of the solver's
+ * problem, as problemFromSchedule does: ones that start in the window
+ * and had ended at `now`, and pinned ones that had not. The review
+ * says so, so "No changes proposed" never hides open work.
+ */
+export function openShiftsLeftOut(
+  events: readonly SchedulerUiEvent[],
+  window: TimeWindow,
+  now: Date | undefined,
+): OpenShiftsLeftOut {
+  let ended = 0;
+  let pinned = 0;
+  for (const event of events) {
+    if (event.status !== "needsCover" || event.start < window.start || event.start >= window.end) {
+      continue;
+    }
+    if (now && event.end <= now) {
+      ended += 1;
+    } else if (isPinned(event)) {
+      pinned += 1;
+    }
+  }
+  return { ended, pinned };
 }
 
 /** The change list's line for one person in a long proposal. */
@@ -555,6 +608,13 @@ export function proposalDoubleBookings(
 /** What the surface shows while a solve runs: label, elapsed time, Cancel. */
 export interface SolveProgress {
   readonly label: string;
+  /** Cancel (F41): ends the run and keeps nothing. */
   readonly onCancel?: () => void;
+  /** Stop and review (F41): ends the run, and the board reviews the best roster found so far. */
+  readonly onStop?: () => void;
+  /** Every label the run can show: the label keeps the widest one's room, so the buttons never move. */
+  readonly phases?: readonly string[];
   readonly seconds: number;
+  /** Stop and review was pressed and the run is ending. */
+  readonly stopping?: boolean;
 }

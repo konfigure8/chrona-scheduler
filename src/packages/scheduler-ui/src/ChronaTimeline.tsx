@@ -1456,6 +1456,7 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
             <React.Fragment key={row.resource.id}>
               <div
                 className="chrona-sched__resource-label"
+                data-resource-id={row.resource.id}
                 style={{ height: rowHeight }}
               >
                 <span className="chrona-sched__resource-name">

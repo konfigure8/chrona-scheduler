@@ -426,9 +426,10 @@ export function SchedulerToolbar(props: SchedulerToolbarProps): JSX.Element {
           <option value="">{strings.groupByNone}</option>
         </select>
       ) : null}
+      {/* A secondary button: the run (Optimize, Repair) or Publish is the surface's one primary. */}
       {onNewEvent ? (
         <button
-          className="chrona-sched__toolbar-primary"
+          className="chrona-sched__toolbar-button"
           onClick={onNewEvent}
           type="button"
         >

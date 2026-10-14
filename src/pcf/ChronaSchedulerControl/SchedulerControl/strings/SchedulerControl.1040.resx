@@ -130,7 +130,7 @@
     <value>Chrona valuta tutti i turni: competenze, disponibilità, ore, costi e conflitti.</value>
   </data>
   <data name="conversionPitchProblem" xml:space="preserve">
-    <value>Pianificare un elemento alla volta nasconde le interazioni.</value>
+    <value>Pianificare un elemento alla volta ignora le interazioni.</value>
   </data>
   <data name="conversionSampleAfter" xml:space="preserve">
     <value>Dopo l'ottimizzazione</value>
@@ -400,7 +400,7 @@
     <value>Non salvato: la persona non può ancora essere salvata. Riprova.</value>
   </data>
   <data name="fieldBundle" xml:space="preserve">
-    <value>Gruppo</value>
+    <value>Gruppo collegato</value>
   </data>
   <data name="fieldProvenance" xml:space="preserve">
     <value>Origine</value>
@@ -555,6 +555,9 @@
   <data name="proposalReviewHint" xml:space="preserve">
     <value>Proposta in esame. Applica o scarta per modificare.</value>
   </data>
+  <data name="proposalStoppedHint" xml:space="preserve">
+    <value>Interrotto in anticipo: il miglior piano turni finora. Applica o scarta per modificare.</value>
+  </data>
   <data name="proposalShowCurrent" xml:space="preserve">
     <value>Attuale</value>
   </data>
@@ -602,6 +605,12 @@
   </data>
   <data name="proposalFilled" xml:space="preserve">
     <value>{filled} turni coperti su {total}</value>
+  </data>
+  <data name="proposalLeftEnded" xml:space="preserve">
+    <value>Già terminati, lasciati scoperti: {count}</value>
+  </data>
+  <data name="proposalLeftPinned" xml:space="preserve">
+    <value>Fissati, lasciati scoperti: {count}</value>
   </data>
   <data name="scorecardLabel" xml:space="preserve">
     <value>Rispetto ai turni attuali</value>
@@ -774,6 +783,18 @@
   <data name="solveSolving" xml:space="preserve">
     <value>Ottimizzazione…</value>
   </data>
+  <data name="solveStop" xml:space="preserve">
+    <value>Interrompi e rivedi</value>
+  </data>
+  <data name="solveStopping" xml:space="preserve">
+    <value>Interruzione…</value>
+  </data>
+  <data name="solveStoppedNothing" xml:space="preserve">
+    <value>Interrotto prima di trovare un piano turni. Non è cambiato nulla. Rilancia e lascia che finisca.</value>
+  </data>
+  <data name="solveStopFailed" xml:space="preserve">
+    <value>Impossibile interrompere l’esecuzione. Continua e il piano turni si aprirà al termine.</value>
+  </data>
   <data name="start" xml:space="preserve">
     <value>Inizio</value>
   </data>
@@ -859,7 +880,7 @@
     <value>Configurazione (facoltativa)</value>
   </data>
   <data name="Prop_CalendarConfig_Desc" xml:space="preserve">
-    <value>ID o nome del calendario Chrona Scheduler. Vuoto: Connect ne crea uno per questa vista.</value>
+    <value>ID o nome di un calendario Chrona Scheduler. Lascia vuoto: Connect ne crea uno per questa vista.</value>
   </data>
   <data name="Prop_Title" xml:space="preserve">
     <value>Titolo (obbligatorio)</value>
@@ -889,7 +910,7 @@
     <value>Risorsa (righe)</value>
   </data>
   <data name="Prop_Resource_Desc" xml:space="preserve">
-    <value>Ricerca della persona o bene assegnato. Collegata: una riga per persona. Non collegata: calendario. Usa una ricerca, non Proprietario.</value>
+    <value>Ricerca della persona o del bene assegnato. Collegata: una riga per persona. Non collegata: calendario. Usa una ricerca, non Proprietario.</value>
   </data>
   <data name="Prop_Status" xml:space="preserve">
     <value>Stato (facoltativo)</value>

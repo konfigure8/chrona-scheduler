@@ -100,7 +100,7 @@
     <value> — contagem local, sem envio de dados.</value>
   </data>
   <data name="conversionCoverageGaps" xml:space="preserve">
-    <value>{gaps} falhas de cobertura</value>
+    <value>{gaps} lacunas de cobertura</value>
   </data>
   <data name="conversionInfoBody" xml:space="preserve">
     <value>Ligar Chrona não altera o funcionamento do agendador.</value>
@@ -130,7 +130,7 @@
     <value>Chrona considera toda a escala: competências, disponibilidade, horas, custos e conflitos.</value>
   </data>
   <data name="conversionPitchProblem" xml:space="preserve">
-    <value>Agendar um item de cada vez oculta as interações.</value>
+    <value>Agendar item a item ignora as interações.</value>
   </data>
   <data name="conversionSampleAfter" xml:space="preserve">
     <value>Após otimizar</value>
@@ -205,7 +205,7 @@
     <value>Sem recursos. Verifique a configuração da vista.</value>
   </data>
   <data name="entitlementGrace" xml:space="preserve">
-    <value>Pagamento em atraso. Prazo até {date}</value>
+    <value>Pagamento em atraso. Tolerância até {date}</value>
   </data>
   <data name="entitlementLapsed" xml:space="preserve">
     <value>Subscrição Chrona expirada. Otimização e geração suspensas até regularizar o pagamento.</value>
@@ -244,7 +244,7 @@
     <value>Já não é necessário: {required} necessários, {existing} existentes. Mantido por estar {cause}.</value>
   </data>
   <data name="goToDate" xml:space="preserve">
-    <value>Ir para data</value>
+    <value>Ir para a data</value>
   </data>
   <data name="groupByLabel" xml:space="preserve">
     <value>Agrupar linhas</value>
@@ -403,7 +403,7 @@
     <value>Lote</value>
   </data>
   <data name="fieldProvenance" xml:space="preserve">
-    <value>Origem</value>
+    <value>Proveniência</value>
   </data>
   <data name="fieldPublishState" xml:space="preserve">
     <value>Publicação</value>
@@ -555,6 +555,9 @@
   <data name="proposalReviewHint" xml:space="preserve">
     <value>A rever proposta. Aplique ou descarte para editar.</value>
   </data>
+  <data name="proposalStoppedHint" xml:space="preserve">
+    <value>Interrompido antes do fim: a melhor escala até agora. Aplique ou descarte para editar.</value>
+  </data>
   <data name="proposalShowCurrent" xml:space="preserve">
     <value>Atual</value>
   </data>
@@ -562,7 +565,7 @@
     <value>Proposto</value>
   </data>
   <data name="proposalHoldCompare" xml:space="preserve">
-    <value>Manter para comparar</value>
+    <value>Manter premido para comparar</value>
   </data>
   <data name="proposalChangesOnly" xml:space="preserve">
     <value>Só alterações</value>
@@ -602,6 +605,12 @@
   </data>
   <data name="proposalFilled" xml:space="preserve">
     <value>{filled} de {total} turnos preenchidos</value>
+  </data>
+  <data name="proposalLeftEnded" xml:space="preserve">
+    <value>Já terminados, por preencher: {count}</value>
+  </data>
+  <data name="proposalLeftPinned" xml:space="preserve">
+    <value>Fixados, por preencher: {count}</value>
   </data>
   <data name="scorecardLabel" xml:space="preserve">
     <value>Em relação à escala atual</value>
@@ -774,6 +783,18 @@
   <data name="solveSolving" xml:space="preserve">
     <value>A otimizar…</value>
   </data>
+  <data name="solveStop" xml:space="preserve">
+    <value>Parar e rever</value>
+  </data>
+  <data name="solveStopping" xml:space="preserve">
+    <value>A parar…</value>
+  </data>
+  <data name="solveStoppedNothing" xml:space="preserve">
+    <value>Interrompido antes de encontrar uma escala. Nada mudou. Volte a executar e deixe terminar.</value>
+  </data>
+  <data name="solveStopFailed" xml:space="preserve">
+    <value>Não foi possível interromper a execução. Continua, e a escala abre quando terminar.</value>
+  </data>
   <data name="start" xml:space="preserve">
     <value>Início</value>
   </data>
@@ -856,7 +877,7 @@
     <value>Tarefas</value>
   </data>
   <data name="Prop_CalendarConfig" xml:space="preserve">
-    <value>Configuração (opcional)</value>
+    <value>Configuração do calendário (opcional)</value>
   </data>
   <data name="Prop_CalendarConfig_Desc" xml:space="preserve">
     <value>ID ou nome do calendário Chrona Scheduler. Vazio: Connect cria um para esta vista.</value>
@@ -1192,7 +1213,7 @@
     <value>{shift} de {name} ficaria por atribuir</value>
   </data>
   <data name="whyNotInReview" xml:space="preserve">
-    <value>Para usar {name}, descarte esta alteração e aja depois de Aplicar.</value>
+    <value>Para usar {name}, descarte esta alteração e edite depois de aplicar.</value>
   </data>
   <data name="scorePreferences" xml:space="preserve">
     <value>Preferências cumpridas</value>

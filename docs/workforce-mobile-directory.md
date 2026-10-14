@@ -2,7 +2,7 @@
 
 Save an import definition to choose who joins Chrona Workforce Mobile and how their details stay current. The definition holds your selected groups, optional office and department filters, field rules and onboarding choices. Background sync keeps worker names, email addresses and reporting managers up to date from Microsoft Entra ID.
 
-Open **Setup → People & access** in your Chrona administration app. Start with **Import definitions**. Use the existing directory connection when it is ready; your Power Platform administrator can repair or configure the connection when needed.
+In the Chrona Workforce Scheduler app, switch to **Mobile** and open **Setup → Directory sync**. Start with **Import definitions**. Use the existing directory connection when it is ready; your Power Platform administrator can repair or configure the connection when needed.
 
 ## Connection
 
@@ -99,7 +99,7 @@ Choose what should happen to new workers:
 | Prepare only | Import worker records. You decide when to send invitations. |
 | Invite new workers | Prepare invitations for eligible newcomers after a complete sync. First confirm that your site's sign-in and invitation delivery are configured. |
 
-Automatic invitations apply to new eligible workers after you enable the policy. They do not resend old invitations or invite every previously imported person. Review existing uninvited people in **People**.
+Automatic invitations apply to new eligible workers after you enable the policy. They do not resend old invitations or invite every previously imported person. Review existing uninvited people in **App access**.
 
 Use **Save draft** after you choose the required groups and settings. A draft is excluded from scheduled sync. When the connection and setup checks pass, use **Save and start sync**. An active source uses **Save and run sync**. These actions save the settings and request a run; they do not repair a connection or turn on a disabled Power Automate flow.
 
@@ -113,7 +113,7 @@ Keep the source and its selected groups. Use **Manage connections** to open the 
 
 1. Open [Power Automate](https://make.powerautomate.com/) and select the same environment as your Chrona app.
 2. Open **Connections**. Find the directory connection used by the Chrona solution. Ask its owner to update the connection if it requires sign-in. For a new directory connection, use **HTTP with Microsoft Entra ID** and set both the resource URI and base URL to `https://graph.microsoft.com`.
-3. Open **Solutions**, then **Chrona Workforce Mobile**. Bind the directory connection reference to the approved directory connection. Check the Dataverse connection reference too.
+3. Open **Solutions**, then **Chrona Workforce Scheduler**. Bind the directory connection reference to the approved directory connection. Check the Dataverse connection reference too.
 4. Check the directory flows and turn on any required flow that is off. Repair its connection first if needed. A user who cannot use a connection might not be able to enable its flow.
 5. In the solution settings, check that **Worker administration website ID** identifies this worker site and **Worker directory automation enabled** is `true`.
 6. In Chrona, select the Dataverse user used by the Power Automate connection. This selection does not change that connection's account.
@@ -133,7 +133,7 @@ Import creates or updates the worker records. To link eligible same-tenant work 
 
 ### What happens when someone leaves?
 
-A sync that reads a disabled account stops its Chrona access. After a complete sync, a person who has left all selected groups or no longer matches the saved filters loses access through that source. Leaving one selected group does not remove a person who still qualifies through another selected group. These are scheduled checks; they are not an instant directory-event connection. Use **Deactivate access** in People when you need to stop Chrona access directly.
+A sync that reads a disabled account stops its Chrona access. After a complete sync, a person who has left all selected groups or no longer matches the saved filters loses access through that source. Leaving one selected group does not remove a person who still qualifies through another selected group. These are scheduled checks; they are not an instant directory-event connection. Use **Deactivate access** in App access when you need to stop Chrona access directly.
 
 If the account is enabled again and the person is eligible, a later complete sync can restore access that directory sync itself stopped. It does not undo a manual stop, expired access or an earlier stop whose reason is unknown. A manual stop made before or during a directory suspension remains in effect. A partial or failed read does not restore access. The worker keeps the same person and contact records across directory definitions and email changes.
 
@@ -143,6 +143,6 @@ This setup uses the directory connection configured for the environment. Selecti
 
 ### A worker cannot get into the app. What should I check?
 
-Open the worker in **People**. Check their access status, directory account, email address, invitation and suggested next action together. Repair the failed step: resend an eligible invitation, review stopped access, or ask the identity administrator to restore sign-in. Reimporting the worker does not reset their password or repair the site's identity provider.
+Open the worker in **App access**. Check their access status, directory account, email address, invitation and suggested next action together. Repair the failed step: resend an eligible invitation, review stopped access, or ask the identity administrator to restore sign-in. Reimporting the worker does not reset their password or repair the site's identity provider.
 
 If a sync fails, open its details, correct the reported connection or profile issue, then retry. Keep the existing source so its identity links and history are retained.

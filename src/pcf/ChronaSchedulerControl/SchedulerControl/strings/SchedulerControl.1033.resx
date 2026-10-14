@@ -555,6 +555,9 @@
   <data name="proposalReviewHint" xml:space="preserve">
     <value>Reviewing a proposal. Apply or discard to edit.</value>
   </data>
+  <data name="proposalStoppedHint" xml:space="preserve">
+    <value>Stopped early: the best roster so far. Apply or discard to edit.</value>
+  </data>
   <data name="proposalShowCurrent" xml:space="preserve">
     <value>Current</value>
   </data>
@@ -602,6 +605,12 @@
   </data>
   <data name="proposalFilled" xml:space="preserve">
     <value>{filled} of {total} shifts filled</value>
+  </data>
+  <data name="proposalLeftEnded" xml:space="preserve">
+    <value>{count} already ended, left open</value>
+  </data>
+  <data name="proposalLeftPinned" xml:space="preserve">
+    <value>{count} pinned, left open</value>
   </data>
   <data name="scorecardLabel" xml:space="preserve">
     <value>Against today's roster</value>
@@ -691,7 +700,7 @@
     <value>This period has passed</value>
   </data>
   <data name="solveQueued" xml:space="preserve">
-    <value>Queued...</value>
+    <value>Queued…</value>
   </data>
   <data name="solveElapsed" xml:space="preserve">
     <value>{seconds} s</value>
@@ -772,7 +781,19 @@
     <value>Upgrade</value>
   </data>
   <data name="solveSolving" xml:space="preserve">
-    <value>Optimizing...</value>
+    <value>Optimizing…</value>
+  </data>
+  <data name="solveStop" xml:space="preserve">
+    <value>Stop and review</value>
+  </data>
+  <data name="solveStopping" xml:space="preserve">
+    <value>Stopping…</value>
+  </data>
+  <data name="solveStoppedNothing" xml:space="preserve">
+    <value>Stopped before a roster was found. Nothing changed. Run it again and let it finish.</value>
+  </data>
+  <data name="solveStopFailed" xml:space="preserve">
+    <value>Couldn't stop the run. It carries on, and its roster opens when it ends.</value>
   </data>
   <data name="start" xml:space="preserve">
     <value>Start</value>

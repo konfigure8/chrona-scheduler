@@ -43,13 +43,13 @@
     <value>Indisponível {range}</value>
   </data>
   <data name="assignSearchPlaceholder" xml:space="preserve">
-    <value>Pesquisar pessoal</value>
+    <value>Pesquisar pessoas</value>
   </data>
   <data name="assignShowEveryone" xml:space="preserve">
     <value>Ver todos ({count})</value>
   </data>
   <data name="assignTitle" xml:space="preserve">
-    <value>Atribuir pessoal</value>
+    <value>Atribuir pessoa</value>
   </data>
   <data name="assignedTo" xml:space="preserve">
     <value>Atribuído a</value>
@@ -100,7 +100,7 @@
     <value> — contagem local, sem envio de dados.</value>
   </data>
   <data name="conversionCoverageGaps" xml:space="preserve">
-    <value>{gaps} falhas de cobertura</value>
+    <value>{gaps} lacunas de cobertura</value>
   </data>
   <data name="conversionInfoBody" xml:space="preserve">
     <value>Conectar o Chrona não altera o funcionamento do agendador.</value>
@@ -127,10 +127,10 @@
     <value>Este JSON exato. Nada é enviado antes de conectar.</value>
   </data>
   <data name="conversionPitchMechanism" xml:space="preserve">
-    <value>Chrona considera toda a escala: competências, disponibilidade, horas, custos e conflitos.</value>
+    <value>O Chrona considera a escala inteira de uma vez: competências, disponibilidade, horas, custos e conflitos.</value>
   </data>
   <data name="conversionPitchProblem" xml:space="preserve">
-    <value>Agendar um item de cada vez oculta as interações.</value>
+    <value>Agendar um item por vez ignora as interações entre eles.</value>
   </data>
   <data name="conversionSampleAfter" xml:space="preserve">
     <value>Após otimizar</value>
@@ -148,7 +148,7 @@
     <value>Nada mais: sem nomes, notas, contatos ou registros não relacionados</value>
   </data>
   <data name="conversionSentPeople" xml:space="preserve">
-    <value>Pessoas: IDs, competências, disponibilidade, horas e custos horários</value>
+    <value>Pessoas: IDs, competências, disponibilidade, horas e valores por hora</value>
   </data>
   <data name="conversionSentTitle" xml:space="preserve">
     <value>Dados de uma otimização real</value>
@@ -166,10 +166,10 @@
     <value>Excluir</value>
   </data>
   <data name="deleteConfirmCount" xml:space="preserve">
-    <value>Excluir {count} itens? Esta ação é irreversível.</value>
+    <value>Excluir {count} itens? Isso não pode ser desfeito.</value>
   </data>
   <data name="deleteConfirmMessage" xml:space="preserve">
-    <value>Excluir {title}? Esta ação é irreversível.</value>
+    <value>Excluir {title}? Isso não pode ser desfeito.</value>
   </data>
   <data name="deleteConfirmTitle" xml:space="preserve">
     <value>Confirmar exclusão</value>
@@ -205,7 +205,7 @@
     <value>Sem recursos. Verifique a configuração da exibição.</value>
   </data>
   <data name="entitlementGrace" xml:space="preserve">
-    <value>Pagamento em atraso. Prazo até {date}</value>
+    <value>Pagamento em atraso. Carência até {date}</value>
   </data>
   <data name="entitlementLapsed" xml:space="preserve">
     <value>Assinatura do Chrona expirada. Otimização e geração pausadas até regularizar o pagamento.</value>
@@ -286,7 +286,7 @@
     <value>Sem cobertura</value>
   </data>
   <data name="legendNonWorking" xml:space="preserve">
-    <value>Fora do horário</value>
+    <value>Fora do expediente</value>
   </data>
   <data name="legendPreferred" xml:space="preserve">
     <value>Horário preferido</value>
@@ -301,7 +301,7 @@
     <value>e</value>
   </data>
   <data name="menuAssign" xml:space="preserve">
-    <value>Atribuir pessoal…</value>
+    <value>Atribuir pessoa…</value>
   </data>
   <data name="menuDeleteCount" xml:space="preserve">
     <value>Excluir {count} itens</value>
@@ -403,10 +403,10 @@
     <value>Lote</value>
   </data>
   <data name="fieldProvenance" xml:space="preserve">
-    <value>Origem</value>
+    <value>Alterado por</value>
   </data>
   <data name="fieldPublishState" xml:space="preserve">
-    <value>Publicação</value>
+    <value>Status de publicação</value>
   </data>
   <data name="fieldStatus" xml:space="preserve">
     <value>Status</value>
@@ -544,7 +544,7 @@
     <value>Retidas ({count})</value>
   </data>
   <data name="proposalHeldBackHint" xml:space="preserve">
-    <value>Cada uma criaria uma dupla atribuição, por isso Aplicar não a inclui.</value>
+    <value>Cada uma criaria uma sobreposição, por isso Aplicar não a inclui.</value>
   </data>
   <data name="proposalApplyAll" xml:space="preserve">
     <value>Aplicar as {count}</value>
@@ -555,6 +555,9 @@
   <data name="proposalReviewHint" xml:space="preserve">
     <value>Revisando a proposta. Aplique ou descarte para editar.</value>
   </data>
+  <data name="proposalStoppedHint" xml:space="preserve">
+    <value>Interrompido antes do fim: a melhor escala até agora. Aplique ou descarte para editar.</value>
+  </data>
   <data name="proposalShowCurrent" xml:space="preserve">
     <value>Atual</value>
   </data>
@@ -562,7 +565,7 @@
     <value>Proposto</value>
   </data>
   <data name="proposalHoldCompare" xml:space="preserve">
-    <value>Manter para comparar</value>
+    <value>Segure para comparar</value>
   </data>
   <data name="proposalChangesOnly" xml:space="preserve">
     <value>Só alterações</value>
@@ -602,6 +605,12 @@
   </data>
   <data name="proposalFilled" xml:space="preserve">
     <value>{filled} de {total} turnos preenchidos</value>
+  </data>
+  <data name="proposalLeftEnded" xml:space="preserve">
+    <value>Já encerrados, deixados em aberto: {count}</value>
+  </data>
+  <data name="proposalLeftPinned" xml:space="preserve">
+    <value>Fixados, deixados em aberto: {count}</value>
   </data>
   <data name="scorecardLabel" xml:space="preserve">
     <value>Em relação à escala atual</value>
@@ -658,13 +667,13 @@
     <value>1 alteração ficou desatualizada. Verifique-a e aplique novamente.</value>
   </data>
   <data name="proposalDoubleBookingMany" xml:space="preserve">
-    <value>{count} duplas atribuições</value>
+    <value>{count} sobreposições</value>
   </data>
   <data name="proposalDoubleBookingOne" xml:space="preserve">
-    <value>1 dupla atribuição</value>
+    <value>1 sobreposição</value>
   </data>
   <data name="proposalDoubleBooks" xml:space="preserve">
-    <value>Dupla atribuição de {person} com {title}</value>
+    <value>Sobreposição de {person} com {title}</value>
   </data>
   <data name="proposalGroupOutOfDate" xml:space="preserve">
     <value>Desatualizadas ({count})</value>
@@ -697,13 +706,13 @@
     <value>{seconds} s</value>
   </data>
   <data name="reasonMinimumBreak" xml:space="preserve">
-    <value>Intervalo inferior a {minimum} min (interrupção: {gap} min)</value>
+    <value>Descanso menor que {minimum} min ({gap} min)</value>
   </data>
   <data name="reasonOutsideGroup" xml:space="preserve">
     <value>Fora de {group}</value>
   </data>
   <data name="reasonOutsideHours" xml:space="preserve">
-    <value>Fora do horário ({start}-{end})</value>
+    <value>Fora do expediente ({start}-{end})</value>
   </data>
   <data name="reasonOverlap" xml:space="preserve">
     <value>Sobrepõe outro item</value>
@@ -715,7 +724,7 @@
     <value>Refazer</value>
   </data>
   <data name="requiredSkills" xml:space="preserve">
-    <value>Funções exigidas</value>
+    <value>Função</value>
   </data>
   <data name="resizeResources" xml:space="preserve">
     <value>Redimensionar coluna de recursos</value>
@@ -774,6 +783,18 @@
   <data name="solveSolving" xml:space="preserve">
     <value>Otimizando…</value>
   </data>
+  <data name="solveStop" xml:space="preserve">
+    <value>Parar e revisar</value>
+  </data>
+  <data name="solveStopping" xml:space="preserve">
+    <value>Parando…</value>
+  </data>
+  <data name="solveStoppedNothing" xml:space="preserve">
+    <value>Interrompido antes de encontrar uma escala. Nada mudou. Execute de novo e deixe terminar.</value>
+  </data>
+  <data name="solveStopFailed" xml:space="preserve">
+    <value>Não foi possível interromper a execução. Ela continua, e a escala abre quando terminar.</value>
+  </data>
   <data name="start" xml:space="preserve">
     <value>Início</value>
   </data>
@@ -793,7 +814,7 @@
     <value>{count} min</value>
   </data>
   <data name="timeZoneChip" xml:space="preserve">
-    <value>Fuso horário visível</value>
+    <value>Fuso horário exibido</value>
   </data>
   <data name="timelineLabel" xml:space="preserve">
     <value>Linha do tempo de recursos</value>
@@ -856,7 +877,7 @@
     <value>Tarefas</value>
   </data>
   <data name="Prop_CalendarConfig" xml:space="preserve">
-    <value>Configuração (opcional)</value>
+    <value>Configuração do calendário (opcional)</value>
   </data>
   <data name="Prop_CalendarConfig_Desc" xml:space="preserve">
     <value>ID ou nome do calendário Chrona Scheduler. Vazio: Connect cria um para esta exibição.</value>
@@ -916,13 +937,13 @@
     <value>Texto que vincula linhas agendadas em conjunto.</value>
   </data>
   <data name="Prop_PublishState" xml:space="preserve">
-    <value>Publicação (opcional)</value>
+    <value>Status de publicação (opcional)</value>
   </data>
   <data name="Prop_PublishState_Desc" xml:space="preserve">
     <value>Coluna de texto ou opção do ciclo de vida: rascunho, publicado, etc.</value>
   </data>
   <data name="Prop_Provenance" xml:space="preserve">
-    <value>Proveniência (opcional)</value>
+    <value>Alterado por (opcional)</value>
   </data>
   <data name="Prop_Provenance_Desc" xml:space="preserve">
     <value>Coluna de texto ou opção que registra quem alterou a linha: pessoa ou otimizador.</value>
@@ -1018,7 +1039,7 @@
     <value>Outras regras obrigatórias</value>
   </data>
   <data name="mustKindOverlap" xml:space="preserve">
-    <value>Dupla atribuição</value>
+    <value>Sobreposição</value>
   </data>
   <data name="mustKindMaximumHours" xml:space="preserve">
     <value>Horas máx.</value>
@@ -1141,7 +1162,7 @@
     <value>{name} se encaixa melhor.</value>
   </data>
   <data name="whyNotTakingOff" xml:space="preserve">
-    <value>{name} perde o turno</value>
+    <value>Tirar de {name}</value>
   </data>
   <data name="whyNotPrefers" xml:space="preserve">
     <value>{name} prefere trabalhar nesse horário</value>
@@ -1192,7 +1213,7 @@
     <value>{shift} de {name} ficaria sem atribuição</value>
   </data>
   <data name="whyNotInReview" xml:space="preserve">
-    <value>Para usar {name}, descarte esta alteração e aja depois de Aplicar.</value>
+    <value>Para usar {name}, descarte esta alteração e faça a mudança depois de Aplicar.</value>
   </data>
   <data name="scorePreferences" xml:space="preserve">
     <value>Preferências atendidas</value>

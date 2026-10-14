@@ -43,6 +43,8 @@ export interface ProposalDrillDown {
 }
 
 export interface ProposalPanelProps {
+  /** Changes an extension's groups show: left out of the panel's own groups. */
+  readonly claimed?: ReadonlySet<string>;
   /** Whether a change's shift can be asked "Why not…?" (not started, in the period). */
   readonly canAskWhyNot?: (change: ProposalChange) => boolean;
   /** The run was too large to explain: one note, and no reason lines (RR2-D8). */
@@ -50,6 +52,8 @@ export interface ProposalPanelProps {
   readonly drillDown?: ProposalDrillDown;
   readonly entries: readonly ProposalPanelEntry[];
   readonly id?: string;
+  /** An extension's groups, first in the list after "Why not…?". */
+  readonly lead?: React.ReactNode;
   /** Opened from the folded tab: over the board, not beside it. */
   readonly overlay?: boolean;
   /** Bring the change into view on the board and select it. */
@@ -124,7 +128,7 @@ export function ProposalPanel(props: ProposalPanelProps): JSX.Element {
   };
 
   const outOfDate = entries.filter((entry) => entry.outOfDate !== undefined);
-  const current = entries.filter((entry) => entry.outOfDate === undefined);
+  const current = entries.filter((entry) => entry.outOfDate === undefined && !props.claimed?.has(entry.change.current.id));
   const assigned = current.filter((entry) => entry.change.kind === "assign");
   const moved = current.filter((entry) => entry.change.kind === "move");
   const unassigned = current.filter((entry) => entry.change.kind === "unassign");
@@ -313,6 +317,7 @@ export function ProposalPanel(props: ProposalPanelProps): JSX.Element {
         </div>
       ) : null}
       {props.whyNot}
+      {props.lead}
       {drillGroup()}
       {summarised ? (
         <div className="chrona-sched__proposal-group" data-testid="proposal-people">

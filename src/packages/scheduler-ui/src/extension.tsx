@@ -1,9 +1,10 @@
 import * as React from "react";
 
+import type { ContextMenuItem } from "./ContextMenu";
 import type { TimelineChange } from "./interactions";
 import type { RosterDay } from "./rosterLayout";
 import type { MustBreachCounts, ScheduleCandidate, ScheduleRuleMatch } from "./schedulingContract";
-import type { SolveProgress } from "./solve";
+import type { ProposalChange, SolveProgress } from "./solve";
 import type { CandidateAnswer, RosterVersion } from "./solveClient";
 import type { SchedulerStrings } from "./stringResources";
 import type {
@@ -243,11 +244,35 @@ export interface PreferencesMet {
   readonly unmet: readonly PreferenceMiss[];
 }
 
+/** What the board gives an extension to group changes with. */
+export interface ChangeGroupsInput {
+  /** The proposal's changes, with which ones the planner dropped. */
+  readonly changes: readonly { readonly change: ProposalChange; readonly dropped: boolean }[];
+  /** Bring a change into view on the board and select it. */
+  readonly onFocus: (change: ProposalChange) => void;
+  readonly resourceNameById: ReadonlyMap<string, string>;
+  /** Keep or drop these changes together. */
+  readonly setDropped: (changeIds: readonly string[], dropped: boolean) => void;
+}
+
+/** Groups an extension shows first in the change list, and the changes they own. */
+export interface ChangeGroups {
+  /** The changes the groups show: the board's own groups leave them out. */
+  readonly claimed: ReadonlySet<string>;
+  readonly node: React.ReactNode;
+}
+
 /**
  * A scenario package adds its own content to the board through these
  * slots. Without an extension the board renders none of it.
  */
 export interface BoardExtension {
+  /**
+   * Groups at the top of the change list, before the board's own, such
+   * as the covers a repair makes. Absent, or undefined for a proposal =
+   * the board's groups only.
+   */
+  readonly changeGroups?: (input: ChangeGroupsInput) => ChangeGroups | undefined;
   /**
    * The host's own form for a new item, opened instead of the board's
    * dialog. Absent = the board's dialog.
@@ -272,6 +297,10 @@ export interface BoardExtension {
   readonly review?: ReviewExtension;
   /** "Why not…?" on a shift and on a change. Absent = no question. */
   readonly whyNot?: WhyNotExtension;
+  /** The extension's own items in a shift's menu, after the board's. Absent = none. */
+  readonly shiftMenu?: (event: SchedulerUiEvent) => readonly ContextMenuItem[];
+  /** A person's menu, opened from their name. Absent, or no items for the person = no menu. */
+  readonly personMenu?: (resource: SchedulerResource) => readonly ContextMenuItem[];
   /**
    * Under the toolbar. When it renders, it takes the place of the
    * board's period bar and of its Optimize entry.

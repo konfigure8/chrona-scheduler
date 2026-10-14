@@ -13,6 +13,12 @@ export interface SchedulerTheme {
   readonly danger: string;
   readonly dangerBackground: string;
   readonly dangerStroke: string;
+  /** Fluent colorNeutralBackgroundDisabled: a disabled button's fill. */
+  readonly disabledBackground: string;
+  /** Fluent colorNeutralStrokeDisabled: a disabled button's border. */
+  readonly disabledStroke: string;
+  /** Fluent colorNeutralForegroundDisabled: a disabled control's text. */
+  readonly disabledText: string;
   readonly fontFamily: string;
   /** Fluent colorPaletteGrapeBorderActive: holiday decorations. */
   readonly holiday: string;
@@ -30,6 +36,8 @@ export interface SchedulerTheme {
   readonly ragRed: string;
   /** Fluent shadow2: faint elevation for cards and containers. */
   readonly shadow: string;
+  /** Fluent colorNeutralShadowAmbient: the colour of a soft edge shadow, dark in both themes. */
+  readonly shadowAmbient: string;
   /** Fluent shadow64: dialogs. */
   readonly shadowDialog: string;
   /** Fluent shadow16: menus, hover cards, and other flyouts. */
@@ -57,6 +65,9 @@ const cssVariableByToken: Record<keyof SchedulerTheme, string> = {
   danger: "--csui-danger",
   dangerBackground: "--csui-danger-bg",
   dangerStroke: "--csui-danger-stroke",
+  disabledBackground: "--csui-disabled-bg",
+  disabledStroke: "--csui-disabled-stroke",
+  disabledText: "--csui-disabled-text",
   fontFamily: "--csui-font",
   holiday: "--csui-holiday",
   now: "--csui-now",
@@ -66,6 +77,7 @@ const cssVariableByToken: Record<keyof SchedulerTheme, string> = {
   ragGreen: "--csui-rag-green",
   ragRed: "--csui-rag-red",
   shadow: "--csui-shadow",
+  shadowAmbient: "--csui-shadow-ambient",
   shadowDialog: "--csui-shadow-dialog",
   shadowFlyout: "--csui-shadow-flyout",
   stroke: "--csui-stroke",
@@ -95,6 +107,32 @@ export function themeToCssVariables(
   return variables;
 }
 
+/**
+ * The colour scheme a background implies, so native fields, pickers and
+ * scrollbars follow a dark host theme. Undefined when the colour does not
+ * read as hex or rgb(): the stylesheet's light default stays.
+ */
+export function colorSchemeOf(background: string | undefined): "dark" | "light" | undefined {
+  const value = background?.trim() ?? "";
+  let rgb: number[] | undefined;
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(value)?.[1];
+  if (hex) {
+    const full = hex.length === 3 ? [...hex].map((digit) => digit + digit).join("") : hex;
+    rgb = [0, 2, 4].map((offset) => parseInt(full.slice(offset, offset + 2), 16));
+  } else {
+    const parts = /^rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)/i.exec(value);
+    rgb = parts ? [Number(parts[1]), Number(parts[2]), Number(parts[3])] : undefined;
+  }
+  if (!rgb) {
+    return undefined;
+  }
+  const [red, green, blue] = rgb.map((channel) => {
+    const share = channel / 255;
+    return share <= 0.03928 ? share / 12.92 : ((share + 0.055) / 1.055) ** 2.4;
+  }) as [number, number, number];
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue < 0.4 ? "dark" : "light";
+}
+
 /** Matches the stylesheet defaults; useful as an explicit baseline. */
 export const fluentLightTheme: SchedulerTheme = {
   background: "#ffffff",
@@ -105,6 +143,9 @@ export const fluentLightTheme: SchedulerTheme = {
   danger: "#b10e1c",
   dangerBackground: "#fdf3f4",
   dangerStroke: "#eeacb2",
+  disabledBackground: "#f0f0f0",
+  disabledStroke: "#e0e0e0",
+  disabledText: "#bdbdbd",
   fontFamily: '"Segoe UI", "Segoe UI Web (West European)", -apple-system, sans-serif',
   holiday: "#881798",
   now: "#bc2f32",
@@ -114,6 +155,7 @@ export const fluentLightTheme: SchedulerTheme = {
   ragGreen: "#107c10",
   ragRed: "#c50f1f",
   shadow: "0 0 2px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.14)",
+  shadowAmbient: "rgba(0, 0, 0, 0.12)",
   shadowDialog: "0 0 8px rgba(0, 0, 0, 0.12), 0 32px 64px rgba(0, 0, 0, 0.14)",
   shadowFlyout: "0 0 2px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.14)",
   stroke: "#e0e0e0",
@@ -140,6 +182,9 @@ export const fluentDarkTheme: SchedulerTheme = {
   danger: "#dc626d",
   dangerBackground: "#3b0509",
   dangerStroke: "#c50f1f",
+  disabledBackground: "#141414",
+  disabledStroke: "#424242",
+  disabledText: "#5c5c5c",
   fontFamily: '"Segoe UI", "Segoe UI Web (West European)", -apple-system, sans-serif',
   holiday: "#b55fc1",
   now: "#e37d80",
@@ -149,6 +194,7 @@ export const fluentDarkTheme: SchedulerTheme = {
   ragGreen: "#107c10",
   ragRed: "#c50f1f",
   shadow: "0 0 2px rgba(0, 0, 0, 0.24), 0 1px 2px rgba(0, 0, 0, 0.28)",
+  shadowAmbient: "rgba(0, 0, 0, 0.24)",
   shadowDialog: "0 0 8px rgba(0, 0, 0, 0.24), 0 32px 64px rgba(0, 0, 0, 0.28)",
   shadowFlyout: "0 0 2px rgba(0, 0, 0, 0.24), 0 8px 16px rgba(0, 0, 0, 0.28)",
   stroke: "#525252",
