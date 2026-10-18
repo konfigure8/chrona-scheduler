@@ -62,7 +62,7 @@ The scenario solution adds its own tables, each with a page in its app: skills, 
 
 ### Sites
 
-Each calendar belongs to a site, and the site sets what every calendar at it shares:
+A calendar with a site shows only the shifts at that site. A calendar with no site shows every shift. The site sets what every calendar at it shares:
 
 | Setting | Column | What it does | If empty |
 | --- | --- | --- | --- |
@@ -142,7 +142,7 @@ With an agent: the `agreement_reading` tool of the Chrona Model Context Protocol
 
 ### Import a roster from Excel
 
-Bring a roster you keep in an Excel workbook into the roster period on the board. Select **Import** on the toolbar. A roster with no shifts also offers **Import from Excel**. The import has four steps: **File**, **Mapping**, **Check** and **Import**. Nothing is written until you confirm.
+Bring a roster you keep in an Excel workbook into the roster period on the board. Select **Import** on the toolbar, or under **Actions** when the roster has shifts. A roster with no shifts also offers **Import from Excel**. The import has four steps: **File**, **Mapping**, **Check** and **Import**. Nothing is written until you confirm.
 
 1. **File**: select **Choose workbook**. Chrona reads an .xlsx file of up to 10 MB in your browser, and the file stays there. It reads a person per row, a day per row, a block per week, or a row per shift. For a file in another layout, select **Download the Chrona template** and fill it in.
 2. **Mapping**: give each code in the file a meaning, such as **Shift**, **Leave** or **Day off**, and give each shift code its times.
@@ -153,7 +153,30 @@ Bring a roster you keep in an Excel workbook into the roster period on the board
 3. **Check**: the page lists each cell it cannot place, with the reason, such as an unknown code, a merged cell or two codes in one cell. Fix the file, or select **Import without them**. Shifts already on the file's days stop the import, unless an earlier import wrote them. Clear those shifts on the board first.
 4. **Import**: Chrona writes the people, shift types, demand, leave and shifts with your own Dataverse rights. Keep the page open. **Stop** keeps what is written. To finish, import the file again: a second import writes no row twice.
 
-After the write, Chrona reads the roster back and compares it with the file, table by table and hours by person. When they match, Chrona saves the roster's counts. The roster header's **Outcomes** shows them as **Hand-built**, beside **Now** and **Before**.
+After the write, Chrona reads the roster back and compares it with the file, table by table and hours by person. When they match, Chrona saves the roster's counts. **Outcomes** shows them as **Hand-built**, beside **Now** and **Before**.
+
+### Mark absent and find cover
+
+When a person cannot work, select **Mark absent**. On a roster that has started, it is on the toolbar. On a coming roster, it is under **Actions**. The menu of a person, and the menu of a shift that has a person, also offer it as **Mark [name] absent**.
+
+1. Type the person's name. Set **From** and its **Start time**, then **Until**: **End of that day**, **End of the next day** or a date you pick. Set a **Reason**: the reasons are your availability types.
+2. The shifts that the absence overlaps need cover at once. A shift that the person has started ends at the start time. The person keeps the part they worked, and the rest is a shift of its own that needs cover.
+3. With **Find cover now**, Chrona repairs the roster that holds the absence. A repair moves only the shifts that the absence opens, open shifts and on-call shifts. Every other shift keeps its person. Nothing changes until you apply.
+4. The review lists the cover for the absent person first, one chain of moves at a time. Select **Drop this cover** to leave a chain out, then **Apply**. A shift that nobody can take without breaking a Must rule stays open, and the review says so.
+
+**Discard** keeps the absence and the open shifts. **Undo absence** removes the absence and gives each shift it opened back to its person, while that shift is still open.
+
+An on-call shift is backup cover. Set **On call** on the Shift form. Left open, it shows as backup, not as a shift that needs cover. Optimize staffs it when people are free. A repair can move its person onto a shift that the absence opens.
+
+### Outcomes
+
+**Outcomes**, under **Actions**, shows what the roster on screen comes to: broken rules, open required shifts, people with no agreement, preferences met, wages and overtime.
+
+- **Now** counts the roster as it stands.
+- **Hand-built** is the roster you imported, when you imported one.
+- **Before** is the previous roster, as last applied.
+
+Chrona saves a roster's counts at each import and each **Apply**, in your environment: numbers only, no names. A count that Chrona did not save shows as **Not saved**. **Last 12 rosters** shows the trend.
 
 ## Editing the rows without an app
 

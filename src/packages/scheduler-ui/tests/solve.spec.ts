@@ -686,6 +686,17 @@ changeListPerPerson();
   });
   assertEqual(noHistory.shifts.length, 2);
   assertEqual(noHistory.shifts[0]?.assignment?.pinned, false);
+  // Busy elsewhere: another board's shift in the window travels pinned and as history, so the
+  // solve counts it for the person's rules, moves nothing, and a breach made only of it is not this board's.
+  const elsewhere = problemFromSchedule({
+    events: [{ ...later, elsewhere: true, id: "other-site" }, later],
+    resources: people,
+    window,
+  });
+  const other = elsewhere.shifts.find((shift) => shift.id === "other-site");
+  assertEqual(other?.assignment?.pinned, true);
+  assertEqual(other?.history, true);
+  assertEqual(elsewhere.shifts.find((shift) => shift.id === "later")?.assignment?.pinned, false);
   console.log("history pinning tests passed");
 }
 

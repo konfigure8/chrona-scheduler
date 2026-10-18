@@ -646,6 +646,8 @@ export function problemFromSchedule(
                 event.start < input.window.start ||
                 event.start >= input.window.end ||
                 (now !== undefined && event.start < now) ||
+                // Busy elsewhere: another board's shift, which this solve only sees.
+                event.elsewhere === true ||
                 // Pinning is a choice (F22 deliverable 2, Q1-A): only a planner's pin
                 // pins. In a repair the API pins what the absence leaves alone (F24).
                 isPinned(event),
@@ -663,8 +665,11 @@ export function problemFromSchedule(
         : {}),
       end: wire(event.end),
       // An assigned shift that has started is history: no breach made only of
-      // history counts. A running open shift is a decision, not history.
-      ...(now !== undefined && event.start < now && event.status !== "needsCover" ? { history: true } : {}),
+      // history counts. A running open shift is a decision, not history. A shift
+      // busy elsewhere is history too: a breach made only of them is the other board's.
+      ...((now !== undefined && event.start < now && event.status !== "needsCover") || (event.elsewhere === true && event.status !== "needsCover")
+        ? { history: true }
+        : {}),
       id: event.id,
       ...(event.onCall ? { onCall: true as const } : {}),
       requiredSkills: event.requiredTags ?? [],

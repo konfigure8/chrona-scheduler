@@ -94,6 +94,14 @@ export interface SchedulerUiEvent {
    */
   readonly code?: string;
   readonly color?: string;
+  /**
+   * Busy elsewhere (Docs/domain_model.md, BUSY ELSEWHERE): the person's
+   * shift on another board, which a solve must see but cannot move. It
+   * travels pinned and as history, so it counts for rest, overlap and
+   * hours, and a breach made only of such shifts is the other board's.
+   * Absent = the board's own shift.
+   */
+  readonly elsewhere?: boolean;
   readonly end: Date;
   readonly fields?: readonly SchedulerEventField[];
   /** See EventFlag: surplus marker owned by generation runs. */
