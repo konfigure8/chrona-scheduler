@@ -3,11 +3,14 @@ import * as React from "react";
 import { useDragController } from "./dragContext";
 import { VerticalSplitter } from "./Splitter";
 import { FlagGlyph } from "./FlagGlyph";
+import { NightGlyph } from "./NightGlyph";
 import { flagReasonText } from "./stringResources";
+import { UNGROUPED } from "./groupSets";
 import { useSchedulerStrings } from "./strings";
 import { tagPillStyle, type TagColorMap } from "./tagColors";
 import { beginAssignSession } from "./interactions";
 import { dateNamesFrom, formatDayLabel } from "./dateNames";
+import { isOpenOnCall } from "./solve";
 import { eventIntersectsWindow } from "./timelineLayout";
 import { clockMinutesBetween } from "./timeZone";
 import type { SchedulerUiEvent, TimeWindow } from "./types";
@@ -22,6 +25,12 @@ export interface UnscheduledPanelProps {
   readonly onFilterChange?: (filter: UnscheduledFilter) => void;
   /** Active primary grouping set; buckets the list like the board. */
   readonly groupSet?: string;
+  /**
+   * Whether the board's coverage falls short anywhere in the window. With
+   * nothing open, a short board says there are no open shifts, never that
+   * everything is covered. Called only while the list is empty.
+   */
+  readonly isShort?: () => boolean;
   /** Renders the header dismiss; the host persists the visibility. */
   readonly onClose?: () => void;
   /** Plain click (no drag): hosts navigate the calendar to the item. */
@@ -105,9 +114,12 @@ export function UnscheduledPanel(props: UnscheduledPanelProps): JSX.Element {
 
   /*
    * Items bucket by the event's organizational group in first-seen
-   * order; ungrouped items trail without a header, and undated rows
-   * close the list under their own header. Cross-group drop policy is
-   * the host's rule via validateChange, not a panel wall.
+   * order. Items with no value in the set close the named groups under
+   * an Ungrouped header of their own, as the board's rows do, so they
+   * never read as part of the group above; undated rows close the list
+   * under their own header. With no grouping set the list has no
+   * headers. Cross-group drop policy is the host's rule via
+   * validateChange, not a panel wall.
    */
   const groups = React.useMemo(() => {
     const order: (string | undefined)[] = [];
@@ -116,7 +128,7 @@ export function UnscheduledPanel(props: UnscheduledPanelProps): JSX.Element {
       const key = event.undated
         ? UNDATED_GROUP
         : groupSet
-          ? event.groups?.[groupSet]
+          ? (event.groups?.[groupSet] ?? UNGROUPED)
           : undefined;
       const bucket = buckets.get(key);
       if (bucket) {
@@ -128,14 +140,19 @@ export function UnscheduledPanel(props: UnscheduledPanelProps): JSX.Element {
     }
     // Ungrouped trail the named groups; undated rows come last.
     const rank = (key: string | undefined): number =>
-      key === UNDATED_GROUP ? 2 : key === undefined ? 1 : 0;
+      key === UNDATED_GROUP ? 2 : key === UNGROUPED ? 1 : 0;
     order.sort((first, second) => rank(first) - rank(second));
     return order.map((name) => ({
       items: buckets.get(name) ?? [],
-      label: name === UNDATED_GROUP ? strings.noDate : name,
+      label:
+        name === UNDATED_GROUP
+          ? strings.noDate
+          : name === UNGROUPED
+            ? strings.ungrouped
+            : name,
       name,
     }));
-  }, [visibleEvents, groupSet, strings.noDate]);
+  }, [visibleEvents, groupSet, strings.noDate, strings.ungrouped]);
 
   return (
     <div className="chrona-sched__unscheduled-wrap" ref={panelRef}>
@@ -200,7 +217,9 @@ export function UnscheduledPanel(props: UnscheduledPanelProps): JSX.Element {
         <p className="chrona-sched__unscheduled-empty">
           {windowFilterActive && events.length > 0
             ? strings.unscheduledEmptyInView
-            : strings.unscheduledEmpty}
+            : props.isShort?.()
+              ? strings.unscheduledEmptyShort
+              : strings.unscheduledEmpty}
         </p>
       ) : null}
       {groups.map((group) => (
@@ -225,12 +244,14 @@ export function UnscheduledPanel(props: UnscheduledPanelProps): JSX.Element {
         {group.items.map((event) => (
           <li key={event.id}>
             <button
-              aria-label={`${event.title}, ${event.undated ? strings.noDate : formatTimeRange(event)}, ${formatDuration(event)}`}
-              className={`${
-                drag.session?.sourceEvent?.id === event.id
-                  ? "chrona-sched__unscheduled-item chrona-sched__unscheduled-item--dragging"
-                  : "chrona-sched__unscheduled-item"
-              }${event.flag ? " chrona-sched__unscheduled-item--flagged" : ""}`}
+              aria-label={`${event.title}, ${event.undated ? strings.noDate : formatTimeRange(event)}, ${formatDuration(event)}${event.night ? `, ${strings.nightShift}` : ""}${isOpenOnCall(event) ? `, ${strings.legendOnCall}` : ""}`}
+              className={[
+                "chrona-sched__unscheduled-item",
+                drag.session?.sourceEvent?.id === event.id ? "chrona-sched__unscheduled-item--dragging" : "",
+                event.flag ? "chrona-sched__unscheduled-item--flagged" : "",
+                // F24 Repair mode: an open on-call shift is backup cover, neutral as on the board.
+                isOpenOnCall(event) ? "chrona-sched__unscheduled-item--on-call" : "",
+              ].filter(Boolean).join(" ")}
               data-event-id={event.id}
               onClick={(clickEvent) => {
                 const down = pointerDownRef.current;
@@ -261,6 +282,7 @@ export function UnscheduledPanel(props: UnscheduledPanelProps): JSX.Element {
                 ) : null}
                 <span className="chrona-sched__unscheduled-name">
                   {event.title}
+                  {event.night ? <NightGlyph title={strings.nightShift} /> : null}
                 </span>
                 <span className="chrona-sched__unscheduled-duration">
                   {formatDuration(event)}
@@ -276,6 +298,9 @@ export function UnscheduledPanel(props: UnscheduledPanelProps): JSX.Element {
                   {formatTimeRange(event)}
                 </span>
               )}
+              {isOpenOnCall(event) ? (
+                <span className="chrona-sched__unscheduled-time">{strings.legendOnCall}</span>
+              ) : null}
               {event.requiredTags && event.requiredTags.length > 0 ? (
                 <span className="chrona-sched__unscheduled-tags">
                   {event.requiredTags.map((tag) => {

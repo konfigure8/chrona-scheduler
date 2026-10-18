@@ -35,6 +35,8 @@ const FLUENT_TOKEN_BY_CHRONA_TOKEN: Readonly<
   Record<keyof SchedulerTheme, string>
 > = {
   background: "colorNeutralBackground1",
+  badge: "colorNeutralBackground3",
+  badgeText: "colorNeutralForeground2",
   brand: "colorBrandBackground",
   brandBackground: "colorBrandBackground2",
   brandForeground: "colorBrandForeground1",

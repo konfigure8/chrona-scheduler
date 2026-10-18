@@ -112,6 +112,13 @@ export interface SchedulerUiEvent {
   readonly groups?: Readonly<Record<string, string>>;
   readonly id: string;
   /**
+   * A night shift (night rules design): the host decides it from the
+   * site's night time or the shift type. The board draws a moon on it,
+   * and it travels to the solver with the Night tag, the one the
+   * agreement's Nights rules count. Absent = not a night shift.
+   */
+  readonly night?: boolean;
+  /**
    * Set by the surface's proposal preview only, never by a host:
    * "proposed" marks a change under review at its proposed place;
    * "ghost" is the faded, non-interactive copy of a moved item at
@@ -213,12 +220,16 @@ export type AgreementRuleKind =
   | "averageHours"
   | "daysInARow"
   | "daysOff"
-  | "disruption"
   | "maximumHours"
   | "minimumHours"
   | "minimumRest"
   | "overtime"
-  | "weeklyRest";
+  | "weeklyRest"
+  | "nightShiftsInARow"
+  | "nightShifts"
+  | "nightShiftHours"
+  | "restAfterNight"
+  | "restAfterNights";
 
 /** Must: a limit a roster keeps. Should: a cost a roster weighs. */
 export type AgreementRuleLevel = "must" | "should";
@@ -239,12 +250,17 @@ export interface SchedulerAgreementRule {
   /** The agreement clause the rule comes from, as the maker wrote it. Absent = none. */
   readonly clause?: string;
   /**
+   * restAfterNights: the night shifts in a row, 1 to 14, that start the
+   * rest. Absent = 1.
+   */
+  readonly count?: number;
+  /**
    * The rule's last day, inclusive: "YYYY-MM-DD" on the site's clock.
    * Absent = no end.
    */
   readonly end?: string;
   readonly kind: AgreementRuleKind;
-  /** Absent = must. Minimum hours, overtime and disruption are always should. */
+  /** Absent = must. Minimum hours and overtime are always should. */
   readonly level?: AgreementRuleLevel;
   /** Off rules stay with the agreement and never apply. */
   readonly on: boolean;
@@ -272,12 +288,19 @@ export interface SchedulerAgreementRule {
    * overtime: the minutes worked in each period before its rate pays;
    * each overtime rule is one tier. weeklyRest: the minutes off in one
    * stretch in every window of weeks. averageHours: the most minutes a
-   * week, on average over each window of weeks. disruption (F24 Repair
-   * mode, Timefold's disruption rule): the weight of each shift a person
-   * loses or gains in a repair.
+   * week, on average over each window of weeks. The Nights rules count
+   * only night shifts: nightShiftsInARow, the most on days in a row;
+   * nightShifts, the most in each period or rolling window of weeks;
+   * nightShiftHours, the most minutes worked in one; restAfterNight, the
+   * minutes off after one; restAfterNights, the minutes off after a run
+   * of at least count of them.
    */
   readonly value: number;
-  /** weeklyRest and averageHours: the weeks of each window, 1 to 52. Absent = 1. */
+  /**
+   * weeklyRest and averageHours: the weeks of each window, 1 to 52.
+   * Absent = 1. nightShifts with weeks and no period counts every
+   * rolling window of that many weeks.
+   */
   readonly weeks?: number;
 }
 

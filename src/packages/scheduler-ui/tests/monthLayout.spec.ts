@@ -57,6 +57,17 @@ function bucketsEventsIntoDays(): void {
   assertEqual(eventsForDay(events, new Date(2026, 7, 19)).length, 0);
 }
 
+// A night shift lists on the day it starts only; leave of a day or more on every day it covers.
+function listsANightOnItsStartDayAndLeaveOnEachDay(): void {
+  const night: SchedulerUiEvent = { ...buildEvent("night", 0, 23, 23), end: new Date(2026, 7, 18, 7, 0) };
+  const leave: SchedulerUiEvent = { ...buildEvent("leave", 0, 0, 0), end: new Date(2026, 7, 20, 0, 0) };
+  assertEqual(eventsForDay([night], new Date(2026, 7, 17)).length, 1);
+  assertEqual(eventsForDay([night], new Date(2026, 7, 18)).length, 0);
+  assertEqual(eventsForDay([leave], new Date(2026, 7, 17)).length, 1);
+  assertEqual(eventsForDay([leave], new Date(2026, 7, 19)).length, 1);
+  assertEqual(eventsForDay([leave], new Date(2026, 7, 20)).length, 0);
+}
+
 function groupsAgendaByDaySorted(): void {
   const groups = groupEventsByDay([
     buildEvent("late", 1, 15, 22),
@@ -105,6 +116,7 @@ buildsMondayFirstAugustMatrix();
 buildsSundayFirstMatrixWhenTheWeekStartsOnSunday();
 dropsWeekendColumnsWhenHidden();
 bucketsEventsIntoDays();
+listsANightOnItsStartDayAndLeaveOnEachDay();
 groupsAgendaByDaySorted();
 packsLanesForVerticalColumns();
 

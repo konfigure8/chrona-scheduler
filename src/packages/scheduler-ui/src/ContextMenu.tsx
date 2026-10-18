@@ -19,6 +19,13 @@ export interface ContextMenuProps {
  * click or escape. Items come from the host so scenarios can extend it. */
 export function ContextMenu(props: ContextMenuProps): JSX.Element {
   const { items, onClose, x, y } = props;
+  // What had focus when the menu opened: a shift, a person, or the board.
+  const [opener] = React.useState(() => (typeof document === "undefined" ? null : (document.activeElement as HTMLElement | null)));
+  const restore = React.useCallback((): void => {
+    if (opener?.isConnected && opener !== document.body) {
+      opener.focus({ preventScroll: true });
+    }
+  }, [opener]);
   const menuRef = React.useRef<HTMLDivElement | null>(null);
 
   React.useEffect(() => {
@@ -29,6 +36,7 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
     };
     const handleKey = (keyEvent: KeyboardEvent): void => {
       if (keyEvent.key === "Escape") {
+        restore();
         onClose();
       }
     };
@@ -62,6 +70,9 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
           disabled={item.disabled}
           key={item.id}
           onClick={() => {
+            // Focus goes back to what opened the menu before the item acts, so a dialog it opens
+            // hands focus back there when it closes.
+            restore();
             onClose();
             item.onSelect();
           }}

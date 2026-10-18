@@ -25,7 +25,9 @@ import {
 import { isDragLocked, showsPin } from "./locks";
 import { FlagGlyph } from "./FlagGlyph";
 import { flagReasonText } from "./stringResources";
+import { NightGlyph } from "./NightGlyph";
 import { PinGlyph } from "./PinGlyph";
+import { openShiftClass } from "./solve";
 import { useSchedulerStrings } from "./strings";
 import type { HourFormat } from "./timeAxis";
 import {
@@ -231,19 +233,83 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
   );
 
   /*
-   * Every picked stat shows, one day wide, after the last day. When the
-   * period is wider than the board, the stats stay at its right edge
-   * and the days scroll under them: each cell is pinned by the stats
-   * to its right (see styles.css).
+   * Every picked stat shows after the last day. When the period is
+   * wider than the board, the stats stay at its right edge and the days
+   * scroll under them: each cell is pinned by the stats to its right
+   * (see styles.css). A stat column is a day wide, or wider when its
+   * header would not fit in two lines, as a word does not wrap
+   * ("Überstunden", "Max. dagen op rij"), or its total would not: a
+   * total is the widest
+   * figure in its column, as a sum is at least any of its parts
+   * ("145.030 AU$"). Both are measured in their own fonts once they
+   * render, and again when they change.
    */
   const shownStats = stats ?? [];
-  const statCell = (index: number): { className: string; style: React.CSSProperties } => ({
-    className:
-      index === 0
-        ? "chrona-sched__roster-stat chrona-sched__roster-stat--first"
-        : "chrona-sched__roster-stat",
-    style: { ["--chrona-roster-stats-after" as string]: shownStats.length - 1 - index } as React.CSSProperties,
+  const headRef = React.useRef<HTMLTableRowElement | null>(null);
+  const footRef = React.useRef<HTMLTableRowElement | null>(null);
+  const [statWidths, setStatWidths] = React.useState<readonly number[]>([]);
+  React.useLayoutEffect(() => {
+    const heads = headRef.current?.querySelectorAll<HTMLElement>("th.chrona-sched__roster-stat");
+    const feet = footRef.current?.querySelectorAll<HTMLElement>("td.chrona-sched__roster-stat");
+    const context =
+      typeof document === "undefined" ? null : document.createElement("canvas").getContext?.("2d") ?? null;
+    const fits = (cell: HTMLElement | undefined, header: boolean): number => {
+      if (!cell || !context) {
+        return 0;
+      }
+      const style = getComputedStyle(cell);
+      context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      const text = (cell.textContent ?? "").trim();
+      const width = (part: string): number => context.measureText(part).width;
+      const words = text.split(/\s+/);
+      const widest = header
+        ? Math.max(
+            // A header word gets 4 px more each side, so it does not touch the lines.
+            Math.max(0, ...words.map(width)) + 8,
+            // Two lines at most: the narrowest break of the words into a first and a second line.
+            words.length > 1
+              ? Math.min(...words.slice(1).map((_word, index) =>
+                  Math.max(width(words.slice(0, index + 1).join(" ")), width(words.slice(index + 1).join(" ")))))
+              : 0,
+          )
+        : width(text);
+      const room =
+        parseFloat(style.paddingLeft) +
+        parseFloat(style.paddingRight) +
+        parseFloat(style.borderLeftWidth) +
+        parseFloat(style.borderRightWidth);
+      return Math.ceil(widest + room + 2);
+    };
+    const widths = [...(heads ?? [])].map((head, index): number =>
+      Math.max(rosterDayWidthPx, fits(head, true), fits(feet?.[index], false)),
+    );
+    setStatWidths((previous) =>
+      previous.length === widths.length && previous.every((width, index) => width === widths[index]) ? previous : widths,
+    );
   });
+  const statWidth = (index: number): number => statWidths[index] ?? rosterDayWidthPx;
+  const statsWidth = shownStats.reduce((sum, _stat, index) => sum + statWidth(index), 0);
+  const statCell = (index: number): { className: string; style: React.CSSProperties } => {
+    let right = 0;
+    for (let after = index + 1; after < shownStats.length; after += 1) {
+      right += statWidth(after);
+    }
+    return {
+      className: [
+        "chrona-sched__roster-stat",
+        index === 0 ? "chrona-sched__roster-stat--first" : "",
+        shownStats[index]?.align === "end" ? "chrona-sched__roster-stat--end" : "",
+      ]
+        .filter(Boolean)
+        .join(" "),
+      style: {
+        ["--chrona-roster-stat-right" as string]: `${right}px`,
+        ["--chrona-roster-stat-width" as string]: `${statWidth(index)}px`,
+      } as React.CSSProperties,
+    };
+  };
+  const totals = extension?.totals;
+  const totalValues = totals ? totals.values(shownStats.map((stat) => stat.id)) : {};
 
   // While days lie under the stats, the board marks it, and the divider casts a shadow.
   const rootRef = React.useRef<HTMLDivElement | null>(null);
@@ -318,17 +384,19 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
     const color = resolveEventColor(event, statusColorRules);
     return (
       <button
-        aria-label={`${event.title}, ${formatTimeRange(event)}`}
+        aria-label={`${event.title}, ${formatTimeRange(event)}${event.night ? `, ${strings.nightShift}` : ""}`}
         data-event-id={event.id}
         className={[
           "chrona-sched__chip",
           "chrona-sched__chip--compact",
           color ? "chrona-sched__chip--colored" : "",
-          event.status === "needsCover" ? "chrona-sched__chip--needs-cover" : "",
+          openShiftClass(event, "chip"),
           event.flag ? "chrona-sched__chip--flagged" : "",
           cellDrag.draggingEventId === event.id ? "chrona-sched__chip--dragging" : "",
           editable ? "chrona-sched__bar--editable" : "",
           event.review === "proposed" ? "chrona-sched__chip--proposed" : "",
+          // A pin and a moon: tighter spacing keeps the start hour whole in a day column.
+          event.night && showsPin(event) ? "chrona-sched__chip--dense" : "",
           changesOnly && event.review !== "proposed" ? "chrona-sched__chip--dim" : "",
         ]
           .filter(Boolean)
@@ -346,6 +414,7 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
         {showsPin(event) ? <PinGlyph /> : null}
         {event.flag ? <FlagGlyph title={flagReasonText(strings, event.flag)} /> : null}
         <span className="chrona-sched__chip-code">{chipCode(event)}</span>
+        {event.night ? <NightGlyph size={10} title={strings.nightShift} /> : null}
         <span className="chrona-sched__chip-time">
           {chipStartTime(event.start, hourFormat)}
         </span>
@@ -367,7 +436,16 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
     key: string,
     lightsUp: boolean,
   ): JSX.Element => (
-    <tr className="chrona-sched__roster-open" data-testid="roster-open-row" key={key}>
+    <tr
+      className={
+        // A day stacking more than three chips keeps the row's label at the top, by the first of them.
+        cells.some((cell) => cell.length > 3)
+          ? "chrona-sched__roster-open chrona-sched__roster-open--tall"
+          : "chrona-sched__roster-open"
+      }
+      data-testid="roster-open-row"
+      key={key}
+    >
       <td className="chrona-sched__roster-resource">
         <div className="chrona-sched__roster-name chrona-sched__roster-open-name">
           <Shifts20Regular />
@@ -496,7 +574,8 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
     );
   };
 
-  if (resources.length === 0) {
+  // Open shifts on the grid's days fill the open row, so a grid with no people is empty only without them.
+  if (resources.length === 0 && !(openCells ?? []).some((cell) => cell.length > 0)) {
     return (
       <div className="chrona-sched__roster">
         <div className="chrona-sched__empty">{strings.emptyResources}</div>
@@ -509,16 +588,26 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
       className="chrona-sched__roster"
       onScroll={shownStats.length > 0 ? markDaysUnder : undefined}
       ref={rootRef}
-      // The stats' width, so a focused chip scrolls clear of them (see styles.css).
-      style={{ ["--chrona-roster-stats" as string]: shownStats.length } as React.CSSProperties}
+      // The stats' width and the totals row, so a focused chip scrolls clear of them (see styles.css).
+      style={
+        {
+          ["--chrona-roster-foot" as string]: totals ? "37px" : "0px",
+          ["--chrona-roster-stats-width" as string]: `${statsWidth}px`,
+        } as React.CSSProperties
+      }
     >
       <table
         className="chrona-sched__roster-table"
-        // The column count sizes the fixed-layout table (see styles.css).
-        style={{ ["--chrona-roster-columns" as string]: days.length + shownStats.length } as React.CSSProperties}
+        // The day count and the stats' width size the fixed-layout table (see styles.css).
+        style={
+          {
+            ["--chrona-roster-columns" as string]: days.length,
+            ["--chrona-roster-stats-width" as string]: `${statsWidth}px`,
+          } as React.CSSProperties
+        }
       >
         <thead>
-          <tr>
+          <tr ref={headRef}>
             <th className="chrona-sched__roster-resource">{strings.resourceHeader}</th>
             {days.map((day, dayIndex) => (
               <th
@@ -556,6 +645,23 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
             </>
           )}
         </tbody>
+        {totals ? (
+          <tfoot>
+            <tr className="chrona-sched__roster-totals" data-testid="roster-totals" ref={footRef}>
+              <td className="chrona-sched__roster-resource">
+                <div className="chrona-sched__roster-name">{totals.label}</div>
+              </td>
+              <td className="chrona-sched__roster-totals-note" colSpan={days.length}>
+                {totals.note ? <span className="chrona-sched__roster-totals-text">{totals.note}</span> : null}
+              </td>
+              {shownStats.map((stat, index) => (
+                <td {...statCell(index)} key={stat.id}>
+                  {totalValues[stat.id]}
+                </td>
+              ))}
+            </tr>
+          </tfoot>
+        ) : null}
       </table>
     </div>
   );

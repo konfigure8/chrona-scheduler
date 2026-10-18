@@ -147,7 +147,7 @@ function formatsWindowLabels(): void {
       { end: new Date(2026, 7, 20), start: new Date(2026, 7, 17) },
       "daySpan",
     ),
-    "Mon 17 Aug - Wed 19 Aug 2026",
+    "Mon 17 Aug – Wed 19 Aug 2026",
   );
   assertEqual(
     formatWindowLabel(

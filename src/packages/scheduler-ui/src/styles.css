@@ -11,6 +11,8 @@
   --csui-bg: #ffffff;
   --csui-surface: #fafafa;
   --csui-surface-hover: #f5f5f5;
+  --csui-badge: #f5f5f5;
+  --csui-badge-text: #424242;
   --csui-stroke: #e0e0e0;
   --csui-stroke-strong: #d1d1d1;
   --csui-text: #242424;
@@ -290,7 +292,7 @@
 }
 
 .chrona-sched__bar--needs-cover .chrona-sched__bar-clip {
-  color: var(--csui-danger);
+  color: var(--csui-warn);
 }
 
 /* A clipped edge is squared off: the bar is cut, not ended. */
@@ -364,10 +366,23 @@
   white-space: nowrap;
 }
 
+/*
+ * An open shift is work to do, not a breach (Matt 2026-08-25, 2026-10-16):
+ * the Unscheduled lane's warm look in every view and the legend; red is
+ * for breaches only.
+ */
 .chrona-sched__bar--needs-cover {
-  background: var(--csui-danger-bg);
-  border: 1px dashed var(--csui-danger-stroke);
-  border-left: 3px solid var(--csui-danger);
+  background: var(--csui-warn-bg);
+  border: 1px dashed var(--csui-stroke-strong);
+  border-left: 3px solid var(--csui-warn);
+}
+
+/* F24 Repair mode: an on-call shift left open is backup cover, not work that needs it: neutral, dashed. */
+.chrona-sched__bar--on-call-open {
+  background: var(--csui-surface);
+  border: 1px dashed var(--csui-stroke-strong);
+  border-left: 3px solid var(--csui-stroke-strong);
+  color: var(--csui-text-soft);
 }
 
 .chrona-sched__bar-time {
@@ -508,6 +523,44 @@
 .chrona-sched__chip .chrona-sched__pin {
   margin-right: 3px;
   vertical-align: -1px;
+}
+
+/* Night shifts (night rules design, D6): Fluent's moon after the code or title, in the bar's own text color. */
+.chrona-sched__night {
+  flex: none;
+  margin-left: 4px;
+  vertical-align: -1px;
+}
+
+/* A compact chip fits pin, code, moon and start hour in a day column: the flex gap spaces them. */
+.chrona-sched__chip--compact .chrona-sched__night,
+.chrona-sched__chip--compact .chrona-sched__pin {
+  margin: 0;
+}
+
+/* A title row that keeps its glyphs on the line: the title shortens, the pin and the moon stay. */
+.chrona-sched__vertical-event-title,
+.chrona-sched__chip--month {
+  align-items: center;
+  display: flex;
+  max-width: 100%;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.chrona-sched__title-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chrona-sched__chip--month .chrona-sched__pin,
+.chrona-sched__chip--month .chrona-sched__chip-time {
+  flex: none;
+}
+
+.chrona-sched__chip--month .chrona-sched__chip-time {
+  margin-right: 4px;
 }
 
 .chrona-sched__dialog-warn {
@@ -798,6 +851,10 @@
   gap: 6px;
 }
 
+.chrona-sched__legend-item .chrona-sched__night {
+  margin-left: 0;
+}
+
 .chrona-sched__legend-swatch {
   border: 1px solid var(--csui-stroke);
   border-radius: 4px;
@@ -805,6 +862,17 @@
   height: 14px;
   position: relative;
   width: 14px;
+}
+
+/* The open-shift swatches are small copies of the bars: dashed, with their accent edge. */
+.chrona-sched__legend-swatch.chrona-sched__bar--needs-cover {
+  border: 1px dashed var(--csui-stroke-strong);
+  border-left: 3px solid var(--csui-warn);
+}
+
+.chrona-sched__legend-swatch.chrona-sched__bar--on-call-open {
+  border: 1px dashed var(--csui-stroke-strong);
+  border-left: 3px solid var(--csui-stroke-strong);
 }
 
 .chrona-sched__shell {
@@ -839,6 +907,13 @@
   padding: 5px 12px;
 }
 
+/* Fluent's focus stroke (colorStrokeFocus2) on the run button and a notice's ✕: the text colour, clear in every theme. */
+.chrona-sched__toolbar-primary:focus-visible,
+.chrona-sched__horizon-notice-close:focus-visible {
+  outline: 2px solid var(--csui-text);
+  outline-offset: 1px;
+}
+
 /* Flat navigation: text Today, bare chevrons, flat date. */
 .chrona-sched__toolbar-button {
   background: transparent;
@@ -856,13 +931,25 @@
   background: var(--csui-surface-hover);
 }
 
-/* A subtle button that waits (Mark absent while a proposal is under review): disabled foreground, no hover. */
-.chrona-sched__toolbar-button:disabled {
+/* A toolbar button that opens a panel (Outcomes): Fluent's subtle selected look while its panel or its strip shows. */
+.chrona-sched__toolbar-button.chrona-sched__toolbar-button--toggle[data-open="true"]:not([aria-disabled="true"]) {
+  background: color-mix(in srgb, var(--csui-text) 8%, var(--csui-bg));
+  color: var(--csui-brand-fg);
+}
+
+/*
+ * A subtle button that waits (Mark absent and Outcomes while a proposal
+ * is under review): disabled foreground, no hover. aria-disabled keeps
+ * it focusable so its tip can say why.
+ */
+.chrona-sched__toolbar-button:disabled,
+.chrona-sched__toolbar-button[aria-disabled="true"] {
   color: var(--csui-disabled-text);
   cursor: not-allowed;
 }
 
-.chrona-sched__toolbar-button:disabled:hover {
+.chrona-sched__toolbar-button:disabled:hover,
+.chrona-sched__toolbar-button[aria-disabled="true"]:hover {
   background: transparent;
 }
 
@@ -1280,6 +1367,26 @@
 }
 
 /* Panel header dismiss: quiet icon button, Fluent subtle style. */
+/*
+ * Design R2.02 DR15: a collapsed side panel is the reopen tab at 44 px,
+ * the touch target, with the Expand icon above its title.
+ */
+.chrona-sched__panel-reopen.chrona-sched__panel-reopen--strip {
+  gap: 8px;
+  justify-content: flex-start;
+  min-width: 44px;
+  padding: 12px 0;
+}
+
+.chrona-sched__panel-reopen-icon {
+  flex: none;
+}
+
+/* The side panel's wrapper for focus: the panel inside keeps its own width. */
+.chrona-sched__side-slot {
+  display: contents;
+}
+
 .chrona-sched__panel-close {
   background: transparent;
   border: none;
@@ -1613,8 +1720,8 @@
   font-size: 12px;
 }
 
-.chrona-sched__dialog-field input,
-.chrona-sched__dialog-field select {
+.chrona-sched__dialog-field:not(.chrona-sched__dialog-field--fluent) input,
+.chrona-sched__dialog-field:not(.chrona-sched__dialog-field--fluent) select {
   background: var(--csui-bg);
   border: 1px solid var(--csui-stroke-strong);
   border-radius: 4px;
@@ -1679,7 +1786,18 @@
   padding: 4px 16px 12px;
 }
 
-.chrona-sched__confirm-dialog .chrona-sched__dialog-field input {
+.chrona-sched__confirm-dialog .chrona-sched__dialog-field:not(.chrona-sched__dialog-field--fluent) input {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+}
+
+/* A field's column takes the dialog's width, never its longest choice's, so the dialog never scrolls sideways. */
+.chrona-sched__confirm-dialog .chrona-sched__dialog-field {
+  grid-template-columns: 110px minmax(0, 1fr);
+}
+
+.chrona-sched__confirm-dialog .chrona-sched__dialog-field:not(.chrona-sched__dialog-field--fluent) select {
   box-sizing: border-box;
   min-width: 0;
   width: 100%;
@@ -1787,7 +1905,7 @@
 .chrona-sched__unscheduled-item {
   background: var(--csui-bg);
   border: 1px solid var(--csui-stroke);
-  border-left: 3px solid var(--csui-warn-stroke);
+  border-left: 3px solid var(--csui-warn);
   border-radius: var(--csui-radius);
   cursor: grab;
   display: flex;
@@ -1802,6 +1920,11 @@
 
 .chrona-sched__unscheduled-item--dragging {
   opacity: 0.45;
+}
+
+/* F24 Repair mode: an open on-call shift is backup cover: a neutral edge, not the warm one of open work. */
+.chrona-sched__unscheduled-item--on-call {
+  border-left-color: var(--csui-stroke-strong);
 }
 
 .chrona-sched__unscheduled-name {
@@ -1916,7 +2039,7 @@
   align-items: center;
   background: var(--csui-warn-bg);
   border: 1px dashed var(--csui-stroke-strong);
-  border-left: 3px solid var(--csui-warn-stroke);
+  border-left: 3px solid var(--csui-warn);
   border-radius: var(--csui-radius);
   color: var(--csui-text);
   cursor: pointer;
@@ -1938,6 +2061,21 @@
 
 .chrona-sched__lane-bar-title {
   font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* F24 Repair mode: an open on-call shift in the lane is backup cover: neutral and dashed, as on the board. */
+.chrona-sched__lane-bar--on-call-open {
+  background: var(--csui-bg);
+  border-left-color: var(--csui-stroke-strong);
+  color: var(--csui-text-soft);
+}
+
+.chrona-sched__lane-bar--on-call-open:hover,
+.chrona-sched__lane-bar--on-call-open:focus-visible {
+  border-color: var(--csui-text-soft);
 }
 
 /* Curated staff picker for an unscheduled shift. */
@@ -2104,6 +2242,39 @@
   border-bottom: 1px solid var(--csui-stroke);
 }
 
+/*
+ * The group's name and, while it is collapsed, its open shifts' count:
+ * the name gives way with an ellipsis, never the count.
+ */
+.chrona-sched__group-title {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+
+.chrona-sched__group-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A neutral count badge (Fluent Badge, small): the number only, its words in the tooltip and the accessible name. */
+.chrona-sched__group-open {
+  background: var(--csui-badge);
+  border-radius: 9999px;
+  box-sizing: border-box;
+  color: var(--csui-badge-text);
+  flex: none;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  min-width: 16px;
+  padding: 0 4px;
+  text-align: center;
+}
+
 /* Vertical views (top-down, day, week) */
 
 .chrona-sched__vertical {
@@ -2191,6 +2362,30 @@
 
 .chrona-sched__vertical-event-title {
   font-weight: 600;
+}
+
+/* An open shift in the day and the week: the timeline's look, and F24 Repair mode's neutral on-call. */
+.chrona-sched__vertical-event.chrona-sched__bar--needs-cover {
+  background: var(--csui-warn-bg);
+  border: 1px dashed var(--csui-stroke-strong);
+  border-left: 3px solid var(--csui-warn);
+}
+
+.chrona-sched__vertical-event.chrona-sched__bar--on-call-open {
+  background: var(--csui-surface);
+  border: 1px dashed var(--csui-stroke-strong);
+  border-left: 3px solid var(--csui-stroke-strong);
+  color: var(--csui-text-soft);
+}
+
+/* An open tile says what it is where a filled tile names the person, as the agenda does. */
+.chrona-sched__bar-time.chrona-sched__open-note--needs-cover {
+  color: var(--csui-warn);
+  font-weight: 600;
+}
+
+.chrona-sched__bar-time.chrona-sched__open-note--on-call {
+  color: var(--csui-text-soft);
 }
 
 /* Month */
@@ -2289,7 +2484,7 @@
   font: inherit;
   font-size: 12px;
   gap: 12px;
-  grid-template-columns: 96px 1fr auto auto;
+  grid-template-columns: 96px 1fr 160px 112px;
   padding: 4px 6px;
   text-align: left;
   width: 100%;
@@ -2309,11 +2504,19 @@
 
 .chrona-sched__agenda-resource {
   color: var(--csui-text-soft);
+  overflow: hidden;
+  text-align: end;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chrona-sched__agenda-needs-cover {
-  color: var(--csui-danger);
+  color: var(--csui-warn);
   font-weight: 600;
+}
+
+.chrona-sched__agenda-on-call {
+  color: var(--csui-text-soft);
 }
 
 .chrona-sched__live {
@@ -2361,9 +2564,8 @@
    * The names, the day headers and the stats stay put over the grid's
    * edges, so a chip that takes focus scrolls clear of them.
    */
-  scroll-padding: var(--chrona-roster-head)
-    calc(var(--chrona-roster-stats, 0) * var(--chrona-roster-day)) 0
-    var(--chrona-roster-people);
+  scroll-padding: var(--chrona-roster-head) var(--chrona-roster-stats-width, 0px)
+    var(--chrona-roster-foot, 0px) var(--chrona-roster-people);
   width: 100%;
 }
 
@@ -2381,7 +2583,7 @@
   table-layout: fixed;
   width: calc(
     var(--chrona-roster-people) + var(--chrona-roster-columns, 7) *
-      var(--chrona-roster-day)
+      var(--chrona-roster-day) + var(--chrona-roster-stats-width, 0px)
   );
 }
 
@@ -2480,12 +2682,12 @@
  * prototype's 14px shifts icon.
  */
 .chrona-sched__roster-table tr.chrona-sched__roster-open td {
-  background: color-mix(in srgb, var(--csui-danger) 3%, var(--csui-bg));
+  background: color-mix(in srgb, var(--csui-warn) 3%, var(--csui-bg));
 }
 
 .chrona-sched__roster-name.chrona-sched__roster-open-name {
   align-items: center;
-  color: var(--csui-danger);
+  color: var(--csui-warn);
   display: flex;
   font-weight: 400;
   gap: 4px;
@@ -2495,6 +2697,12 @@
   flex: none;
   height: 14px;
   width: 14px;
+}
+
+/* A tall open row: its label at the top, level with the first chips. */
+.chrona-sched__roster-table tr.chrona-sched__roster-open--tall td.chrona-sched__roster-resource {
+  padding-top: 8px;
+  vertical-align: top;
 }
 
 /*
@@ -2525,6 +2733,59 @@
   font-weight: 600;
 }
 
+/* Money in a stats cell sits right, in tabular figures, as figures in a column do. */
+.chrona-sched__stat-money {
+  display: block;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* A word in a caption that carries a tip: a dotted underline says there is more. */
+/* A note with a tip moves to the next line whole: a caption breaks only at its " · ". */
+.chrona-sched__caption-note {
+  cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
+/*
+ * The grid's totals: a last row that stays at the bottom of the board,
+ * on the surface ground under a stronger line; its note runs across
+ * the days and stays beside the names as the days scroll.
+ */
+.chrona-sched__roster-table tfoot td {
+  background: var(--csui-surface);
+  border-top: 1px solid var(--csui-stroke-strong);
+  bottom: 0;
+  height: 36px;
+  position: sticky;
+  z-index: 2;
+}
+
+.chrona-sched__roster-table tfoot td.chrona-sched__roster-resource,
+.chrona-sched__roster-table tfoot td.chrona-sched__roster-stat {
+  z-index: 3;
+}
+
+.chrona-sched__roster-table td.chrona-sched__roster-totals-note {
+  padding: 0;
+}
+
+/* It wraps inside the days in view, so the stats never cover its end. */
+.chrona-sched__roster-totals-text {
+  box-sizing: border-box;
+  color: var(--csui-text-soft);
+  display: inline-block;
+  font-size: 12px;
+  left: var(--chrona-roster-people);
+  line-height: 16px;
+  max-width: calc(100cqw - var(--chrona-roster-people) - var(--chrona-roster-stats-width, 0px));
+  padding: 4px 10px;
+  position: sticky;
+  white-space: normal;
+}
+
 /*
  * Workforce: the stats right of the last day, after a divider. Each
  * cell is pinned by the stats to its right, so on a period wider than
@@ -2532,8 +2793,18 @@
  * them, as the names stay at the left.
  */
 .chrona-sched__roster-table .chrona-sched__roster-stat {
+  max-width: var(--chrona-roster-stat-width, var(--chrona-roster-day));
+  min-width: var(--chrona-roster-stat-width, var(--chrona-roster-day));
   position: sticky;
-  right: calc(var(--chrona-roster-stats-after, 0) * var(--chrona-roster-day));
+  right: var(--chrona-roster-stat-right, 0px);
+  width: var(--chrona-roster-stat-width, var(--chrona-roster-day));
+}
+
+/* A column that reads as amounts: its header and figures sit right, clear of the line. */
+.chrona-sched__roster-table th.chrona-sched__roster-stat--end,
+.chrona-sched__roster-table td.chrona-sched__roster-stat--end {
+  padding-right: 8px;
+  text-align: right;
 }
 
 .chrona-sched__roster-table td.chrona-sched__roster-stat {
@@ -2571,6 +2842,11 @@
     right: auto;
     z-index: 3;
   }
+
+  /* The totals stay at the bottom, but scroll with the days. */
+  .chrona-sched__roster-table tfoot td.chrona-sched__roster-stat {
+    right: auto;
+  }
 }
 
 .chrona-sched__roster-name {
@@ -2604,8 +2880,23 @@
 }
 
 .chrona-sched__chip--needs-cover {
-  background: var(--csui-danger-bg);
-  border: 1px dashed var(--csui-danger-stroke);
+  background: var(--csui-warn-bg);
+  border: 1px dashed var(--csui-warn-stroke);
+}
+
+.chrona-sched__chip--on-call-open {
+  background: var(--csui-surface);
+  border: 1px dashed var(--csui-stroke-strong);
+  color: var(--csui-text-soft);
+}
+
+/* The month's chips carry the bars' small accent edge, so an open shift reads at a glance. */
+.chrona-sched__chip--month.chrona-sched__chip--needs-cover {
+  border-left: 3px solid var(--csui-warn);
+}
+
+.chrona-sched__chip--month.chrona-sched__chip--on-call-open {
+  border-left: 3px solid var(--csui-stroke-strong);
 }
 
 .chrona-sched__chip-time {
@@ -2629,7 +2920,7 @@
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
-  gap: 4px;
+  gap: 3px;
   height: 26px;
   margin: 1px 0;
   overflow: hidden;
@@ -2639,14 +2930,25 @@
   width: 100%;
 }
 
+.chrona-sched__chip--compact.chrona-sched__chip--dense {
+  gap: 2px;
+  padding: 0 3px;
+}
+
 .chrona-sched__chip--compact.chrona-sched__chip--colored {
   color: var(--csui-text);
 }
 
 .chrona-sched__chip--compact.chrona-sched__chip--needs-cover {
-  background: var(--csui-danger-bg);
-  border: 1px dashed var(--csui-danger-stroke);
-  color: var(--csui-danger);
+  background: var(--csui-warn-bg);
+  border: 1px dashed var(--csui-warn-stroke);
+  color: var(--csui-warn);
+}
+
+.chrona-sched__chip--compact.chrona-sched__chip--on-call-open {
+  background: var(--csui-surface);
+  border: 1px dashed var(--csui-stroke-strong);
+  color: var(--csui-text-soft);
 }
 
 .chrona-sched__chip--compact.chrona-sched__chip--flagged {
@@ -2659,6 +2961,8 @@
  * shifts the proposal leaves alone step back.
  */
 .chrona-sched__chip--compact.chrona-sched__chip--proposed {
+  /* Room for the change dot, so it never sits on the start hour. */
+  padding-right: 11px;
   position: relative;
 }
 
@@ -2759,7 +3063,9 @@
   color: var(--csui-brand-fg);
   cursor: pointer;
   font: inherit;
+  font-size: 12px;
   font-weight: 600;
+  line-height: 16px;
   padding: 0;
 }
 
@@ -2795,6 +3101,7 @@
 
 /* F31 rework: the scorecard sets the proposal's figures against today's roster. */
 .chrona-sched__scorecard {
+  container-type: inline-size;
   flex: none;
   margin: 4px 0;
 }
@@ -2810,6 +3117,13 @@
   gap: 8px;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   margin: 0;
+}
+
+/* Seven or eight tiles on a narrow board: two rows of four, not six and an orphan pair. */
+@container (max-width: 1099px) {
+  .chrona-sched__scorecard dl:has(> :nth-child(7)) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 .chrona-sched__score {
   background: var(--csui-bg);
@@ -2911,6 +3225,28 @@
   display: inline-flex;
   gap: 4px;
 }
+/*
+ * A caption with Fluent's info button: a long word ("Überstundenkosten") breaks inside itself
+ * and the button follows its last line, as the other tiles' captions wrap.
+ */
+.chrona-sched__score-caption--info {
+  min-width: 0;
+}
+/* The label shrinks and wraps inside itself; its button stays beside it. */
+.chrona-sched__score-caption--info .chrona-sched__score-infolabel {
+  align-items: center;
+  display: inline-flex;
+  min-width: 0;
+}
+.chrona-sched__score-caption--info .chrona-sched__score-infolabel .fui-InfoLabel__label {
+  flex: 0 1 auto;
+  hyphens: auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.chrona-sched__score-caption--info .chrona-sched__score-infolabel .fui-InfoLabel__infoButton {
+  flex: none;
+}
 .chrona-sched__score-icon {
   color: var(--csui-text-soft);
   flex: none;
@@ -2930,12 +3266,25 @@
   line-height: 20px;
   padding: 0 8px 4px;
 }
+/* Rows fill the card in columns, so nine rows stay a few lines tall; a name and its figures share one cell. */
 .chrona-sched__breakdown-list {
+  column-gap: 32px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   list-style: none;
   margin: 0;
-  /* A rule's name and its figures stay within one glance. */
-  max-width: 480px;
   padding: 0;
+}
+/* Each cell's rule ends at its edge: a count reads with its own name, not the next cell's. */
+.chrona-sched__breakdown-list > li {
+  border-bottom: 1px solid var(--csui-stroke);
+}
+/* A rule nothing breaks, now or proposed, steps back. */
+.chrona-sched__breakdown-row.chrona-sched__breakdown-row--clear {
+  color: var(--csui-text-soft);
+}
+.chrona-sched__breakdown-proposed--broken {
+  font-weight: 600;
 }
 .chrona-sched__breakdown-row {
   align-items: center;
@@ -3067,7 +3416,7 @@
 }
 
 /*
- * Planning chrome (PLAN doctrine 2026-08-24): mode tabs, the horizon
+ * Planning chrome (planning view, ruled 2026-08-24): mode tabs, the horizon
  * rail (primary period selector), and the persistent period header.
  * Fluent v9 idioms via the token layer throughout.
  */
@@ -3123,6 +3472,15 @@
 /* F26 resume-or-discard prompt: the notice idiom with its actions. */
 /* F27: the lapsed entitlement bar - Fluent MessageBar warning intent
  * on the horizon-notice idiom; attention, never error, never modal. */
+/* R2.19: where a link landed, in the brand's tint (design R2.02 DR14), edge to edge with the run row and the grid. */
+.chrona-sched__horizon-notice.chrona-sched__link-notice {
+  margin: 0 0 8px;
+}
+.chrona-sched__horizon-notice.chrona-sched__link-notice--opened {
+  background: var(--csui-brand-bg);
+  border-color: var(--csui-brand-stroke);
+}
+
 .chrona-sched__horizon-notice--warning {
   background: var(--csui-warn-bg);
   border-color: var(--csui-warn-stroke);
@@ -3164,7 +3522,8 @@
 
 .chrona-sched__account-link {
   color: var(--csui-brand-fg);
-  font-size: 13px;
+  font-size: 12px;
+  line-height: 16px;
   text-decoration: none;
 }
 
@@ -3272,6 +3631,220 @@
   max-height: 100%;
   overflow: auto;
   padding: 10px;
+}
+
+/* An extension's panel of figures needs more room than the change list. */
+.chrona-sched__proposal-panel.chrona-sched__proposal-panel--wide {
+  flex-basis: 360px;
+}
+
+.chrona-sched__proposal-panel--overlay.chrona-sched__proposal-panel--wide {
+  width: 360px;
+}
+
+/*
+ * Workforce Outcomes (R2.18, design R2.02 DR15): a table, not a card;
+ * neutral throughout, figures right-aligned in tabular digits, Now in
+ * semibold, the Must rows indented under their total.
+ */
+.chrona-sched__outcomes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/*
+ * The head stays in view while the panel scrolls: it covers the panel's
+ * 10px padding band edge to edge (55px = band + 36px + 8px + its rule), and
+ * each table's column names stick under it.
+ */
+.chrona-sched__outcomes {
+  --csui-outcomes-head: 55px;
+}
+
+.chrona-sched__outcomes-head {
+  align-items: center;
+  background: var(--csui-bg);
+  border-bottom: 1px solid var(--csui-stroke);
+  box-sizing: border-box;
+  display: flex;
+  gap: 4px;
+  height: var(--csui-outcomes-head);
+  margin: -10px -10px 0;
+  padding: 10px 10px 8px;
+  position: sticky;
+  top: -10px;
+  z-index: 1;
+}
+
+.chrona-sched__outcomes-table thead th,
+.chrona-sched__outcomes-table thead td,
+.chrona-sched__outcomes-trend thead th {
+  background: var(--csui-bg);
+  /* A collapsed border stays with the table: the stuck row draws its own rule. */
+  box-shadow: inset 0 -1px 0 var(--csui-stroke);
+  position: sticky;
+  top: calc(var(--csui-outcomes-head) - 10px);
+}
+
+/* The title on one line with the actions; the period under it. */
+.chrona-sched__outcomes-heading {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.chrona-sched__outcomes-title {
+  align-self: flex-start;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  margin: 0;
+}
+
+/* The panel's focus ring: Fluent's focus stroke with its corner, on the heading, the trend toggle and the dash. */
+.chrona-sched__outcomes-title:focus-visible,
+.chrona-sched__outcomes-disclosure:focus-visible,
+.chrona-sched__outcome-dash:focus-visible {
+  border-radius: var(--csui-radius);
+  outline: 2px solid var(--csui-text);
+  outline-offset: 1px;
+}
+
+.chrona-sched__outcomes-range {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrona-sched__outcomes-range,
+.chrona-sched__outcome-col-range {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+}
+
+.chrona-sched__outcome-col-range {
+  display: block;
+  white-space: nowrap;
+}
+
+.chrona-sched__outcomes-table,
+.chrona-sched__outcomes-trend {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  width: 100%;
+}
+
+.chrona-sched__outcomes-table th,
+.chrona-sched__outcomes-table td,
+.chrona-sched__outcomes-trend th,
+.chrona-sched__outcomes-trend td {
+  border-bottom: 1px solid var(--csui-stroke);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  padding: 8px 4px;
+  text-align: right;
+}
+
+.chrona-sched__outcomes-table th[scope="row"],
+.chrona-sched__outcomes-trend th[scope="row"] {
+  text-align: left;
+}
+
+/* Only the label column wraps; figures keep their line and their room. */
+.chrona-sched__outcomes-table td,
+.chrona-sched__outcomes-table thead th,
+.chrona-sched__outcomes-trend td:last-child {
+  padding-left: 12px;
+  white-space: nowrap;
+}
+
+.chrona-sched__outcomes-table thead th {
+  vertical-align: bottom;
+}
+
+.chrona-sched__outcomes-table thead th,
+.chrona-sched__outcomes-trend thead th {
+  color: var(--csui-text-soft);
+}
+
+.chrona-sched__outcomes-table .chrona-sched__outcome-row td {
+  font-size: 14px;
+}
+
+.chrona-sched__outcomes-table .chrona-sched__outcome-row td:nth-child(2) {
+  font-weight: 600;
+}
+
+.chrona-sched__outcomes-table .chrona-sched__outcome-subrow th,
+.chrona-sched__outcomes-table .chrona-sched__outcome-subrow td {
+  color: var(--csui-text-soft);
+  padding-bottom: 6px;
+  padding-top: 6px;
+}
+
+.chrona-sched__outcomes-table .chrona-sched__outcome-subrow th {
+  padding-left: 16px;
+}
+
+.chrona-sched__outcomes-table td.chrona-sched__outcome-alarm {
+  color: var(--csui-danger);
+}
+
+.chrona-sched__outcome-unsaved {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.chrona-sched__outcomes-disclosure {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: var(--csui-radius);
+  color: var(--csui-text);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 14px;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.chrona-sched__outcomes-disclosure:hover {
+  color: var(--csui-brand-fg);
+}
+
+
+/* A dash with a reason: the tip on focus as on hover. */
+.chrona-sched__outcome-dash {
+  cursor: default;
+}
+
+.chrona-sched__outcome-trend polyline {
+  stroke: var(--csui-text-soft);
+  stroke-width: 1.5;
+}
+
+.chrona-sched__outcome-trend circle {
+  fill: var(--csui-text-soft);
+}
+
+.chrona-sched__outcome-trend .chrona-sched__outcome-trend-last {
+  fill: var(--csui-text);
+}
+
+.chrona-sched__outcomes-caption {
+  color: var(--csui-text-soft);
+  font-size: 12px;
+  line-height: 16px;
+  margin: 0;
+  /* No last word alone on its line where the webview supports it. */
+  text-wrap: pretty;
 }
 
 /*
@@ -3563,6 +4136,17 @@
   padding: 6px 8px;
   text-align: left;
   width: 100%;
+}
+/* A drill line the proposal fixes: the change list's fix mark before it. */
+.chrona-sched__drill-entry--fixed {
+  align-items: flex-start;
+  display: flex;
+  gap: 4px;
+}
+.chrona-sched__drill-fixed-icon {
+  color: var(--csui-success);
+  flex: none;
+  margin-top: 2px;
 }
 .chrona-sched__drill-entry:hover {
   background: var(--csui-surface-hover);

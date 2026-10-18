@@ -14,7 +14,8 @@
  * - a signed lapsed claim (past due beyond grace, blocked, cancelled)
  *   turns the paid domain read-only: Optimize and Generate withdraw
  *   behind a warning bar that says why;
- * - grace and a count above the plan's ceiling are warning chips;
+ * - grace is a warning chip; a count above the plan stops nothing, so
+ *   the board shows nothing (the portal's Plan and usage page has it);
  * - no claims at all (not connected, or a server that sends none)
  *   leaves the control exactly as it was before claims existed.
  * Never modal, never blocking, never a locked roster. The standing
@@ -153,8 +154,6 @@ export function entitlementDueForRefresh(snapshot: EntitlementSnapshot | undefin
 
 /** What the surface shows about the entitlement (display only, F19). */
 export interface EntitlementDisplay {
-  /** True when the scheduled count has reached the plan's ceiling. */
-  readonly aboveCeiling?: boolean;
   readonly graceUntil?: Date;
   readonly kind: EntitlementStatusKind;
   /** Runs a refresh now; shown as Retry beside the paused chip. */
@@ -162,10 +161,6 @@ export interface EntitlementDisplay {
   readonly pausedSince?: Date;
   /** The portal's Plan and usage page; the standing link. */
   readonly planUrl?: string;
-  /** The plan's ceiling, when it states one. */
-  readonly resourcesIncluded?: number;
-  /** Resources scheduled this period: the high-water mark, else the calendar's latest. */
-  readonly resourcesScheduled?: number;
 }
 
 export interface EntitlementDisplayOptions {
@@ -180,18 +175,13 @@ export function toEntitlementDisplay(
   if (!status) {
     return undefined;
   }
-  const metrics = status.session.metrics;
-  const scheduled = metrics.resourcesScheduledHighWater ?? metrics.resourcesScheduledLatest;
-  const included = metrics.resourcesIncluded;
+  // The usage count is not on the board (Matt 2026-10-17): Plan and usage shows it.
   return {
-    ...(scheduled !== undefined && included !== undefined && scheduled >= included ? { aboveCeiling: true } : {}),
     ...(status.graceUntil ? { graceUntil: status.graceUntil } : {}),
     kind: status.kind,
     ...(options.onRetry ? { onRetry: options.onRetry } : {}),
     ...(status.pausedSince ? { pausedSince: status.pausedSince } : {}),
     ...(options.planUrl ? { planUrl: options.planUrl } : {}),
-    ...(included !== undefined ? { resourcesIncluded: included } : {}),
-    ...(scheduled !== undefined ? { resourcesScheduled: scheduled } : {}),
   };
 }
 

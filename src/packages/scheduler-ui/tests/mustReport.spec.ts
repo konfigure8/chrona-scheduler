@@ -55,12 +55,16 @@ const shift = (
 });
 
 const zero: MustBreachCounts = {
+  averageHours: 0,
   daysInARow: 0,
+  daysOff: 0,
+  maximumHours: 0,
   onLeaveOrUnavailable: 0,
-  other: { maximumHours: 0, overlap: 0, splitParts: 0, unlisted: 0 },
+  other: { overlap: 0, splitParts: 0, unlisted: 0 },
   restBetweenShifts: 0,
   site: 0,
   skills: 0,
+  weeklyRest: 0,
 };
 const counts = (patch: Partial<Omit<MustBreachCounts, "other">> & { other?: Partial<MustBreachCounts["other"]> }): MustBreachCounts => ({
   ...zero,
@@ -105,18 +109,25 @@ const context = {
 
 function rowsAddUpToTheTotal(): void {
   const all = counts({
+    averageHours: 12,
     daysInARow: 2,
+    daysOff: 10,
+    maximumHours: 1,
+    nights: 13,
     onLeaveOrUnavailable: 3,
-    other: { maximumHours: 1, overlap: 4, splitParts: 5, unlisted: 6 },
+    other: { overlap: 4, splitParts: 5, unlisted: 6 },
     restBetweenShifts: 7,
     site: 9,
     skills: 8,
+    weeklyRest: 11,
   });
+  // R2.18 Decision 6: the agreement rules have rows of their own; Other keeps double bookings and split parts.
+  // Nights: the five Nights rules share a row after the agreement rows.
   assert.deepEqual(
     MUST_ROWS.map((row) => mustRowCount(all, row)),
-    [7, 2, 8, 9, 3, 16],
+    [7, 2, 1, 10, 11, 12, 13, 8, 9, 3, 15],
   );
-  assert.equal(mustBreachTotal(all), 45);
+  assert.equal(mustBreachTotal(all), 91);
 }
 
 function aFreshProposalShowsTheSolversCounts(): void {
@@ -255,14 +266,18 @@ function drillDownEntriesNameWhoAndWhen(): void {
     ],
     { ...context, names: englishDateNames },
   );
-  assert.equal(entries[0]?.label, "Sam · Tue 3 Nov 06:00 → Tue 3 Nov 14:00");
+  assert.equal(entries[0]?.label, "Sam\u00a0· Tue 3 Nov 06:00 → Tue 3 Nov 14:00");
   assert.deepEqual(entries[0]?.shiftIds, ["n1", "d2"]);
-  assert.equal(entries[1]?.label, "Sam · Mon 2 Nov – Tue 3 Nov");
+  assert.equal(entries[1]?.label, "Sam\u00a0· Mon 2 Nov – Tue 3 Nov");
   // "Other Must rules" entries lead with their kind.
-  assert.equal(entries[2]?.label, "Double booking · Sam · Night · Mon 2 Nov 22:00-06:00, 14:00-22:00");
+  assert.equal(entries[2]?.label, "Double booking\u00a0· Sam\u00a0· Night · Mon 2 Nov 22:00-06:00, 14:00-22:00");
   // A look-back shift is not on the board: the entry shows and selects what the board has.
   assert.deepEqual(entries[3]?.shiftIds, ["d2"]);
   assert.equal(DRILL_DOWN_LIMIT, 50);
+  // Shifts that are all pinned say so: Optimize cannot move them.
+  const pinned = new Map([...context.eventsById].map(([id, event]) => [id, { ...event, pinned: true }]));
+  const [held] = drillDownEntries([restMatch], { ...context, eventsById: pinned, names: englishDateNames });
+  assert.equal(held?.label, "Sam\u00a0· Tue 3 Nov 06:00 → Tue 3 Nov 14:00\u00a0· pinned");
 }
 
 rowsAddUpToTheTotal();

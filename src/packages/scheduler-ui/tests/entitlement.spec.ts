@@ -69,29 +69,24 @@ const run = async (): Promise<void> => {
   assertEqual(entitlementAllows(undefined, scenarioCapability("workforce-scheduling")), true, "no claims allow the scenario");
   assertEqual(toEntitlementDisplay(undefined), undefined, "nothing to display");
 
-  // Paid and current: every claimed capability, the metric with its ceiling.
+  // Paid and current: every claimed capability; the usage count stays off the board (Matt 2026-10-17).
   const current = deriveEntitlementStatus(snapshot(paid), now);
   assertEqual(current?.kind, "current", "current kind");
   assertEqual(entitlementAllows(current, CAPABILITY_SOLVE), true, "current solves");
   assertEqual(entitlementAllows(current, "scenario:workforce-scheduling"), true, "current has the scenario");
   assertEqual(entitlementAllows(current, "scenario:field-services"), false, "another scenario is not claimed");
   const display = toEntitlementDisplay(current, { planUrl: "https://portal.example/plan?environment=org" });
-  assertEqual(display?.resourcesScheduled, 41, "high-water mark wins over the latest count");
-  assertEqual(display?.resourcesIncluded, 50, "ceiling shown");
   assertEqual(display?.planUrl, "https://portal.example/plan?environment=org", "plan link carried");
-  assertEqual(display?.aboveCeiling, undefined, "under the ceiling");
-  const above = deriveEntitlementStatus(snapshot({ ...paid, metrics: { resourcesIncluded: 50, resourcesScheduledHighWater: 50 } }), now);
-  assertEqual(toEntitlementDisplay(above)?.aboveCeiling, true, "at the ceiling counts as above plan");
+  assertEqual(Object.keys(display ?? {}).sort().join(","), "kind,planUrl", "no usage count on the board");
   assertEqual(planUsageUrl("https://portal.example/environments?x=1#y", "org.crm6.dynamics.com"), "https://portal.example/plan?environment=org.crm6.dynamics.com", "plan link from any portal link");
   assertEqual(planUsageUrl("https://portal.example/"), "https://portal.example/plan", "plan link without an environment");
   assertEqual(planUsageUrl(undefined, "org"), undefined, "no portal link, no plan link");
   assertEqual(planUsageUrl("not a url"), undefined, "a broken link yields none");
 
-  // Free registered: solve only, no metric.
+  // Free registered: solve only.
   const free = deriveEntitlementStatus(snapshot({ ...paid, capabilities: ["solve"], metrics: {}, paymentState: "free", tier: "free" }), now);
   assertEqual(free?.kind, "free", "free kind");
   assertEqual(entitlementAllows(free, "scenario:workforce-scheduling"), false, "free has no scenario");
-  assertEqual(toEntitlementDisplay(free)?.resourcesScheduled, undefined, "free shows no metric");
 
   // Grace: everything stays, the end of grace is shown.
   const graceUntil = new Date(now.getTime() + 3 * day).toISOString();

@@ -68,12 +68,16 @@ const currentEvents = [
 ] as never;
 
 const noBreaches: MustBreachCounts = {
+  averageHours: 0,
   daysInARow: 0,
+  daysOff: 0,
+  maximumHours: 0,
   onLeaveOrUnavailable: 0,
-  other: { maximumHours: 0, overlap: 0, splitParts: 0, unlisted: 0 },
+  other: { overlap: 0, splitParts: 0, unlisted: 0 },
   restBetweenShifts: 0,
   site: 0,
   skills: 0,
+  weeklyRest: 0,
 };
 
 /** A "Why not…?" for Ann on the one shift, on an unchanged roster. */

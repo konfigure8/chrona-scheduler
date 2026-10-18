@@ -1,4 +1,6 @@
 import { buildLegendEntries, type RowDecoration } from "./decorations";
+import { NightGlyph } from "./NightGlyph";
+import { isOpenOnCall, isOpenRequired } from "./solve";
 import { useSchedulerStrings } from "./strings";
 import type { SchedulerUiEvent } from "./types";
 
@@ -15,7 +17,7 @@ export function SchedulerLegend(props: SchedulerLegendProps): JSX.Element | null
   const strings = useSchedulerStrings();
   const entries = buildLegendEntries(
     props.decorations,
-    props.events.some((event) => event.status === "needsCover"),
+    props.events.some(isOpenRequired),
     {
       busyElsewhere: strings.legendBusyElsewhere,
       custom: strings.legendCustom,
@@ -27,7 +29,11 @@ export function SchedulerLegend(props: SchedulerLegendProps): JSX.Element | null
     },
     strings.legendNeedsCover,
   );
-  if (entries.length === 0) {
+  // Night shifts (night rules design): the moon the chips carry.
+  const nights = props.events.some((event) => event.night === true);
+  // F24 Repair mode: an on-call shift left open, backup cover rather than work that needs it.
+  const onCall = props.events.some(isOpenOnCall);
+  if (entries.length === 0 && !nights && !onCall) {
     return null;
   }
 
@@ -46,6 +52,18 @@ export function SchedulerLegend(props: SchedulerLegendProps): JSX.Element | null
           {entry.label}
         </span>
       ))}
+      {onCall ? (
+        <span className="chrona-sched__legend-item" key="on-call">
+          <span aria-hidden="true" className="chrona-sched__legend-swatch chrona-sched__bar--on-call-open" />
+          {strings.legendOnCall}
+        </span>
+      ) : null}
+      {nights ? (
+        <span className="chrona-sched__legend-item" key="night">
+          <NightGlyph />
+          {strings.nightShift}
+        </span>
+      ) : null}
     </div>
   );
 }

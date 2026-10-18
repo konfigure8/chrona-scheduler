@@ -41,6 +41,7 @@ import {
   type HourFormat,
 } from "./timeAxis";
 import { buildResourceGroups, groupCollapseKey } from "./resourceGrouping";
+import { isOpenOnCall, openShiftClass, openShiftNote } from "./solve";
 import { formatString, useSchedulerStrings } from "./strings";
 import {
   isDeleteLocked,
@@ -50,13 +51,18 @@ import {
 import { gapFractions, normalizeGaps } from "./spans";
 import { FlagGlyph } from "./FlagGlyph";
 import { flagReasonText } from "./stringResources";
+import { NightGlyph } from "./NightGlyph";
 import { PinGlyph } from "./PinGlyph";
 import { VerticalSplitter } from "./Splitter";
 import { tagClassName, tagPillStyle, type TagColorMap } from "./tagColors";
 import { computeVisibleEntryRange } from "./rowVirtualization";
 import { useBoardExtension } from "./extension";
 import { assignedHours, capacityForWindow } from "./hours";
-import { packEventLanes, type TimelineRowLayout } from "./timelineLayout";
+import {
+  eventIntersectsWindow,
+  packEventLanes,
+  type TimelineRowLayout,
+} from "./timelineLayout";
 import {
   isSameDay,
   resolveEventColor,
@@ -146,6 +152,8 @@ export interface ChronaTimelineProps {
 interface DisplayEntry {
   /** Collapse-state key for header entries (group or group+subgroup). */
   readonly collapseKey?: string;
+  /** A collapsed group's open shifts in the window, counted in its header. */
+  readonly collapsedOpen?: number;
   /** 0 = group header, 1 = subgroup header. */
   readonly depth?: number;
   readonly groupName?: string;
@@ -511,6 +519,12 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
       window: timeWindow,
     });
 
+  // The open shifts the window shows in lanes; with these, a board with no people is not empty.
+  const openInWindow = React.useMemo(
+    () => (unscheduledEvents ?? []).filter((event) => eventIntersectsWindow(event, timeWindow)),
+    [unscheduledEvents, timeWindow],
+  );
+
   const displayEntries = React.useMemo<readonly DisplayEntry[]>(() => {
     const entries: DisplayEntry[] = [];
     let cursor = 0;
@@ -525,8 +539,9 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
       }
     }
 
+    // Only open shifts in the window get a lane, so only their groups get a header without people.
     const laneBuckets = new Map<string, SchedulerUiEvent[]>();
-    for (const event of unscheduledEvents ?? []) {
+    for (const event of openInWindow) {
       const key = groupValue(event.groups, primarySet);
       const bucket = laneBuckets.get(key);
       if (bucket) {
@@ -579,9 +594,12 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
       return entries;
     }
 
-    for (const group of buildResourceGroups(resources, effectiveGroupBy)) {
+    // A group whose open shifts have nobody in it still gets its header and lane.
+    for (const group of buildResourceGroups(resources, effectiveGroupBy, [...laneBuckets.keys()])) {
+      const collapsed = collapsedGroups.has(group.name);
       entries.push({
         collapseKey: group.name,
+        collapsedOpen: collapsed ? (laneBuckets.get(group.name)?.length ?? 0) : 0,
         depth: 0,
         groupName: group.name,
         height: groupHeaderHeight,
@@ -593,7 +611,7 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
         top: cursor,
       });
       cursor += groupHeaderHeight;
-      if (collapsedGroups.has(group.name)) {
+      if (collapsed) {
         continue;
       }
       pushLane(laneBuckets.get(group.name) ?? []);
@@ -631,7 +649,7 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
     effectiveGroupBy,
     primarySet,
     collapsedGroups,
-    unscheduledEvents,
+    openInWindow,
   ]);
 
   const rows = React.useMemo(
@@ -1295,7 +1313,28 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                   type="button"
                 >
                   <span aria-hidden="true">{isCollapsed ? "▸" : "▾"}</span>{" "}
-                  {groupName === UNGROUPED ? strings.ungrouped : groupName} ({entry.memberCount})
+                  <span className="chrona-sched__group-title">
+                    <span className="chrona-sched__group-name">
+                      {groupName === UNGROUPED ? strings.ungrouped : groupName} ({entry.memberCount})
+                    </span>
+                    {entry.collapsedOpen ? (
+                      // Collapsing never hides open work: the group's open shifts in the window, counted beside its name.
+                      <span
+                        className="chrona-sched__group-open"
+                        data-testid="collapsed-open"
+                        title={formatString(strings.unscheduledLaneLabel, {
+                          count: entry.collapsedOpen,
+                        })}
+                      >
+                        <span aria-hidden="true">{entry.collapsedOpen}</span>
+                        <span className="chrona-sched__sr-only">
+                          {formatString(strings.unscheduledLaneLabel, {
+                            count: entry.collapsedOpen,
+                          })}
+                        </span>
+                      </span>
+                    ) : null}
+                  </span>
                 </button>
                 <div
                   className="chrona-sched__group-canvas"
@@ -1366,13 +1405,16 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                           positioned.event.start,
                           positioned.event.end,
                         ),
+                        // Everything in the lane is open: on call, or needing cover.
+                        openShiftNote(positioned.event, strings) ?? strings.legendNeedsCover,
                         ...(positioned.event.requiredTags ?? []),
                       ].join(", ")}
-                      className={
-                        positioned.event.review === "proposed"
-                          ? "chrona-sched__lane-bar chrona-sched__bar--proposed"
-                          : "chrona-sched__lane-bar"
-                      }
+                      className={[
+                        "chrona-sched__lane-bar",
+                        // F24 Repair mode: an open on-call shift is backup cover, neutral as on the board.
+                        isOpenOnCall(positioned.event) ? "chrona-sched__lane-bar--on-call-open" : "",
+                        positioned.event.review === "proposed" ? "chrona-sched__bar--proposed" : "",
+                      ].filter(Boolean).join(" ")}
                       data-event-id={positioned.event.id}
                       key={positioned.event.id}
                       onPointerDown={(downEvent) => {
@@ -1396,13 +1438,16 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                       <span className="chrona-sched__lane-bar-title">
                         {positioned.event.title}
                       </span>
-                      <span className="chrona-sched__bar-time">
-                        {formatTimeRange(
-                          positioned.event.start,
-                          positioned.event.end,
-                        )}
-                      </span>
-                      {(positioned.event.requiredTags ?? []).map((tag) => {
+                      {/* A short bar keeps its title whole; the time and the skills stay in its name and hover card. */}
+                      {positioned.width >= 96 ? (
+                        <span className="chrona-sched__bar-time">
+                          {formatTimeRange(
+                            positioned.event.start,
+                            positioned.event.end,
+                          )}
+                        </span>
+                      ) : null}
+                      {(positioned.width >= 160 ? positioned.event.requiredTags ?? [] : []).map((tag) => {
                         const pill = tagPillStyle(tag, tagColors);
                         return (
                           <span
@@ -1582,9 +1627,7 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                     positioned.event.end.getTime() > timeWindow.end.getTime();
                   const barClasses = [
                     "chrona-sched__bar",
-                    positioned.event.status === "needsCover"
-                      ? "chrona-sched__bar--needs-cover"
-                      : "",
+                    openShiftClass(positioned.event, "bar"),
                     selection.has(positioned.event.id)
                       ? "chrona-sched__bar--selected"
                       : "",
@@ -1609,6 +1652,7 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                       positioned.event.start,
                       positioned.event.end,
                     ),
+                    ...(positioned.event.night ? [strings.nightShift] : []),
                     ...(positioned.event.requiredTags ?? []),
                     ...normalizeGaps(positioned.event).map(
                       (gap) => gap.label ?? "break",
@@ -1717,6 +1761,7 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                         />
                       ) : null}
                       <span>{positioned.event.title}</span>
+                      {positioned.event.night ? <NightGlyph title={strings.nightShift} /> : null}
                       <span className="chrona-sched__bar-time">
                         {formatTimeRange(
                           positioned.event.start,
@@ -1841,7 +1886,7 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
           />
         ) : null}
       </div>
-      {resources.length === 0 ? (
+      {resources.length === 0 && openInWindow.length === 0 ? (
         // Sibling of the wide grid, not a child: a block here is as wide
         // as the scrollport (not the canvas), and sticky keeps it in view
         // however far the axis is scrolled.

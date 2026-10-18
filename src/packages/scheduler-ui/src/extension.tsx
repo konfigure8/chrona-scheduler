@@ -1,10 +1,11 @@
 import * as React from "react";
 
 import type { ContextMenuItem } from "./ContextMenu";
+import type { DateNames } from "./dateNames";
 import type { TimelineChange } from "./interactions";
 import type { RosterDay } from "./rosterLayout";
 import type { MustBreachCounts, ScheduleCandidate, ScheduleRuleMatch } from "./schedulingContract";
-import type { ProposalChange, SolveProgress } from "./solve";
+import type { MustRow, ProposalChange, SolveProgress } from "./solve";
 import type { CandidateAnswer, RosterVersion } from "./solveClient";
 import type { SchedulerStrings } from "./stringResources";
 import type {
@@ -23,10 +24,16 @@ export interface BoardState {
   /** The events on the board; the proposal's while one is previewed. */
   readonly events: readonly SchedulerUiEvent[];
   readonly resources: readonly SchedulerResource[];
+  /** A proposal is open: its change list holds the side panel. */
+  readonly reviewing?: boolean;
+  /** The side panel's collapse (design R2.02 DR15): whether it is a strip now, and opening it again. */
+  readonly sidePanel?: { readonly collapsed: boolean; readonly expand: () => void };
   /** A running solve's progress, as the board shows it; absent when none runs. */
   readonly solveProgress?: SolveProgress;
   /** The board's strings, resolved. */
   readonly strings: SchedulerStrings;
+  /** The open shifts on the board; the proposal's while one is previewed. Absent when the host has none to show. */
+  readonly unscheduled?: readonly SchedulerUiEvent[];
   readonly view: SchedulerViewKind;
   readonly window: TimeWindow;
 }
@@ -43,6 +50,8 @@ export interface CreateRequest {
 
 /** A column right of the Roster grid's last day: its short label and full name. */
 export interface RosterStatColumn {
+  /** "end": the column reads as amounts, so its header and figures sit right. Absent = centred. */
+  readonly align?: "end";
   readonly id: string;
   readonly label: string;
   readonly title: string;
@@ -100,6 +109,12 @@ export interface TimelineExtension {
     readonly label: string;
     /** The strip's content on the canvas. */
     readonly render: (input: TimelineStripInput) => React.ReactNode;
+    /**
+     * Whether the strip falls short anywhere in the window, across every
+     * group. The empty side panel then says nothing is open, not that
+     * everything is covered.
+     */
+    readonly short?: (input: Omit<TimelineStripInput, "group" | "pxPerHour">) => boolean;
   };
 }
 
@@ -129,7 +144,7 @@ export interface RosterGroupInput {
 
 /** The Roster grid's extension points. */
 export interface RosterExtension {
-  /** Columns right of the last day, a day wide each, shown while the room allows. */
+  /** Columns right of the last day, a day wide each; on a period wider than the board they stay at its right edge. */
   readonly columns?: readonly RosterStatColumn[];
   /** A person's values in the shown columns, by column id. */
   readonly columnValues?: (
@@ -142,6 +157,38 @@ export interface RosterExtension {
   readonly groups?: (input: RosterGroupInput) => readonly RosterGroup[];
   /** Under a person's name. */
   readonly personDetail?: (resource: SchedulerResource) => React.ReactNode;
+  /**
+   * A last row that stays at the bottom of the grid: a label under the
+   * names, a note across the days, and a figure under each column that
+   * has one. Absent = none.
+   */
+  readonly totals?: {
+    readonly label: string;
+    readonly note?: React.ReactNode;
+    readonly values: (columnIds: readonly string[]) => Readonly<Record<string, React.ReactNode>>;
+  };
+}
+
+/** A tile an extension adds to the review's scorecard, after the board's own. */
+export interface ScorecardTile {
+  /** Stable; the tile's test id is "score-{id}". */
+  readonly id: string;
+  readonly icon?: React.ReactElement;
+  readonly label: string;
+  /**
+   * The change from now, worded as the board's other tiles word it:
+   * "+A$120 vs now", or "No change" when delta is 0. text is the
+   * signed amount. lowerIsBetter gives the note its tone; absent = none.
+   */
+  readonly change?: { readonly delta: number; readonly lowerIsBetter?: boolean; readonly text: string };
+  /** Under the value when there is no change to show. */
+  readonly note?: string;
+  /** A second line in the warning tone, such as who the figure leaves out. */
+  readonly attention?: string;
+  /** The label's tip. */
+  readonly title?: string;
+  /** The figure as Apply would leave the roster. */
+  readonly value: string;
 }
 
 /** A roster and its people, as the review hands it to an extension. */
@@ -179,6 +226,13 @@ export interface ReviewExtension {
    * planner holds back a change, it stands in for the solver's counts.
    */
   readonly checkMust: (roster: ReviewRoster) => BoardMustCheck;
+  /**
+   * A drill-down line's words for a match, such as an agreement period
+   * and how far it is off (R2.18 Decision 6); undefined = the board's.
+   */
+  readonly describe?: (match: ScheduleRuleMatch, roster: ReviewRoster, names: DateNames) => string | undefined;
+  /** The agreement rows the roster's rules name, shown at 0 too. Absent = only rows with a count. */
+  readonly ruleRows?: readonly MustRow[];
   /** Who the report does not check in a period, and whether anyone is. */
   readonly unchecked: (roster: Omit<ReviewRoster, "events">) => UncheckedPeople;
 }
@@ -266,6 +320,12 @@ export interface ChangeGroups {
  * A scenario package adds its own content to the board through these
  * slots. Without an extension the board renders none of it.
  */
+/** What the board gives a side panel of an extension's own. */
+export interface SidePanelControls {
+  /** Collapse the panel to its strip at the side; the strip opens it again. */
+  readonly onCollapse: () => void;
+}
+
 export interface BoardExtension {
   /**
    * Groups at the top of the change list, before the board's own, such
@@ -293,8 +353,18 @@ export interface BoardExtension {
    * Optimize's window now and as Apply would leave it. Absent = no tile.
    */
   readonly preferencesMet?: (roster: ReviewRoster) => PreferencesMet;
+  /** The extension's own counts for the period as Apply leaves it, saved with the board's (F53 saved counts). */
+  readonly outcomeFigures?: (roster: ReviewRoster) => Readonly<Record<string, number>>;
   /** The review's Must report. Absent = the solver's verdict only. */
   readonly review?: ReviewExtension;
+  /** The extension's words for some of the board's, where its product names a thing its own way. */
+  readonly strings?: Partial<SchedulerStrings>;
+  /**
+   * Tiles after the board's own on the review's scorecard, from the
+   * roster now and as Apply would leave it, over Optimize's window.
+   * Absent = none.
+   */
+  readonly scoreTiles?: (rosters: { readonly now: ReviewRoster; readonly proposed: ReviewRoster }) => readonly ScorecardTile[];
   /** "Why not…?" on a shift and on a change. Absent = no question. */
   readonly whyNot?: WhyNotExtension;
   /** The extension's own items in a shift's menu, after the board's. Absent = none. */
@@ -308,8 +378,19 @@ export interface BoardExtension {
   readonly header?: Slot;
   /** Dialogs and other layers, rendered after the board's own. */
   readonly overlays?: Slot;
+  /** A notice of the extension's own at the top of the board, under the period bar. */
+  readonly notice?: Slot;
   /** The Roster grid's columns, groups and person details. */
   readonly roster?: (board: BoardState) => RosterExtension | undefined;
+  /**
+   * A panel of the extension's own in the side panel's place, while no
+   * review or question has it. Absent, or undefined = none. The panel
+   * puts the board's Collapse in its header (design R2.02 DR15).
+   */
+  readonly sidePanel?: (
+    board: BoardState,
+    panel: SidePanelControls,
+  ) => { readonly label: string; readonly node: React.ReactNode } | undefined;
   /** The timeline's strips. */
   readonly timeline?: (board: BoardState) => TimelineExtension | undefined;
   readonly toolbar?: {

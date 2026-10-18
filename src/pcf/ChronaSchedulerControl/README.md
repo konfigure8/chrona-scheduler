@@ -21,6 +21,10 @@ work items' resource lookups; the `calendarConfigId` mapping rows name
 the customer's resource table (groups, timezones, people who hold no
 assignments yet) and the control loads it via WebAPI.
 
+The property-set names are frozen: a rename breaks every maker's
+binding. Fixture mode is explicit: `calendarConfigId = "demo"` renders
+the demo, and a bound view renders its real data, empty included.
+
 ## Recipe: bind work items
 
 1. Add the control to a view, subgrid, or custom page and bind
@@ -98,5 +102,5 @@ browser storage under `chrona-sched:v1:{userId}:{viewId}`.
 - `pnpm run test:pcf` - builds the real bundle and runs the Playwright
   smoke suite against the sandbox (port 8182), covering both the
   fixture fallback and the CSV-bound adapter path.
-- Deep behavior tests live in `packages/scheduler-ui` (Vite harness,
-  99+ Playwright specs); the control suite is the integration canary.
+- Deep behavior tests live in the scheduler packages; the control
+  suite is the integration canary.

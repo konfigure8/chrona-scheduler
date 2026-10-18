@@ -34,9 +34,6 @@ export interface SchedulerStrings {
   readonly entitlementLapsed: string;
   readonly entitlementPaused: string;
   readonly entitlementPlanUsage: string;
-  readonly entitlementResources: string;
-  readonly entitlementResourcesAbovePlan: string;
-  readonly entitlementResourcesNoCeiling: string;
   readonly entitlementRetry: string;
   readonly finish: string;
   readonly flagCauseAssigned: string;
@@ -54,6 +51,11 @@ export interface SchedulerStrings {
   readonly legendCustom: string;
   readonly legendHoliday: string;
   readonly legendNeedsCover: string;
+  /** F24 Repair mode: an on-call shift left open, in the legend, the agenda and the hover card. */
+  readonly legendOnCall: string;
+  /** Under the review's open-shift list: the on-call shifts left open, which are not counted. */
+  readonly drillOnCallOpenOne: string;
+  readonly drillOnCallOpenMany: string;
   readonly legendNonWorking: string;
   readonly legendPreferred: string;
   readonly legendUnavailable: string;
@@ -130,6 +132,16 @@ export interface SchedulerStrings {
   /** Pipe-separated month and weekday names, January first / Sunday first. */
   readonly monthsLong: string;
   readonly monthsShort: string;
+  /** A date: {day} and {month} (the short month name). */
+  readonly dateLabelPattern: string;
+  /** A date with its year: {day}, {month} (the long month name) and {year}. */
+  readonly dateLongPattern: string;
+  /** A day: {weekday} (the short weekday name), {day} and {month} (the short month name). */
+  readonly dayLabelPattern: string;
+  /** Days in one month: {from} and {to} (the first and last day numbers) and {month} (the short month name). */
+  readonly dayRangePattern: string;
+  /** A day where space is short: {weekday} (the short weekday name) and {day}. */
+  readonly dayShortPattern: string;
   readonly moveAmount: string;
   readonly moveDialogTitle: string;
   readonly moveDirection: string;
@@ -177,6 +189,10 @@ export interface SchedulerStrings {
   readonly proposalPanelTitle: string;
   /** Roster grid: the folded change list's tab. */
   readonly proposalPanelToggle: string;
+  readonly panelCollapse: string;
+  readonly panelExpand: string;
+  /** The name of the info button beside a label with a tip. */
+  readonly infoButton: string;
   readonly proposalGroupAssigned: string;
   readonly proposalGroupMoved: string;
   readonly proposalGroupUnassigned: string;
@@ -217,10 +233,17 @@ export interface SchedulerStrings {
   /** F63 Person sites: a person on a shift at a site they do not work at. */
   readonly mustRowSite: string;
   readonly mustRowOnLeave: string;
+  readonly mustRowMaximumHours: string;
+  readonly mustRowDaysOff: string;
+  readonly mustRowWeeklyRest: string;
+  readonly mustRowAverageHours: string;
+  /** The Must report's row for the five Nights rules of an agreement. */
+  readonly mustRowNights: string;
+  /** The moon's tooltip and name on a night shift. */
+  readonly nightShift: string;
   readonly mustRowOther: string;
   /** The kinds "Other Must rules" names. */
   readonly mustKindOverlap: string;
-  readonly mustKindMaximumHours: string;
   readonly mustKindSplitParts: string;
   readonly mustKindUnlisted: string;
   /** A breakdown row read in full: plain, and as a button that opens its shifts. */
@@ -236,6 +259,7 @@ export interface SchedulerStrings {
   readonly proposalMustKeptUnchecked: string;
   /** The change list's group of a breakdown row's shifts, capped. */
   readonly drillGroup: string;
+  readonly drillGroupFixed: string;
   readonly drillMore: string;
   /** One reason line per change (design R10, Pass 1 call 5). */
   readonly reasonFixesRest: string;
@@ -356,6 +380,8 @@ export interface SchedulerStrings {
   readonly unscheduledAll: string;
   readonly unscheduledEmpty: string;
   readonly unscheduledEmptyInView: string;
+  /** The empty side panel while coverage falls short in the window. */
+  readonly unscheduledEmptyShort: string;
   readonly unscheduledFilterLabel: string;
   readonly unscheduledInView: string;
   readonly unscheduledTitle: string;
@@ -397,9 +423,6 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   entitlementLapsed: "Chrona subscription lapsed. Optimize and Generate are paused until billing is resolved.",
   entitlementPaused: "Optimizer paused since {since}. Chrona is unreachable; scheduling works as normal.",
   entitlementPlanUsage: "Plan and usage",
-  entitlementResources: "{scheduled} of {included} resources scheduled this period",
-  entitlementResourcesAbovePlan: "{scheduled} of {included} resources scheduled, above plan",
-  entitlementResourcesNoCeiling: "{scheduled} resources scheduled this period",
   entitlementRetry: "Retry",
   finish: "Finish",
   flagCauseAssigned: "assigned",
@@ -418,6 +441,9 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   legendCustom: "Highlighted",
   legendHoliday: "Holiday",
   legendNeedsCover: "Needs cover",
+  legendOnCall: "On call",
+  drillOnCallOpenOne: "1 on-call shift open, not counted",
+  drillOnCallOpenMany: "{count} on-call shifts open, not counted",
   legendNonWorking: "Non-working time",
   legendPreferred: "Preferred hours",
   legendUnavailable: "Unavailable",
@@ -501,6 +527,11 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   monthMore: "+{count} more",
   monthsLong: "January|February|March|April|May|June|July|August|September|October|November|December",
   monthsShort: "Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec",
+  dateLabelPattern: "{day} {month}",
+  dateLongPattern: "{day} {month} {year}",
+  dayLabelPattern: "{weekday} {day} {month}",
+  dayRangePattern: "{from}–{to} {month}",
+  dayShortPattern: "{weekday} {day}",
   moveAmount: "Amount",
   moveDialogTitle: "Move to",
   moveDirection: "Direction",
@@ -544,6 +575,9 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   proposalChangesOnly: "Changes only",
   proposalPanelTitle: "Proposed changes",
   proposalPanelToggle: "Proposed changes ({count})",
+  panelCollapse: "Collapse",
+  panelExpand: "Expand {title}",
+  infoButton: "More information",
   proposalGroupAssigned: "Assigned ({count})",
   proposalGroupMoved: "Moved ({count})",
   proposalGroupUnassigned: "Unassigned ({count})",
@@ -579,9 +613,14 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   mustRowSkills: "Skills",
   mustRowSite: "Wrong site",
   mustRowOnLeave: "On leave or unavailable",
+  mustRowMaximumHours: "Maximum hours",
+  mustRowDaysOff: "Days off",
+  mustRowWeeklyRest: "Weekly rest",
+  mustRowAverageHours: "Average hours",
+  mustRowNights: "Night shifts",
+  nightShift: "Night shift",
   mustRowOther: "Other Must rules",
   mustKindOverlap: "Double booking",
-  mustKindMaximumHours: "Max hours",
   mustKindSplitParts: "Split parts",
   mustKindUnlisted: "Other",
   mustRowSummary: "{rule}: {now} now, {proposed} proposed",
@@ -594,6 +633,7 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   proposalMustKeptUncheckedOne: "Must rules kept · not checked for 1 person",
   proposalMustKeptUnchecked: "Must rules kept · not checked for {count} people",
   drillGroup: "{rule} ({count})",
+  drillGroupFixed: "{rule} ({count}) · fixed",
   drillMore: "and {count} more",
   reasonFixesRest: "Fixes {name}'s rest ({hours} h)",
   reasonFixesDaysInARow: "Fixes {name}'s days in a row",
@@ -699,6 +739,7 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   unscheduledAll: "All",
   unscheduledEmpty: "Everything covered.",
   unscheduledEmptyInView: "Nothing in this window.",
+  unscheduledEmptyShort: "No open shifts.",
   unscheduledFilterLabel: "Filter unscheduled items",
   unscheduledInView: "In view",
   unscheduledTitle: "Unscheduled",
@@ -717,9 +758,14 @@ export function formatString(
   template: string,
   values: Readonly<Record<string, string | number>>,
 ): string {
-  return template.replace(/\{(\w+)\}/g, (match, key: string) => {
+  // A value that ends in an abbreviation point ("22. Nov.") takes the sentence's full stop: never "..".
+  return template.replace(/\{(\w+)\}(\.?)/g, (match, key: string, stop: string) => {
     const value = values[key];
-    return value === undefined ? match : String(value);
+    if (value === undefined) {
+      return match;
+    }
+    const text = String(value);
+    return stop === "." && text.endsWith(".") ? text : text + stop;
   });
 }
 

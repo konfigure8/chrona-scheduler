@@ -2,7 +2,9 @@ import * as React from "react";
 
 import { useCellDrag } from "./ChronaRoster";
 import { isDragLocked, showsPin } from "./locks";
+import { NightGlyph } from "./NightGlyph";
 import { PinGlyph } from "./PinGlyph";
+import { openShiftClass, openShiftNote } from "./solve";
 import { formatString, useSchedulerStrings } from "./strings";
 import {
   allowVerdict,
@@ -153,14 +155,15 @@ export function MonthView(props: MonthViewProps): JSX.Element {
                     </div>
                     {dayEvents.slice(0, maxChipsPerDay).map((event) => (
                       <button
-                        aria-label={`${event.title}, ${formatStart(event)}`}
+                        aria-label={[event.title, formatStart(event), event.night ? strings.nightShift : undefined, openShiftNote(event, strings)]
+                          .filter(Boolean)
+                          .join(", ")}
                         data-event-id={event.id}
                         disabled={event.review === "ghost"}
                         className={[
                           "chrona-sched__chip",
-                          event.status === "needsCover"
-                            ? "chrona-sched__chip--needs-cover"
-                            : "",
+                          "chrona-sched__chip--month",
+                          openShiftClass(event, "chip"),
                           cellDrag.draggingEventId === event.id
                             ? "chrona-sched__chip--dragging"
                             : "",
@@ -199,7 +202,8 @@ export function MonthView(props: MonthViewProps): JSX.Element {
                         <span className="chrona-sched__chip-time">
                           {formatStart(event)}
                         </span>{" "}
-                        {event.title}
+                        <span className="chrona-sched__title-text">{event.title}</span>
+                        {event.night ? <NightGlyph title={strings.nightShift} /> : null}
                       </button>
                     ))}
                     {overflow > 0 ? (

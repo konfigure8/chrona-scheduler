@@ -33,12 +33,17 @@ export function chipCode(
   return initials.join("").toLocaleUpperCase();
 }
 
-/** A compact chip's start time in the board's hour format: "07:00", or "7am" and "7:30am". */
+/**
+ * A compact chip's start time in the board's hour format, minutes left
+ * out on the hour so the chip keeps it whole: "07" and "07:30", or "7am"
+ * and "7:30am".
+ */
 export function chipStartTime(start: Date, format: HourFormat = "24"): string {
   const hours = start.getHours();
   const minutes = start.getMinutes().toString().padStart(2, "0");
   if (format === "24") {
-    return `${hours.toString().padStart(2, "0")}:${minutes}`;
+    const hour = hours.toString().padStart(2, "0");
+    return minutes === "00" ? hour : `${hour}:${minutes}`;
   }
   const twelve = hours % 12 === 0 ? 12 : hours % 12;
   const suffix = hours < 12 ? "am" : "pm";

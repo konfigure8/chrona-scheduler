@@ -1,17 +1,21 @@
-import { Button, Checkbox } from "@fluentui/react-components";
+import { Button, Checkbox, Tooltip } from "@fluentui/react-components";
 import {
+  Checkmark12Regular,
   Checkmark16Regular,
   Dismiss12Regular,
   Dismiss16Regular,
   Info16Regular,
+  PanelRightContract20Regular,
   Warning16Regular,
 } from "@fluentui/react-icons";
 import * as React from "react";
 
 import { formatHours } from "./compactChip";
 import { dateNamesFrom, formatDayLabel } from "./dateNames";
+import { NightGlyph } from "./NightGlyph";
 import { DRILL_DOWN_LIMIT, type DrillDownEntry, type ProposalReason } from "./proposalReasons";
 import { proposalPeople, type ProposalChange } from "./solve";
+import { useFullScreen } from "./fullScreen";
 import { formatString } from "./stringResources";
 import { useSchedulerStrings } from "./strings";
 import type { SchedulerUiEvent } from "./types";
@@ -34,6 +38,8 @@ export interface ProposalPanelEntry {
 /** A breakdown row's shifts, at the top of the change list (design Pass 1 call 4). */
 export interface ProposalDrillDown {
   readonly entries: readonly DrillDownEntry[];
+  /** Today's breaches the proposal fixes: each line carries the fix mark. */
+  readonly fixed?: boolean;
   /** A new value moves focus to the group's heading. */
   readonly focusKey: number;
   readonly heading: string;
@@ -56,6 +62,8 @@ export interface ProposalPanelProps {
   readonly lead?: React.ReactNode;
   /** Opened from the folded tab: over the board, not beside it. */
   readonly overlay?: boolean;
+  /** Collapse the list to its strip at the side (design R2.02 DR15); absent = no Collapse. */
+  readonly onCollapse?: () => void;
   /** Bring the change into view on the board and select it. */
   readonly onFocus?: (change: ProposalChange) => void;
   /** "Why not…?" on a change; `origin` takes the focus back when the answer closes. */
@@ -110,6 +118,7 @@ function ReasonLine(props: { readonly reason: ProposalReason }): JSX.Element {
  * is counted, not explained, and one note says so.
  */
 export function ProposalPanel(props: ProposalPanelProps): JSX.Element {
+  const mountNode = useFullScreen()?.mountNode;
   const strings = useSchedulerStrings();
   const names = React.useMemo(() => dateNamesFrom(strings), [strings]);
   const { drillDown, entries, onFocus, onKeepAll, onToggleDrop, resourceNameById } = props;
@@ -188,6 +197,12 @@ export function ProposalPanel(props: ProposalPanelProps): JSX.Element {
                   >
                     <span className="chrona-sched__unscheduled-name">
                       {change.proposed.title}
+                      {change.proposed.night ? (
+                        <>
+                          <NightGlyph title={strings.nightShift} />
+                          <span className="chrona-sched__sr-only">{`, ${strings.nightShift}`}</span>
+                        </>
+                      ) : null}
                     </span>
                     <span className="chrona-sched__proposal-detail">
                       {describe(change.proposed)}
@@ -263,12 +278,13 @@ export function ProposalPanel(props: ProposalPanelProps): JSX.Element {
           {listed.map((entry) => (
             <li key={entry.key}>
               <button
-                className="chrona-sched__drill-entry"
+                className={drillDown.fixed ? "chrona-sched__drill-entry chrona-sched__drill-entry--fixed" : "chrona-sched__drill-entry"}
                 data-testid="drill-entry"
                 onClick={() => drillDown.onFocusEntry(entry)}
                 type="button"
               >
-                {entry.label}
+                {drillDown.fixed ? <Checkmark12Regular aria-hidden="true" className="chrona-sched__drill-fixed-icon" /> : null}
+                {drillDown.fixed ? <span>{entry.label}</span> : entry.label}
               </button>
             </li>
           ))}
@@ -304,6 +320,17 @@ export function ProposalPanel(props: ProposalPanelProps): JSX.Element {
           >
             {allKept ? strings.proposalKeepNone : strings.proposalKeepAll}
           </Button>
+        ) : null}
+        {props.onCollapse ? (
+          <Tooltip content={strings.panelCollapse} mountNode={mountNode} relationship="label">
+            <Button
+              appearance="subtle"
+              data-testid="panel-collapse"
+              icon={<PanelRightContract20Regular />}
+              onClick={props.onCollapse}
+              size="small"
+            />
+          </Tooltip>
         ) : null}
       </div>
       {props.countsOnly ? (

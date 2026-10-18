@@ -26,7 +26,7 @@ import {
   Settings20Regular,
 } from "@fluentui/react-icons";
 
-import { dateNamesFrom, type DateNames } from "./dateNames";
+import { dateNamesFrom, formatDateLongLabel, type DateNames } from "./dateNames";
 import { useFullScreen } from "./fullScreen";
 import { formatString, useSchedulerStrings, type SchedulerStrings } from "./strings";
 import {
@@ -180,12 +180,10 @@ function calendarStrings(strings: SchedulerStrings, names: DateNames): CalendarS
   };
 }
 
-/** Day first, like every date the board writes: "17 August 2026". */
-const calendarDateFormatting: DateFormatting = {
-  ...DEFAULT_DATE_FORMATTING,
-  formatMonthDayYear: (date, names) =>
-    `${date.getDate()} ${names.months[date.getMonth()] ?? ""} ${date.getFullYear()}`,
-};
+/** In the board's language, like every date the board writes: "17 August 2026", German "17. August 2026". */
+function calendarDateFormatting(names: DateNames): DateFormatting {
+  return { ...DEFAULT_DATE_FORMATTING, formatMonthDayYear: (date) => formatDateLongLabel(date, names) };
+}
 
 function rangeTypeFor(interval: SchedulerTimeScale): DateRangeType {
   if (interval === "week") {
@@ -215,6 +213,7 @@ function DateNavigator(props: {
     () => calendarStrings(strings, props.names),
     [strings, props.names],
   );
+  const formatting = React.useMemo(() => calendarDateFormatting(props.names), [props.names]);
   return (
     <Popover
       mountNode={mountNode}
@@ -238,7 +237,7 @@ function DateNavigator(props: {
       <PopoverSurface aria-label={strings.goToDate}>
         <Calendar
           dateRangeType={rangeTypeFor(props.interval)}
-          dateTimeFormatter={calendarDateFormatting}
+          dateTimeFormatter={formatting}
           firstDayOfWeek={(props.weekStartsOn ?? DayOfWeek.Monday) as DayOfWeek}
           highlightSelectedMonth
           isMonthPickerVisible={false}

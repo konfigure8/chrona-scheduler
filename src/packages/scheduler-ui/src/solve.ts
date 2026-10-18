@@ -228,15 +228,60 @@ export function previewProposal(
 }
 
 /**
- * The shifts left open if the planner applies the proposal as it
- * stands now (F40 Three-level score): a kept change counts as proposed,
- * a dropped or withheld one as it is today, so the list follows Drop
- * and Keep. Earliest first.
+ * An open shift that is required work. An open on-call shift is not
+ * (domain model 6.6, F24 Repair mode): it weighs as a Should rule, and
+ * the solver's analysis leaves it out of its open shifts too.
+ */
+export function isOpenRequired(event: SchedulerUiEvent): boolean {
+  return event.status === "needsCover" && event.onCall !== true;
+}
+
+/** An on-call shift left open: backup cover, drawn neutral, not as needing cover. */
+export function isOpenOnCall(event: SchedulerUiEvent): boolean {
+  return event.status === "needsCover" && event.onCall === true;
+}
+
+/** The open look of a shift's chip or bar: needing cover, an open on-call shift, or none. */
+/** What an open shift's accessible name adds: on call, or needs cover; nothing for a covered shift. */
+export function openShiftNote(
+  event: SchedulerUiEvent,
+  strings: { readonly legendNeedsCover: string; readonly legendOnCall: string },
+): string | undefined {
+  return isOpenOnCall(event) ? strings.legendOnCall : isOpenRequired(event) ? strings.legendNeedsCover : undefined;
+}
+
+export function openShiftClass(event: SchedulerUiEvent, kind: "bar" | "chip"): string {
+  return isOpenOnCall(event) ? `chrona-sched__${kind}--on-call-open` : event.status === "needsCover" ? `chrona-sched__${kind}--needs-cover` : "";
+}
+
+/**
+ * The required shifts left open if the planner applies the proposal as
+ * it stands now (F40 Three-level score): a kept change counts as
+ * proposed, a dropped or withheld one as it is today, so the list
+ * follows Drop and Keep. Earliest first.
  */
 export function openShiftsAfter(
   proposal: ScheduleProposal,
   changes: readonly ProposalChange[],
   options: ProposalPreviewOptions = {},
+): readonly SchedulerUiEvent[] {
+  return shiftsAfter(proposal, changes, options, isOpenRequired);
+}
+
+/** The on-call shifts left open if the planner applies the proposal as it stands now; not counted as open. */
+export function openOnCallAfter(
+  proposal: ScheduleProposal,
+  changes: readonly ProposalChange[],
+  options: ProposalPreviewOptions = {},
+): readonly SchedulerUiEvent[] {
+  return shiftsAfter(proposal, changes, options, isOpenOnCall);
+}
+
+function shiftsAfter(
+  proposal: ScheduleProposal,
+  changes: readonly ProposalChange[],
+  options: ProposalPreviewOptions,
+  wanted: (event: SchedulerUiEvent) => boolean,
 ): readonly SchedulerUiEvent[] {
   const changeById = new Map(changes.map((change) => [change.current.id, change]));
   const open: SchedulerUiEvent[] = [];
@@ -247,7 +292,7 @@ export function openShiftsAfter(
       !options.dropped?.has(event.id) &&
       !options.withheld?.has(event.id);
     const shown = change ? (kept ? change.proposed : change.current) : event;
-    if (shown.status === "needsCover") {
+    if (wanted(shown)) {
       open.push(shown);
     }
   }
@@ -282,34 +327,62 @@ export function proposalMustRules(
 }
 
 /** The Must report's rows, top to bottom (design DR2 call 6). */
-export type MustRow = "daysInARow" | "onLeaveOrUnavailable" | "other" | "restBetweenShifts" | "site" | "skills";
+export type MustRow =
+  | "averageHours"
+  | "daysInARow"
+  | "daysOff"
+  | "maximumHours"
+  | "nights"
+  | "onLeaveOrUnavailable"
+  | "other"
+  | "restBetweenShifts"
+  | "site"
+  | "skills"
+  | "weeklyRest";
 
-/** The site row (F63 Person sites) shows only when a roster breaks it: a board with no sites never does. */
+/**
+ * The rows in order. The site row (F63 Person sites) and the agreement
+ * rows (R2.18 Decision 6) show only when a roster breaks them or, for
+ * the agreement rows, when the roster's agreements have that rule
+ * (OPTIONAL_MUST_ROWS): a board with neither never shows them.
+ */
 export const MUST_ROWS: readonly MustRow[] = [
   "restBetweenShifts",
   "daysInARow",
+  "maximumHours",
+  "daysOff",
+  "weeklyRest",
+  "averageHours",
+  "nights",
   "skills",
   "site",
   "onLeaveOrUnavailable",
   "other",
 ];
 
+/** The rows hidden while nothing breaks them, unless the roster's rules name them. */
+export const OPTIONAL_MUST_ROWS: ReadonlySet<MustRow> = new Set<MustRow>([
+  "averageHours",
+  "daysOff",
+  "maximumHours",
+  "nights",
+  "site",
+  "weeklyRest",
+]);
+
 /** The row a Must rule's matches count in: the named rows, else "Other Must rules". */
 export function mustRowOf(rule: MustRuleName): MustRow {
-  return rule === "restBetweenShifts" ||
-    rule === "daysInARow" ||
-    rule === "skills" ||
-    rule === "site" ||
-    rule === "onLeaveOrUnavailable"
-    ? rule
-    : "other";
+  return rule === "overlap" || rule === "splitParts" || rule === "unlisted" ? "other" : rule;
 }
 
 /** A row's count in one roster's counts. */
 export function mustRowCount(counts: MustBreachCounts, row: MustRow): number {
   if (row === "other") {
     const { other } = counts;
-    return other.overlap + other.maximumHours + other.splitParts + other.unlisted;
+    return other.overlap + other.splitParts + other.unlisted;
+  }
+  if (row === "nights") {
+    return counts.nights ?? 0;
   }
   return counts[row];
 }
@@ -342,6 +415,8 @@ export interface MustReport {
  * are there when an extension counts them.
  */
 export interface AppliedOutcome {
+  /** An extension's own counts for the period as Apply leaves it, by name. Absent = none. */
+  readonly figures?: Readonly<Record<string, number>>;
   readonly mustBreaches?: MustBreachCounts;
   /** The shifts Apply leaves open in the period. */
   readonly openShifts: number;
@@ -460,7 +535,8 @@ export function proposalScore(
       }
     }
   }
-  const answered = scoped.events.length;
+  // Required shifts only: an on-call shift is not filled or open work.
+  const answered = scoped.events.filter((event) => event.onCall !== true).length;
   // The open shifts the run left out stay open, so they count as unfilled.
   const leftEnded = proposal.leftOpen?.ended ?? 0;
   const leftPinned = proposal.leftOpen?.pinned ?? 0;

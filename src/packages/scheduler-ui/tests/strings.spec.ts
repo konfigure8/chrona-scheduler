@@ -19,6 +19,14 @@ function fillsPlaceholders(): void {
   // not silently.
   assertEqual(formatString("Hi {missing}", {}), "Hi {missing}");
   assertEqual(formatString("No placeholders", { count: 1 }), "No placeholders");
+  // A value that ends in an abbreviation point takes the sentence's full stop: one point, not two.
+  assertEqual(
+    formatString("Über einen Link geöffnet: Dienstplan {range}. Es wurde nichts geändert.", { range: "9. Nov. – 22. Nov." }),
+    "Über einen Link geöffnet: Dienstplan 9. Nov. – 22. Nov. Es wurde nichts geändert.",
+  );
+  assertEqual(formatString("Pick a day on or after {from}.", { from: "Mon 9 Nov" }), "Pick a day on or after Mon 9 Nov.");
+  assertEqual(formatString("{count}. Woche", { count: 3 }), "3. Woche");
+  assertEqual(formatString("Bis {day}.", {}), "Bis {day}.");
 }
 
 function mergesOverridesOverDefaults(): void {

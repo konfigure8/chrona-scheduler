@@ -1,4 +1,4 @@
-import { englishDateNames, formatDayLabel, weekdayShort, type DateNames } from "./dateNames";
+import { englishDateNames, formatDayLabel, formatDayShortLabel, type DateNames } from "./dateNames";
 import type { TimeWindow } from "./types";
 
 export { formatDayLabel };
@@ -185,7 +185,7 @@ export function formatDayLabelToFit(date: Date, widthPx: number, names: DateName
     return formatDayLabel(date, names);
   }
   if (widthPx >= 48) {
-    return `${weekdayShort(date, names)} ${date.getDate()}`;
+    return formatDayShortLabel(date, names);
   }
   return `${date.getDate()}`;
 }

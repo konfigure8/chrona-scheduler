@@ -170,6 +170,12 @@ export interface FixtureHostOptions {
     before: readonly SchedulerUiEvent[],
     after: readonly SchedulerUiEvent[],
   ) => void;
+  /**
+   * Whether a stored item is a night shift on the site's clock (night
+   * rules design): the board marks it and the solve tags it Night.
+   * Absent = no night shifts.
+   */
+  readonly isNightShift?: (event: SchedulerUiEvent, siteZone: string) => boolean;
 }
 
 export interface FixtureHostResult {
@@ -584,16 +590,35 @@ export function useFixtureScheduleHost(
     return () => document.removeEventListener("keydown", handler);
   }, [undo, redo]);
 
+  // Night shifts are read on the stored instants, on the site's clock, before the display zone.
+  const isNightShift = options?.isNightShift;
+  const nightMarked = React.useMemo(
+    () =>
+      isNightShift
+        ? events.map((event) => {
+            const night = isNightShift(event, siteZone);
+            if (night === (event.night === true)) {
+              return event;
+            }
+            if (night) {
+              return { ...event, night: true };
+            }
+            const { night: _night, ...rest } = event;
+            return rest;
+          })
+        : events,
+    [events, isNightShift, siteZone],
+  );
   const displayEvents = React.useMemo(
     () =>
       displayZone === "site"
-        ? events
-        : events.map((event) => ({
+        ? nightMarked
+        : nightMarked.map((event) => ({
             ...event,
             end: toDisplay(event.end),
             start: toDisplay(event.start),
           })),
-    [events, displayZone, toDisplay],
+    [nightMarked, displayZone, toDisplay],
   );
   // Undated rows wait in the panel only, as the Dataverse host keeps them.
   const scheduled = displayEvents.filter(

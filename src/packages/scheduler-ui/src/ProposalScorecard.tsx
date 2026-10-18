@@ -1,3 +1,4 @@
+import { InfoLabel } from "@fluentui/react-components";
 import {
   ArrowSwap16Regular,
   ChevronDown12Regular,
@@ -13,17 +14,19 @@ import {
 import * as React from "react";
 
 import { dateNamesFrom, formatDayLabel, type DateNames } from "./dateNames";
-import type { PreferencesMet, UncheckedPeople } from "./extension";
+import type { PreferencesMet, ScorecardTile, UncheckedPeople } from "./extension";
 import { DRILL_DOWN_LIMIT } from "./proposalReasons";
 import { mustBreachTotal, type MustBreachCounts, type SolveSearch } from "./schedulingContract";
 import {
   MUST_ROWS,
   mustRowCount,
+  OPTIONAL_MUST_ROWS,
   mustRowMatches,
   type MustReport,
   type MustRow,
   type ProposalScore,
 } from "./solve";
+import { useFullScreen } from "./fullScreen";
 import { formatString, useSchedulerStrings, type SchedulerStrings } from "./strings";
 import type { SchedulerUiEvent } from "./types";
 
@@ -42,10 +45,14 @@ export interface ProposalScorecardProps {
   readonly mustReport?: MustReport;
   /** Brings a breakdown row's shifts into the change list. */
   readonly onOpenRow?: (row: MustRow) => void;
+  /** The agreement rows the roster's rules name: shown at 0 too (R2.18 Decision 6). */
+  readonly ruleRows?: ReadonlySet<MustRow>;
   /** Brings one open shift into view on the board and selects it. */
   readonly onFocusShift?: (event: SchedulerUiEvent) => void;
   /** The shifts Apply would leave open, earliest first. */
   readonly openShifts: readonly SchedulerUiEvent[];
+  /** F24 Repair mode: the on-call shifts Apply would leave open, not counted among them. */
+  readonly openOnCall?: number;
   /** People on the board. */
   readonly peopleTotal: number;
   /** A person's name, for the unmet preferences. */
@@ -60,6 +67,8 @@ export interface ProposalScorecardProps {
   readonly search?: SolveSearch;
   /** People whose rest and day limits are not checked. Absent = not known. */
   readonly unchecked?: UncheckedPeople;
+  /** An extension's tiles, after the board's own. */
+  readonly extraTiles?: readonly ScorecardTile[];
 }
 
 interface ScoreDisclosure {
@@ -73,8 +82,10 @@ interface ScoreProps {
   /** The tile opens a list below the scorecard row. */
   readonly disclosure?: ScoreDisclosure;
   /** The tile's 16px icon before its label, as the prototype's scorecard draws it. */
-  readonly icon: React.ReactElement;
+  readonly icon?: React.ReactElement;
   readonly label: string;
+  /** The label's tip. */
+  readonly title?: string;
   readonly note: string;
   readonly noteTone?: "good" | "worse";
   /** A second note line, in the warning tone: who is not checked. */
@@ -96,6 +107,8 @@ function Score(props: ScoreProps): JSX.Element {
   }
   const base = ids.current;
   const { disclosure } = props;
+  const mountNode = useFullScreen()?.mountNode;
+  const strings = useSchedulerStrings();
   const className = [
     "chrona-sched__score",
     props.tone ? `chrona-sched__score--${props.tone}` : "",
@@ -127,6 +140,24 @@ function Score(props: ScoreProps): JSX.Element {
               <ChevronDown12Regular aria-hidden="true" className="chrona-sched__score-chevron" />
             )}
           </button>
+        ) : props.title ? (
+          // A tile with a tip: Fluent's info button after the label, for mouse, touch and keyboard
+          // alike. The tip opens below, from the button's start: it stays on the board and never
+          // covers the review bar's Apply and Discard above the tiles.
+          <span className="chrona-sched__score-caption chrona-sched__score-caption--info">
+            {props.icon}
+            <InfoLabel
+              className="chrona-sched__score-infolabel"
+              info={props.title}
+              infoButton={{
+                "aria-label": strings.infoButton,
+                popover: { mountNode, positioning: { align: "start", position: "below" } },
+              }}
+              size="small"
+            >
+              {props.label}
+            </InfoLabel>
+          </span>
         ) : (
           <span className="chrona-sched__score-caption">
             {props.icon}
@@ -203,6 +234,22 @@ function deltaNote(
   };
 }
 
+/** An extension tile's note: its change from now in the board's words, else its own note. */
+function extraTileNote(strings: SchedulerStrings, tile: ScorecardTile): Pick<ScoreProps, "note" | "noteTone"> {
+  const change = tile.change;
+  if (!change) {
+    return { note: tile.note ?? "" };
+  }
+  if (change.delta === 0) {
+    return { note: strings.scoreNoChange };
+  }
+  const note = formatString(strings.scoreVsNow, { delta: change.text });
+  if (change.lowerIsBetter === undefined) {
+    return { note };
+  }
+  return { note, noteTone: (change.lowerIsBetter ? change.delta < 0 : change.delta > 0) ? "good" : "worse" };
+}
+
 /** A breakdown row's name. */
 export function mustRowLabel(strings: SchedulerStrings, row: MustRow): string {
   switch (row) {
@@ -216,18 +263,27 @@ export function mustRowLabel(strings: SchedulerStrings, row: MustRow): string {
       return strings.mustRowSite;
     case "onLeaveOrUnavailable":
       return strings.mustRowOnLeave;
+    case "maximumHours":
+      return strings.mustRowMaximumHours;
+    case "daysOff":
+      return strings.mustRowDaysOff;
+    case "weeklyRest":
+      return strings.mustRowWeeklyRest;
+    case "averageHours":
+      return strings.mustRowAverageHours;
+    case "nights":
+      return strings.mustRowNights;
     default:
       return strings.mustRowOther;
   }
 }
 
-/** "Double booking 1 · Max hours 1": the kinds behind "Other Must rules", with their counts. */
+/** "Double booking 1 · Split shift 1": the kinds behind "Other Must rules", with their counts. */
 export function otherMustKinds(strings: SchedulerStrings, counts: MustBreachCounts): string {
   const { other } = counts;
   return (
     [
       [strings.mustKindOverlap, other.overlap],
-      [strings.mustKindMaximumHours, other.maximumHours],
       [strings.mustKindSplitParts, other.splitParts],
       [strings.mustKindUnlisted, other.unlisted],
     ] as const
@@ -379,7 +435,7 @@ export function ProposalScorecard(props: ProposalScorecardProps): JSX.Element {
             const label = mustRowLabel(strings, row);
             const nowCount = now ? mustRowCount(now, row) : undefined;
             const proposedCount = mustRowCount(proposed, row);
-            if (row === "site" && proposedCount === 0 && !nowCount) {
+            if (OPTIONAL_MUST_ROWS.has(row) && proposedCount === 0 && !nowCount && props.ruleRows?.has(row) !== true) {
               return null;
             }
             const nowText = nowCount === undefined ? "—" : String(nowCount);
@@ -389,6 +445,7 @@ export function ProposalScorecard(props: ProposalScorecardProps): JSX.Element {
                 : "";
             const opens = props.onOpenRow && mustRowMatches(mustReport, row) !== undefined;
             const values = { now: nowText, proposed: String(proposedCount), rule: label };
+            const clear = proposedCount === 0 && (nowCount ?? 0) === 0;
             const content = (
               <>
                 <span aria-hidden="true" className="chrona-sched__breakdown-label">
@@ -398,7 +455,7 @@ export function ProposalScorecard(props: ProposalScorecardProps): JSX.Element {
                 <span aria-hidden="true" className="chrona-sched__breakdown-value">
                   {nowText}
                   <span className="chrona-sched__breakdown-arrow">→</span>
-                  {proposedCount}
+                  <span className={proposedCount > 0 ? "chrona-sched__breakdown-proposed--broken" : undefined}>{proposedCount}</span>
                 </span>
               </>
             );
@@ -407,7 +464,7 @@ export function ProposalScorecard(props: ProposalScorecardProps): JSX.Element {
                 {opens ? (
                   <button
                     aria-label={formatString(strings.mustRowOpen, values)}
-                    className="chrona-sched__breakdown-row chrona-sched__breakdown-row--open"
+                    className={`chrona-sched__breakdown-row chrona-sched__breakdown-row--open${clear ? " chrona-sched__breakdown-row--clear" : ""}`}
                     onClick={() => props.onOpenRow?.(row)}
                     type="button"
                   >
@@ -415,7 +472,7 @@ export function ProposalScorecard(props: ProposalScorecardProps): JSX.Element {
                     <ChevronRight16Regular aria-hidden="true" className="chrona-sched__breakdown-chevron" />
                   </button>
                 ) : (
-                  <div className="chrona-sched__breakdown-row">
+                  <div className={`chrona-sched__breakdown-row${clear ? " chrona-sched__breakdown-row--clear" : ""}`}>
                     {content}
                     <span className="chrona-sched__sr-only">{formatString(strings.mustRowSummary, values)}</span>
                   </div>
@@ -467,6 +524,11 @@ export function ProposalScorecard(props: ProposalScorecardProps): JSX.Element {
         {openShifts.length > listed.length ? (
           <div className="chrona-sched__breakdown-more">
             {formatString(strings.drillMore, { count: String(openShifts.length - listed.length) })}
+          </div>
+        ) : null}
+        {props.openOnCall ? (
+          <div className="chrona-sched__breakdown-more" data-testid="open-on-call">
+            {props.openOnCall === 1 ? strings.drillOnCallOpenOne : formatString(strings.drillOnCallOpenMany, { count: String(props.openOnCall) })}
           </div>
         ) : null}
       </div>
@@ -581,6 +643,18 @@ export function ProposalScorecard(props: ProposalScorecardProps): JSX.Element {
           value={`${score.filledProposed} / ${score.total}`}
         />
         {preferencesTile()}
+        {(props.extraTiles ?? []).map((tile) => (
+          <Score
+            {...(tile.attention ? { attention: tile.attention } : {})}
+            icon={tile.icon}
+            key={tile.id}
+            label={tile.label}
+            {...extraTileNote(strings, tile)}
+            testId={`score-${tile.id}`}
+            title={tile.title}
+            value={tile.value}
+          />
+        ))}
         <Score
           icon={<ArrowSwap16Regular aria-hidden="true" className="chrona-sched__score-icon" />}
           label={strings.scoreChanges}

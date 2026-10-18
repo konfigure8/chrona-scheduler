@@ -54,6 +54,30 @@
   <data name="assignedTo" xml:space="preserve">
     <value>Atribuído a</value>
   </data>
+  <data name="dateLabelPattern" xml:space="preserve">
+    <value>{day} {month}</value>
+  </data>
+  <data name="dateLongPattern" xml:space="preserve">
+    <value>{day} de {month} de {year}</value>
+  </data>
+  <data name="dayLabelPattern" xml:space="preserve">
+    <value>{weekday}, {day} {month}</value>
+  </data>
+  <data name="dayRangePattern" xml:space="preserve">
+    <value>{from}–{to} {month}</value>
+  </data>
+  <data name="dayShortPattern" xml:space="preserve">
+    <value>{weekday} {day}</value>
+  </data>
+  <data name="drillOnCallOpenMany" xml:space="preserve">
+    <value>{count} turnos de prevenção em aberto, não contados</value>
+  </data>
+  <data name="drillOnCallOpenOne" xml:space="preserve">
+    <value>1 turno de prevenção em aberto, não contado</value>
+  </data>
+  <data name="legendOnCall" xml:space="preserve">
+    <value>Prevenção</value>
+  </data>
   <data name="unassigned" xml:space="preserve">
     <value>Sem atribuição</value>
   </data>
@@ -216,15 +240,6 @@
   <data name="entitlementPlanUsage" xml:space="preserve">
     <value>Plano e uso</value>
   </data>
-  <data name="entitlementResources" xml:space="preserve">
-    <value>{scheduled} de {included} recursos agendados neste período</value>
-  </data>
-  <data name="entitlementResourcesAbovePlan" xml:space="preserve">
-    <value>{scheduled} de {included} recursos agendados; acima do plano</value>
-  </data>
-  <data name="entitlementResourcesNoCeiling" xml:space="preserve">
-    <value>{scheduled} recursos agendados neste período</value>
-  </data>
   <data name="entitlementRetry" xml:space="preserve">
     <value>Tentar de novo</value>
   </data>
@@ -349,7 +364,7 @@
     <value>janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro</value>
   </data>
   <data name="monthsShort" xml:space="preserve">
-    <value>jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez</value>
+    <value>jan.|fev.|mar.|abr.|mai.|jun.|jul.|ago.|set.|out.|nov.|dez.</value>
   </data>
   <data name="moveAmount" xml:space="preserve">
     <value>Quantidade</value>
@@ -575,6 +590,15 @@
   </data>
   <data name="proposalPanelToggle" xml:space="preserve">
     <value>Alterações propostas ({count})</value>
+  </data>
+  <data name="panelCollapse" xml:space="preserve">
+    <value>Reduzir</value>
+  </data>
+  <data name="panelExpand" xml:space="preserve">
+    <value>Expandir {title}</value>
+  </data>
+  <data name="infoButton" xml:space="preserve">
+    <value>Mais informações</value>
   </data>
   <data name="proposalGroupAssigned" xml:space="preserve">
     <value>Atribuídos ({count})</value>
@@ -855,6 +879,9 @@
   <data name="unscheduledEmptyInView" xml:space="preserve">
     <value>Nada neste período.</value>
   </data>
+  <data name="unscheduledEmptyShort" xml:space="preserve">
+    <value>Nenhum turno por atribuir.</value>
+  </data>
   <data name="unscheduledFilterLabel" xml:space="preserve">
     <value>Filtrar itens por agendar</value>
   </data>
@@ -871,7 +898,7 @@
     <value>Por agendar ({count})</value>
   </data>
   <data name="weekdaysShort" xml:space="preserve">
-    <value>dom|seg|ter|qua|qui|sex|sáb</value>
+    <value>dom.|seg.|ter.|qua.|qui.|sex.|sáb.</value>
   </data>
   <data name="DataSet_WorkItems" xml:space="preserve">
     <value>Tarefas</value>
@@ -1035,14 +1062,29 @@
   <data name="mustRowOnLeave" xml:space="preserve">
     <value>Ausente ou indisponível</value>
   </data>
+  <data name="mustRowMaximumHours" xml:space="preserve">
+    <value>Horas máximas</value>
+  </data>
+  <data name="mustRowDaysOff" xml:space="preserve">
+    <value>Dias livres</value>
+  </data>
+  <data name="mustRowWeeklyRest" xml:space="preserve">
+    <value>Descanso semanal</value>
+  </data>
+  <data name="mustRowAverageHours" xml:space="preserve">
+    <value>Horas médias</value>
+  </data>
+  <data name="mustRowNights" xml:space="preserve">
+    <value>Turnos da noite</value>
+  </data>
+  <data name="nightShift" xml:space="preserve">
+    <value>Turno da noite</value>
+  </data>
   <data name="mustRowOther" xml:space="preserve">
     <value>Outras regras obrigatórias</value>
   </data>
   <data name="mustKindOverlap" xml:space="preserve">
     <value>Dupla atribuição</value>
-  </data>
-  <data name="mustKindMaximumHours" xml:space="preserve">
-    <value>Horas máx.</value>
   </data>
   <data name="mustKindSplitParts" xml:space="preserve">
     <value>Turno repartido</value>
@@ -1079,6 +1121,9 @@
   </data>
   <data name="drillGroup" xml:space="preserve">
     <value>{rule} ({count})</value>
+  </data>
+  <data name="drillGroupFixed" xml:space="preserve">
+    <value>{rule} ({count}) · corrigido</value>
   </data>
   <data name="drillMore" xml:space="preserve">
     <value>e mais {count}</value>

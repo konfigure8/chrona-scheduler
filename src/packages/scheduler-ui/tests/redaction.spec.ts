@@ -241,12 +241,16 @@ assertEqual(onCallRedaction.problem.shifts[1]?.onCall, undefined, "an ordinary s
 // The run's rule checks map back to the real person and shifts; days and
 // counts stay as they are, and unknown ids pass through.
 const counts: MustBreachCounts = {
+  averageHours: 0,
   daysInARow: 1,
+  daysOff: 0,
+  maximumHours: 0,
   onLeaveOrUnavailable: 0,
-  other: { maximumHours: 0, overlap: 0, splitParts: 0, unlisted: 0 },
+  other: { overlap: 0, splitParts: 0, unlisted: 0 },
   restBetweenShifts: 1,
   site: 0,
   skills: 0,
+  weeklyRest: 0,
 };
 const analysed = unredactSolution(
   {

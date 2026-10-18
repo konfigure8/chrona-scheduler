@@ -70,10 +70,18 @@ export function mustRuleLabel(rule: ScheduleRuleMatch["rule"], strings: Schedule
       return strings.mustRowSite;
     case "onLeaveOrUnavailable":
       return strings.mustRowOnLeave;
+    case "maximumHours":
+      return strings.mustRowMaximumHours;
+    case "daysOff":
+      return strings.mustRowDaysOff;
+    case "weeklyRest":
+      return strings.mustRowWeeklyRest;
+    case "averageHours":
+      return strings.mustRowAverageHours;
+    case "nights":
+      return strings.mustRowNights;
     case "overlap":
       return strings.mustKindOverlap;
-    case "maximumHours":
-      return strings.mustKindMaximumHours;
     case "splitParts":
       return strings.mustKindSplitParts;
     default:
@@ -216,6 +224,8 @@ export interface DrillDownEntry {
 }
 
 export interface DrillDownContext extends ReasonContext {
+  /** An extension's words for a match, such as an agreement period and how far it is off; undefined = the board's. */
+  readonly describe?: (match: ScheduleRuleMatch) => string | undefined;
   readonly names: DateNames;
 }
 
@@ -234,8 +244,6 @@ function otherKind(match: ScheduleRuleMatch, strings: SchedulerStrings): string 
   switch (match.rule) {
     case "overlap":
       return strings.mustKindOverlap;
-    case "maximumHours":
-      return strings.mustKindMaximumHours;
     case "splitParts":
       return strings.mustKindSplitParts;
     default:
@@ -249,7 +257,8 @@ function otherKind(match: ScheduleRuleMatch, strings: SchedulerStrings): string 
  * from the end of one shift to the start of the next, a run of days
  * from its first day to its last; a match of "Other Must rules" leads
  * with its kind. A match naming a shift the board does not hold (the
- * look-back before the period) shows what the board has.
+ * look-back before the period) shows what the board has. A match whose
+ * shifts are all pinned says so: Optimize cannot move them.
  */
 export function drillDownEntries(
   matches: readonly ScheduleRuleMatch[],
@@ -282,25 +291,22 @@ export function drillDownEntries(
     } else if (first) {
       when = `${first.title} · ${formatDayLabel(first.start, names)} ${shifts.map(range).join(", ")}`;
     }
+    const words = context.describe?.(match);
+    const pinned = shifts.length > 0 && shifts.every((shift) => shift.pinned === true);
     const parts = [
       mustRowOfRule(match) === "other" ? otherKind(match, strings) : "",
       people,
-      when,
+      words ?? when,
     ].filter((part) => part.length > 0);
     return {
       key: `${matchKey(match)}#${index}`,
-      label: parts.join(" · "),
+      // Each part keeps the separator before it, so a line never ends on one.
+      label: [...parts, ...(pinned ? [strings.flagCausePinned] : [])].join("\u00a0· "),
       shiftIds: shifts.map((shift) => shift.id),
     };
   });
 }
 
 function mustRowOfRule(match: ScheduleRuleMatch): "named" | "other" {
-  return match.rule === "restBetweenShifts" ||
-    match.rule === "daysInARow" ||
-    match.rule === "skills" ||
-    match.rule === "site" ||
-    match.rule === "onLeaveOrUnavailable"
-    ? "named"
-    : "other";
+  return match.rule === "overlap" || match.rule === "splitParts" || match.rule === "unlisted" ? "other" : "named";
 }

@@ -5,6 +5,10 @@
  */
 export interface SchedulerTheme {
   readonly background: string;
+  /** Fluent colorNeutralBackground3: a neutral count badge's fill. */
+  readonly badge: string;
+  /** Fluent colorNeutralForeground2: a neutral count badge's number. */
+  readonly badgeText: string;
   readonly brand: string;
   readonly brandBackground: string;
   /** Fluent colorBrandForeground1: brand-coloured text and links on neutral surfaces. */
@@ -58,6 +62,8 @@ export interface SchedulerTheme {
 
 const cssVariableByToken: Record<keyof SchedulerTheme, string> = {
   background: "--csui-bg",
+  badge: "--csui-badge",
+  badgeText: "--csui-badge-text",
   brand: "--csui-brand",
   brandBackground: "--csui-brand-bg",
   brandForeground: "--csui-brand-fg",
@@ -136,6 +142,8 @@ export function colorSchemeOf(background: string | undefined): "dark" | "light" 
 /** Matches the stylesheet defaults; useful as an explicit baseline. */
 export const fluentLightTheme: SchedulerTheme = {
   background: "#ffffff",
+  badge: "#f5f5f5",
+  badgeText: "#424242",
   brand: "#0f6cbd",
   brandBackground: "#ebf3fc",
   brandForeground: "#0f6cbd",
@@ -175,6 +183,8 @@ export const fluentLightTheme: SchedulerTheme = {
 /** The Fluent v9 web dark theme, for hosts without modern theming. */
 export const fluentDarkTheme: SchedulerTheme = {
   background: "#292929",
+  badge: "#141414",
+  badgeText: "#d6d6d6",
   brand: "#115ea3",
   brandBackground: "#082338",
   brandForeground: "#479ef5",

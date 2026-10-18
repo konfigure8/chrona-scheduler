@@ -71,13 +71,13 @@ Optimize fills open work and balances the schedule against the rules you have. I
 
 ![The Optimize explainer: a sample run before and after, what a real run would use, and the free trial button](docs/images/optimize.png)
 
-The answer arrives as a proposal on the same board. Proposed placements carry a dashed ring, a moved shift leaves a ghost at its old place, and the list names every change with its notes. Drop the ones you disagree with, then **Apply**. Nothing is written before that. On the Roster grid, a dot marks each change, **Changes only** dims the rest, and **Hold to compare** shows today's roster while you hold it. A connected environment gets a free daily allowance of runs.
+While it runs, **Stop and review** ends the run and opens the best roster found so far, if it has found one. **Cancel** ends the run and keeps nothing. The answer arrives as a proposal on the same board. Proposed placements carry a dashed ring, a moved shift leaves a ghost at its old place, and the list names every change with its notes. Drop the ones you disagree with, then **Apply**. Nothing is written before that. On the Roster grid, a dot marks each change, **Changes only** dims the rest, and **Hold to compare** shows today's roster while you hold it. A connected environment gets a free daily allowance of runs.
 
 ![Reviewing a proposal: proposed changes on the board with the Current / Proposed switch, the change list, Apply and Discard](docs/images/review.png)
 
 ## Staff rostering
 
-When scheduling turns into rostering, **Chrona Workforce Scheduler** adds the tables and the app for it: roles built from skills, with mismatch highlighting, availability and preferences, hours against capacity, agreements with rest and day limits, demand and the coverage strip, shift templates with rotating patterns and generation, roster periods with publish. Same board. It is licensed per scheduled person; ask us at support@chrona365.com.
+When scheduling turns into rostering, **Chrona Workforce Scheduler** adds the tables and the app for it: roles built from skills, with mismatch highlighting, availability and preferences, hours against capacity, agreements with rest, hours, overtime and night shift rules, demand and the coverage strip, shift types and coverage with rotating patterns and generation, roster periods with publish, a roster import from Excel, **Mark absent** with a repair that keeps every shift the absence leaves alone, wages and overtime hours, and the **Outcomes** of each roster. Same board. It is licensed per scheduled person; ask us at support@chrona365.com.
 
 ![Planning a roster: the horizon of roster periods, coverage per hour, people with skills and hours, the unscheduled panel](docs/images/planning.png)
 

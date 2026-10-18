@@ -54,6 +54,30 @@
   <data name="assignedTo" xml:space="preserve">
     <value>Assegnato a</value>
   </data>
+  <data name="dateLabelPattern" xml:space="preserve">
+    <value>{day} {month}</value>
+  </data>
+  <data name="dateLongPattern" xml:space="preserve">
+    <value>{day} {month} {year}</value>
+  </data>
+  <data name="dayLabelPattern" xml:space="preserve">
+    <value>{weekday} {day} {month}</value>
+  </data>
+  <data name="dayRangePattern" xml:space="preserve">
+    <value>{from}–{to} {month}</value>
+  </data>
+  <data name="dayShortPattern" xml:space="preserve">
+    <value>{weekday} {day}</value>
+  </data>
+  <data name="drillOnCallOpenMany" xml:space="preserve">
+    <value>{count} turni di reperibilità scoperti, non contati</value>
+  </data>
+  <data name="drillOnCallOpenOne" xml:space="preserve">
+    <value>1 turno di reperibilità scoperto, non contato</value>
+  </data>
+  <data name="legendOnCall" xml:space="preserve">
+    <value>Reperibilità</value>
+  </data>
   <data name="unassigned" xml:space="preserve">
     <value>Non assegnato</value>
   </data>
@@ -215,15 +239,6 @@
   </data>
   <data name="entitlementPlanUsage" xml:space="preserve">
     <value>Piano e utilizzo</value>
-  </data>
-  <data name="entitlementResources" xml:space="preserve">
-    <value>{scheduled} risorse su {included} pianificate nel periodo</value>
-  </data>
-  <data name="entitlementResourcesAbovePlan" xml:space="preserve">
-    <value>{scheduled} risorse su {included} pianificate, oltre il piano</value>
-  </data>
-  <data name="entitlementResourcesNoCeiling" xml:space="preserve">
-    <value>{scheduled} risorse pianificate nel periodo</value>
   </data>
   <data name="entitlementRetry" xml:space="preserve">
     <value>Riprova</value>
@@ -576,6 +591,15 @@
   <data name="proposalPanelToggle" xml:space="preserve">
     <value>Modifiche proposte ({count})</value>
   </data>
+  <data name="panelCollapse" xml:space="preserve">
+    <value>Comprimi</value>
+  </data>
+  <data name="panelExpand" xml:space="preserve">
+    <value>Espandi {title}</value>
+  </data>
+  <data name="infoButton" xml:space="preserve">
+    <value>Altre informazioni</value>
+  </data>
   <data name="proposalGroupAssigned" xml:space="preserve">
     <value>Assegnati ({count})</value>
   </data>
@@ -855,6 +879,9 @@
   <data name="unscheduledEmptyInView" xml:space="preserve">
     <value>Nulla in questo periodo.</value>
   </data>
+  <data name="unscheduledEmptyShort" xml:space="preserve">
+    <value>Nessun turno da assegnare.</value>
+  </data>
   <data name="unscheduledFilterLabel" xml:space="preserve">
     <value>Filtra elementi non pianificati</value>
   </data>
@@ -1035,14 +1062,29 @@
   <data name="mustRowOnLeave" xml:space="preserve">
     <value>Assente o non disponibile</value>
   </data>
+  <data name="mustRowMaximumHours" xml:space="preserve">
+    <value>Ore massime</value>
+  </data>
+  <data name="mustRowDaysOff" xml:space="preserve">
+    <value>Giorni liberi</value>
+  </data>
+  <data name="mustRowWeeklyRest" xml:space="preserve">
+    <value>Riposo settimanale</value>
+  </data>
+  <data name="mustRowAverageHours" xml:space="preserve">
+    <value>Ore medie</value>
+  </data>
+  <data name="mustRowNights" xml:space="preserve">
+    <value>Turni di notte</value>
+  </data>
+  <data name="nightShift" xml:space="preserve">
+    <value>Turno di notte</value>
+  </data>
   <data name="mustRowOther" xml:space="preserve">
     <value>Altre regole obbligatorie</value>
   </data>
   <data name="mustKindOverlap" xml:space="preserve">
     <value>Doppia assegnazione</value>
-  </data>
-  <data name="mustKindMaximumHours" xml:space="preserve">
-    <value>Ore max</value>
   </data>
   <data name="mustKindSplitParts" xml:space="preserve">
     <value>Turno spezzato</value>
@@ -1079,6 +1121,9 @@
   </data>
   <data name="drillGroup" xml:space="preserve">
     <value>{rule} ({count})</value>
+  </data>
+  <data name="drillGroupFixed" xml:space="preserve">
+    <value>{rule} ({count}) · risolto</value>
   </data>
   <data name="drillMore" xml:space="preserve">
     <value>e altri {count}</value>

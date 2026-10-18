@@ -3,7 +3,9 @@ import {
   diffProposal,
   ghostIdOf,
   isGhostEvent,
+  isOpenRequired,
   openShiftCount,
+  openShiftsAfter,
   openShiftsLeftOut,
   previewProposal,
   proposalDoubleBookings,
@@ -404,6 +406,39 @@ function scorecardFollowsKeepAndPeriod(): void {
   console.log("scorecard tests passed");
 }
 scorecardFollowsKeepAndPeriod();
+
+/** F24 Repair mode: an open on-call shift is not required work, so the review counts it neither open nor filled, as the solver's analysis does. */
+function openOnCallShiftIsNotRequiredWork(): void {
+  const window = { end: new Date(2026, 7, 18), start: new Date(2026, 7, 17) };
+  const early: SchedulerUiEvent = {
+    end: new Date(2026, 7, 17, 14),
+    id: "early",
+    resourceId: "dee",
+    start: new Date(2026, 7, 17, 6),
+    status: "assigned",
+    title: "Floor",
+  };
+  const onCall: SchedulerUiEvent = {
+    end: new Date(2026, 7, 17, 14),
+    id: "on-call",
+    onCall: true,
+    resourceId: "open",
+    start: new Date(2026, 7, 17, 6),
+    status: "needsCover",
+    title: "Floor",
+  };
+  const required: SchedulerUiEvent = { ...onCall, id: "required", onCall: false };
+  assertEqual(isOpenRequired(onCall), false);
+  assertEqual(isOpenRequired(required), true);
+  assertEqual(isOpenRequired(early), false);
+  const proposal: ScheduleProposal = { events: [early, onCall, required], feasible: true, runId: "run-on-call", window };
+  assertEqual(openShiftsAfter(proposal, []).map((event) => event.id).join(","), "required");
+  const score = proposalScore(proposal, [], {}, window);
+  assertEqual(score.total, 2);
+  assertEqual(score.filledProposed, 1);
+  console.log("on-call open shift tests passed");
+}
+openOnCallShiftIsNotRequiredWork();
 
 /*
  * Matt 2026-10-13: open shifts that had ended, or are pinned, stay out of

@@ -380,7 +380,7 @@ export function EventDialog(props: EventDialogProps): JSX.Element {
             >
               {resources.every((resource) => resource.id !== event.resourceId) ? (
                 <option value={event.resourceId}>
-                  {event.status === "needsCover"
+                  {event.status === "needsCover" && event.onCall !== true
                     ? strings.needsCover
                     : strings.unassigned}
                 </option>

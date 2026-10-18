@@ -52,6 +52,12 @@ export function buildMonthMatrix(
   return weeks;
 }
 
+/**
+ * The events a month cell lists, earliest first: those that start on the
+ * day, and an event of a whole day or longer (leave, a course) on every
+ * day it covers. A night shift shows on the day it starts only, as on the
+ * roster, so the next day does not read as covered.
+ */
 export function eventsForDay(
   events: readonly SchedulerUiEvent[],
   day: Date,
@@ -60,10 +66,10 @@ export function eventsForDay(
   dayStart.setHours(0, 0, 0, 0);
   const dayEnd = new Date(dayStart.getTime() + millisecondsPerDay);
   return events
-    .filter(
-      (event) =>
-        event.start.getTime() < dayEnd.getTime() &&
-        event.end.getTime() > dayStart.getTime(),
+    .filter((event) =>
+      event.end.getTime() - event.start.getTime() >= millisecondsPerDay
+        ? event.start.getTime() < dayEnd.getTime() && event.end.getTime() > dayStart.getTime()
+        : event.start.getTime() >= dayStart.getTime() && event.start.getTime() < dayEnd.getTime(),
     )
     .sort((first, second) => first.start.getTime() - second.start.getTime());
 }

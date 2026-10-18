@@ -4,6 +4,7 @@ import {
   ChevronDown20Regular,
   ChevronUp20Regular,
   Eye20Regular,
+  PanelRightExpand20Regular,
   Warning16Regular,
 } from "@fluentui/react-icons";
 
@@ -56,6 +57,7 @@ import {
   diffProposal,
   isGhostEvent,
   mustRowMatches,
+  openOnCallAfter,
   openShiftsAfter,
   previewProposal,
   proposalDoubleBookings,
@@ -75,7 +77,7 @@ import {
 import { ProposalPanel, type ProposalDrillDown } from "./ProposalPanel";
 import { leftOpenNotes, mustRowLabel, ProposalScorecard } from "./ProposalScorecard";
 import { drillDownEntries, personFixCounts, proposalReasons } from "./proposalReasons";
-import { mustBreachTotal } from "./schedulingContract";
+import { mustBreachTotal, type ScheduleRuleMatch } from "./schedulingContract";
 import { WhyNotGroup } from "./WhyNotGroup";
 import { rosterVersionOf, whyNotAction, type WhyNotAction } from "./whyNot";
 import { SolveProgressIndicator, useElapsedSeconds } from "./SolveProgress";
@@ -157,9 +159,10 @@ export interface SchedulerSurfaceProps {
   /** Server-reported free-tier allowance; display-only (F19). Absent
    * = no quota to show (paid/unlimited or not connected). */
   readonly solveQuota?: SolveQuotaDisplay;
-  /** F27: the entitlement's state beside the solve entry - a quiet chip
-   * for paused or grace, a calm notice for lapsed, the resource metric
-   * as quiet metadata. Display only; the host withdraws Optimize and
+  /** F27: the entitlement's state beside the solve entry - a warning chip
+   * for paused (with Retry) or grace, a warning bar for lapsed, and the
+   * standing Plan and usage link. The usage count stays in the portal
+   * (Matt 2026-10-17). Display only; the host withdraws Optimize and
    * Generate itself from the claims. */
   readonly entitlement?: EntitlementDisplay;
   /** F26: resume-or-discard prompt for a run the session reported. */
@@ -683,6 +686,18 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
         : undefined,
     [appliedAll, currentAll, preferencesMet, proposalChanges, props.resources, reviewPeriod],
   );
+  // An extension's scorecard tiles (R2.17 wages), from the same two rosters.
+  const scoreTiles = boardExtension?.scoreTiles;
+  const extraTiles = React.useMemo(
+    () =>
+      scoreTiles && proposalChanges
+        ? scoreTiles({
+            now: { events: currentAll, resources: props.resources, window: reviewPeriod },
+            proposed: { events: appliedAll, resources: props.resources, window: reviewPeriod },
+          })
+        : undefined,
+    [appliedAll, currentAll, proposalChanges, props.resources, reviewPeriod, scoreTiles],
+  );
   const mustReport = React.useMemo(() => {
     if (!review || !props.proposal || !proposalChanges) {
       return undefined;
@@ -740,9 +755,26 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       { dropped: droppedChangeIds, withheld: withheldChangeIds },
     );
   }, [droppedChangeIds, proposalChanges, props.proposal, reviewPeriod, withheldChangeIds]);
+  // F24 Repair mode: the on-call shifts Apply would leave open; the open-shift list says they are not counted.
+  const openOnCall = React.useMemo(() => {
+    if (!props.proposal || !proposalChanges) {
+      return 0;
+    }
+    const inPeriod = (event: SchedulerUiEvent): boolean =>
+      event.start >= reviewPeriod.start && event.start < reviewPeriod.end;
+    return openOnCallAfter(
+      { ...props.proposal, events: props.proposal.events.filter(inPeriod) },
+      proposalChanges.filter((change) => inPeriod(change.current)),
+      { dropped: droppedChangeIds, withheld: withheldChangeIds },
+    ).length;
+  }, [droppedChangeIds, proposalChanges, props.proposal, reviewPeriod, withheldChangeIds]);
   // What Apply leaves in the period, handed to the host with the changes (F53 saved counts).
+  const outcomeFigures = boardExtension?.outcomeFigures;
   const appliedOutcome = React.useMemo<AppliedOutcome>(
     () => ({
+      ...(outcomeFigures && proposalChanges
+        ? { figures: outcomeFigures({ events: appliedAll, resources: props.resources, window: reviewPeriod }) }
+        : {}),
       ...(mustReport?.proposed ? { mustBreaches: mustReport.proposed } : {}),
       openShifts: openShifts.length,
       ...(preferenceFigures
@@ -751,7 +783,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       ...(unchecked ? { unchecked: unchecked.count } : {}),
       window: reviewPeriod,
     }),
-    [mustReport, openShifts, preferenceFigures, reviewPeriod, unchecked],
+    [appliedAll, mustReport, openShifts, outcomeFigures, preferenceFigures, proposalChanges, props.resources, reviewPeriod, unchecked],
   );
   // A breakdown row opened into the change list; a new nonce moves focus to its heading.
   const [drill, setDrill] = React.useState<{ readonly nonce: number; readonly row: MustRow } | undefined>();
@@ -827,7 +859,49 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     proposalChanges !== undefined &&
     proposalChanges.length > 0;
   // The side panel on the Roster grid: the change list, or a "Why not…?" question on its own.
-  const rosterSidePanel = rosterReview || (props.view === "roster" && whyNot !== undefined);
+  const rosterSidePanel =
+    rosterReview || (props.view === "roster" && (whyNot !== undefined || boardExtension?.sidePanel !== undefined));
+  /*
+   * Design R2.02 DR15: the change list and an extension's panel collapse
+   * to a strip at the side, so a long roster gets the grid's width. Each
+   * new panel opens expanded.
+   */
+  const sidePanelKind = rosterReview ? "changes" : props.view === "roster" && boardExtension?.sidePanel ? "extension" : undefined;
+  const [sideCollapsed, setSideCollapsed] = React.useState(false);
+  React.useEffect(() => setSideCollapsed(false), [sidePanelKind]);
+  const sideStripRef = React.useRef<HTMLButtonElement | null>(null);
+  const sidePanelRef = React.useRef<HTMLDivElement | null>(null);
+  const sideFocus = React.useRef<"panel" | "strip" | undefined>(undefined);
+  React.useEffect(() => {
+    // Focus follows the toggle: the strip after Collapse, the panel's Collapse after Expand.
+    if (sideFocus.current === "strip") {
+      sideStripRef.current?.focus();
+    } else if (sideFocus.current === "panel") {
+      sidePanelRef.current?.querySelector<HTMLElement>('[data-testid="panel-collapse"]')?.focus();
+    }
+    sideFocus.current = undefined;
+  }, [sideCollapsed]);
+  const collapseSide = React.useCallback(() => {
+    sideFocus.current = "strip";
+    setSideCollapsed(true);
+  }, []);
+  const expandSide = React.useCallback(() => {
+    sideFocus.current = "panel";
+    setSideCollapsed(false);
+  }, []);
+  const sideStrip = (title: string): JSX.Element => (
+    <button
+      aria-label={formatString(strings.panelExpand, { title })}
+      className="chrona-sched__panel-reopen chrona-sched__panel-reopen--strip"
+      data-testid="side-panel-expand"
+      onClick={expandSide}
+      ref={sideStripRef}
+      type="button"
+    >
+      <PanelRightExpand20Regular aria-hidden="true" className="chrona-sched__panel-reopen-icon" />
+      {title}
+    </button>
+  );
   const [layoutWidth, setLayoutWidth] = React.useState(0);
   React.useLayoutEffect(() => {
     const layout = layoutRef.current;
@@ -850,11 +924,11 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
         : 0,
     [props.showWeekends, props.view, props.window],
   );
-  // The change list's 240px and the layout's 12px gap, as styles.css sets them.
+  // The panel's width (the change list's 240px, an extension's 360px) and the layout's 12px gap, as styles.css sets them.
   const sidePanelFolds =
     rosterSidePanel &&
     layoutWidth > 0 &&
-    layoutWidth - 240 - 12 < rosterPeopleWidthPx + rosterDayCount * rosterDayWidthPx;
+    layoutWidth - (sidePanelKind === "extension" ? 360 : 240) - 12 < rosterPeopleWidthPx + rosterDayCount * rosterDayWidthPx;
   const changesFolded = rosterReview && sidePanelFolds;
   React.useEffect(() => {
     if (!changesFolded) {
@@ -970,13 +1044,18 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     canEdit,
     events: boardEvents,
     resources: props.resources,
+    reviewing: proposalChanges !== undefined,
+    sidePanel: { collapsed: sideCollapsed, expand: expandSide },
     solveProgress,
     strings,
+    unscheduled: boardUnscheduled,
     view: props.view,
     window: props.window,
   };
   // An extension's header takes the place of the period bar and the Optimize entry.
   const header = extension?.header?.(boardState);
+  const extensionNotice = extension?.notice?.(boardState);
+  const extensionPanel = extension?.sidePanel?.(boardState, { onCollapse: collapseSide });
   const hasHeader = header !== undefined && header !== null && header !== false;
   /*
    * Every delete path (menu, keyboard, dialog, group) funnels through
@@ -1571,7 +1650,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       return (
         <DayColumnsView
           editable={canEdit}
-          events={boardEvents}
+          events={allEvents}
           hourFormat={props.hourFormat}
           onEventChange={props.onEventChange}
           onEventClick={props.onEventClick}
@@ -1592,7 +1671,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
         <MonthView
           anchor={props.window.start}
           editable={canEdit}
-          events={boardEvents}
+          events={allEvents}
           onEventChange={props.onEventChange}
           onEventClick={props.onEventClick}
           showWeekends={props.showWeekends}
@@ -1606,7 +1685,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     if (props.view === "agenda") {
       return (
         <AgendaView
-          events={boardEvents}
+          events={allEvents}
           onEventClick={props.onEventClick}
           resources={props.resources}
           window={props.window}
@@ -1918,14 +1997,27 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     drill && drillMatches
       ? {
           entries: drillDownEntries(drillMatches.matches, {
+            ...(review?.describe
+              ? {
+                  // A row of the roster as it stands opens today's matches: their words come from today's roster.
+                  describe: (match: ScheduleRuleMatch) =>
+                    review.describe?.(
+                      match,
+                      { events: drillMatches.roster === "now" ? props.events : appliedAll, resources: props.resources, window: reviewPeriod },
+                      dateNamesFrom(strings),
+                    ),
+                }
+              : {}),
             eventsById: proposalEventsById,
             nameOf: nameOfResource,
             names: dateNamesFrom(strings),
             strings,
             toInstant: props.toInstant,
           }),
+          // Today's matches open only when the proposal leaves none: the proposal fixes them.
+          ...(drillMatches.roster === "now" ? { fixed: true } : {}),
           focusKey: drill.nonce,
-          heading: formatString(strings.drillGroup, {
+          heading: formatString(drillMatches.roster === "now" ? strings.drillGroupFixed : strings.drillGroup, {
             count: String(drillMatches.matches.length),
             rule: mustRowLabel(strings, drill.row),
           }),
@@ -2160,6 +2252,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           <span>{props.dataNotice}</span>
         </div>
       ) : null}
+      {extensionNotice}
       {props.resumeRun ? (
         <div
           className="chrona-sched__horizon-notice chrona-sched__resume-notice"
@@ -2331,10 +2424,9 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
               })}
             </span>
           ) : null}
-          {/* F27 stage 2: never modal, never blocking. The ladder: lapsed
-              is the warning bar above; paused and grace are warning
-              chips (paused with Retry); a count at the ceiling is a
-              warning chip; the metric is quiet metadata and a link. */}
+          {/* F27 stage 2: never modal, never blocking. Lapsed is the
+              warning bar above; paused and grace are warning chips
+              (paused with Retry); otherwise only the Plan and usage link. */}
           {props.entitlement?.kind === "paused" ? (
             <>
               <span
@@ -2371,33 +2463,6 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
                   : "",
               })}
             </span>
-          ) : null}
-          {props.entitlement &&
-          props.entitlement.kind !== "lapsed" &&
-          props.entitlement.resourcesScheduled !== undefined ? (
-            props.entitlement.aboveCeiling && props.entitlement.resourcesIncluded !== undefined ? (
-              <span
-                className="chrona-sched__progress-chip chrona-sched__progress-chip--late"
-                data-testid="entitlement-metrics"
-                role="status"
-              >
-                {formatString(strings.entitlementResourcesAbovePlan, {
-                  included: props.entitlement.resourcesIncluded,
-                  scheduled: props.entitlement.resourcesScheduled,
-                })}
-              </span>
-            ) : (
-              <span className="chrona-sched__solve-quota" data-testid="entitlement-metrics">
-                {props.entitlement.resourcesIncluded !== undefined
-                  ? formatString(strings.entitlementResources, {
-                      included: props.entitlement.resourcesIncluded,
-                      scheduled: props.entitlement.resourcesScheduled,
-                    })
-                  : formatString(strings.entitlementResourcesNoCeiling, {
-                      scheduled: props.entitlement.resourcesScheduled,
-                    })}
-              </span>
-            )
           ) : null}
           {props.entitlement?.planUrl ?? planUsageUrl(props.solveQuota?.portalUrl) ? (
             <a
@@ -2654,12 +2719,15 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           id={scorecardId}
           must={proposalMust}
           mustReport={mustReport}
+          {...(review?.ruleRows ? { ruleRows: new Set(review.ruleRows) } : {})}
           nameOf={nameOfResource}
           onFocusShift={(event) => focusShifts([event.id])}
           onOpenRow={openMustRow}
           openShifts={openShifts}
+          openOnCall={openOnCall}
           peopleTotal={props.resources.length}
           preferences={preferenceFigures}
+          extraTiles={extraTiles}
           score={proposalFigures}
           search={props.proposal?.search}
           unchecked={unchecked}
@@ -2672,12 +2740,13 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
             <button
               aria-controls={changesPanelId}
               aria-expanded={changesOpen}
-              className="chrona-sched__panel-reopen"
+              className="chrona-sched__panel-reopen chrona-sched__panel-reopen--strip"
               data-testid="proposal-panel-tab"
               onClick={() => setChangesOpen((open) => !open)}
               ref={changesTabRef}
               type="button"
             >
+              <PanelRightExpand20Regular aria-hidden="true" className="chrona-sched__panel-reopen-icon" />
               {formatString(strings.proposalPanelToggle, {
                 count: proposalChanges.length,
               })}
@@ -2687,7 +2756,13 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
             ) : null}
           </div>
         ) : proposalChanges && proposalChanges.length > 0 ? (
-          <ProposalPanel {...proposalPanelProps} id={changesPanelId} />
+          sideCollapsed ? (
+            sideStrip(formatString(strings.proposalPanelToggle, { count: proposalChanges.length }))
+          ) : (
+            <div className="chrona-sched__side-slot" ref={sidePanelRef}>
+              <ProposalPanel {...proposalPanelProps} id={changesPanelId} onCollapse={collapseSide} />
+            </div>
+          )
         ) : whyNotNode ? (
           // No change list: the question has the side panel to itself, over the board when the days need the room.
           sidePanelFolds ? (
@@ -2704,6 +2779,31 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
             <aside aria-label={strings.menuWhyNot} className="chrona-sched__proposal-panel" data-testid="why-not-panel">
               {whyNotNode}
             </aside>
+          )
+        ) : extensionPanel && sideCollapsed ? (
+          sideStrip(extensionPanel.label)
+        ) : extensionPanel ? (
+          // The extension's own panel, over the board when the days need the room.
+          sidePanelFolds ? (
+            <div className="chrona-sched__proposal-fold" ref={sidePanelRef}>
+              <aside
+                aria-label={extensionPanel.label}
+                className="chrona-sched__proposal-panel chrona-sched__proposal-panel--overlay chrona-sched__proposal-panel--wide"
+                data-testid="extension-panel"
+              >
+                {extensionPanel.node}
+              </aside>
+            </div>
+          ) : (
+            <div className="chrona-sched__side-slot" ref={sidePanelRef}>
+              <aside
+                aria-label={extensionPanel.label}
+                className="chrona-sched__proposal-panel chrona-sched__proposal-panel--wide"
+                data-testid="extension-panel"
+              >
+                {extensionPanel.node}
+              </aside>
+            </div>
           )
         ) : null}
         {showPanel && boardUnscheduled ? (
@@ -2736,6 +2836,14 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
                 : undefined
             }
             groupSet={(props.groupBy ?? groupSetOptions.slice(0, 1))[0]}
+            isShort={() =>
+              extension?.timeline?.(boardState)?.strip?.short?.({
+                events: boardEvents,
+                groupSet: (props.groupBy ?? groupSetOptions.slice(0, 1))[0],
+                resources: props.resources,
+                window: props.window,
+              }) ?? false
+            }
             onWidthChange={props.onUnscheduledPanelWidthChange}
             tagColors={props.tagColors}
             width={props.unscheduledPanelWidth}
@@ -3001,7 +3109,9 @@ export function SchedulerSurface(props: SchedulerSurfaceProps): JSX.Element {
     >
       <FullScreenProvider value={fullScreen}>
         <DragProvider>
-          <SchedulerStringsProvider strings={props.strings}>
+          <SchedulerStringsProvider
+            strings={props.extension?.strings ? { ...props.strings, ...props.extension.strings } : props.strings}
+          >
             <BoardExtensionProvider extension={props.extension}>
               <InteractionShell {...props} />
             </BoardExtensionProvider>

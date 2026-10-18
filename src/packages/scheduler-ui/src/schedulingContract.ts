@@ -51,12 +51,16 @@ const SOLVER_RULE_KINDS: ReadonlySet<AgreementRuleKind> = new Set<SolverRuleKind
   "averageHours",
   "daysInARow",
   "daysOff",
-  "disruption",
   "maximumHours",
   "minimumHours",
   "minimumRest",
   "overtime",
   "weeklyRest",
+  "nightShiftsInARow",
+  "nightShifts",
+  "nightShiftHours",
+  "restAfterNight",
+  "restAfterNights",
 ]);
 
 /** The kinds the board checks itself, for its warnings and its count after a hold-back. */
@@ -68,11 +72,11 @@ export function isSolverRuleKind(kind: AgreementRuleKind): kind is SolverRuleKin
 }
 
 /** The kinds that only ever weigh as a cost, as in Timefold's contracts. */
-const ALWAYS_SHOULD: ReadonlySet<AgreementRuleKind> = new Set<AgreementRuleKind>(["disruption", "minimumHours", "overtime"]);
+const ALWAYS_SHOULD: ReadonlySet<AgreementRuleKind> = new Set<AgreementRuleKind>(["minimumHours", "overtime"]);
 
 /**
- * A rule's level as it holds: minimum hours, overtime and disruption
- * are always should; any other rule is must unless the maker set should.
+ * A rule's level as it holds: minimum hours and overtime are always
+ * should; any other rule is must unless the maker set should.
  */
 export function ruleLevel(rule: Pick<SchedulerAgreementRule, "kind" | "level">): AgreementRuleLevel {
   return ALWAYS_SHOULD.has(rule.kind) ? "should" : (rule.level ?? "must");
@@ -92,6 +96,8 @@ export function isBoardCheckedRule(rule: Pick<SchedulerAgreementRule, "kind" | "
  * dates are calendar days read on the problem's clock (timeZone).
  */
 export interface ScheduleContractAgreementRule {
+  /** restAfterNights: the night shifts in a row that start the rest. Absent = 1. */
+  readonly count?: number;
   /** The rule's last day, inclusive, "YYYY-MM-DD". Absent = no end. */
   readonly end?: string;
   /**
@@ -113,7 +119,7 @@ export interface ScheduleContractAgreementRule {
   readonly start?: string;
   /**
    * Above 0, in the units SchedulerAgreementRule.value names: minutes,
-   * days for days in a row and days off, or the weight for disruption.
+   * or days for days in a row and days off.
    */
   readonly value: number;
   /** weeklyRest and averageHours: the weeks of each window. Absent = 1. */
@@ -204,6 +210,8 @@ export interface ScheduleContractShift {
    */
   readonly split?: { readonly id: string; readonly samePerson: "preferred" | "required" };
   readonly start: string;
+  /** The shift's tags (Timefold shift tags): Night marks a night shift. Absent = none. */
+  readonly tags?: readonly string[];
   readonly title: string;
 }
 
@@ -232,8 +240,7 @@ export interface ScheduleContractTimePreference {
  * stands. Each shift's assignment is its current person; the absent
  * person stays on their shift, with their absence as unavailability.
  * The API pins every assigned shift the absence leaves alone, so only
- * the shifts it uncovers and on-call shifts can move, and the people's
- * disruption rules count what moves.
+ * the shifts it uncovers and on-call shifts can move.
  */
 export type ScheduleContractRepair = true;
 
@@ -280,15 +287,19 @@ export interface SolveSearch {
  * rule.
  */
 export type MustRuleName =
+  | "averageHours"
   | "daysInARow"
+  | "daysOff"
   | "maximumHours"
+  | "nights"
   | "onLeaveOrUnavailable"
   | "overlap"
   | "restBetweenShifts"
   | "site"
   | "skills"
   | "splitParts"
-  | "unlisted";
+  | "unlisted"
+  | "weeklyRest";
 
 /** Chrona's names for the Should rules an answer explains; it leaves others out. */
 export type ShouldRuleName =
@@ -301,8 +312,11 @@ export type ShouldRuleName =
 export type ScheduleRuleName = MustRuleName | ShouldRuleName;
 
 const MUST_RULES: ReadonlySet<string> = new Set<MustRuleName>([
+  "averageHours",
   "daysInARow",
+  "daysOff",
   "maximumHours",
+  "nights",
   "onLeaveOrUnavailable",
   "overlap",
   "restBetweenShifts",
@@ -310,6 +324,7 @@ const MUST_RULES: ReadonlySet<string> = new Set<MustRuleName>([
   "skills",
   "splitParts",
   "unlisted",
+  "weeklyRest",
 ]);
 
 const SHOULD_RULES: ReadonlySet<string> = new Set<ShouldRuleName>([
@@ -330,9 +345,8 @@ export function isShouldRule(rule: string): rule is ShouldRuleName {
   return SHOULD_RULES.has(rule);
 }
 
-/** Must breaches outside the four named counts, one per match. */
+/** Must breaches outside the named counts, one per match. */
 export interface OtherMustBreachCounts {
-  readonly maximumHours: number;
   readonly overlap: number;
   /** Parts of a split that must share one person, held by two. */
   readonly splitParts: number;
@@ -342,11 +356,27 @@ export interface OtherMustBreachCounts {
 
 /** Must breaches in one roster, each in its counting unit. */
 export interface MustBreachCounts {
+  /** One per rolling window of weeks whose hours are over the weekly average times its weeks (R2.18). */
+  readonly averageHours: number;
   /**
    * One per run of working days with at least one day whose run so far
    * is longer than the limit in force that day.
    */
   readonly daysInARow: number;
+  /** One per period with fewer days off than the minimum, scaled to its planned days (R2.18). */
+  readonly daysOff: number;
+  /**
+   * One per person over their contract's maximum in the window, and one
+   * per period over an agreement's Maximum hours (R2.18).
+   */
+  readonly maximumHours: number;
+  /**
+   * Nights: one per run of night shifts over its limit or rested too
+   * little after, per period over its night shifts, per night shift
+   * too long, and per short rest after a night shift. Absent in counts
+   * made before the Nights rules = 0.
+   */
+  readonly nights?: number;
   /** One per match: assigned in unavailable time, or a casual outside declared availability. */
   readonly onLeaveOrUnavailable: number;
   readonly other: OtherMustBreachCounts;
@@ -360,6 +390,8 @@ export interface MustBreachCounts {
   readonly site: number;
   /** One per assigned shift whose person lacks a required skill. */
   readonly skills: number;
+  /** One per rolling window of weeks whose longest time off is shorter than the rule's (R2.18). */
+  readonly weeklyRest: number;
 }
 
 /** Every Must breach in the counts. */
@@ -368,11 +400,15 @@ export function mustBreachTotal(counts: MustBreachCounts): number {
   return (
     counts.restBetweenShifts +
     counts.daysInARow +
+    counts.maximumHours +
+    counts.daysOff +
+    counts.weeklyRest +
+    counts.averageHours +
+    (counts.nights ?? 0) +
     counts.skills +
     counts.site +
     counts.onLeaveOrUnavailable +
     other.overlap +
-    other.maximumHours +
     other.splitParts +
     other.unlisted
   );
@@ -386,6 +422,8 @@ export function mustBreachTotal(counts: MustBreachCounts): number {
 export interface ScheduleRuleMatch {
   /** daysInARow: the run's working days, "YYYY-MM-DD" on the problem's clock. */
   readonly days?: readonly string[];
+  /** nights: which of the five Nights rules the match breaks. Absent = not known. */
+  readonly kind?: NightRuleKind;
   /** The person the match is about. Absent = no one. */
   readonly resourceId?: string;
   readonly rule: ScheduleRuleName;
@@ -395,6 +433,12 @@ export interface ScheduleRuleMatch {
    */
   readonly shiftIds: readonly string[];
 }
+
+/** The five Nights rules (night rules design), as an agreement names them. */
+export type NightRuleKind = Extract<
+  AgreementRuleKind,
+  "nightShiftHours" | "nightShifts" | "nightShiftsInARow" | "restAfterNight" | "restAfterNights"
+>;
 
 /** How one roster stands against the rules. */
 export interface ScheduleRosterCheck {
@@ -534,6 +578,7 @@ export function problemFromSchedule(
       return rule.on && isSolverRuleKind(kind) && Number.isFinite(rule.value) && rule.value > 0
         ? [
             {
+              ...(rule.kind === "restAfterNights" && rule.count !== undefined ? { count: rule.count } : {}),
               ...(rule.end ? { end: rule.end } : {}),
               kind,
               ...(ruleLevel(rule) === "should" ? { level: "should" as const } : {}),
@@ -625,6 +670,8 @@ export function problemFromSchedule(
       requiredSkills: event.requiredTags ?? [],
       ...(event.split ? { split: { id: event.split.id, samePerson: event.split.samePerson } } : {}),
       start: wire(event.start),
+      // Nights: a night shift carries the tag the Nights rules count.
+      ...(event.night ? { tags: ["Night"] } : {}),
       title: event.title,
     })),
     ...(timePreferences.length > 0 ? { timePreferences } : {}),

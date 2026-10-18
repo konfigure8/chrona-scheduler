@@ -199,6 +199,8 @@ function redactWith(
             ? { split: { id: pseudoSplit(shift.split.id), samePerson: shift.split.samePerson } }
             : {}),
           start: shift.start,
+          // Nights: a tag is a fact about the shift (Night), never a name.
+          ...(shift.tags && shift.tags.length > 0 ? { tags: shift.tags } : {}),
           title: pseudonym,
         };
       }),

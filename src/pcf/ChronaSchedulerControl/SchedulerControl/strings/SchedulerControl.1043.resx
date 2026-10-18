@@ -54,6 +54,30 @@
   <data name="assignedTo" xml:space="preserve">
     <value>Toegewezen aan</value>
   </data>
+  <data name="dateLabelPattern" xml:space="preserve">
+    <value>{day} {month}</value>
+  </data>
+  <data name="dateLongPattern" xml:space="preserve">
+    <value>{day} {month} {year}</value>
+  </data>
+  <data name="dayLabelPattern" xml:space="preserve">
+    <value>{weekday} {day} {month}</value>
+  </data>
+  <data name="dayRangePattern" xml:space="preserve">
+    <value>{from}–{to} {month}</value>
+  </data>
+  <data name="dayShortPattern" xml:space="preserve">
+    <value>{weekday} {day}</value>
+  </data>
+  <data name="drillOnCallOpenMany" xml:space="preserve">
+    <value>{count} bereikbaarheidsdiensten open, niet geteld</value>
+  </data>
+  <data name="drillOnCallOpenOne" xml:space="preserve">
+    <value>1 bereikbaarheidsdienst open, niet geteld</value>
+  </data>
+  <data name="legendOnCall" xml:space="preserve">
+    <value>Bereikbaarheidsdienst</value>
+  </data>
   <data name="unassigned" xml:space="preserve">
     <value>Niet toegewezen</value>
   </data>
@@ -216,15 +240,6 @@
   <data name="entitlementPlanUsage" xml:space="preserve">
     <value>Abonnement en gebruik</value>
   </data>
-  <data name="entitlementResources" xml:space="preserve">
-    <value>{scheduled} van {included} resources gepland deze periode</value>
-  </data>
-  <data name="entitlementResourcesAbovePlan" xml:space="preserve">
-    <value>{scheduled} van {included} resources gepland, boven abonnement</value>
-  </data>
-  <data name="entitlementResourcesNoCeiling" xml:space="preserve">
-    <value>{scheduled} resources gepland deze periode</value>
-  </data>
   <data name="entitlementRetry" xml:space="preserve">
     <value>Opnieuw</value>
   </data>
@@ -349,7 +364,7 @@
     <value>januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december</value>
   </data>
   <data name="monthsShort" xml:space="preserve">
-    <value>jan|feb|mrt|apr|mei|jun|jul|aug|sep|okt|nov|dec</value>
+    <value>jan.|feb.|mrt.|apr.|mei|jun.|jul.|aug.|sep.|okt.|nov.|dec.</value>
   </data>
   <data name="moveAmount" xml:space="preserve">
     <value>Aantal</value>
@@ -575,6 +590,15 @@
   </data>
   <data name="proposalPanelToggle" xml:space="preserve">
     <value>Voorgestelde wijzigingen ({count})</value>
+  </data>
+  <data name="panelCollapse" xml:space="preserve">
+    <value>Samenvouwen</value>
+  </data>
+  <data name="panelExpand" xml:space="preserve">
+    <value>{title} uitvouwen</value>
+  </data>
+  <data name="infoButton" xml:space="preserve">
+    <value>Meer informatie</value>
   </data>
   <data name="proposalGroupAssigned" xml:space="preserve">
     <value>Toegewezen ({count})</value>
@@ -855,6 +879,9 @@
   <data name="unscheduledEmptyInView" xml:space="preserve">
     <value>Niets in deze periode.</value>
   </data>
+  <data name="unscheduledEmptyShort" xml:space="preserve">
+    <value>Geen open diensten.</value>
+  </data>
   <data name="unscheduledFilterLabel" xml:space="preserve">
     <value>Ongeplande items filteren</value>
   </data>
@@ -1035,14 +1062,29 @@
   <data name="mustRowOnLeave" xml:space="preserve">
     <value>Met verlof of niet beschikbaar</value>
   </data>
+  <data name="mustRowMaximumHours" xml:space="preserve">
+    <value>Maximale uren</value>
+  </data>
+  <data name="mustRowDaysOff" xml:space="preserve">
+    <value>Vrije dagen</value>
+  </data>
+  <data name="mustRowWeeklyRest" xml:space="preserve">
+    <value>Wekelijkse rusttijd</value>
+  </data>
+  <data name="mustRowAverageHours" xml:space="preserve">
+    <value>Gemiddelde uren</value>
+  </data>
+  <data name="mustRowNights" xml:space="preserve">
+    <value>Nachtdiensten</value>
+  </data>
+  <data name="nightShift" xml:space="preserve">
+    <value>Nachtdienst</value>
+  </data>
   <data name="mustRowOther" xml:space="preserve">
     <value>Overige verplichte regels</value>
   </data>
   <data name="mustKindOverlap" xml:space="preserve">
     <value>Dubbele boeking</value>
-  </data>
-  <data name="mustKindMaximumHours" xml:space="preserve">
-    <value>Max. uren</value>
   </data>
   <data name="mustKindSplitParts" xml:space="preserve">
     <value>Gebroken dienst</value>
@@ -1079,6 +1121,9 @@
   </data>
   <data name="drillGroup" xml:space="preserve">
     <value>{rule} ({count})</value>
+  </data>
+  <data name="drillGroupFixed" xml:space="preserve">
+    <value>{rule} ({count}) · opgelost</value>
   </data>
   <data name="drillMore" xml:space="preserve">
     <value>en nog {count}</value>

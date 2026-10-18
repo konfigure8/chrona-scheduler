@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { dateNamesFrom } from "./dateNames";
 import { groupEventsByDay } from "./monthLayout";
+import { isOpenOnCall } from "./solve";
 import { useSchedulerStrings } from "./strings";
 import { eventIntersectsWindow } from "./timelineLayout";
 import type {
@@ -66,13 +67,15 @@ export function AgendaView(props: AgendaViewProps): JSX.Element {
                   </span>
                   <span className="chrona-sched__agenda-resource">
                     {resourcesById.get(event.resourceId)?.name ??
-                      event.resourceId}
+                      (event.status === "needsCover" ? strings.unassigned : event.resourceId)}
                   </span>
-                  {event.status === "needsCover" ? (
-                    <span className="chrona-sched__agenda-needs-cover">
-                      Needs cover
-                    </span>
-                  ) : null}
+                  {isOpenOnCall(event) ? (
+                    <span className="chrona-sched__agenda-on-call">{strings.legendOnCall}</span>
+                  ) : event.status === "needsCover" ? (
+                    <span className="chrona-sched__agenda-needs-cover">{strings.legendNeedsCover}</span>
+                  ) : (
+                    <span />
+                  )}
                 </button>
               </li>
             ))}

@@ -54,6 +54,30 @@
   <data name="assignedTo" xml:space="preserve">
     <value>Asignado a</value>
   </data>
+  <data name="dateLabelPattern" xml:space="preserve">
+    <value>{day} {month}</value>
+  </data>
+  <data name="dateLongPattern" xml:space="preserve">
+    <value>{day} de {month} de {year}</value>
+  </data>
+  <data name="dayLabelPattern" xml:space="preserve">
+    <value>{weekday}, {day} {month}</value>
+  </data>
+  <data name="dayRangePattern" xml:space="preserve">
+    <value>{from}–{to} {month}</value>
+  </data>
+  <data name="dayShortPattern" xml:space="preserve">
+    <value>{weekday} {day}</value>
+  </data>
+  <data name="drillOnCallOpenMany" xml:space="preserve">
+    <value>{count} turnos de guardia sin cubrir, no contados</value>
+  </data>
+  <data name="drillOnCallOpenOne" xml:space="preserve">
+    <value>1 turno de guardia sin cubrir, no contado</value>
+  </data>
+  <data name="legendOnCall" xml:space="preserve">
+    <value>De guardia</value>
+  </data>
   <data name="unassigned" xml:space="preserve">
     <value>Sin asignar</value>
   </data>
@@ -215,15 +239,6 @@
   </data>
   <data name="entitlementPlanUsage" xml:space="preserve">
     <value>Plan y uso</value>
-  </data>
-  <data name="entitlementResources" xml:space="preserve">
-    <value>{scheduled} de {included} recursos programados este periodo</value>
-  </data>
-  <data name="entitlementResourcesAbovePlan" xml:space="preserve">
-    <value>{scheduled} de {included} recursos programados; plan superado</value>
-  </data>
-  <data name="entitlementResourcesNoCeiling" xml:space="preserve">
-    <value>{scheduled} recursos programados este periodo</value>
   </data>
   <data name="entitlementRetry" xml:space="preserve">
     <value>Reintentar</value>
@@ -576,6 +591,15 @@
   <data name="proposalPanelToggle" xml:space="preserve">
     <value>Cambios propuestos ({count})</value>
   </data>
+  <data name="panelCollapse" xml:space="preserve">
+    <value>Contraer</value>
+  </data>
+  <data name="panelExpand" xml:space="preserve">
+    <value>Expandir {title}</value>
+  </data>
+  <data name="infoButton" xml:space="preserve">
+    <value>Más información</value>
+  </data>
   <data name="proposalGroupAssigned" xml:space="preserve">
     <value>Asignados ({count})</value>
   </data>
@@ -855,6 +879,9 @@
   <data name="unscheduledEmptyInView" xml:space="preserve">
     <value>Nada en este periodo.</value>
   </data>
+  <data name="unscheduledEmptyShort" xml:space="preserve">
+    <value>No hay turnos abiertos.</value>
+  </data>
   <data name="unscheduledFilterLabel" xml:space="preserve">
     <value>Filtrar elementos sin programar</value>
   </data>
@@ -1035,14 +1062,29 @@
   <data name="mustRowOnLeave" xml:space="preserve">
     <value>Ausente o no disponible</value>
   </data>
+  <data name="mustRowMaximumHours" xml:space="preserve">
+    <value>Horas máximas</value>
+  </data>
+  <data name="mustRowDaysOff" xml:space="preserve">
+    <value>Días libres</value>
+  </data>
+  <data name="mustRowWeeklyRest" xml:space="preserve">
+    <value>Descanso semanal</value>
+  </data>
+  <data name="mustRowAverageHours" xml:space="preserve">
+    <value>Horas promedio</value>
+  </data>
+  <data name="mustRowNights" xml:space="preserve">
+    <value>Turnos de noche</value>
+  </data>
+  <data name="nightShift" xml:space="preserve">
+    <value>Turno de noche</value>
+  </data>
   <data name="mustRowOther" xml:space="preserve">
     <value>Otras reglas obligatorias</value>
   </data>
   <data name="mustKindOverlap" xml:space="preserve">
     <value>Doble asignación</value>
-  </data>
-  <data name="mustKindMaximumHours" xml:space="preserve">
-    <value>Horas máx.</value>
   </data>
   <data name="mustKindSplitParts" xml:space="preserve">
     <value>Turno partido</value>
@@ -1079,6 +1121,9 @@
   </data>
   <data name="drillGroup" xml:space="preserve">
     <value>{rule} ({count})</value>
+  </data>
+  <data name="drillGroupFixed" xml:space="preserve">
+    <value>{rule} ({count}) · corregido</value>
   </data>
   <data name="drillMore" xml:space="preserve">
     <value>y {count} más</value>

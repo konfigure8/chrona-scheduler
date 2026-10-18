@@ -12,7 +12,7 @@ export type RowDecorationKind =
 /**
  * A span drawn on a resource row that is not an event: availability bands
  * now; travel segments, breaks, and holidays later. One rendering
- * primitive for all of them (see Docs/scheduler_ui_plan.md scenario forward-compatibility).
+ * primitive for all of them (see packages/scheduler-ui/README.md, seams for later scenarios).
  */
 export interface RowDecoration {
   readonly end: Date;

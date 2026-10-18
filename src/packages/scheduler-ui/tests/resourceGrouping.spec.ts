@@ -73,6 +73,74 @@ function ungroupedTrailsWithSentinel(): void {
   assertEqual(groups[1]?.name, UNGROUPED);
 }
 
+function openShiftGroupWithNoPeopleAppears(): void {
+  const groups = buildResourceGroups(
+    [resource("a", "Site 1"), resource("b", "Site 2")],
+    ["Sites"],
+    ["Site 3"],
+  );
+  assertEqual(groups.length, 3);
+  assertEqual(groups[2]?.name, "Site 3");
+  // One bucket with no name and no members: no level-2 header, no rows.
+  assertEqual(groups[2]?.subgroups.length, 1);
+  assertEqual(groups[2]?.subgroups[0]?.name, undefined);
+  assertEqual(groups[2]?.subgroups[0]?.members.length, 0);
+}
+
+function openShiftGroupsFollowPeopleInFirstSeenOrder(): void {
+  const groups = buildResourceGroups(
+    [resource("a", "Site 2", "Front"), resource("b", "Site 1")],
+    ["Sites", "Teams"],
+    ["Site 9", "Site 4"],
+  );
+  assertEqual(groups.map((group) => group.name).join("|"), "Site 2|Site 1|Site 9|Site 4");
+  // A group with no people has no subgroups, at either level.
+  assertEqual(groups[2]?.subgroups.length, 1);
+  assertEqual(groups[2]?.subgroups[0]?.name, undefined);
+}
+
+function ungroupedStaysLastWithOpenShiftGroups(): void {
+  // Ungrouped from the people.
+  const fromPeople = buildResourceGroups(
+    [resource("a"), resource("b", "Team")],
+    ["Sites"],
+    ["Cellar"],
+  );
+  assertEqual(fromPeople.map((group) => group.name).join("|"), `Team|Cellar|${UNGROUPED}`);
+  // Ungrouped from the open shifts only, named first.
+  const fromShifts = buildResourceGroups(
+    [resource("b", "Team")],
+    ["Sites"],
+    [UNGROUPED, "Cellar"],
+  );
+  assertEqual(fromShifts.map((group) => group.name).join("|"), `Team|Cellar|${UNGROUPED}`);
+  assertEqual(fromShifts[2]?.subgroups[0]?.members.length, 0);
+  // No people at all: the open shifts' groups alone, Ungrouped last.
+  const nobody = buildResourceGroups([], ["Sites"], [UNGROUPED, "Cellar", "Bar"]);
+  assertEqual(nobody.map((group) => group.name).join("|"), `Cellar|Bar|${UNGROUPED}`);
+}
+
+function groupWithPeopleAndOpenShiftsAppearsOnce(): void {
+  const groups = buildResourceGroups(
+    [resource("a", "Site 1"), resource("b", "Site 1"), resource("c")],
+    ["Sites"],
+    ["Site 1", UNGROUPED, "Site 3", "Site 3"],
+  );
+  assertEqual(groups.map((group) => group.name).join("|"), `Site 1|Site 3|${UNGROUPED}`);
+  // The people's group keeps its members; the open shifts add nothing to it.
+  assertEqual(groups[0]?.subgroups.length, 1);
+  assertEqual(groups[0]?.subgroups[0]?.members.length, 2);
+  assertEqual(groups[2]?.subgroups[0]?.members.length, 1);
+}
+
+function noExtraNamesKeepsPeopleGroupsOnly(): void {
+  const withEmpty = buildResourceGroups([resource("a", "Site 1")], ["Sites"], []);
+  const without = buildResourceGroups([resource("a", "Site 1")], ["Sites"]);
+  assertEqual(withEmpty.length, 1);
+  assertEqual(without.length, 1);
+  assertEqual(buildResourceGroups([], ["Sites"]).length, 0);
+}
+
 function collapseKeysCannotCollide(): void {
   // The delimiter is a control character no real name contains.
   const first = groupCollapseKey("A B", "C");
@@ -86,6 +154,11 @@ function collapseKeysCannotCollide(): void {
 bucketsTwoLevelsInFirstSeenOrder();
 oneLevelDataStaysOneLevel();
 ungroupedTrailsWithSentinel();
+openShiftGroupWithNoPeopleAppears();
+openShiftGroupsFollowPeopleInFirstSeenOrder();
+ungroupedStaysLastWithOpenShiftGroups();
+groupWithPeopleAndOpenShiftsAppearsOnce();
+noExtraNamesKeepsPeopleGroupsOnly();
 collapseKeysCannotCollide();
 
 console.log("resourceGrouping tests passed");

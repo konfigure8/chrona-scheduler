@@ -18,8 +18,8 @@ function mapsTokensToCssVariables(): void {
 function presetsCoverEveryToken(): void {
   const lightVariables = themeToCssVariables(fluentLightTheme);
   const darkVariables = themeToCssVariables(fluentDarkTheme);
-  assertEqual(Object.keys(lightVariables).length, 35);
-  assertEqual(Object.keys(darkVariables).length, 35);
+  assertEqual(Object.keys(lightVariables).length, 37);
+  assertEqual(Object.keys(darkVariables).length, 37);
   // Fluent's own dark neutrals: Background1 is the canvas, Background2
   // sits under it. hostTheme.spec asserts both presets against the
   // real @fluentui/react-theme package.

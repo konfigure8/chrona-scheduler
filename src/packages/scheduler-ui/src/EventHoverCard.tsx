@@ -102,7 +102,9 @@ export function EventHoverCard(props: EventHoverCardProps): JSX.Element {
         label: strings.assignedTo,
         value:
           event.status === "needsCover"
-            ? strings.needsCover
+            ? event.onCall === true
+              ? strings.unassigned
+              : strings.needsCover
             : (resource?.name ?? event.resourceId),
       },
       ...(event.requiredTags && event.requiredTags.length > 0

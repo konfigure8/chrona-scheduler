@@ -25,10 +25,16 @@ export function groupCollapseKey(group: string, subgroup?: string): string {
  * land in the Ungrouped bucket, LAST - visible data quality beats
  * silent flattening (ruling 2026-08-31). Group names carry the
  * UNGROUPED sentinel; renderers label it via strings.ungrouped.
+ *
+ * extraGroupNames are groups that need a header even with no people,
+ * such as the groups of the open shifts in view: each one not already
+ * a people's group follows those groups in the order given, with one
+ * unnamed subgroup and no members. Ungrouped stays last.
  */
 export function buildResourceGroups(
   resources: readonly SchedulerResource[],
   groupBy: readonly string[],
+  extraGroupNames?: readonly string[],
 ): readonly ResourceGroup[] {
   const primary = groupBy[0];
   const secondary = groupBy[1];
@@ -56,6 +62,13 @@ export function buildResourceGroups(
     } else {
       entry.buckets.set(rawSub, [resource]);
       entry.order.push(rawSub);
+    }
+  }
+
+  for (const name of extraGroupNames ?? []) {
+    if (!groupBuckets.has(name)) {
+      groupBuckets.set(name, { buckets: new Map([[undefined, []]]), order: [undefined] });
+      groupOrder.push(name);
     }
   }
 

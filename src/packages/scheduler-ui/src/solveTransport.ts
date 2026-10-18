@@ -26,6 +26,7 @@ import {
   isShouldRule,
   type CandidateFit,
   type MustBreachCounts,
+  type NightRuleKind,
   type ScheduleCandidate,
   type ScheduleCandidateCheck,
   type ScheduleProblemV2,
@@ -209,13 +210,13 @@ const isText = (value: unknown): value is string => typeof value === "string";
 const isTextList = (value: unknown): value is readonly string[] =>
   Array.isArray(value) && value.every(isText);
 
-const OTHER_NAMED = ["maximumHours", "overlap", "splitParts"] as const;
+const OTHER_NAMED = ["overlap", "splitParts"] as const;
 
 /**
  * Must counts, whole or not at all. An "other" Must rule this board
  * does not name yet counts as unlisted, so the total stays whole. An
  * API from before the site rule (F63 Person sites) sends no site
- * count: none.
+ * count, and one from before the Nights rules no nights count: none.
  */
 function readMustBreaches(value: unknown): MustBreachCounts | undefined {
   const record = asRecord(value);
@@ -225,7 +226,15 @@ function readMustBreaches(value: unknown): MustBreachCounts | undefined {
   }
   const { daysInARow, onLeaveOrUnavailable, restBetweenShifts, skills } = record;
   const site = record.site ?? 0;
-  const { maximumHours, overlap, splitParts } = other;
+  // R2.18: an API from before the agreement rows sends maximum hours under "other" and the
+  // agreement rules' other breaches as other rules; its total stays whole either way.
+  const before = record.maximumHours === undefined;
+  const maximumHours = before ? (other.maximumHours ?? 0) : record.maximumHours;
+  const daysOff = record.daysOff ?? 0;
+  const weeklyRest = record.weeklyRest ?? 0;
+  const averageHours = record.averageHours ?? 0;
+  const nights = record.nights ?? 0;
+  const { overlap, splitParts } = other;
   if (
     !isCount(daysInARow) ||
     !isCount(onLeaveOrUnavailable) ||
@@ -233,6 +242,10 @@ function readMustBreaches(value: unknown): MustBreachCounts | undefined {
     !isCount(skills) ||
     !isCount(site) ||
     !isCount(maximumHours) ||
+    !isCount(daysOff) ||
+    !isCount(weeklyRest) ||
+    !isCount(averageHours) ||
+    !isCount(nights) ||
     !isCount(overlap) ||
     !isCount(splitParts)
   ) {
@@ -243,19 +256,33 @@ function readMustBreaches(value: unknown): MustBreachCounts | undefined {
     if (!isCount(count)) {
       return undefined;
     }
-    if (!(OTHER_NAMED as readonly string[]).includes(rule)) {
+    if (!(OTHER_NAMED as readonly string[]).includes(rule) && !(before && rule === "maximumHours")) {
       unlisted += count;
     }
   }
   return {
+    averageHours,
     daysInARow,
+    daysOff,
+    maximumHours,
+    nights,
     onLeaveOrUnavailable,
-    other: { maximumHours, overlap, splitParts, unlisted },
+    other: { overlap, splitParts, unlisted },
     restBetweenShifts,
     site,
     skills,
+    weeklyRest,
   };
 }
+
+/** The Nights rules a match can name. */
+const NIGHT_KINDS: ReadonlySet<string> = new Set<NightRuleKind>([
+  "nightShiftHours",
+  "nightShifts",
+  "nightShiftsInARow",
+  "restAfterNight",
+  "restAfterNights",
+]);
 
 /** One readable match of a rule this board names; anything else is left out. */
 function readMatch(value: unknown): ScheduleRuleMatch | undefined {
@@ -264,6 +291,7 @@ function readMatch(value: unknown): ScheduleRuleMatch | undefined {
   const shiftIds = record?.shiftIds;
   const resourceId = record?.resourceId;
   const days = record?.days;
+  const kind = record?.kind;
   if (
     !isText(rule) ||
     !(isMustRule(rule) || isShouldRule(rule)) ||
@@ -275,6 +303,7 @@ function readMatch(value: unknown): ScheduleRuleMatch | undefined {
   }
   return {
     ...(isTextList(days) ? { days } : {}),
+    ...(rule === "nights" && isText(kind) && NIGHT_KINDS.has(kind) ? { kind: kind as NightRuleKind } : {}),
     ...(isText(resourceId) ? { resourceId } : {}),
     rule,
     shiftIds,

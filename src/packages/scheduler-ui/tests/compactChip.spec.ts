@@ -18,7 +18,7 @@ import { chipCode, chipStartTime, formatHours } from "../src/compactChip";
 {
   const at = (hours: number, minutes: number): Date =>
     new Date(2026, 9, 5, hours, minutes);
-  assert.equal(chipStartTime(at(7, 0)), "07:00");
+  assert.equal(chipStartTime(at(7, 0)), "07", "on the hour, the hour alone");
   assert.equal(chipStartTime(at(22, 45), "24"), "22:45");
   assert.equal(chipStartTime(at(7, 0), "12"), "7am");
   assert.equal(chipStartTime(at(14, 30), "12"), "2:30pm");

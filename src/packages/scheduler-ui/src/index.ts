@@ -70,9 +70,11 @@ export {
   type PreferenceMiss,
   type PreferencesMet,
   type BoardState,
+  type SidePanelControls,
   type FitExtension,
   type ResourceFit,
   type RosterExtension,
+  type ScorecardTile,
   type RosterGroup,
   type RosterGroupInput,
   type ReviewExtension,
@@ -123,6 +125,7 @@ export {
   type VirtualRange,
 } from "./rowVirtualization";
 export {
+  colorSchemeOf,
   fluentDarkTheme,
   fluentLightTheme,
   themeToCssVariables,
@@ -246,6 +249,11 @@ export {
   mustRowCount,
   mustRowMatches,
   mustRowOf,
+  isOpenOnCall,
+  isOpenRequired,
+  openOnCallAfter,
+  openShiftClass,
+  openShiftNote,
   openShiftCount,
   openShiftsAfter,
   openShiftsLeftOut,
@@ -366,6 +374,7 @@ export {
   type ScheduleContractUnavailability,
   type ScheduleProblemV2,
   type ScheduleRosterCheck,
+  type NightRuleKind,
   type ScheduleRuleMatch,
   type ScheduleRuleName,
   type ScheduleRunStatus,
@@ -455,6 +464,9 @@ export {
   dateNamesFrom,
   englishDateNames,
   formatDateLabel,
+  formatDateLongLabel,
+  formatDayRange,
+  formatDayShortLabel,
   formatDayTimeLabel,
   monthLong,
   monthShort,
@@ -502,3 +514,5 @@ export {
   type FixtureHostResult,
   type FixtureView,
 } from "./fixtureHost";
+export { useFullScreen, type FullScreenControl } from "./fullScreen";
+export { mustRowLabel } from "./ProposalScorecard";

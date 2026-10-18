@@ -277,7 +277,7 @@ export function formatWindowLabel(
     return `${startLabel} ${start.getFullYear()}`;
   }
   const endLabel = formatDayLabel(lastDay, names);
-  return `${startLabel} - ${endLabel} ${lastDay.getFullYear()}`;
+  return `${startLabel} – ${endLabel} ${lastDay.getFullYear()}`;
 }
 
 /**

@@ -16,7 +16,10 @@ import {
 import { buildRosterDays } from "./rosterLayout";
 import { isDragLocked, showsPin } from "./locks";
 import { gapFractions } from "./spans";
+import { NightGlyph } from "./NightGlyph";
 import { PinGlyph } from "./PinGlyph";
+import { dateNamesFrom } from "./dateNames";
+import { isOpenOnCall, openShiftClass, openShiftNote } from "./solve";
 import { useSchedulerStrings } from "./strings";
 import {
   formatHourLabel,
@@ -530,14 +533,19 @@ function VerticalGrid(props: VerticalGridProps): JSX.Element {
                   positioned.event.end.getTime() > column.window.end.getTime();
                 return (
                   <button
-                    aria-label={`${positioned.event.title}, ${formatTimeRange(positioned.event.start, positioned.event.end)}`}
+                    aria-label={[
+                      positioned.event.title,
+                      formatTimeRange(positioned.event.start, positioned.event.end),
+                      positioned.event.night ? strings.nightShift : undefined,
+                      openShiftNote(positioned.event, strings),
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
                     data-event-id={positioned.event.id}
                     disabled={positioned.event.review === "ghost"}
                     className={[
                       "chrona-sched__vertical-event",
-                      positioned.event.status === "needsCover"
-                        ? "chrona-sched__bar--needs-cover"
-                        : "",
+                      openShiftClass(positioned.event, "bar"),
                       editable && !isDragLocked(positioned.event)
                         ? "chrona-sched__bar--editable"
                         : "",
@@ -643,16 +651,29 @@ function VerticalGrid(props: VerticalGridProps): JSX.Element {
                     ) : null}
                     <span className="chrona-sched__vertical-event-title">
                       {showsPin(positioned.event) ? <PinGlyph /> : null}
-                      {positioned.event.title}
+                      <span className="chrona-sched__title-text">{positioned.event.title}</span>
+                      {positioned.event.night ? <NightGlyph title={strings.nightShift} /> : null}
                     </span>
-                    <span className="chrona-sched__bar-time">
-                      {column.showResourceName && resourceName
-                        ? resourceName
-                        : formatTimeRange(
-                            positioned.event.start,
-                            positioned.event.end,
-                          )}
-                    </span>
+                    {column.showResourceName && openShiftNote(positioned.event, strings) ? (
+                      <span
+                        className={
+                          isOpenOnCall(positioned.event)
+                            ? "chrona-sched__bar-time chrona-sched__open-note--on-call"
+                            : "chrona-sched__bar-time chrona-sched__open-note--needs-cover"
+                        }
+                      >
+                        {openShiftNote(positioned.event, strings)}
+                      </span>
+                    ) : (
+                      <span className="chrona-sched__bar-time">
+                        {column.showResourceName && resourceName
+                          ? resourceName
+                          : formatTimeRange(
+                              positioned.event.start,
+                              positioned.event.end,
+                            )}
+                      </span>
+                    )}
                     {editable && !isDragLocked(positioned.event) && positioned.width > 30 ? (
                       <span
                         aria-hidden="true"
@@ -827,7 +848,10 @@ export interface DayColumnsViewProps {
 
 /** Classic vertical day/week view: one column per day, all resources mixed. */
 export function DayColumnsView(props: DayColumnsViewProps): JSX.Element {
-  const days = buildRosterDays(props.window, props.showWeekends ?? true);
+  const strings = useSchedulerStrings();
+  // The day headers in the board's language, as the roster's and the month's.
+  const names = React.useMemo(() => dateNamesFrom(strings), [strings]);
+  const days = buildRosterDays(props.window, props.showWeekends ?? true, names);
   const hourRange = React.useMemo(
     () => resolveVerticalHourRange(props.events),
     [props.events],

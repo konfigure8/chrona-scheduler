@@ -19,7 +19,7 @@ Table **Chrona Scheduler Calendar** (`chr_chronaschedulercalendar`). The first s
 | Subgroup column | `chr_resourcesubgroupcolumn` | A second grouping level, picked from the table's columns. | None. |
 | Time zone column | `chr_resourcetimezonecolumn` | A column with a person's IANA time zone, picked from the table's columns. | None. |
 | Capacity column | `chr_resourcecapacitycolumn` | Weekly hours per person, picked from the table's number columns; shows hours against capacity and lets the optimizer respect them. | No hours. |
-| Cost column | `chr_resourcecostcolumn` | Employer cost per hour, in cents, for the optimizer. | No cost. |
+| Cost column | `chr_resourcecostcolumn` | Employer cost per hour, in cents, for the optimizer. In Chrona Workforce Scheduler, a person's **Hourly rate** comes first. | No cost. |
 | Resource filter | `chr_resourcefilter` | An OData `$filter` fragment for the lanes, for example active people only. | Every row. |
 | Overlap policy | `chr_overlappolicy` | Two rows on the same person at the same time: off, warn or block. | Warn. |
 | Skill mismatch policy | `chr_skillmismatchpolicy` | A row on a person without the role it requires: off, warn or block. | Block. |
@@ -58,7 +58,7 @@ The last button on the toolbar shows the board on the whole screen. Select it ag
 
 ## 5. With Chrona Workforce Scheduler
 
-The scenario solution adds its own tables, each with a page in its app: skills, roles and the skills a role needs, the roles and skills of people, availability types and availability, agreements and their rules, demand and demand drivers, and work item templates with their spans. The scheduler reads them for role matching, availability bands and preferred times, agreement rules, the coverage strip, generation and the optimizer's rules.
+The scenario solution adds its own tables, each with a page in its app: skills, roles and the skills a role needs, the roles and skills of people, availability types and availability, agreements and their rules, demand and demand drivers, and shift types and coverage. The scheduler reads them for role matching, availability bands and preferred times, agreement rules, the coverage strip, generation and the optimizer's rules.
 
 ### Sites
 
@@ -68,7 +68,12 @@ Each calendar belongs to a site, and the site sets what every calendar at it sha
 | --- | --- | --- | --- |
 | Time zone | `chr_timezone` | The site's time zone. Its calendars and shifts take it. | Required. |
 | Period | `chr_periodunit` | The roster period: week, fortnight or month. The Roster grid, Generate and Optimize plan by it on every calendar at the site. | The Roster grid shows the week. |
-| Period starts on | `chr_periodanchor` | The first day of the first roster period; periods repeat from here. Rotating templates count their **Cycle week** from it. | Needed with Period. |
+| Period starts on | `chr_periodanchor` | The first day of the first roster period; periods repeat from here. Rotating coverage rows count their **Cycle week** from it. | Needed with Period. |
+| Night time from, Night time to | `chr_nightstart`, `chr_nightend` | The site's night time. An end at or before the start is the next day. | The night time of the site's country. |
+| Night hours | `chr_nighthours` | The hours of a shift's work, breaks left out, inside the night time that make it a night shift. | The country's. |
+| More than the night hours | `chr_nightmore` | Yes: more than the night hours. No: at least. | The country's. |
+
+A site's own night time counts only when **Night time from**, **Night time to** and **Night hours** are all set. Otherwise it takes its country's, from its time zone: Germany 23:00 to 06:00, more than 2 hours; the Netherlands 00:00 to 06:00, more than 1 hour; France 21:00 to 06:00, at least 3 hours; anywhere else 23:00 to 06:00, at least 3 hours. A shift is a night shift when that much of its work falls in the night time, or when its shift type's **Night shift** is **Always**.
 
 ### Agreements
 
@@ -76,16 +81,17 @@ An agreement holds the rostering rules of an award, an enterprise agreement or y
 
 Set agreements up on the app's **Agreements** page, with the **Chrona Workforce Admin** role. Turn on auditing before the first rule: see [Install Chrona Workforce Scheduler](https://chrona365.com/docs/workforce/install).
 
-1. Add an agreement and give it a **Name**.
-2. In its **Rules** grid, add one row for each rule:
+1. Add an agreement and give it a **Name**. Save it.
+2. On its **Rules** tab, add each rule to its group: **Rest**, **Days on and off**, **Hours**, **Overtime** or **Night shifts**. Each group has its own button, such as **Add rest rule**. A rule reads as one sentence with its numbers, its **Must** or **Should** level, its dates, its clause and its On switch. Each rule is one row of the **Agreement rule** table, with these columns:
 
 | Column | What it holds | When empty |
 | --- | --- | --- |
-| Rule | One of the eight rules below. | Required. |
-| Value | Hours, or whole days for **Days in a row** and **Days off**. Above 0. | Required. |
+| Rule | One of the thirteen rules below. | Required. |
+| Value | Hours; whole days for **Days in a row** and **Days off**; night shifts for **Night shifts in a row** and **Night shifts in a period**. Above 0. | Required. |
 | Must or Should | **Must** always holds: Optimize leaves a shift open rather than break it. **Should** gives way when the roster is better for it. | Must. **Minimum hours** and **Overtime** are always Should. |
-| Period | For **Maximum hours**, **Minimum hours**, **Days off** and **Overtime**: Day, Week, Fortnight, Month or Roster period. | Week. |
-| Over (weeks) | For **Weekly rest** and **Average hours**: how many weeks each window runs, 1 to 52. | 1. |
+| Period | For **Maximum hours**, **Minimum hours**, **Days off** and **Overtime**: Day, Week, Fortnight, Month or Roster period. For **Night shifts in a period**: Week, Fortnight, Month, Roster period or Rolling weeks. | Week. |
+| Over (weeks) | For **Weekly rest**, **Average hours**, and **Night shifts in a period** with Rolling weeks: how many weeks each window runs, 1 to 52. | 1. |
+| Nights in a row | For **Rest after a run of nights**: the night shifts in a row that start the rest, 1 to 14. | 1. |
 | Rate (%) | For **Overtime**: what an hour past the value pays, as a percentage of the person's **Hourly rate**. 150 is time and a half. | No overtime cost. |
 | Clause | The clause of the award or agreement the rule comes from, such as 21.3. | None. |
 | On | Only rules that are on count. | On. |
@@ -104,27 +110,50 @@ The rules:
 | Overtime | Hours | The hours worked in each period before the rate pays. Add one row for each step, such as 38 hours at 150% and 48 hours at 200%. |
 | Weekly rest | Hours | The hours off in one stretch in every window, such as 24 hours in every week. |
 | Average hours | Hours | The most hours a week, on average, over each window, such as 38 hours over 26 weeks. |
+| Night shifts in a row | Night shifts | The most night shifts in a row. |
+| Night shifts in a period | Night shifts | The most night shifts in each period or window, such as 36 in every 16 weeks. |
+| Hours in a night shift | Hours | The most paid hours in one night shift. |
+| Rest after a night shift | Hours | The rest after a night shift, up to the start of the next shift. |
+| Rest after a run of nights | Hours | The rest after the last of **Nights in a row** or more night shifts in a row, such as 46 hours after 3. |
 
-3. In its **People** grid, add the people who work under it. You can also set **Agreement** on a person, beside **Hours per week** and **Hourly rate**.
+3. On its **Applies to** tab, select **Add a person** or **Add everyone in a role**. **Add everyone in a role** adds those people now. A person who joins the role later needs their own agreement. Adding a person moves them from the agreement they had. You can also set **Agreement** on a person, beside **Hours per week** and **Hourly rate**.
+4. On its **Source** tab, select **Attach document** to keep the agreement as published, up to 32 megabytes (MB). The tab lists each clause the rules cite, with its words and its rules.
 
 How the rules apply:
 
 - Optimize keeps every Must rule, and leaves a shift open rather than break one. It keeps each Should rule where it can.
 - Periods are counted on the site's clock. When the site's roster **Period** is a week or a fortnight, weeks start on the day of its **Period starts on** date and fortnights on that date, so a week or fortnight rule lines up with the roster. Otherwise a week starts on the first day of the week in the Power Apps regional settings of the person who runs Optimize. A month is a calendar month. **Roster period** is the period Optimize plans.
 - A period that ends after the period Optimize plans is counted up to that end. **Days off** and **Minimum hours** are reduced in proportion to the days counted.
-- **Weekly rest** and **Average hours** look at every window of weeks, one week after another.
+- **Weekly rest**, **Average hours**, and **Night shifts in a period** with Rolling weeks look at every window of weeks, one week after another.
+- The five night rules count only night shifts (see **Sites**). A run of night shifts ends at a day off or at a shift that is not a night shift. **Night shifts in a period** counts each night shift in the period it starts in.
 - **Overtime** costs the hours past each step at the step's rate above the person's **Hourly rate**. A person with no rate costs nothing extra. Optimize weighs the cost with the other Should rules.
+- The board counts wages from the same hours and rates: **Wages** and **Overtime hours** in the toolbar's **Stats** menu, **Wages** and **Overtime cost** in a proposal, and the roster's **Outcomes**. They count hourly rates and overtime, with no loadings.
 - When two rules of one type are in force on the same day, both hold.
 - The rule in force when the later work starts applies. Rest before a shift uses the minimum in force when that shift starts. Each day of a run uses the limit in force that day.
 - To stop a rule, set its **Effective end**. Switching it off changes past periods too.
-- The rules also count the shifts before the roster period, as far back as the longest rule needs: its rest, its run of days, the start of its period or its window.
+- The rules also count the shifts before the roster period, as far back as the longest rule needs: its rest, its run of days, the start of its period or its window. Their breaks are not read, so a night shift before the roster period is judged from its start to its end.
 - A person with no agreement, or with no rule in force, is not checked. The board marks each such person, unless no one has an agreement.
 - A deactivated agreement counts as no agreement.
 - Dataverse refuses to delete an agreement while people work under it. Move them to another agreement first.
-- In the review, broken **Maximum hours** and **Average hours** rules count as maximum hours, and broken **Days off** and **Weekly rest** rules count as other Must rules.
+- In the review, broken **Maximum hours**, **Days off**, **Weekly rest** and **Average hours** rules each count on a row of their own, and broken night rules count as night shifts.
 - A change by hand that breaks a Must rest or days in a row rule gets a warning on the board. The board does not block it.
 
-With an agent: the `generate_agreement` tool of the Chrona Model Context Protocol (MCP) server turns your rules into the requests that create the agreement and its rules. Your agent links the people with its own Dataverse tools, so no person data reaches Chrona.
+With an agent: the `agreement_reading` tool of the Chrona Model Context Protocol (MCP) server tells your agent how to read your agreement document and propose its rules, each with its clause number. Your agent writes nothing until you confirm each clause number and value. The `generate_agreement` tool then turns the rules into the requests that create the agreement and its rules. Your agent attaches the document, keeps each clause's words and links the people with its own Dataverse tools. The document, its words and person data do not reach the Chrona MCP server.
+
+### Import a roster from Excel
+
+Bring a roster you keep in an Excel workbook into the roster period on the board. Select **Import** on the toolbar. A roster with no shifts also offers **Import from Excel**. The import has four steps: **File**, **Mapping**, **Check** and **Import**. Nothing is written until you confirm.
+
+1. **File**: select **Choose workbook**. Chrona reads an .xlsx file of up to 10 MB in your browser, and the file stays there. It reads a person per row, a day per row, a block per week, or a row per shift. For a file in another layout, select **Download the Chrona template** and fill it in.
+2. **Mapping**: give each code in the file a meaning, such as **Shift**, **Leave** or **Day off**, and give each shift code its times.
+   - Without an agent, select **Map it here**.
+   - With an agent, select **Share with my agent**. The page saves a summary of the file in your environment: sheet names, headers and codes, with names and notes replaced. The page shows the words to give your agent, such as "Map Chrona import 7F3K". Your agent reads the summary with its own Dataverse tools and maps it with the `import_mapping` tool of the Chrona MCP server. The mapping it writes back shows as **From your agent**.
+
+   Then select **Check the whole file**.
+3. **Check**: the page lists each cell it cannot place, with the reason, such as an unknown code, a merged cell or two codes in one cell. Fix the file, or select **Import without them**. Shifts already on the file's days stop the import, unless an earlier import wrote them. Clear those shifts on the board first.
+4. **Import**: Chrona writes the people, shift types, demand, leave and shifts with your own Dataverse rights. Keep the page open. **Stop** keeps what is written. To finish, import the file again: a second import writes no row twice.
+
+After the write, Chrona reads the roster back and compares it with the file, table by table and hours by person. When they match, Chrona saves the roster's counts. The roster header's **Outcomes** shows them as **Hand-built**, beside **Now** and **Before**.
 
 ## Editing the rows without an app
 
