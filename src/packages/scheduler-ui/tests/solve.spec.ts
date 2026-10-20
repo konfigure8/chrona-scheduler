@@ -16,13 +16,14 @@ import {
   type ScheduleProposal,
 } from "../src/solve";
 import { outOfDateChanges } from "../src/freshness";
+import { redactProblem } from "../src/redaction";
 import { problemFromSchedule } from "../src/schedulingContract";
 import {
   buildSolveRequest,
   proposalFromSolution,
   solutionFromPoll,
 } from "../src/solveTransport";
-import type { SchedulerResource, SchedulerUiEvent } from "../src/types";
+import { tagHolds, type SchedulerResource, type SchedulerUiEvent } from "../src/types";
 
 function assertEqual<T>(actual: T, expected: T): void {
   if (actual !== expected) {
@@ -727,6 +728,83 @@ changeListPerPerson();
   assertEqual(byId.get("pinned-assigned")?.assignment?.pinned, true);
   assertEqual(byId.has(uncovered.id), true);
   console.log("pin tests passed");
+}
+
+/*
+ * F65 Contracts and employment types: a person's contracts travel in
+ * minutes, a week period left out as the default; one that ended
+ * before the window stays home. Redaction keeps them: days, hours and
+ * a rate, no name.
+ */
+{
+  const window = { end: at(36), start: at(12) };
+  const person: SchedulerResource = {
+    ...people[0]!,
+    contracts: [
+      { end: "2027-01-31", guaranteedHours: 20, maxHours: 30, start: "2026-06-01" },
+      { guaranteedHours: 30.5, hourlyRateCents: 3450, maxHours: 38, period: "fortnight", start: "2027-02-01" },
+      { period: "week", start: "2027-03-01" },
+    ],
+  };
+  const problem = problemFromSchedule({ events: [], periods: { weekStart: "monday" }, resources: [person], window });
+  // A contract's hours count over a period: the week's first day travels, as for an agreement's period rules.
+  assertEqual(problem.periods?.weekStart, "monday");
+  assertEqual(
+    JSON.stringify(problem.resources[0]?.contracts),
+    JSON.stringify([
+      { guaranteedMinutes: 1830, hourlyRateCents: 3450, maxMinutes: 2280, period: "fortnight", start: "2027-02-01" },
+      { start: "2027-03-01" },
+    ]),
+  );
+  assertEqual(redactProblem(problem).problem.resources[0]?.contracts?.length, 2);
+  const none = problemFromSchedule({ events: [], resources: [{ ...people[0]!, contracts: [] }], window });
+  assertEqual("contracts" in (none.resources[0] ?? {}), false);
+  console.log("contract tests passed");
+}
+
+/*
+ * F4 Validated role membership: a role held only on some days travels as
+ * Timefold's dated skill; a role with no spans stays a plain id, and a
+ * role that holds at no time (an empty list) is not sent. The board's
+ * check reads the same spans.
+ */
+{
+  const window = { end: at(36), start: at(12) };
+  const person: SchedulerResource = {
+    ...people[0]!,
+    tagSpans: { Lead: [], Nurse: [{ end: at(20) }, { start: at(30) }] },
+    tags: ["Floor", "Nurse", "Lead"],
+  };
+  const problem = problemFromSchedule({ events: [], resources: [person], window });
+  assertEqual(
+    JSON.stringify(problem.resources[0]?.skills),
+    JSON.stringify([
+      "Floor",
+      { id: "Nurse", validityDateTimeSpans: [{ end: at(20).toISOString() }, { start: at(30).toISOString() }] },
+    ]),
+  );
+  assertEqual(JSON.stringify(redactProblem(problem).problem.resources[0]?.skills), JSON.stringify(problem.resources[0]?.skills));
+  assertEqual(tagHolds(person, "Floor", { end: at(24), start: at(16) }), true);
+  assertEqual(tagHolds(person, "Nurse", { end: at(20), start: at(14) }), true);
+  // A span must cover the whole shift: 16:00 to 24:00 runs past the first span's end.
+  assertEqual(tagHolds(person, "Nurse", { end: at(24), start: at(16) }), false);
+  assertEqual(tagHolds(person, "Nurse", { end: at(34), start: at(30) }), true);
+  assertEqual(tagHolds(person, "Lead", { end: at(24), start: at(16) }), false);
+  assertEqual(tagHolds(person, "Bar", { end: at(24), start: at(16) }), false);
+  // With no span given, holding the tag is enough.
+  assertEqual(tagHolds(person, "Lead"), true);
+  // Spans read the site's clock, like shift times: they go as the same instants.
+  const sited = problemFromSchedule({
+    events: [],
+    resources: [person],
+    toInstant: (display) => new Date(display.getTime() - 2 * 60 * 60 * 1000),
+    window,
+  });
+  assertEqual(
+    JSON.stringify(sited.resources[0]?.skills?.[1]),
+    JSON.stringify({ id: "Nurse", validityDateTimeSpans: [{ end: at(18).toISOString() }, { start: at(28).toISOString() }] }),
+  );
+  console.log("role validity tests passed");
 }
 
 /*

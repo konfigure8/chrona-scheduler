@@ -119,6 +119,7 @@ export const dutchStrings: SchedulerStrings = {
   "assignReasonHours": "Zou {capacity} u overschrijden",
   "assignEmpty": "Geen passend personeel.",
   "assignAction": "{name} toewijzen",
+  "assignActionNone": "Toewijzen",
   "monthMore": "+{count} meer",
   "monthsLong": "januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december",
   "monthsShort": "jan.|feb.|mrt.|apr.|mei|jun.|jul.|aug.|sep.|okt.|nov.|dec.",

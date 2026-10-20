@@ -119,6 +119,7 @@ export const portugueseStrings: SchedulerStrings = {
   "assignReasonHours": "Excederia {capacity} h",
   "assignEmpty": "Nenhuma pessoa encontrada.",
   "assignAction": "Atribuir a {name}",
+  "assignActionNone": "Atribuir",
   "monthMore": "+{count} mais",
   "monthsLong": "janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro",
   "monthsShort": "jan.|fev.|mar.|abr.|mai.|jun.|jul.|ago.|set.|out.|nov.|dez.",

@@ -18,8 +18,8 @@ Table **Chrona Scheduler Calendar** (`chr_chronaschedulercalendar`). The first s
 | Group column | `chr_resourcegroupcolumn` | Lanes grouped under this column's value, for example a team or a site; picked from the table's columns. | No groups. |
 | Subgroup column | `chr_resourcesubgroupcolumn` | A second grouping level, picked from the table's columns. | None. |
 | Time zone column | `chr_resourcetimezonecolumn` | A column with a person's IANA time zone, picked from the table's columns. | None. |
-| Capacity column | `chr_resourcecapacitycolumn` | Weekly hours per person, picked from the table's number columns; shows hours against capacity and lets the optimizer respect them. | No hours. |
-| Cost column | `chr_resourcecostcolumn` | Employer cost per hour, in cents, for the optimizer. In Chrona Workforce Scheduler, a person's **Hourly rate** comes first. | No cost. |
+| Capacity column | `chr_resourcecapacitycolumn` | Weekly hours per person, picked from the table's number columns; shows hours against capacity and lets the optimizer respect them. In Chrona Workforce Scheduler, each person's contracts set the hours instead (see **Contracts**). | No hours. |
+| Cost column | `chr_resourcecostcolumn` | Employer cost per hour, in cents, for the optimizer. In Chrona Workforce Scheduler, the **Hourly rate** on each person's contract applies instead. | No cost. |
 | Resource filter | `chr_resourcefilter` | An OData `$filter` fragment for the lanes, for example active people only. | Every row. |
 | Overlap policy | `chr_overlappolicy` | Two rows on the same person at the same time: off, warn or block. | Warn. |
 | Skill mismatch policy | `chr_skillmismatchpolicy` | A row on a person without the role it requires: off, warn or block. | Block. |
@@ -37,7 +37,7 @@ Table **Chrona Scheduler View** (`chr_chronaschedulerview`), keyed by the view's
 | Setting | Column | What it does | Without it |
 | --- | --- | --- | --- |
 | Bound view | `chr_viewid` | The view this row configures, picked from the public views; Connect sets it. | The row is not found. |
-| Layout | `chr_layout` | The board's layout: timeline lanes, the roster grid, top-down columns or the agenda list. | Timeline. |
+| Layout | `chr_layout` | The board's layout: timeline lanes, the roster grid, top-down columns or the agenda list. | Timeline. In Chrona Workforce Scheduler, the roster grid. |
 | Color by | `chr_colorby` | What colors the rows: the role's color, one color per lane group, or the warning tint for rows needing cover. | Nothing; the bars stay neutral. |
 | Display time zone | `chr_displaytimezone` | Another IANA zone for this view, or `user` for each user's own. | The calendar's time zone. |
 | Slot length | `chr_slotminutes` | The time scale bars snap to, picked as a duration. | 30 minutes. |
@@ -59,6 +59,16 @@ The last button on the toolbar shows the board on the whole screen. Select it ag
 ## 5. With Chrona Workforce Scheduler
 
 The scenario solution adds its own tables, each with a page in its app: skills, roles and the skills a role needs, the roles and skills of people, availability types and availability, agreements and their rules, demand and demand drivers, and shift types and coverage. The scheduler reads them for role matching, availability bands and preferred times, agreement rules, the coverage strip, generation and the optimizer's rules.
+
+### Skills with dates
+
+A skill can count for set days only, such as a licence that runs out. Open a person, and in the **Skills** grid open the skill. **Valid from** (`chr_validfrom`) is its first day and **Valid until** (`chr_validuntil`) its last day. Leave either one empty for no limit on that side. To renew a skill, add it again from the day after the old one ends.
+
+A person holds a role on a shift only when every skill that the role needs is valid from the shift's start to its end:
+
+- On the board, a shift outside those days counts as a shift for a role the person does not hold. The calendar's **Skill rule** (`chr_skillmismatchpolicy`) is **Block**, **Warn** or **Off**. Under the person's name on the roster grid, a note names a missing skill, a skill that has run out or starts later, and a skill that runs out within 30 days.
+- Optimize gives a shift only to a person whose skills for its role are valid for the whole shift.
+- In Chrona Workforce Mobile, a person takes an open shift, a swap or cover only when they hold the shift's role and its skills are valid over each work period of the shift.
 
 ### Sites
 
@@ -92,7 +102,7 @@ Set agreements up on the app's **Agreements** page, with the **Chrona Workforce 
 | Period | For **Maximum hours**, **Minimum hours**, **Days off** and **Overtime**: Day, Week, Fortnight, Month or Roster period. For **Night shifts in a period**: Week, Fortnight, Month, Roster period or Rolling weeks. | Week. |
 | Over (weeks) | For **Weekly rest**, **Average hours**, and **Night shifts in a period** with Rolling weeks: how many weeks each window runs, 1 to 52. | 1. |
 | Nights in a row | For **Rest after a run of nights**: the night shifts in a row that start the rest, 1 to 14. | 1. |
-| Rate (%) | For **Overtime**: what an hour past the value pays, as a percentage of the person's **Hourly rate**. 150 is time and a half. | No overtime cost. |
+| Rate (%) | For **Overtime**: what an hour past the value pays, as a percentage of the **Hourly rate** on the person's contract. 150 is time and a half. | No overtime cost. |
 | Clause | The clause of the award or agreement the rule comes from, such as 21.3. | None. |
 | On | Only rules that are on count. | On. |
 | Effective start | The rule's first day, in the site's time zone. | Always. |
@@ -116,7 +126,7 @@ The rules:
 | Rest after a night shift | Hours | The rest after a night shift, up to the start of the next shift. |
 | Rest after a run of nights | Hours | The rest after the last of **Nights in a row** or more night shifts in a row, such as 46 hours after 3. |
 
-3. On its **Applies to** tab, select **Add a person** or **Add everyone in a role**. **Add everyone in a role** adds those people now. A person who joins the role later needs their own agreement. Adding a person moves them from the agreement they had. You can also set **Agreement** on a person, beside **Hours per week** and **Hourly rate**.
+3. On its **Applies to** tab, select **Add a person** or **Add everyone in a role**. **Add everyone in a role** adds those people now. A person who joins the role later needs their own agreement. Adding a person moves them from the agreement they had. You can also set **Agreement** on a person.
 4. On its **Source** tab, select **Attach document** to keep the agreement as published, up to 32 megabytes (MB). The tab lists each clause the rules cite, with its words and its rules.
 
 How the rules apply:
@@ -126,7 +136,7 @@ How the rules apply:
 - A period that ends after the period Optimize plans is counted up to that end. **Days off** and **Minimum hours** are reduced in proportion to the days counted.
 - **Weekly rest**, **Average hours**, and **Night shifts in a period** with Rolling weeks look at every window of weeks, one week after another.
 - The five night rules count only night shifts (see **Sites**). A run of night shifts ends at a day off or at a shift that is not a night shift. **Night shifts in a period** counts each night shift in the period it starts in.
-- **Overtime** costs the hours past each step at the step's rate above the person's **Hourly rate**. A person with no rate costs nothing extra. Optimize weighs the cost with the other Should rules.
+- **Overtime** costs the hours past each step at the step's rate above the **Hourly rate** on the person's contract, the contract in force on the day. A person with no rate costs nothing extra. Optimize weighs the cost with the other Should rules.
 - The board counts wages from the same hours and rates: **Wages** and **Overtime hours** in the toolbar's **Stats** menu, **Wages** and **Overtime cost** in a proposal, and the roster's **Outcomes**. They count hourly rates and overtime, with no loadings.
 - When two rules of one type are in force on the same day, both hold.
 - The rule in force when the later work starts applies. Rest before a shift uses the minimum in force when that shift starts. Each day of a run uses the limit in force that day.
@@ -140,11 +150,44 @@ How the rules apply:
 
 With an agent: the `agreement_reading` tool of the Chrona Model Context Protocol (MCP) server tells your agent how to read your agreement document and propose its rules, each with its clause number. Your agent writes nothing until you confirm each clause number and value. The `generate_agreement` tool then turns the rules into the requests that create the agreement and its rules. Your agent attaches the document, keeps each clause's words and links the people with its own Dataverse tools. The document, its words and person data do not reach the Chrona MCP server.
 
+### Contracts
+
+A contract holds one person's own terms: their employment type, their dates, their guaranteed and maximum hours, and their hourly rate. The agreement holds the rules everyone on it shares. A contract adds limits to them and cannot loosen them. In Chrona Workforce Scheduler, a person's hours and hourly rate come only from their contracts.
+
+First, set up your employment types on the app's **Employment types** page, with the **Chrona Workforce Admin** role. Name each one your way, such as Full-time, Part-time and Casual. Its **Availability** is where a person starts: **Available unless marked unavailable** or **Unavailable unless marked available**. A person's first contract gives them the availability of its employment type.
+
+Then open a person and select the **Contracts** tab:
+
+1. Select **New contract**.
+2. Pick the **Employment type** and the **Start**. Pick an **End** only if the contract ends. Leave it empty if the contract is ongoing. If a later contract exists, an empty **End** becomes the day before it.
+3. Enter the **Guaranteed hours**, the **Maximum hours**, **Hours per** and the **Hourly rate**.
+4. Select **Save**.
+
+| Field | What it holds | When empty |
+| --- | --- | --- |
+| Employment type | The type from the **Employment types** page. | No type. |
+| Start | The contract's first day. | Required. |
+| End | The contract's last day. On or after the start. | Ongoing. |
+| Guaranteed hours | The hours Optimize gives the person in each period where it can, a Should rule. | None, as for a casual. |
+| Maximum hours | The most hours the person works in each period, a Must rule. | Only the agreement's limits. |
+| Hours per | The period of both hours: Week, Fortnight, Month or Roster period. | Week. |
+| Hourly rate | The rate in your organization's currency. Wages and overtime cost read it. | No rate: **Wages** leave the person out. |
+
+How contracts apply:
+
+- A person has one contract in force on each day. A new contract ends the contract before it on the day before the new one starts. The page tells you before you save. A contract that shares a day with another of the person's contracts is refused.
+- To change a person's terms from a later day, add a new contract. Editing a contract that has started changes it from its first day.
+- **End contract** sets a contract's last day. A contract that has not started has **Delete** instead. The contract before it then runs until the day before the next contract, or with no end.
+- A contract's rules apply only on its own days. Optimize keeps each person within their **Maximum hours** and gives them their **Guaranteed hours** where it can, both over **Hours per**. The agreement's rules still hold. When a contract allows more hours than the agreement, the contract shows a warning, and the agreement's limit applies.
+- The Roster grid shows each person's hours against the contract in force on the roster's first day: the bar runs to the maximum, with a mark at the guaranteed hours. Its tip names each figure.
+- **Wages** count each shift at the rate of the contract in force on its day. The wages note names each person with no rate.
+- The **Chrona Workforce User** role reads contracts. The **Chrona Workforce Admin** role adds, changes, ends and deletes them.
+
 ### Import a roster from Excel
 
 Bring a roster you keep in an Excel workbook into the roster period on the board. Select **Import** on the toolbar, or under **Actions** when the roster has shifts. A roster with no shifts also offers **Import from Excel**. The import has four steps: **File**, **Mapping**, **Check** and **Import**. Nothing is written until you confirm.
 
-1. **File**: select **Choose workbook**. Chrona reads an .xlsx file of up to 10 MB in your browser, and the file stays there. It reads a person per row, a day per row, a block per week, or a row per shift. For a file in another layout, select **Download the Chrona template** and fill it in.
+1. **File**: select **Choose workbook**. Chrona reads an .xlsx file of up to 10 MB in your browser, and the file stays there. It reads a person per row, a day per row, a block per week, or a row per shift, and leaves other sheets, such as a staff list, out. For a file in another layout, select **Download the Chrona template** and fill it in.
 2. **Mapping**: give each code in the file a meaning, such as **Shift**, **Leave** or **Day off**, and give each shift code its times.
    - Without an agent, select **Map it here**.
    - With an agent, select **Share with my agent**. The page saves a summary of the file in your environment: sheet names, headers and codes, with names and notes replaced. The page shows the words to give your agent, such as "Map Chrona import 7F3K". Your agent reads the summary with its own Dataverse tools and maps it with the `import_mapping` tool of the Chrona MCP server. The mapping it writes back shows as **From your agent**.

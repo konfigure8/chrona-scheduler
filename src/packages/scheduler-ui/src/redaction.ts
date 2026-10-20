@@ -165,6 +165,8 @@ function redactWith(
           ? { agreementId: pseudoAgreement(resource.agreementId) }
           : {}),
         ...(resource.contract ? { contract: resource.contract } : {}),
+        // F65 Contracts: days, hours and a rate, not a name.
+        ...(resource.contracts ? { contracts: resource.contracts } : {}),
         ...(resource.costCentsPerHour !== undefined
           ? { costCentsPerHour: resource.costCentsPerHour }
           : {}),

@@ -16,7 +16,7 @@ import { dateNamesFrom, weekdayShort } from "./dateNames";
 import { buildMonthMatrix, eventsForDay } from "./monthLayout";
 import {
   isSameDay,
-  resolveEventColor,
+  eventFill,
   type StatusColorRule,
 } from "./viewConfig";
 import type { TimelineChange } from "./ChronaTimeline";
@@ -190,12 +190,8 @@ export function MonthView(props: MonthViewProps): JSX.Element {
                                 })
                             : undefined
                         }
-                        style={{
-                          background:
-                            event.review === "ghost"
-                              ? undefined
-                              : resolveEventColor(event, statusColorRules),
-                        }}
+                        data-on-color={eventFill(event, statusColorRules).color !== undefined ? "" : undefined}
+                        style={eventFill(event, statusColorRules)}
                         type="button"
                       >
                         {showsPin(event) ? <PinGlyph /> : null}

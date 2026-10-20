@@ -34,10 +34,12 @@ import type {
   AgreementRuleLevel,
   AgreementRulePeriod,
   AvailabilityBand,
+  PersonContract,
   SchedulerAgreement,
   SchedulerAgreementRule,
   SchedulerResource,
   SchedulerUiEvent,
+  TagSpan,
 } from "./types";
 import { maxHoursPerWindow } from "./windowHours";
 
@@ -160,6 +162,13 @@ export interface ScheduleContractResource {
     readonly minHoursPerWindow?: number;
     readonly type: ResourceContractType;
   };
+  /**
+   * F65 Contracts and employment types: the person's own terms, one in
+   * force on each day, each a version of the person's own Timefold
+   * contract beside their agreement's. A contract that ended before the
+   * window is not sent. Absent = no contract.
+   */
+  readonly contracts?: readonly ScheduleContractPersonContract[];
   /** Employer cost in cents per hour; omitted = unknown, cost skipped. */
   readonly costCentsPerHour?: number;
   readonly id: string;
@@ -169,7 +178,37 @@ export interface ScheduleContractResource {
    * none: the person takes only shifts with no site.
    */
   readonly sites?: readonly string[];
-  readonly skills: readonly string[];
+  /** The roles and skills held; F4: a tag held only on some days as Timefold's dated skill. */
+  readonly skills: readonly (string | ScheduleContractSkill)[];
+}
+
+/**
+ * F4 Validated role membership: a skill that holds only in its spans
+ * (Timefold skill validity, validityDateTimeSpans). An empty list holds at
+ * no time.
+ */
+export interface ScheduleContractSkill {
+  readonly id: string;
+  readonly validityDateTimeSpans: readonly { readonly end?: string; readonly start?: string }[];
+}
+
+/**
+ * One contract of a person (F65), in the problem's units: its days are
+ * calendar days on the problem's clock (timeZone), its hours minutes.
+ * Guaranteed minutes are a Should minimum (Timefold allows no required
+ * minimum), maximum minutes a Must maximum, both over the period.
+ */
+export interface ScheduleContractPersonContract {
+  /** The contract's last day, inclusive, "YYYY-MM-DD". Absent = ongoing. */
+  readonly end?: string;
+  readonly guaranteedMinutes?: number;
+  /** Overrides costCentsPerHour on the contract's days. */
+  readonly hourlyRateCents?: number;
+  readonly maxMinutes?: number;
+  /** The period the minutes count over. Absent = week. */
+  readonly period?: "fortnight" | "month" | "rosterPeriod" | "week";
+  /** The contract's first day, "YYYY-MM-DD". */
+  readonly start: string;
 }
 
 export interface ScheduleContractShift {
@@ -592,8 +631,11 @@ export function problemFromSchedule(
         : [];
     }),
   }));
-  const countsPeriods = agreements.some((agreement) =>
-    agreement.rules.some((rule) => !BOARD_CHECKED_KINDS.has(rule.kind)));
+  // F65: a contract's hours count over a period too, so the solver needs the week and the window.
+  const countsPeriods =
+    agreements.some((agreement) => agreement.rules.some((rule) => !BOARD_CHECKED_KINDS.has(rule.kind))) ||
+    input.resources.some((resource) =>
+      (resource.contracts ?? []).some((contract) => (contract.guaranteedHours ?? 0) > 0 || (contract.maxHours ?? 0) > 0));
   const bands = input.unavailability ?? [];
   const timePreferences = bands
     .filter(
@@ -627,12 +669,16 @@ export function problemFromSchedule(
             },
           }
         : {}),
+      ...contractsOf(resource.contracts, input.window.start),
       ...(resource.costCentsPerHour !== undefined
         ? { costCentsPerHour: resource.costCentsPerHour }
         : {}),
       id: resource.id,
       name: resource.name,
-      skills: resource.tags ?? [],
+      // F4: a role that holds at no time (a skill it needs is missing) is not sent; Timefold defines no empty span list.
+      skills: (resource.tags ?? [])
+        .filter((tag) => resource.tagSpans?.[tag]?.length !== 0)
+        .map((tag) => skillOf(tag, resource.tagSpans?.[tag], wire)),
     })),
     shifts: shifts.map((event) => ({
       assignment:
@@ -693,4 +739,59 @@ export function problemFromSchedule(
       start: wire(input.window.start),
     },
   };
+}
+
+/** "YYYY-MM-DD" of a board date: its local reading is the site's clock. */
+function boardDay(date: Date): string {
+  const pad = (value: number): string => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+/**
+ * F65: a person's contracts in the problem's units (hours to minutes).
+ * A contract that ended before the window starts is not sent (an
+ * expired contract is not sent to the solver, domain model section 1).
+ */
+/** F4: a held tag as the solver reads it, dated when it holds only on some days. */
+function skillOf(
+  tag: string,
+  spans: readonly TagSpan[] | undefined,
+  wire: (date: Date) => string,
+): string | ScheduleContractSkill {
+  return spans
+    ? {
+        id: tag,
+        // Board dates read the site's clock: they go as instants, like the shifts' times.
+        validityDateTimeSpans: spans.map((span) => ({
+          ...(span.end ? { end: wire(span.end) } : {}),
+          ...(span.start ? { start: wire(span.start) } : {}),
+        })),
+      }
+    : tag;
+}
+
+function contractsOf(
+  contracts: readonly PersonContract[] | undefined,
+  windowStart: Date,
+): { readonly contracts?: readonly ScheduleContractPersonContract[] } {
+  const firstDay = boardDay(windowStart);
+  const minutes = (hours: number | undefined): number | undefined =>
+    hours !== undefined && hours > 0 ? Math.round(hours * 60) : undefined;
+  const sent = (contracts ?? [])
+    .filter((contract) => contract.end === undefined || contract.end >= firstDay)
+    .map((contract) => {
+      const guaranteedMinutes = minutes(contract.guaranteedHours);
+      const maxMinutes = minutes(contract.maxHours);
+      return {
+        ...(contract.end !== undefined ? { end: contract.end } : {}),
+        ...(guaranteedMinutes !== undefined ? { guaranteedMinutes } : {}),
+        ...(contract.hourlyRateCents !== undefined && contract.hourlyRateCents > 0
+          ? { hourlyRateCents: contract.hourlyRateCents }
+          : {}),
+        ...(maxMinutes !== undefined ? { maxMinutes } : {}),
+        ...(contract.period !== undefined && contract.period !== "week" ? { period: contract.period } : {}),
+        start: contract.start,
+      };
+    });
+  return sent.length > 0 ? { contracts: sent } : {};
 }

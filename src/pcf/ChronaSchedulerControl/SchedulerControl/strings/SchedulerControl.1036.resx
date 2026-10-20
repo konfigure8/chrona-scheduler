@@ -21,6 +21,9 @@
   <data name="assignAction" xml:space="preserve">
     <value>Affecter {name}</value>
   </data>
+  <data name="assignActionNone" xml:space="preserve">
+    <value>Affecter</value>
+  </data>
   <data name="assignBestOptions" xml:space="preserve">
     <value>Meilleurs choix</value>
   </data>
@@ -934,10 +937,10 @@
     <value>Date et heure de fin.</value>
   </data>
   <data name="Prop_Resource" xml:space="preserve">
-    <value>Ressource (lignes)</value>
+    <value>Ressource (couloirs)</value>
   </data>
   <data name="Prop_Resource_Desc" xml:space="preserve">
-    <value>Recherche vers la personne ou l'actif affecté. Liée : une ligne par personne. Non liée : calendrier. Utilisez une recherche, pas Propriétaire.</value>
+    <value>Recherche vers la personne ou l'actif affecté. Liée : un couloir par personne. Non liée : calendrier. Utilisez une recherche, pas Propriétaire.</value>
   </data>
   <data name="Prop_Status" xml:space="preserve">
     <value>Statut (facultatif)</value>
@@ -1009,7 +1012,7 @@
     <value>Sous-groupe</value>
   </data>
   <data name="Prop_Subgroup_Desc" xml:space="preserve">
-    <value>Deuxième niveau de ligne auquel l'élément appartient.</value>
+    <value>Deuxième niveau de couloir auquel l'élément appartient.</value>
   </data>
   <data name="nextMonth" xml:space="preserve">
     <value>Mois suivant</value>

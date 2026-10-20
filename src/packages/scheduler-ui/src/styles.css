@@ -17,6 +17,9 @@
   --csui-stroke-strong: #d1d1d1;
   --csui-text: #242424;
   --csui-text-soft: #616161;
+  /* Fluent colorNeutralForeground1Static / ForegroundStaticInverted: text on a maker's colour. */
+  --csui-text-static: #242424;
+  --csui-text-static-inverted: #ffffff;
   --csui-disabled-bg: #f0f0f0;
   --csui-disabled-stroke: #e0e0e0;
   --csui-disabled-text: #bdbdbd;
@@ -390,6 +393,12 @@
   font-size: 12px;
 }
 
+/* On a maker's colour the card sets text that reads on it; its times follow, not the soft grey. */
+[data-on-color] .chrona-sched__bar-time,
+[data-on-color] .chrona-sched__chip-time {
+  color: inherit;
+}
+
 .chrona-sched__now {
   border-left: 2px solid var(--csui-now);
   bottom: 0;
@@ -495,13 +504,17 @@
 }
 
 .chrona-sched__preview--block {
-  background: color-mix(in srgb, var(--csui-danger) 16%, transparent);
+  background: var(--csui-danger-bg);
   border: 1px dashed var(--csui-danger);
   color: var(--csui-danger);
 }
 
 .chrona-sched__preview-reason {
   font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Pinned items: glyph plus a default cursor (no grab affordance). */
@@ -639,6 +652,16 @@
    skill missing): the warning stroke, the note in the tooltip. */
 .chrona-sched__tag--warning {
   border-color: var(--csui-warn);
+}
+
+/* A warned tag takes focus for its note (F4); the note keeps its lines. */
+.chrona-sched__tag--warning:focus-visible {
+  outline: 2px solid var(--csui-brand);
+  outline-offset: 1px;
+}
+
+.chrona-sched__tag-note {
+  white-space: pre-line;
 }
 
 /* Saved-view switcher: Fluent-styled select, leftmost in the toolbar. */
@@ -1526,7 +1549,8 @@
   flex: 0 0 auto;
 }
 
-.chrona-sched__row-canvas--mismatch {
+.chrona-sched__row-canvas--mismatch,
+.chrona-sched__roster-cell--mismatch {
   background: repeating-linear-gradient(
     45deg,
     color-mix(in srgb, var(--csui-danger) 5%, transparent),
@@ -2150,7 +2174,8 @@
   box-shadow: inset 3px 0 0 var(--csui-brand);
 }
 
-.chrona-sched__assign-candidate--dim {
+/* A person who cannot take the shift: the name dims, the reason stays readable. */
+.chrona-sched__assign-candidate--dim .chrona-sched__assign-name {
   opacity: 0.55;
 }
 

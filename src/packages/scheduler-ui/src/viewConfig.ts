@@ -1,5 +1,6 @@
 import type { WorkingWindow } from "./decorations";
 import { englishDateNames, formatDayLabel, monthLong, type DateNames } from "./dateNames";
+import { readableTextOn } from "./theme";
 import type { HourFormat } from "./timeAxis";
 import type { SchedulerUiEvent, TimeWindow } from "./types";
 
@@ -344,6 +345,19 @@ export function resolveInitialScrollHour(
     return 8;
   }
   return Math.max(0, earliest - 1);
+}
+
+/**
+ * An event card's fill: its display colour and text that reads on it in
+ * any theme. A ghost keeps the stylesheet's.
+ */
+export function eventFill(
+  event: SchedulerUiEvent,
+  rules: readonly StatusColorRule[] | undefined,
+): { readonly background?: string; readonly color?: string } {
+  const background = event.review === "ghost" ? undefined : resolveEventColor(event, rules);
+  const color = readableTextOn(background);
+  return { ...(background !== undefined ? { background } : {}), ...(color !== undefined ? { color } : {}) };
 }
 
 /** Resolves an event's display color: explicit color, then first matching rule. */

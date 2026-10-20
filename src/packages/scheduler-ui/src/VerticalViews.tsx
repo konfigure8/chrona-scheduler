@@ -33,7 +33,7 @@ import { useBoardExtension } from "./extension";
 import { packEventLanes } from "./timelineLayout";
 import {
   isSameDay,
-  resolveEventColor,
+  eventFill,
   resolveVerticalHourRange,
   type StatusColorRule,
 } from "./viewConfig";
@@ -531,6 +531,7 @@ function VerticalGrid(props: VerticalGridProps): JSX.Element {
                   column.window.start.getTime();
                 const clipEnd =
                   positioned.event.end.getTime() > column.window.end.getTime();
+                const fill = eventFill(positioned.event, statusColorRules);
                 return (
                   <button
                     aria-label={[
@@ -585,14 +586,9 @@ function VerticalGrid(props: VerticalGridProps): JSX.Element {
                         column,
                       )
                     }
+                    data-on-color={fill.color !== undefined ? "" : undefined}
                     style={{
-                      background:
-                        positioned.event.review === "ghost"
-                          ? undefined
-                          : resolveEventColor(
-                              positioned.event,
-                              statusColorRules,
-                            ),
+                      ...fill,
                       height: Math.max(positioned.width - 2, 14),
                       left: `${positioned.lane * laneWidth}%`,
                       top: positioned.left,

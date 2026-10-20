@@ -137,6 +137,7 @@ export const germanStrings: SchedulerStrings = {
   assignReasonHours: "W\u00fcrde {capacity} Std. \u00fcberschreiten",
   assignEmpty: "Kein passendes Personal.",
   assignAction: "{name} zuweisen",
+  assignActionNone: "Zuweisen",
   menuUnschedule: "Zuweisung aufheben",
   monthMore: "+{count} weitere",
   monthsLong: "Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember",

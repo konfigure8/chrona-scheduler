@@ -68,8 +68,19 @@ export function computeCapabilityTiers(
       (decoration) =>
         decoration.kind === "unavailable" && decoration.resourceId !== undefined,
     ),
-    cost: people.some((resource) => resource.costCentsPerHour !== undefined),
-    hours: people.some((resource) => resource.capacityHours !== undefined),
+    // F65 Contracts: a contract's rate and hours count as the person's own.
+    cost: people.some(
+      (resource) =>
+        resource.costCentsPerHour !== undefined ||
+        (resource.contracts ?? []).some((contract) => (contract.hourlyRateCents ?? 0) > 0),
+    ),
+    hours: people.some(
+      (resource) =>
+        resource.capacityHours !== undefined ||
+        (resource.contracts ?? []).some(
+          (contract) => (contract.guaranteedHours ?? 0) > 0 || (contract.maxHours ?? 0) > 0,
+        ),
+    ),
     locks: work.some((event) => isPinned(event)),
     roles:
       work.some((event) => (event.requiredTags?.length ?? 0) > 0) &&

@@ -70,8 +70,12 @@ export interface ResourceFit {
  * the host's rule.
  */
 export interface FitExtension {
-  /** The assign picker's reason a person cannot take the item. */
-  readonly assignReason: (missing: readonly string[]) => string;
+  /** The assign picker's reason a person cannot take the item, given what they lack for it. */
+  readonly assignReason: (
+    missing: readonly string[],
+    resource?: SchedulerResource,
+    event?: SchedulerUiEvent,
+  ) => string;
   /** What the person lacks for the item; empty when they fit. */
   readonly missing: (
     resource: SchedulerResource | undefined,

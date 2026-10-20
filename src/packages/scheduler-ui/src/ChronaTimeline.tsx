@@ -54,7 +54,8 @@ import { flagReasonText } from "./stringResources";
 import { NightGlyph } from "./NightGlyph";
 import { PinGlyph } from "./PinGlyph";
 import { VerticalSplitter } from "./Splitter";
-import { tagClassName, tagPillStyle, type TagColorMap } from "./tagColors";
+import { RolePill } from "./RolePill";
+import { tagPillStyle, type TagColorMap } from "./tagColors";
 import { computeVisibleEntryRange } from "./rowVirtualization";
 import { useBoardExtension } from "./extension";
 import { assignedHours, capacityForWindow } from "./hours";
@@ -65,7 +66,7 @@ import {
 } from "./timelineLayout";
 import {
   isSameDay,
-  resolveEventColor,
+  eventFill,
   resolveInitialScrollHour,
   type StatusColorRule,
 } from "./viewConfig";
@@ -1519,27 +1520,15 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                     className="chrona-sched__resource-tags"
                     title={row.resource.tags.join(", ")}
                   >
-                    {row.resource.tags.map((tag) => {
-                      const pill = tagPillStyle(tag, tagColors);
-                      const note = row.resource.tagNotes?.[tag];
-                      return (
-                        <span
-                          className={tagClassName(
-                            pill !== undefined,
-                            note !== undefined,
-                          )}
-                          key={tag}
-                          style={
-                            note
-                              ? { ...pill, borderColor: "var(--csui-warn)" }
-                              : pill
-                          }
-                          title={note}
-                        >
-                          {tag}
-                        </span>
-                      );
-                    })}
+                    {row.resource.tags.map((tag) => (
+                      <RolePill
+                        colors={tagColors}
+                        focusable
+                        key={tag}
+                        note={row.resource.tagNotes?.[tag]}
+                        tag={tag}
+                      />
+                    ))}
                   </span>
                 ) : null}
               </div>
@@ -1620,6 +1609,7 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                   // A pin takes the edit handles away and shows the mark.
                   const isFixed = isDragLocked(positioned.event);
                   const isPinned = showsPin(positioned.event);
+                  const fill = eventFill(positioned.event, statusColorRules);
                   const clipStart =
                     positioned.event.start.getTime() <
                     timeWindow.start.getTime();
@@ -1692,14 +1682,9 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                         )
                       }
                       role="gridcell"
+                      data-on-color={fill.color !== undefined ? "" : undefined}
                       style={{
-                        background:
-                          positioned.event.review === "ghost"
-                            ? undefined
-                            : resolveEventColor(
-                                positioned.event,
-                                statusColorRules,
-                              ),
+                        ...fill,
                         height: config.rowHeight - 8,
                         left: positioned.left,
                         top: positioned.lane * config.rowHeight + 4,
@@ -1830,7 +1815,9 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                 ) : null}
                 {rowPreview ? (
                   <div
+                    aria-label={rowPreview.verdict.reason}
                     className={`chrona-sched__preview chrona-sched__preview--${rowPreview.verdict.kind}`}
+                    title={rowPreview.verdict.reason}
                     style={{
                       height: config.rowHeight - 8,
                       left: dateToOffset(

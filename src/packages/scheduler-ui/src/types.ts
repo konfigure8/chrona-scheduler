@@ -21,6 +21,12 @@ export interface SchedulerResource {
   readonly agreementId?: string;
   /** Weekly capacity in hours; shown as "assigned/capacity" when present. */
   readonly capacityHours?: number;
+  /**
+   * F65 Contracts and employment types: the person's own terms, one in
+   * force on each day. Absent = no contract: no contract hours, and no
+   * hourly rate from a contract.
+   */
+  readonly contracts?: readonly PersonContract[];
   /** Employer cost per hour in cents; activates the cost tier
    * (F22 deliverable 2) and travels on the wire (F23: ruled kept). */
   readonly costCentsPerHour?: number;
@@ -46,6 +52,61 @@ export interface SchedulerResource {
    * stroke and the note as its tooltip.
    */
   readonly tagNotes?: Readonly<Record<string, string>>;
+  /**
+   * F4 Validated role membership: when each held tag holds, for a tag held
+   * only on some days (a role whose licence expires). A tag with no entry
+   * holds at any time; an empty list holds at none, so a role whose
+   * required skill is missing stays on the row and blocks every shift.
+   */
+  readonly tagSpans?: Readonly<Record<string, readonly TagSpan[]>>;
+}
+
+/** F4: one span in which a held tag holds; no start or end leaves that side open, the end exclusive. */
+export interface TagSpan {
+  readonly end?: Date;
+  readonly start?: Date;
+}
+
+/**
+ * F4 Validated role membership: whether the resource holds a tag over a
+ * span, from its start to its end. With no span given, holding the tag is
+ * enough.
+ */
+export function tagHolds(
+  resource: Pick<SchedulerResource, "tagSpans" | "tags"> | undefined,
+  tag: string,
+  during?: { readonly end: Date; readonly start: Date },
+): boolean {
+  if (!(resource?.tags ?? []).includes(tag)) {
+    return false;
+  }
+  const spans = resource?.tagSpans?.[tag];
+  if (!spans || !during) {
+    return true;
+  }
+  return spans.some(
+    (span) =>
+      (span.start === undefined || span.start.getTime() <= during.start.getTime()) &&
+      (span.end === undefined || span.end.getTime() >= during.end.getTime()),
+  );
+}
+
+/**
+ * F65 Contracts and employment types: one person's own terms from a day
+ * to an optional last day, both "YYYY-MM-DD" on the board's clock (no
+ * last day = ongoing). The agreement's rules still hold beside them: a
+ * contract can add limits but cannot loosen the agreement's.
+ */
+export interface PersonContract {
+  readonly end?: string;
+  /** The hours the person is guaranteed each period: a Should target. */
+  readonly guaranteedHours?: number;
+  readonly hourlyRateCents?: number;
+  /** The most hours the person works each period: a Must limit. */
+  readonly maxHours?: number;
+  /** The period the hours count over. Absent = week. */
+  readonly period?: "fortnight" | "month" | "rosterPeriod" | "week";
+  readonly start: string;
 }
 
 /**

@@ -21,6 +21,9 @@
   <data name="assignAction" xml:space="preserve">
     <value>Atribuir a {name}</value>
   </data>
+  <data name="assignActionNone" xml:space="preserve">
+    <value>Atribuir</value>
+  </data>
   <data name="assignBestOptions" xml:space="preserve">
     <value>Melhores opções</value>
   </data>
@@ -934,10 +937,10 @@
     <value>Data e hora de fim.</value>
   </data>
   <data name="Prop_Resource" xml:space="preserve">
-    <value>Recurso (linhas)</value>
+    <value>Recurso (raias)</value>
   </data>
   <data name="Prop_Resource_Desc" xml:space="preserve">
-    <value>Pesquisa da pessoa ou ativo atribuído. Vinculada: uma linha por pessoa. Sem vínculo: calendário. Use pesquisa, não Proprietário.</value>
+    <value>Pesquisa da pessoa ou ativo atribuído. Vinculada: uma raia por pessoa. Sem vínculo: calendário. Use pesquisa, não Proprietário.</value>
   </data>
   <data name="Prop_Status" xml:space="preserve">
     <value>Status (opcional)</value>
@@ -1009,7 +1012,7 @@
     <value>Subgrupo</value>
   </data>
   <data name="Prop_Subgroup_Desc" xml:space="preserve">
-    <value>Segundo nível de linha a que o item pertence.</value>
+    <value>Segundo nível de raia a que o item pertence.</value>
   </data>
   <data name="nextMonth" xml:space="preserve">
     <value>Próximo mês</value>

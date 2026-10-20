@@ -128,6 +128,8 @@ export interface SchedulerStrings {
   readonly assignReasonHours: string;
   readonly assignEmpty: string;
   readonly assignAction: string;
+  /** The Assign button before anyone is picked. */
+  readonly assignActionNone: string;
   readonly monthMore: string;
   /** Pipe-separated month and weekday names, January first / Sunday first. */
   readonly monthsLong: string;
@@ -524,6 +526,7 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   assignReasonHours: "Would exceed {capacity}h",
   assignEmpty: "No matching staff.",
   assignAction: "Assign {name}",
+  assignActionNone: "Assign",
   monthMore: "+{count} more",
   monthsLong: "January|February|March|April|May|June|July|August|September|October|November|December",
   monthsShort: "Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec",

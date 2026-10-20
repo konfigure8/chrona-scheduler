@@ -119,6 +119,7 @@ export const italianStrings: SchedulerStrings = {
   "assignReasonHours": "Supererebbe {capacity} h",
   "assignEmpty": "Nessuna persona trovata.",
   "assignAction": "Assegna a {name}",
+  "assignActionNone": "Assegna",
   "monthMore": "+{count} altri",
   "monthsLong": "gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre",
   "monthsShort": "gen|feb|mar|apr|mag|giu|lug|ago|set|ott|nov|dic",

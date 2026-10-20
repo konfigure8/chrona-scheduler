@@ -21,6 +21,9 @@
   <data name="assignAction" xml:space="preserve">
     <value>Assegna a {name}</value>
   </data>
+  <data name="assignActionNone" xml:space="preserve">
+    <value>Assegna</value>
+  </data>
   <data name="assignBestOptions" xml:space="preserve">
     <value>Opzioni migliori</value>
   </data>
@@ -934,10 +937,10 @@
     <value>Data e ora di fine.</value>
   </data>
   <data name="Prop_Resource" xml:space="preserve">
-    <value>Risorsa (righe)</value>
+    <value>Risorsa (corsie)</value>
   </data>
   <data name="Prop_Resource_Desc" xml:space="preserve">
-    <value>Ricerca della persona o del bene assegnato. Collegata: una riga per persona. Non collegata: calendario. Usa una ricerca, non Proprietario.</value>
+    <value>Ricerca della persona o del bene assegnato. Collegata: una corsia per persona. Non collegata: calendario. Usa una ricerca, non Proprietario.</value>
   </data>
   <data name="Prop_Status" xml:space="preserve">
     <value>Stato (facoltativo)</value>
@@ -1009,7 +1012,7 @@
     <value>Sottogruppo</value>
   </data>
   <data name="Prop_Subgroup_Desc" xml:space="preserve">
-    <value>Secondo livello di riga a cui appartiene l'elemento.</value>
+    <value>Secondo livello di corsia a cui appartiene l'elemento.</value>
   </data>
   <data name="nextMonth" xml:space="preserve">
     <value>Mese successivo</value>

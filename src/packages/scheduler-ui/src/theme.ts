@@ -32,8 +32,9 @@ export interface SchedulerTheme {
   /** Fluent colorBackgroundOverlay: the dialog scrim. */
   readonly overlay: string;
   /**
-   * Fluent colorStatus*Background3: the red, amber and green (RAG)
-   * fills, such as the Workforce hours bar.
+   * Fluent colorStatus*BorderActive: the red, amber and green (RAG)
+   * fills, such as the Workforce hours bar; lighter in dark themes, so
+   * they hold contrast on a dark surface.
    */
   readonly ragAmber: string;
   readonly ragGreen: string;
@@ -52,6 +53,10 @@ export interface SchedulerTheme {
   readonly surfaceHover: string;
   readonly text: string;
   readonly textSoft: string;
+  /** Fluent colorNeutralForeground1Static: dark text in every theme, for a pale maker colour. */
+  readonly textStatic: string;
+  /** Fluent colorNeutralForegroundStaticInverted: white text in every theme, for a deep maker colour. */
+  readonly textStaticInverted: string;
   readonly success: string;
   readonly successBackground: string;
   readonly successStroke: string;
@@ -92,6 +97,8 @@ const cssVariableByToken: Record<keyof SchedulerTheme, string> = {
   surfaceHover: "--csui-surface-hover",
   text: "--csui-text",
   textSoft: "--csui-text-soft",
+  textStatic: "--csui-text-static",
+  textStaticInverted: "--csui-text-static-inverted",
   success: "--csui-success",
   successBackground: "--csui-success-bg",
   successStroke: "--csui-success-stroke",
@@ -119,11 +126,33 @@ export function themeToCssVariables(
  * read as hex or rgb(): the stylesheet's light default stays.
  */
 export function colorSchemeOf(background: string | undefined): "dark" | "light" | undefined {
-  const value = background?.trim() ?? "";
+  const luminance = luminanceOf(background);
+  return luminance === undefined ? undefined : luminance < 0.4 ? "dark" : "light";
+}
+
+/**
+ * Text that reads on a maker's colour, in any theme: dark on a pale
+ * fill, white on a deep one, from whichever gives the higher contrast.
+ * Undefined when the colour does not read as hex or rgb(): the card
+ * keeps its stylesheet text.
+ */
+export function readableTextOn(color: string | undefined): string | undefined {
+  const luminance = luminanceOf(color);
+  if (luminance === undefined) {
+    return undefined;
+  }
+  // #242424 and #ffffff give equal contrast at a relative luminance of about 0.217.
+  return luminance > 0.217 ? "var(--csui-text-static)" : "var(--csui-text-static-inverted)";
+}
+
+/** The WCAG relative luminance of a hex or rgb() colour, or undefined. */
+function luminanceOf(color: string | undefined): number | undefined {
+  const value = color?.trim() ?? "";
   let rgb: number[] | undefined;
-  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(value)?.[1];
+  // #rgb, #rgba, #rrggbb or #rrggbbaa: the alpha does not change which text reads best.
+  const hex = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.exec(value)?.[1];
   if (hex) {
-    const full = hex.length === 3 ? [...hex].map((digit) => digit + digit).join("") : hex;
+    const full = hex.length <= 4 ? [...hex.slice(0, 3)].map((digit) => digit + digit).join("") : hex.slice(0, 6);
     rgb = [0, 2, 4].map((offset) => parseInt(full.slice(offset, offset + 2), 16));
   } else {
     const parts = /^rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)/i.exec(value);
@@ -136,7 +165,7 @@ export function colorSchemeOf(background: string | undefined): "dark" | "light" 
     const share = channel / 255;
     return share <= 0.03928 ? share / 12.92 : ((share + 0.055) / 1.055) ** 2.4;
   }) as [number, number, number];
-  return 0.2126 * red + 0.7152 * green + 0.0722 * blue < 0.4 ? "dark" : "light";
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
 }
 
 /** Matches the stylesheet defaults; useful as an explicit baseline. */
@@ -172,6 +201,8 @@ export const fluentLightTheme: SchedulerTheme = {
   surfaceHover: "#f5f5f5",
   text: "#242424",
   textSoft: "#616161",
+  textStatic: "#242424",
+  textStaticInverted: "#ffffff",
   success: "#0e700e",
   successBackground: "#f1faf1",
   successStroke: "#9fd89f",
@@ -200,9 +231,9 @@ export const fluentDarkTheme: SchedulerTheme = {
   now: "#e37d80",
   onBrand: "#ffffff",
   overlay: "rgba(0, 0, 0, 0.5)",
-  ragAmber: "#f7630c",
-  ragGreen: "#107c10",
-  ragRed: "#c50f1f",
+  ragAmber: "#faa06b",
+  ragGreen: "#54b054",
+  ragRed: "#dc626d",
   shadow: "0 0 2px rgba(0, 0, 0, 0.24), 0 1px 2px rgba(0, 0, 0, 0.28)",
   shadowAmbient: "rgba(0, 0, 0, 0.24)",
   shadowDialog: "0 0 8px rgba(0, 0, 0, 0.24), 0 32px 64px rgba(0, 0, 0, 0.28)",
@@ -216,6 +247,8 @@ export const fluentDarkTheme: SchedulerTheme = {
   surfaceHover: "#3d3d3d",
   text: "#ffffff",
   textSoft: "#adadad",
+  textStatic: "#242424",
+  textStaticInverted: "#ffffff",
   warning: "#faa06b",
   warningBackground: "#4a1e04",
   warningStroke: "#f7630c",

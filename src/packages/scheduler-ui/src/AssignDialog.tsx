@@ -4,9 +4,10 @@ import type { RowDecoration } from "./decorations";
 import { useBoardExtension } from "./extension";
 import { assignedHours } from "./hours";
 import { formatString, useSchedulerStrings } from "./strings";
-import { tagClassName, tagPillStyle, type TagColorMap } from "./tagColors";
+import { RolePill } from "./RolePill";
+import { tagPillStyle, type TagColorMap } from "./tagColors";
 import { clockMinutesBetween } from "./timeZone";
-import type { SchedulerResource, SchedulerUiEvent } from "./types";
+import { tagHolds, type SchedulerResource, type SchedulerUiEvent } from "./types";
 
 /**
  * Curated staff picker for an unscheduled shift: qualified-and-free
@@ -86,7 +87,7 @@ export function AssignDialog(props: AssignDialogProps): JSX.Element {
     for (const resource of resources) {
       const missing = fit?.missing(resource, event) ?? [];
       if (fit && missing.length > 0) {
-        unqualified.push({ reason: fit.assignReason(missing), resource });
+        unqualified.push({ reason: fit.assignReason(missing, resource, event), resource });
         continue;
       }
       const busy = events.find(
@@ -191,27 +192,15 @@ export function AssignDialog(props: AssignDialogProps): JSX.Element {
                   {Object.values(candidate.resource.groups).join(" \u00b7 ")}
                 </span>
               ) : null}
-              {(candidate.resource.tags ?? []).map((tag) => {
-                const pill = tagPillStyle(tag, tagColors);
-                const note = candidate.resource.tagNotes?.[tag];
-                return (
-                  <span
-                    className={tagClassName(
-                      pill !== undefined,
-                      note !== undefined,
-                    )}
-                    key={tag}
-                    style={
-                      note
-                        ? { ...pill, borderColor: "var(--csui-warn)" }
-                        : pill
-                    }
-                    title={note}
-                  >
-                    {tag}
-                  </span>
-                );
-              })}
+              {(candidate.resource.tags ?? []).map((tag) => (
+                // A tag judged for this shift: its note shows only when it does not hold over it (F4).
+                <RolePill
+                  colors={tagColors}
+                  key={tag}
+                  note={tagHolds(candidate.resource, tag, event) ? undefined : candidate.resource.tagNotes?.[tag]}
+                  tag={tag}
+                />
+              ))}
             </>
           )}
         </span>
@@ -324,9 +313,9 @@ export function AssignDialog(props: AssignDialogProps): JSX.Element {
             onClick={() => selected && onAssign(selected.resource.id)}
             type="button"
           >
-            {formatString(strings.assignAction, {
-              name: selected?.resource.name ?? "",
-            })}
+            {selected
+              ? formatString(strings.assignAction, { name: selected.resource.name })
+              : strings.assignActionNone}
           </button>
         </div>
       </div>

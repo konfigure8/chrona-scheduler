@@ -21,6 +21,9 @@
   <data name="assignAction" xml:space="preserve">
     <value>{name} toewijzen</value>
   </data>
+  <data name="assignActionNone" xml:space="preserve">
+    <value>Toewijzen</value>
+  </data>
   <data name="assignBestOptions" xml:space="preserve">
     <value>Beste opties</value>
   </data>

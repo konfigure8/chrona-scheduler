@@ -126,6 +126,7 @@ export {
 } from "./rowVirtualization";
 export {
   colorSchemeOf,
+  readableTextOn,
   fluentDarkTheme,
   fluentLightTheme,
   themeToCssVariables,
@@ -369,6 +370,8 @@ export {
   type ScheduleContractPeriods,
   type ScheduleContractRepair,
   type ScheduleContractResource,
+  type ScheduleContractPersonContract,
+  type ScheduleContractSkill,
   type ScheduleContractShift,
   type ScheduleContractTimePreference,
   type ScheduleContractUnavailability,

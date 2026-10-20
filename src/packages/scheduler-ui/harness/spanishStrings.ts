@@ -119,6 +119,7 @@ export const spanishStrings: SchedulerStrings = {
   "assignReasonHours": "Superaría {capacity} h",
   "assignEmpty": "No hay personal coincidente.",
   "assignAction": "Asignar a {name}",
+  "assignActionNone": "Asignar",
   "monthMore": "+{count} más",
   "monthsLong": "enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre",
   "monthsShort": "ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic",

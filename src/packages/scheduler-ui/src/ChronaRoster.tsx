@@ -35,6 +35,7 @@ import {
   resolveEventColor,
   type StatusColorRule,
 } from "./viewConfig";
+import { readableTextOn } from "./theme";
 import type { TimelineChange } from "./ChronaTimeline";
 import type {
   SchedulerResource,
@@ -83,6 +84,8 @@ interface CellDragState {
 
 interface CellHover {
   readonly dayIndex: number;
+  /** People the dragged shift does not fit on the hovered day: their cells hatch, as the Timeline's rows do. */
+  readonly misfits: ReadonlySet<string>;
   readonly resourceId: string;
   readonly verdict: ChangeVerdict;
 }
@@ -213,6 +216,7 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
   const strings = useSchedulerStrings();
   // A mark after a person's name, such as a scenario's glyph with its reason.
   const personMark = useBoardExtension()?.personMark;
+  const fit = useBoardExtension()?.fit;
   const days = buildRosterDays(window, showWeekends, dateNamesFrom(strings));
   // The review marks each change with a ring and a dot, and Hold to
   // compare shows where it was, so the grid shows no ghosts.
@@ -376,12 +380,25 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
         cell.resourceId,
       );
       const verdict = dropVerdict(drag.event, result);
-      setHover({ dayIndex: cell.dayIndex, resourceId: cell.resourceId, verdict });
+      // Who the shift does not fit on that day, judged as the Timeline judges its rows.
+      const misfits = new Set(
+        fit
+          ? resources
+              .filter((resource) => {
+                const moved = computeCellDropResult(drag.event, cell.dayIndex - drag.originDayIndex, resource.id);
+                return fit.missing(resource, { ...drag.event, end: moved.end, resourceId: resource.id, start: moved.start }).length > 0;
+              })
+              .map((resource) => resource.id)
+          : [],
+      );
+      setHover({ dayIndex: cell.dayIndex, misfits, resourceId: cell.resourceId, verdict });
     },
   });
 
   const renderChip = (event: SchedulerUiEvent, dayIndex: number): JSX.Element => {
     const color = resolveEventColor(event, statusColorRules);
+    // Text that reads on the maker's colour in any theme.
+    const ink = readableTextOn(color);
     return (
       <button
         aria-label={`${event.title}, ${formatTimeRange(event)}${event.night ? `, ${strings.nightShift}` : ""}`}
@@ -408,7 +425,8 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
             ? (downEvent) => cellDrag.begin(downEvent, { event, originDayIndex: dayIndex })
             : undefined
         }
-        style={{ background: color }}
+        data-on-color={ink ? "" : undefined}
+        style={{ background: color, color: ink }}
         type="button"
       >
         {showsPin(event) ? <PinGlyph /> : null}
@@ -515,6 +533,9 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
                 [
                   isHovered
                     ? `chrona-sched__cell-drop chrona-sched__cell-drop--${hover.verdict.kind}`
+                    : "",
+                  hover && hover.dayIndex === dayIndex && hover.misfits.has(row.resource.id)
+                    ? "chrona-sched__roster-cell--mismatch"
                     : "",
                   dayIndex === todayDayIndex
                     ? "chrona-sched__roster-cell--today"

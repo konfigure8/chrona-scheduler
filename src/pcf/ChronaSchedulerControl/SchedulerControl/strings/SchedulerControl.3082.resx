@@ -21,6 +21,9 @@
   <data name="assignAction" xml:space="preserve">
     <value>Asignar a {name}</value>
   </data>
+  <data name="assignActionNone" xml:space="preserve">
+    <value>Asignar</value>
+  </data>
   <data name="assignBestOptions" xml:space="preserve">
     <value>Mejores opciones</value>
   </data>
@@ -934,10 +937,10 @@
     <value>Fecha y hora de fin.</value>
   </data>
   <data name="Prop_Resource" xml:space="preserve">
-    <value>Recurso (filas)</value>
+    <value>Recurso (carriles)</value>
   </data>
   <data name="Prop_Resource_Desc" xml:space="preserve">
-    <value>Búsqueda de la persona o activo asignado. Vinculada: una fila por persona. Sin vincular: calendario. Usa una búsqueda, no Propietario.</value>
+    <value>Búsqueda de la persona o activo asignado. Vinculada: un carril por persona. Sin vincular: calendario. Usa una búsqueda, no Propietario.</value>
   </data>
   <data name="Prop_Status" xml:space="preserve">
     <value>Estado (opcional)</value>
@@ -1009,7 +1012,7 @@
     <value>Subgrupo</value>
   </data>
   <data name="Prop_Subgroup_Desc" xml:space="preserve">
-    <value>Segundo nivel de fila al que pertenece el elemento.</value>
+    <value>Segundo nivel de carril al que pertenece el elemento.</value>
   </data>
   <data name="nextMonth" xml:space="preserve">
     <value>Mes siguiente</value>

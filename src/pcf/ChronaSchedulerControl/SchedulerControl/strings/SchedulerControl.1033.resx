@@ -21,6 +21,9 @@
   <data name="assignAction" xml:space="preserve">
     <value>Assign {name}</value>
   </data>
+  <data name="assignActionNone" xml:space="preserve">
+    <value>Assign</value>
+  </data>
   <data name="assignBestOptions" xml:space="preserve">
     <value>Best options</value>
   </data>
