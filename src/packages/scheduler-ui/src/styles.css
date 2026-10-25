@@ -77,6 +77,10 @@
   --csui-grid-hour: color-mix(in srgb, var(--csui-stroke) 45%, var(--csui-bg));
   --csui-grid-slot: color-mix(in srgb, var(--csui-stroke) 28%, var(--csui-bg));
   --csui-radius: 4px;
+  /* Fluent borderRadiusSmall. */
+  --csui-radius-small: 2px;
+  /* Fluent spacingHorizontalM: between a label column and its values. */
+  --csui-spacing-horizontal-m: 12px;
 
   background: var(--csui-bg);
   box-sizing: border-box;
@@ -340,6 +344,8 @@
   color: var(--csui-text-soft);
   display: flex;
   flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
   justify-content: center;
   min-height: 160px;
   padding: 32px;
@@ -492,13 +498,15 @@
 }
 
 .chrona-sched__preview--allow {
-  background: color-mix(in srgb, var(--csui-brand) 18%, transparent);
+  /* Solid, as warn: the shift's own words under it never show through. */
+  background: color-mix(in srgb, var(--csui-brand) 18%, var(--csui-surface));
   border: 1px dashed var(--csui-brand);
   color: var(--csui-brand-fg);
 }
 
 .chrona-sched__preview--warn {
-  background: color-mix(in srgb, var(--csui-warn) 18%, transparent);
+  /* Solid, so the shift's own words under it never show through the reason. */
+  background: color-mix(in srgb, var(--csui-warn) 18%, var(--csui-surface));
   border: 1px dashed var(--csui-warn);
   color: var(--csui-warn);
 }
@@ -507,6 +515,36 @@
   background: var(--csui-danger-bg);
   border: 1px dashed var(--csui-danger);
   color: var(--csui-danger);
+}
+
+/* A preview with a reason keeps its true width; its time and reason sit in a label beside it, never cut. */
+.chrona-sched__preview:has(> .chrona-sched__preview-label) {
+  overflow: visible;
+}
+
+.chrona-sched__preview-inline {
+  display: contents;
+}
+
+.chrona-sched__preview-label {
+  align-items: center;
+  background: var(--csui-surface);
+  border: 1px solid currentColor;
+  border-radius: var(--csui-radius);
+  box-shadow: var(--csui-shadow);
+  display: flex;
+  gap: 6px;
+  left: calc(100% + 4px);
+  line-height: 16px;
+  padding: 2px 8px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.chrona-sched__preview-label--start {
+  left: auto;
+  right: calc(100% + 4px);
 }
 
 .chrona-sched__preview-reason {
@@ -576,6 +614,41 @@
   margin-right: 4px;
 }
 
+/* An extension's read-only mark on a shift (BoardExtension.shiftMark): its glyph after the title, and its line in the hover card and the dialog. */
+.chrona-sched__shift-mark {
+  display: inline-flex;
+  flex: none;
+  margin-left: 4px;
+}
+
+/* A state that wants the planner's action: the board's warm tone, as Needs cover (red stays for breaches). */
+.chrona-sched__shift-mark--attention {
+  color: var(--csui-warn);
+}
+
+.chrona-sched__shift-mark-note {
+  align-items: center;
+  color: var(--csui-text);
+  display: flex;
+  font-size: 12px;
+  gap: 4px;
+  margin: 4px 0 0;
+}
+
+.chrona-sched__hover-card-mark {
+  margin: 0 0 8px;
+}
+
+.chrona-sched__dialog-mark {
+  margin: 0 0 12px;
+}
+
+.chrona-sched__shift-mark-note .chrona-sched__shift-mark,
+.chrona-sched__legend-item .chrona-sched__shift-mark,
+.chrona-sched__chip--compact .chrona-sched__shift-mark {
+  margin: 0;
+}
+
 .chrona-sched__dialog-warn {
   background: var(--csui-warn-bg);
   border: 1px solid var(--csui-warn-stroke);
@@ -584,7 +657,8 @@
   font-size: 12px;
   margin: 4px 0 0;
   padding: 8px 10px;
-  text-align: center;
+  /* Message text starts at the left, as Fluent's MessageBar does and as the block message above it. */
+  text-align: left;
 }
 
 /* A notice inside a confirm dialog is the MessageBar idiom: inset like the
@@ -664,19 +738,6 @@
   white-space: pre-line;
 }
 
-/* Saved-view switcher: Fluent-styled select, leftmost in the toolbar. */
-.chrona-sched__toolbar-groupselect,
-.chrona-sched__toolbar-viewselect {
-  background: var(--csui-bg);
-  border: 1px solid var(--csui-stroke-strong);
-  border-radius: var(--csui-radius);
-  color: var(--csui-text);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 4px 8px;
-}
-
 /* Display-zone chip beside the range label. */
 .chrona-sched__toolbar-tz {
   background: var(--csui-surface-hover);
@@ -688,14 +749,9 @@
 
 /* Teams-style time-scale menu */
 
+/* It sits first in the trailing cluster, beside the interval tabs. */
 .chrona-sched__timescale {
-  margin-left: auto;
   position: relative;
-}
-
-/* When the menu is present it claims the auto gap; the pills follow. */
-.chrona-sched__timescale + .chrona-sched__toolbar-views {
-  margin-left: 8px;
 }
 
 .chrona-sched__timescale-trigger {
@@ -930,9 +986,11 @@
   padding: 5px 12px;
 }
 
-/* Fluent's focus stroke (colorStrokeFocus2) on the run button and a notice's ✕: the text colour, clear in every theme. */
+/* Fluent's focus stroke (colorStrokeFocus2) on the run button, the toolbar's buttons, a notice's ✕ and a notice's portal links: the text colour, clear in every theme. */
 .chrona-sched__toolbar-primary:focus-visible,
-.chrona-sched__horizon-notice-close:focus-visible {
+.chrona-sched__toolbar-button:focus-visible,
+.chrona-sched__horizon-notice-close:focus-visible,
+.chrona-sched__entitlement-action:focus-visible {
   outline: 2px solid var(--csui-text);
   outline-offset: 1px;
 }
@@ -1389,7 +1447,6 @@
   background: color-mix(in srgb, var(--chrona-blue) 85%, #0f172a);
 }
 
-/* Panel header dismiss: quiet icon button, Fluent subtle style. */
 /*
  * Design R2.02 DR15: a collapsed side panel is the reopen tab at 44 px,
  * the touch target, with the Expand icon above its title.
@@ -1410,27 +1467,9 @@
   display: contents;
 }
 
-.chrona-sched__panel-close {
-  background: transparent;
-  border: none;
-  border-radius: var(--csui-radius);
-  color: var(--csui-text-soft);
-  cursor: pointer;
-  font: inherit;
-  font-size: 14px;
-  line-height: 1;
-  margin-left: auto;
-  padding: 2px 6px;
-}
-
-.chrona-sched__panel-close:hover {
-  background: var(--csui-surface-hover);
-  color: var(--csui-text);
-}
-
 /*
  * Collapsed-pane reopen affordance (Outlook/Teams pattern): a slim
- * vertical tab at the right edge carrying the live count.
+ * vertical tab at the right edge, for the side panel and the change list.
  */
 .chrona-sched__panel-reopen {
   align-items: center;
@@ -1471,15 +1510,17 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  /* A cluster wider than the board breaks inside itself and stays right-aligned, line under line. */
+  justify-content: flex-end;
   margin-left: auto;
 }
 
+/* Inside the trailing cluster, which takes the free space before it: the tabs follow the time scale. */
 .chrona-sched__toolbar-views {
   background: var(--csui-surface-hover);
   border-radius: 9999px;
   display: flex;
   gap: 2px;
-  margin-left: auto;
   padding: 4px;
 }
 
@@ -1583,6 +1624,12 @@
   z-index: 20;
 }
 
+/* Fluent's menu divider between groups of items. */
+.chrona-sched__menu-separator {
+  border-top: 1px solid var(--csui-stroke);
+  margin: 4px -4px;
+}
+
 .chrona-sched__menu-item {
   background: none;
   border: none;
@@ -1611,7 +1658,7 @@
   box-shadow: var(--csui-shadow-flyout);
   min-width: 240px;
   max-width: 340px;
-  padding: 12px 14px;
+  padding: 12px 16px;
   pointer-events: none;
   position: absolute;
   z-index: 15;
@@ -1638,15 +1685,20 @@
 
 .chrona-sched__hover-card-title {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 8px;
 }
 
 .chrona-sched__hover-card-grid {
   display: grid;
-  gap: 8px 18px;
-  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   margin: 0;
+}
+
+/* A row across both columns (HoverCardEntry.wide): an extension's long line. */
+.chrona-sched__hover-card-wide {
+  grid-column: 1 / -1;
 }
 
 .chrona-sched__hover-card-grid dt {
@@ -1657,6 +1709,9 @@
 .chrona-sched__hover-card-grid dd {
   font-size: 14px;
   margin: 0;
+  min-width: 0;
+  /* A long skill name breaks rather than widening the card. */
+  overflow-wrap: anywhere;
 }
 
 /* The rule note: why a flagged shift is flagged, under the details. */
@@ -1735,13 +1790,26 @@
 .chrona-sched__dialog-field {
   align-items: center;
   display: grid;
-  gap: 12px;
+  gap: var(--csui-spacing-horizontal-m);
   grid-template-columns: 110px 1fr;
 }
 
+/* A label longer than its column (German "Veröffentlichungsstatus") breaks, hyphenated where the
+   control's language allows, and keeps its distance from the value. */
 .chrona-sched__dialog-field > span:first-child {
   color: var(--csui-text-soft);
   font-size: 12px;
+  hyphens: auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* A read-only value keeps its label on its first line. A value of several lines (notes) keeps its
+   line breaks and spaces and scrolls on its own, so the dialog's title and actions stay in view;
+   a shade at an edge shows there is more text that way (it scrolls with the text, so it shows only
+   while text is hidden there). */
+.chrona-sched__dialog-field--static {
+  align-items: baseline;
 }
 
 .chrona-sched__dialog-field:not(.chrona-sched__dialog-field--fluent) input,
@@ -2102,139 +2170,6 @@
   border-color: var(--csui-text-soft);
 }
 
-/* Curated staff picker for an unscheduled shift. */
-.chrona-sched__assign-dialog {
-  display: flex;
-  flex-direction: column;
-  max-height: min(70vh, 100%);
-  width: 400px;
-}
-
-.chrona-sched__assign-shift {
-  align-items: center;
-  color: var(--csui-text-soft);
-  display: flex;
-  flex-wrap: wrap;
-  font-size: 12px;
-  gap: 6px;
-  padding: 8px 16px 0;
-}
-
-.chrona-sched__assign-shift-title {
-  color: var(--csui-text);
-  font-weight: 600;
-}
-
-.chrona-sched__assign-search {
-  background: var(--csui-bg);
-  border: 1px solid var(--csui-stroke-strong);
-  border-radius: var(--csui-radius);
-  color: var(--csui-text);
-  font: inherit;
-  font-size: 14px;
-  margin: 10px 16px 0;
-  padding: 5px 10px;
-}
-
-.chrona-sched__assign-list {
-  flex: 1 1 auto;
-  overflow-y: auto;
-  padding: 4px 0 8px;
-}
-
-.chrona-sched__assign-section {
-  color: var(--csui-text-soft);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 10px 16px 4px;
-  text-transform: uppercase;
-}
-
-.chrona-sched__assign-candidate {
-  align-items: center;
-  background: transparent;
-  border: none;
-  color: var(--csui-text);
-  cursor: pointer;
-  display: flex;
-  font: inherit;
-  gap: 10px;
-  padding: 7px 16px;
-  text-align: left;
-  width: 100%;
-}
-
-.chrona-sched__assign-candidate:hover {
-  background: var(--csui-surface-hover);
-}
-
-.chrona-sched__assign-candidate--selected {
-  background: var(--csui-brand-bg);
-  box-shadow: inset 3px 0 0 var(--csui-brand);
-}
-
-/* A person who cannot take the shift: the name dims, the reason stays readable. */
-.chrona-sched__assign-candidate--dim .chrona-sched__assign-name {
-  opacity: 0.55;
-}
-
-.chrona-sched__assign-main {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.chrona-sched__assign-name {
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.chrona-sched__assign-meta {
-  align-items: center;
-  color: var(--csui-text-soft);
-  display: flex;
-  flex-wrap: wrap;
-  font-size: 12px;
-  gap: 6px;
-}
-
-.chrona-sched__assign-hours {
-  color: var(--csui-text-soft);
-  flex: 0 0 auto;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.chrona-sched__assign-empty {
-  color: var(--csui-text-soft);
-  font-size: 12px;
-  margin: 0;
-  padding: 10px 16px;
-}
-
-.chrona-sched__assign-foot {
-  align-items: center;
-  display: flex;
-}
-
-.chrona-sched__assign-more {
-  background: transparent;
-  border: none;
-  color: var(--csui-brand-fg);
-  cursor: pointer;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 0;
-}
-
-.chrona-sched__assign-spacer {
-  flex: 1 1 auto;
-}
-
 .chrona-sched__group-label {
   align-items: center;
   background: var(--csui-surface);
@@ -2352,10 +2287,11 @@
   background: var(--csui-today-bg);
 }
 
+/* Columns share the width down to 120px; past that the view scrolls sideways, its scrollbar in view. */
 .chrona-sched__vertical-column {
   border-right: 1px solid var(--csui-stroke);
-  flex: 1 0 150px;
-  min-width: 150px;
+  flex: 1 0 120px;
+  min-width: 120px;
 }
 
 .chrona-sched__vertical-canvas {
@@ -3022,7 +2958,6 @@
   font-size: 10px;
   font-weight: 400;
   min-width: 0;
-  opacity: 0.8;
   overflow: hidden;
   text-overflow: clip;
   white-space: nowrap;
@@ -3402,13 +3337,58 @@
 .chrona-sched__period-chip {
   margin-left: 0;
 }
+/* Colour by group: the group's tint before its name. */
+.chrona-sched__group-swatch {
+  border-radius: 2px;
+  display: inline-block;
+  flex: none;
+  height: 12px;
+  width: 12px;
+}
+
+/* Where a roster period ends: heavier than any grid line, so it never reads as a week's. */
 .chrona-sched__period-boundary {
-  border-left: 1px dashed var(--csui-stroke-strong, #8a8886);
+  border-left: 2px dashed var(--csui-text-soft);
   bottom: 0;
+  margin-left: -1px;
   pointer-events: none;
   position: absolute;
   top: 0;
   z-index: 1;
+}
+
+/* The week band names the period that starts at the line. */
+.chrona-sched__axis-weeks {
+  position: relative;
+}
+
+.chrona-sched__period-tick {
+  align-items: center;
+  background: var(--csui-bg);
+  border-left: 2px dashed var(--csui-text-soft);
+  box-sizing: border-box;
+  color: var(--csui-text-soft);
+  display: flex;
+  font-size: 12px;
+  height: 100%;
+  margin-left: -1px;
+  padding: 0 6px;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+/* The week a period starts in reads as the band's other week labels do. */
+.chrona-sched__period-tick-week {
+  font-weight: 600;
+}
+
+/* No room for words: the tick is its line alone. */
+.chrona-sched__period-tick--bare {
+  background: none;
+  padding: 0;
 }
 
 .chrona-sched__proposal-note--block {
@@ -3605,6 +3585,20 @@
   width: 100%;
 }
 
+/* The heading on one line: the name shortens, the count stays whole. */
+.chrona-sched__unscheduled-group-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-align: start;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chrona-sched__unscheduled-group-count {
+  flex: none;
+}
+
 .chrona-sched__unscheduled-caret {
   display: inline-block;
   font-size: 10px;
@@ -3722,19 +3716,34 @@
 
 .chrona-sched__outcomes-title {
   align-self: flex-start;
+  /*
+   * Room for the focus ring around the word: the side margins keep the word on the range's
+   * line, and 4px below keep the ring (2px out, 2px wide) 4px clear of the range.
+   */
+  border-radius: 4px;
   font-size: 14px;
   font-weight: 600;
   line-height: 20px;
-  margin: 0;
+  margin: 0 -4px 8px;
+  padding: 0 4px;
+}
+
+/* Opened with the mouse, the heading takes focus without a ring. */
+.chrona-sched__outcomes-title:focus:not(:focus-visible) {
+  outline: none;
 }
 
 /* The panel's focus ring: Fluent's focus stroke with its corner, on the heading, the trend toggle and the dash. */
-.chrona-sched__outcomes-title:focus-visible,
 .chrona-sched__outcomes-disclosure:focus-visible,
 .chrona-sched__outcome-dash:focus-visible {
   border-radius: var(--csui-radius);
   outline: 2px solid var(--csui-text);
   outline-offset: 1px;
+}
+
+.chrona-sched__outcomes-title:focus-visible {
+  outline: 2px solid var(--csui-text);
+  outline-offset: 2px;
 }
 
 .chrona-sched__outcomes-range {
@@ -3955,22 +3964,36 @@
   font-size: 12px;
 }
 
-/* The panel title and Keep all or none on one line. */
+/* The panel title, with Keep all or none and collapse beside it or, when it needs the room, under it. */
 .chrona-sched__proposal-head {
   align-items: center;
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 4px 8px;
   justify-content: space-between;
   margin: 0 0 4px;
 }
 
+/* The title takes the line it needs; a title too long to share it (German "Vorgeschlagene
+   Änderungen") puts the buttons on the next line, at the right, and never runs under them. */
 .chrona-sched__proposal-head .chrona-sched__unscheduled-title {
+  flex: 1 1 auto;
+  hyphens: auto;
   margin: 0;
   min-width: 0;
+  overflow-wrap: break-word;
 }
 
-/* Keep all / Keep none keeps its line; only the title wraps. */
-.chrona-sched__proposal-head > button {
+/* Keep all / Keep none and the collapse button keep their line, together, at the right; only the title wraps. */
+.chrona-sched__proposal-head-actions {
+  align-items: center;
+  display: flex;
+  flex: none;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.chrona-sched__proposal-head-actions > button {
   flex: none;
   white-space: nowrap;
 }
@@ -4142,6 +4165,9 @@
   flex: 1;
   margin: 0;
   padding-bottom: 0;
+}
+.chrona-sched__drill-status {
+  white-space: nowrap;
 }
 .chrona-sched__drill-heading:focus-visible {
   outline: 2px solid var(--csui-brand);

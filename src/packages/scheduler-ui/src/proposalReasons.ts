@@ -6,12 +6,15 @@
  * or not analysed) gives no reasons, and a change no match names gets
  * no line.
  */
+import { formatClock, formatClockRange } from "./clock";
 import { formatHours } from "./compactChip";
 import { formatDayLabel, type DateNames } from "./dateNames";
+import { extensionMustRow } from "./ruleRegistry";
 import { isMustRule, type ScheduleRuleMatch, type ScheduleSolveAnalysis } from "./schedulingContract";
 import type { ProposalChange } from "./solve";
 import { formatString, type SchedulerStrings } from "./stringResources";
 import { clockMinutesBetween } from "./timeZone";
+import type { HourFormat } from "./timeAxis";
 import type { SchedulerUiEvent } from "./types";
 
 /** "fix" = a breach removed, "add" = a Must breach added, "strain" = a Should rule strained. */
@@ -34,6 +37,10 @@ export interface ReasonContext {
   readonly strings: SchedulerStrings;
   /** A board date back to the real moment, for rest gaps. Absent = the dates are moments. */
   readonly toInstant?: (display: Date) => Date;
+  /** The user's number locale for the hours of a rest gap; absent = the browser's. */
+  readonly locale?: string;
+  /** The user's hour format for the times a line names; absent = 24-hour. */
+  readonly hourFormat?: HourFormat;
 }
 
 /** The minutes between a short rest's two shifts; undefined when a shift is not on the board. */
@@ -85,7 +92,8 @@ export function mustRuleLabel(rule: ScheduleRuleMatch["rule"], strings: Schedule
     case "splitParts":
       return strings.mustKindSplitParts;
     default:
-      return strings.mustKindUnlisted;
+      // A package's own row names itself (ruleRegistry.ts).
+      return extensionMustRow(rule)?.label(strings) ?? strings.mustKindUnlisted;
   }
 }
 
@@ -96,7 +104,7 @@ function fixText(match: ScheduleRuleMatch, context: ReasonContext): string {
     const gap = restGapMinutes(match, context);
     return gap === undefined
       ? strings.reasonFixesMust
-      : formatString(strings.reasonFixesRest, { hours: formatHours(gap), name });
+      : formatString(strings.reasonFixesRest, { hours: formatHours(gap, context.locale), name });
   }
   if (match.rule === "daysInARow" && name !== undefined) {
     return formatString(strings.reasonFixesDaysInARow, { name });
@@ -115,7 +123,7 @@ function addText(match: ScheduleRuleMatch, context: ReasonContext): string {
   const name = match.resourceId !== undefined ? context.nameOf(match.resourceId) : undefined;
   const gap = match.rule === "restBetweenShifts" ? restGapMinutes(match, context) : undefined;
   return name !== undefined && gap !== undefined
-    ? formatString(strings.reasonAddsRest, { hours: formatHours(gap), name })
+    ? formatString(strings.reasonAddsRest, { hours: formatHours(gap, context.locale), name })
     : strings.reasonAddsMust;
 }
 
@@ -184,8 +192,9 @@ export function proposalReasons(
 
 /**
  * The Must breaches a person's changes fix, for the change list's line
- * per person in a long proposal: each breach once, by the person the
- * change gives the shift to, or takes it from when it leaves it open.
+ * per person in a long proposal: each breach once, credited to the
+ * person whose rule break it was (the change's person when the match
+ * names no one).
  */
 export function personFixCounts(
   changes: readonly ProposalChange[],
@@ -202,11 +211,13 @@ export function personFixCounts(
     if (fixed.length === 0) {
       continue;
     }
-    const own = byPerson.get(side.resourceId) ?? new Set<string>();
+    // A fix counts for the person whose rule break it was, not whoever takes the shift.
     for (const match of fixed) {
+      const resourceId = match.resourceId ?? side.resourceId;
+      const own = byPerson.get(resourceId) ?? new Set<string>();
       own.add(matchKey(match));
+      byPerson.set(resourceId, own);
     }
-    byPerson.set(side.resourceId, own);
   }
   byPerson.forEach((keys, resourceId) => counts.set(resourceId, keys.size));
   return counts;
@@ -229,9 +240,6 @@ export interface DrillDownContext extends ReasonContext {
   readonly names: DateNames;
 }
 
-const pad = (value: number): string => value.toString().padStart(2, "0");
-const clock = (date: Date): string => `${pad(date.getHours())}:${pad(date.getMinutes())}`;
-const range = (event: SchedulerUiEvent): string => `${clock(event.start)}-${clock(event.end)}`;
 
 /** "YYYY-MM-DD" as that day's board date. */
 function boardDay(date: string): Date | undefined {
@@ -265,6 +273,8 @@ export function drillDownEntries(
   context: DrillDownContext,
 ): readonly DrillDownEntry[] {
   const { eventsById, names, strings } = context;
+  const clock = (date: Date): string => formatClock(date, context.hourFormat);
+  const range = (event: SchedulerUiEvent): string => formatClockRange(event.start, event.end, context.hourFormat);
   return matches.map((match, index) => {
     const shifts = match.shiftIds
       .map((id) => eventsById.get(id))

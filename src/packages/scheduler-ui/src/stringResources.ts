@@ -18,6 +18,8 @@ export interface SchedulerStrings {
   readonly deleteConfirmAction: string;
   readonly deleteConfirmCount: string;
   readonly deleteConfirmMessage: string;
+  /** The body of a set's delete confirm, under its counted title. */
+  readonly deleteConfirmUndone: string;
   readonly deleteConfirmTitle: string;
   readonly dialogFinishAfterStart: string;
   readonly directionEarlier: string;
@@ -53,6 +55,8 @@ export interface SchedulerStrings {
   readonly legendNeedsCover: string;
   /** F24 Repair mode: an on-call shift left open, in the legend, the agenda and the hover card. */
   readonly legendOnCall: string;
+  /** The legend's accessible name. */
+  readonly legendName: string;
   /** Under the review's open-shift list: the on-call shifts left open, which are not counted. */
   readonly drillOnCallOpenOne: string;
   readonly drillOnCallOpenMany: string;
@@ -61,7 +65,6 @@ export interface SchedulerStrings {
   readonly legendUnavailable: string;
   readonly legendUnpreferred: string;
   readonly menuDeleteCount: string;
-  readonly menuDuplicate: string;
   readonly menuOpen: string;
   readonly menuOpenRecord: string;
   readonly menuPin: string;
@@ -72,11 +75,7 @@ export interface SchedulerStrings {
   readonly menuMoveToCount: string;
   readonly menuReassign: string;
   readonly menuReassignCount: string;
-  readonly groupByLabel: string;
-  readonly groupByNone: string;
   readonly ungrouped: string;
-  readonly hideUnscheduledPanel: string;
-  readonly unscheduledToggle: string;
   readonly conversionOptimize: string;
   readonly conversionTitle: string;
   readonly conversionPitchProblem: string;
@@ -111,25 +110,16 @@ export interface SchedulerStrings {
   readonly conversionNotNow: string;
   readonly conversionConnect: string;
   readonly conversionLearnMore: string;
-  readonly menuAssign: string;
   readonly menuUnschedule: string;
+  /** Unschedule on a multi-selection, as the other set actions name their count; also its confirmation's title. */
+  readonly menuUnscheduleCount: string;
   readonly unscheduleConfirmTitle: string;
   readonly unscheduleConfirmMessage: string;
+  /** A set's Unschedule confirm: its title, counted as Delete's is, and its body. */
+  readonly unscheduleConfirmCountTitle: string;
+  readonly unscheduleConfirmCount: string;
   readonly unscheduleConfirmAction: string;
   readonly unscheduledLaneLabel: string;
-  readonly assignTitle: string;
-  readonly assignBestOptions: string;
-  readonly assignNotAvailable: string;
-  readonly assignShowEveryone: string;
-  readonly assignSearchPlaceholder: string;
-  readonly assignHoursLeft: string;
-  readonly assignReasonUnavailable: string;
-  readonly assignReasonBusy: string;
-  readonly assignReasonHours: string;
-  readonly assignEmpty: string;
-  readonly assignAction: string;
-  /** The Assign button before anyone is picked. */
-  readonly assignActionNone: string;
   readonly monthMore: string;
   /** Pipe-separated month and weekday names, January first / Sunday first. */
   readonly monthsLong: string;
@@ -163,6 +153,10 @@ export interface SchedulerStrings {
   /** The Roster grid's row of shifts nobody works. */
   readonly rosterOpenShifts: string;
   readonly periodPrevious: string;
+  /** The week band's tick where a roster period starts: {date} is its first day. */
+  readonly periodBoundaryLabel: string;
+  /** An ISO week's number in the week band, as the user's language writes it: "W45", "KW 45". */
+  readonly weekNumberLabel: string;
   readonly proposalApply: string;
   readonly proposalAppliedMany: string;
   readonly proposalAppliedOne: string;
@@ -347,7 +341,6 @@ export interface SchedulerStrings {
   readonly resizeUnscheduled: string;
   readonly resourceHeader: string;
   readonly save: string;
-  readonly savedViews: string;
   readonly start: string;
   readonly solve: string;
   readonly solveFailed: string;
@@ -407,8 +400,9 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   close: "Close",
   delete: "Delete",
   deleteConfirmAction: "Delete",
-  deleteConfirmCount: "Delete {count} items? This cannot be undone.",
+  deleteConfirmCount: "Delete {count} items?",
   deleteConfirmMessage: "Delete {title}? This cannot be undone.",
+  deleteConfirmUndone: "You can't undo this.",
   deleteConfirmTitle: "Confirm delete",
   dialogFinishAfterStart: "Finish must be after start.",
   directionEarlier: "Earlier",
@@ -422,8 +416,8 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   emptyResources:
     "No resources to display. Check the view's resource configuration.",
   entitlementGrace: "Payment past due, grace until {date}",
-  entitlementLapsed: "Chrona subscription lapsed. Optimize and Generate are paused until billing is resolved.",
-  entitlementPaused: "Optimizer paused since {since}. Chrona is unreachable; scheduling works as normal.",
+  entitlementLapsed: "Chrona subscription lapsed. Auto Schedule and Generate are paused until billing is resolved.",
+  entitlementPaused: "Auto Schedule paused since {since}. Chrona is unreachable; scheduling works as normal.",
   entitlementPlanUsage: "Plan and usage",
   entitlementRetry: "Retry",
   finish: "Finish",
@@ -444,6 +438,7 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   legendHoliday: "Holiday",
   legendNeedsCover: "Needs cover",
   legendOnCall: "On call",
+  legendName: "Legend",
   drillOnCallOpenOne: "1 on-call shift open, not counted",
   drillOnCallOpenMany: "{count} on-call shifts open, not counted",
   legendNonWorking: "Non-working time",
@@ -451,7 +446,6 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   legendUnavailable: "Unavailable",
   legendUnpreferred: "Unpreferred hours",
   menuDeleteCount: "Delete {count} items",
-  menuDuplicate: "Duplicate",
   menuOpen: "Open",
   menuOpenRecord: "Open record",
   menuPin: "Pin",
@@ -462,12 +456,8 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   menuMoveToCount: "Move {count} items to...",
   menuReassign: "Reassign to...",
   menuReassignCount: "Reassign {count} items to...",
-  groupByLabel: "Group rows",
-  groupByNone: "No grouping",
   ungrouped: "Ungrouped",
-  hideUnscheduledPanel: "Hide the unscheduled panel",
-  unscheduledToggle: "Unscheduled ({count})",
-  conversionOptimize: "Optimize",
+  conversionOptimize: "Auto Schedule",
   conversionTitle: "The whole board, solved at once",
   conversionPitchProblem: "Scheduling one item at a time misses the interactions.",
   conversionPitchMechanism:
@@ -484,12 +474,12 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   capabilityHours: "hours",
   capabilityCost: "cost",
   listAnd: "and",
-  solveCapabilitiesLine: "Optimizing with: {list}",
+  solveCapabilitiesLine: "Auto Schedule uses: {list}",
   conversionCountsSuffix: " \u2014 counted locally, nothing sent.",
   conversionCoverageGaps: "{gaps} coverage gaps",
   conversionSampleTitle: "A sample run",
   conversionSampleBefore: "Before",
-  conversionSampleAfter: "After: the optimized result",
+  conversionSampleAfter: "After Auto Schedule",
   conversionSampleCounts: "{open} open items \u00b7 {conflicts} conflicts",
   conversionAxisLabels: "Mon 8 AM|Mon 12 PM|Mon 4 PM|Tue 8 AM",
   conversionSentTitle: "What a real run would use",
@@ -508,25 +498,15 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   conversionNotNow: "Not now",
   conversionConnect: "Try a free sample run",
   conversionLearnMore: "Learn more",
-  menuAssign: "Assign staff\u2026",
   menuUnschedule: "Unschedule",
+  menuUnscheduleCount: "Unschedule {count} items",
   unscheduleConfirmTitle: "Unschedule shift",
   unscheduleConfirmMessage:
     "Unschedule {title}? The shift keeps its time and returns to Unscheduled for reassignment.",
+  unscheduleConfirmCountTitle: "Unschedule {count} items?",
+  unscheduleConfirmCount: "They keep their times and go back to Unscheduled.",
   unscheduleConfirmAction: "Unschedule",
   unscheduledLaneLabel: "Unscheduled \u00b7 {count}",
-  assignTitle: "Assign staff",
-  assignBestOptions: "Best options",
-  assignNotAvailable: "Not available",
-  assignShowEveryone: "Show everyone ({count})",
-  assignSearchPlaceholder: "Search staff",
-  assignHoursLeft: "{left}h left of {capacity}h",
-  assignReasonUnavailable: "Unavailable {range}",
-  assignReasonBusy: "Already working {range}",
-  assignReasonHours: "Would exceed {capacity}h",
-  assignEmpty: "No matching staff.",
-  assignAction: "Assign {name}",
-  assignActionNone: "Assign",
   monthMore: "+{count} more",
   monthsLong: "January|February|March|April|May|June|July|August|September|October|November|December",
   monthsShort: "Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec",
@@ -553,6 +533,8 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   redo: "Redo",
   rosterOpenShifts: "Open shifts",
   periodPrevious: "Previous period",
+  periodBoundaryLabel: "Period from {date}",
+  weekNumberLabel: "W{week}",
   proposalApply: "Apply",
   proposalAppliedMany: "Applied {count} suggestions",
   proposalAppliedOne: "Applied 1 suggestion",
@@ -662,7 +644,7 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   whyNotVerdictMust: "{name} would break {count} Must rules",
   whyNotVerdictShould: "{name} keeps every Must rule but fits less well",
   whyNotVerdictEqual: "{name} fits as well.",
-  whyNotVerdictEqualReview: "{name} fits as well. Optimize had to pick one.",
+  whyNotVerdictEqualReview: "{name} fits as well. Auto Schedule had to pick one.",
   whyNotVerdictBetter: "{name} fits better.",
   whyNotTakingOff: "Taking it off {name}",
   whyNotPrefers: "{name} prefers to work then",
@@ -701,28 +683,27 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   solvePeriodPassed: "This period has passed",
   solveQueued: "Queued…",
   solveElapsed: "{seconds} s",
-  requiredSkills: "Required skills",
+  requiredSkills: "Role",
   resizeResources: "Resize the resources column",
   resizeUnscheduled: "Resize the unscheduled panel",
   resourceHeader: "Resource",
   save: "Save",
-  savedViews: "Views",
   start: "Start",
-  solve: "Solve",
-  solveFailed: "Solve failed: {message}",
-  solveQuotaRemaining: "{remaining} of {limit} free optimizations left today",
+  solve: "Auto Schedule",
+  solveFailed: "Auto Schedule failed: {message}",
+  solveQuotaRemaining: "{remaining} of {limit} free runs left today",
   solveQuotaExhausted:
-    "Today's free optimizations are used. More tomorrow — or upgrade for unlimited.",
+    "Today's free runs are used. More tomorrow — or upgrade for unlimited.",
   solveQuotaUpgrade: "Upgrade",
-  resumeFinished: "An optimization finished while you were away.",
-  resumeRunning: "An optimization is running for this schedule.",
+  resumeFinished: "An Auto Schedule run finished while you were away.",
+  resumeRunning: "Auto Schedule is running for this schedule.",
   resumeChanged:
-    "An optimization finished while you were away, but the schedule has changed since. Its result no longer applies.",
+    "An Auto Schedule run finished while you were away, but the schedule has changed since. Its result no longer applies.",
   resumeReview: "Review",
   resumeFollow: "Follow",
   resumeDiscard: "Discard",
   openChronaAccount: "Open Chrona account",
-  solveSolving: "Optimizing…",
+  solveSolving: "Auto scheduling…",
   solveStop: "Stop and review",
   solveStopping: "Stopping…",
   solveStoppedNothing: "Stopped before a roster was found. Nothing changed. Run it again and let it finish.",

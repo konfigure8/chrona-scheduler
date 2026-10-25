@@ -75,6 +75,11 @@ export {
   type ResourceFit,
   type RosterExtension,
   type ScorecardTile,
+  type ShiftMark,
+  type OpenShiftKind,
+  type HoverCardEntry,
+  type RosterChipStyle,
+  type DecorationContentInput,
   type RosterGroup,
   type RosterGroupInput,
   type ReviewExtension,
@@ -162,6 +167,21 @@ export {
   chipStartTime,
   formatHours,
 } from "./compactChip";
+export { BoardLocaleProvider, localeForLanguage, useBoardHourFormat, useBoardLocale } from "./boardLocale";
+export { formatClock, formatClockRange } from "./clock";
+export { labelWidth } from "./labelWidth";
+export {
+  boardRules,
+  extensionMustRow,
+  registerBoardRules,
+  type BoardRules,
+  type ExtensionAgreementRuleKinds,
+  type ExtensionMatchKinds,
+  type ExtensionMustRow,
+  type ExtensionMustRows,
+  type ExtensionShouldRules,
+} from "./ruleRegistry";
+export { ShiftMarkNote, useOpenShiftKind, useShiftMarks } from "./ShiftMark";
 export {
   buildTimeTicks,
   buildTimeTicksEvery,
@@ -247,10 +267,15 @@ export {
   idleSolveState,
   isGhostEvent,
   MUST_ROWS,
+  mustRows,
+  isOptionalMustRow,
   mustRowCount,
   mustRowMatches,
   mustRowOf,
+  compareSameStart,
   isOpenOnCall,
+  openKindOf,
+  type OpenShiftKindOf,
   isOpenRequired,
   openOnCallAfter,
   openShiftClass,
@@ -308,6 +333,7 @@ export {
   redactProblem,
   redactProblemForTenant,
   type RedactedProblem,
+  type RedactionExtension,
   type ResourceKeyScheme,
   type ResourcePlaceholderKey,
   unredactCandidateCheck,
@@ -511,11 +537,9 @@ export {
   type FixtureSchedule,
 } from "./fixtures";
 export {
-  fixtureViews,
   useFixtureScheduleHost,
   type FixtureHostOptions,
   type FixtureHostResult,
-  type FixtureView,
 } from "./fixtureHost";
 export { useFullScreen, type FullScreenControl } from "./fullScreen";
 export { mustRowLabel } from "./ProposalScorecard";

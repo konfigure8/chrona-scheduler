@@ -1,3 +1,5 @@
+import type { ExtensionAgreementRuleKinds } from "./ruleRegistry";
+
 export type SchedulerViewKind =
   | "agenda"
   | "day"
@@ -263,14 +265,17 @@ export interface GeneratedShiftOrigin {
    * and never touching edited ones, which requires remembering the
    * created values.
    */
-  readonly generated: {
-    readonly end: string;
-    readonly start: string;
-    readonly tags: readonly string[];
-    readonly title: string;
-  };
+  readonly generated: GeneratedShiftValues;
   readonly slotId: string;
   readonly templateId: string;
+}
+
+/** The values Generate gave a shift (GeneratedShiftOrigin.generated); a scenario package may add its own. */
+export interface GeneratedShiftValues {
+  readonly end: string;
+  readonly start: string;
+  readonly tags: readonly string[];
+  readonly title: string;
 }
 
 export type AvailabilityBandKind =
@@ -298,7 +303,8 @@ export type AgreementRuleKind =
   | "nightShifts"
   | "nightShiftHours"
   | "restAfterNight"
-  | "restAfterNights";
+  | "restAfterNights"
+  | keyof ExtensionAgreementRuleKinds;
 
 /** Must: a limit a roster keeps. Should: a cost a roster weighs. */
 export type AgreementRuleLevel = "must" | "should";
@@ -362,7 +368,7 @@ export interface SchedulerAgreementRule {
    * nightShifts, the most in each period or rolling window of weeks;
    * nightShiftHours, the most minutes worked in one; restAfterNight, the
    * minutes off after one; restAfterNights, the minutes off after a run
-   * of at least count of them.
+   * of at least count of them. A package's own kinds count as it says.
    */
   readonly value: number;
   /**

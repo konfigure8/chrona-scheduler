@@ -1,4 +1,5 @@
 import { englishDateNames, formatDayLabel, formatDayShortLabel, type DateNames } from "./dateNames";
+import { defaultSchedulerStrings, formatString } from "./stringResources";
 import type { TimeWindow } from "./types";
 
 export { formatDayLabel };
@@ -83,25 +84,36 @@ export interface WeekSpan {
   readonly width: number;
 }
 
-/** ISO-week header cells clipped to the window (Monday boundaries). */
+/**
+ * Week header cells clipped to the window, each starting on the board's
+ * first day of the week (`weekStartsOn`, 0 = Sunday; Monday when absent)
+ * and named in the user's language: `weekLabel` is the weekNumberLabel
+ * string ("W{week}", "KW {week}"). A week is numbered by the ISO week that
+ * holds most of its days, its fourth day: on Monday weeks, the ISO week.
+ */
 export function buildWeekSpans(
   window: TimeWindow,
   pxPerHour: number,
+  weekLabel: string = defaultSchedulerStrings.weekNumberLabel,
+  weekStartsOn = 1,
 ): readonly WeekSpan[] {
+  const first = ((weekStartsOn % 7) + 7) % 7;
   const spans: WeekSpan[] = [];
   let cursor = new Date(window.start.getTime());
   while (cursor.getTime() < window.end.getTime()) {
-    const nextMonday = new Date(cursor.getTime());
-    nextMonday.setHours(0, 0, 0, 0);
-    nextMonday.setDate(
-      nextMonday.getDate() + (7 - ((nextMonday.getDay() + 6) % 7)),
-    );
+    const weekStart = new Date(cursor.getTime());
+    weekStart.setHours(0, 0, 0, 0);
+    weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() - first + 7) % 7));
+    const nextWeek = new Date(weekStart.getTime());
+    nextWeek.setDate(nextWeek.getDate() + 7);
     const spanEnd = new Date(
-      Math.min(nextMonday.getTime(), window.end.getTime()),
+      Math.min(nextWeek.getTime(), window.end.getTime()),
     );
+    const fourthDay = new Date(weekStart.getTime());
+    fourthDay.setDate(fourthDay.getDate() + 3);
     const left = dateToOffset(cursor, window, pxPerHour);
     spans.push({
-      label: `W${isoWeekNumber(cursor)}`,
+      label: formatString(weekLabel, { week: isoWeekNumber(fourthDay) }),
       left,
       width: dateToOffset(spanEnd, window, pxPerHour) - left,
     });

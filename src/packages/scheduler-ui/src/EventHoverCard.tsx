@@ -1,8 +1,12 @@
 import * as React from "react";
 
+import { useBoardHourFormat } from "./boardLocale";
 import { spanMinutes, workedMinutes } from "./spans";
 import { dateNamesFrom, formatDayTimeLabel } from "./dateNames";
 import { FlagGlyph } from "./FlagGlyph";
+import { useBoardExtension } from "./extension";
+import { ShiftMarkNote, useShiftMarks } from "./ShiftMark";
+import { openKindOf } from "./solve";
 import { flagReasonText } from "./stringResources";
 import { useSchedulerStrings } from "./strings";
 
@@ -61,7 +65,10 @@ function formatDuration(event: SchedulerUiEvent): string {
 export function EventHoverCard(props: EventHoverCardProps): JSX.Element {
   const { anchor, bounds, event, resource } = props;
   const strings = useSchedulerStrings();
+  const hourFormat = useBoardHourFormat();
   const dateNames = dateNamesFrom(strings);
+  const shiftMark = useShiftMarks()(event);
+  const extension = useBoardExtension();
   const cardRef = React.useRef<HTMLDivElement | null>(null);
   const [placement, setPlacement] = React.useState<{
     readonly beakLeft: number;
@@ -94,15 +101,15 @@ export function EventHoverCard(props: EventHoverCardProps): JSX.Element {
     setPlacement({ beakLeft, below, left, top });
   }, [anchor, bounds]);
 
-  const entries: readonly { readonly label: string; readonly value: string }[] =
+  const entries: readonly { readonly label: string; readonly value: string; readonly wide?: boolean }[] =
     [
-      { label: strings.start, value: formatDayTimeLabel(event.start, dateNames) },
+      { label: strings.start, value: formatDayTimeLabel(event.start, dateNames, hourFormat) },
       { label: strings.duration, value: formatDuration(event) },
       {
         label: strings.assignedTo,
         value:
           event.status === "needsCover"
-            ? event.onCall === true
+            ? event.onCall === true || openKindOf(event, extension?.openShift) !== undefined
               ? strings.unassigned
               : strings.needsCover
             : (resource?.name ?? event.resourceId),
@@ -110,7 +117,8 @@ export function EventHoverCard(props: EventHoverCardProps): JSX.Element {
       ...(event.requiredTags && event.requiredTags.length > 0
         ? [{ label: strings.requiredSkills, value: event.requiredTags.join(", ") }]
         : []),
-      ...(event.fields ?? []),
+      // An extension's own lines take the fields' place (BoardExtension.hoverEntries).
+      ...(extension?.hoverEntries?.(event) ?? event.fields ?? []),
     ];
 
   return (
@@ -128,9 +136,10 @@ export function EventHoverCard(props: EventHoverCardProps): JSX.Element {
       }}
     >
       <div className="chrona-sched__hover-card-title">{event.title}</div>
+      {shiftMark ? <ShiftMarkNote className="chrona-sched__hover-card-mark" mark={shiftMark} /> : null}
       <dl className="chrona-sched__hover-card-grid">
         {entries.map((entry, index) => (
-          <div key={`${entry.label}-${index}`}>
+          <div className={entry.wide ? "chrona-sched__hover-card-wide" : undefined} key={`${entry.label}-${index}`}>
             <dt>{entry.label}</dt>
             <dd>{entry.value}</dd>
           </div>

@@ -152,6 +152,14 @@ export function startOfWeek(date: Date, weekStartsOn = 1): Date {
   return start;
 }
 
+/**
+ * Top-down draws one day, a column per person: its window is that day,
+ * whatever the interval, and the toolbar offers no other range.
+ */
+export function drawsOneDay(representation: SchedulerRepresentation | undefined): boolean {
+  return representation === "topDown";
+}
+
 /** Window covering the scale anchored at (the day of) `anchor`. */
 export function resolveWindowForScale(
   anchor: Date,
@@ -160,7 +168,7 @@ export function resolveWindowForScale(
   const dayStart = new Date(anchor.getTime());
   dayStart.setHours(0, 0, 0, 0);
 
-  const scale = config.timeScale ?? "day";
+  const scale = drawsOneDay(config.representation) ? "day" : (config.timeScale ?? "day");
   if (scale === "day") {
     return {
       end: new Date(dayStart.getTime() + millisecondsPerDay),

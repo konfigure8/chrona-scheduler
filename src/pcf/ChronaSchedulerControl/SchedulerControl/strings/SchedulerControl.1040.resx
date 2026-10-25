@@ -18,42 +18,6 @@
   <data name="apply" xml:space="preserve">
     <value>Applica</value>
   </data>
-  <data name="assignAction" xml:space="preserve">
-    <value>Assegna a {name}</value>
-  </data>
-  <data name="assignActionNone" xml:space="preserve">
-    <value>Assegna</value>
-  </data>
-  <data name="assignBestOptions" xml:space="preserve">
-    <value>Opzioni migliori</value>
-  </data>
-  <data name="assignEmpty" xml:space="preserve">
-    <value>Nessuna persona trovata.</value>
-  </data>
-  <data name="assignHoursLeft" xml:space="preserve">
-    <value>{left} h residue su {capacity} h</value>
-  </data>
-  <data name="assignNotAvailable" xml:space="preserve">
-    <value>Non disponibile</value>
-  </data>
-  <data name="assignReasonBusy" xml:space="preserve">
-    <value>Già al lavoro {range}</value>
-  </data>
-  <data name="assignReasonHours" xml:space="preserve">
-    <value>Supererebbe {capacity} h</value>
-  </data>
-  <data name="assignReasonUnavailable" xml:space="preserve">
-    <value>Non disponibile {range}</value>
-  </data>
-  <data name="assignSearchPlaceholder" xml:space="preserve">
-    <value>Cerca personale</value>
-  </data>
-  <data name="assignShowEveryone" xml:space="preserve">
-    <value>Mostra tutti ({count})</value>
-  </data>
-  <data name="assignTitle" xml:space="preserve">
-    <value>Assegna personale</value>
-  </data>
   <data name="assignedTo" xml:space="preserve">
     <value>Assegnato a</value>
   </data>
@@ -80,6 +44,9 @@
   </data>
   <data name="legendOnCall" xml:space="preserve">
     <value>Reperibilità</value>
+  </data>
+  <data name="legendName" xml:space="preserve">
+    <value>Legenda</value>
   </data>
   <data name="unassigned" xml:space="preserve">
     <value>Non assegnato</value>
@@ -148,7 +115,7 @@
     <value>Non ora</value>
   </data>
   <data name="conversionOptimize" xml:space="preserve">
-    <value>Ottimizza</value>
+    <value>Pianificazione automatica</value>
   </data>
   <data name="conversionPayloadNote" xml:space="preserve">
     <value>Questo JSON esatto. Nessun invio prima del collegamento.</value>
@@ -160,7 +127,7 @@
     <value>Pianificare un elemento alla volta ignora le interazioni.</value>
   </data>
   <data name="conversionSampleAfter" xml:space="preserve">
-    <value>Dopo l'ottimizzazione</value>
+    <value>Dopo la pianificazione automatica</value>
   </data>
   <data name="conversionSampleBefore" xml:space="preserve">
     <value>Prima</value>
@@ -169,7 +136,7 @@
     <value>{open} elementi da assegnare · {conflicts} conflitti</value>
   </data>
   <data name="conversionSampleTitle" xml:space="preserve">
-    <value>Esempio di ottimizzazione</value>
+    <value>Esempio di esecuzione</value>
   </data>
   <data name="conversionSentNothingElse" xml:space="preserve">
     <value>Nient'altro: niente nomi, note, contatti o record non pertinenti</value>
@@ -178,7 +145,7 @@
     <value>Persone: ID risorsa, competenze, disponibilità, ore e tariffe</value>
   </data>
   <data name="conversionSentTitle" xml:space="preserve">
-    <value>Dati per un'ottimizzazione reale</value>
+    <value>Dati per un'esecuzione reale</value>
   </data>
   <data name="conversionSentWork" xml:space="preserve">
     <value>Attività: orari, requisiti e ID dell'assegnatario</value>
@@ -193,10 +160,13 @@
     <value>Elimina</value>
   </data>
   <data name="deleteConfirmCount" xml:space="preserve">
-    <value>Eliminare {count} elementi? L'azione è irreversibile.</value>
+    <value>Eliminare {count} elementi?</value>
   </data>
   <data name="deleteConfirmMessage" xml:space="preserve">
     <value>Eliminare {title}? L'azione è irreversibile.</value>
+  </data>
+  <data name="deleteConfirmUndone" xml:space="preserve">
+    <value>L’azione è irreversibile.</value>
   </data>
   <data name="deleteConfirmTitle" xml:space="preserve">
     <value>Conferma eliminazione</value>
@@ -235,10 +205,10 @@
     <value>Pagamento scaduto. Proroga fino al {date}</value>
   </data>
   <data name="entitlementLapsed" xml:space="preserve">
-    <value>Abbonamento Chrona scaduto. Ottimizzazione e generazione sospese fino alla regolarizzazione del pagamento.</value>
+    <value>Abbonamento Chrona scaduto. Pianificazione automatica e generazione sospese fino alla regolarizzazione del pagamento.</value>
   </data>
   <data name="entitlementPaused" xml:space="preserve">
-    <value>Ottimizzazione sospesa dal {since}. Chrona non è raggiungibile; puoi continuare a pianificare.</value>
+    <value>Pianificazione automatica sospesa dal {since}. Chrona non è raggiungibile; puoi continuare a pianificare.</value>
   </data>
   <data name="entitlementPlanUsage" xml:space="preserve">
     <value>Piano e utilizzo</value>
@@ -263,15 +233,6 @@
   </data>
   <data name="goToDate" xml:space="preserve">
     <value>Vai alla data</value>
-  </data>
-  <data name="groupByLabel" xml:space="preserve">
-    <value>Raggruppa righe</value>
-  </data>
-  <data name="groupByNone" xml:space="preserve">
-    <value>Nessun gruppo</value>
-  </data>
-  <data name="hideUnscheduledPanel" xml:space="preserve">
-    <value>Nascondi elementi non pianificati</value>
   </data>
   <data name="interval" xml:space="preserve">
     <value>Intervallo</value>
@@ -318,14 +279,8 @@
   <data name="listAnd" xml:space="preserve">
     <value>e</value>
   </data>
-  <data name="menuAssign" xml:space="preserve">
-    <value>Assegna personale…</value>
-  </data>
   <data name="menuDeleteCount" xml:space="preserve">
     <value>Elimina {count} elementi</value>
-  </data>
-  <data name="menuDuplicate" xml:space="preserve">
-    <value>Duplica</value>
   </data>
   <data name="menuMoveTo" xml:space="preserve">
     <value>Sposta a…</value>
@@ -360,6 +315,12 @@
   <data name="menuUnschedule" xml:space="preserve">
     <value>Rimuovi assegnazione</value>
   </data>
+  <data name="menuUnscheduleCount" xml:space="preserve">
+    <value>Rimuovi l’assegnazione di {count} elementi</value>
+  </data>
+  <data name="unscheduleConfirmCount" xml:space="preserve">
+    <value>Mantengono l’orario e tornano in Non pianificati.</value>
+  </data>
   <data name="monthMore" xml:space="preserve">
     <value>+{count} altri</value>
   </data>
@@ -391,10 +352,10 @@
     <value>Collegamento a Chrona fallito: {message}</value>
   </data>
   <data name="msgConnected" xml:space="preserve">
-    <value>Chrona collegato ({limit} ottimizzazioni gratuite al giorno). Avvio della prima prova…</value>
+    <value>Chrona collegato ({limit} esecuzioni gratuite al giorno). Avvio della prima prova…</value>
   </data>
   <data name="msgConnectedUnlimited" xml:space="preserve">
-    <value>Chrona collegato. Avvio della prima ottimizzazione…</value>
+    <value>Chrona collegato. Avvio della prima pianificazione automatica…</value>
   </data>
   <data name="msgCreateFailed" xml:space="preserve">
     <value>Impossibile creare {title} (colonne obbligatorie mancanti?)</value>
@@ -445,7 +406,7 @@
     <value>Ripristinato</value>
   </data>
   <data name="msgResumeChanged" xml:space="preserve">
-    <value>Un'ottimizzazione è terminata mentre eri via, ma i turni sono cambiati. Il risultato non è più applicabile.</value>
+    <value>Una pianificazione automatica è terminata mentre eri via, ma i turni sono cambiati. Il risultato non è più applicabile.</value>
   </data>
   <data name="msgRowCapReached" xml:space="preserve">
     <value>Sono visibili solo le prime {count} righe. Filtra la vista per vedere le altre.</value>
@@ -457,13 +418,13 @@
     <value>{title} selezionato</value>
   </data>
   <data name="msgSessionFailed" xml:space="preserve">
-    <value>Impossibile avviare l'ottimizzazione Chrona: {message}</value>
+    <value>Impossibile avviare la pianificazione automatica: {message}</value>
   </data>
   <data name="msgSolveNoPrivilege" xml:space="preserve">
-    <value>Per ottimizzare serve il ruolo Chrona Scheduler User.</value>
+    <value>La pianificazione automatica richiede il ruolo Chrona Scheduler User.</value>
   </data>
   <data name="msgSolveNoCalendar" xml:space="preserve">
-    <value>Questa vista non ha ancora un calendario Chrona, quindi non si può ottimizzare.</value>
+    <value>Questa vista non ha ancora un calendario Chrona, quindi la pianificazione automatica non può partire.</value>
   </data>
   <data name="msgUndid" xml:space="preserve">
     <value>Modifica annullata</value>
@@ -512,6 +473,12 @@
   </data>
   <data name="periodPrevious" xml:space="preserve">
     <value>Periodo precedente</value>
+  </data>
+  <data name="periodBoundaryLabel" xml:space="preserve">
+    <value>Periodo dal {date}</value>
+  </data>
+  <data name="weekNumberLabel" xml:space="preserve">
+    <value>Sett. {week}</value>
   </data>
   <data name="pinnedNotice" xml:space="preserve">
     <value>Fissato. Sblocca per modificare.</value>
@@ -763,13 +730,13 @@
     <value>Risorsa</value>
   </data>
   <data name="resumeChanged" xml:space="preserve">
-    <value>Un'ottimizzazione è terminata mentre eri via, ma i turni sono cambiati. Il risultato non è più applicabile.</value>
+    <value>Una pianificazione automatica è terminata mentre eri via, ma i turni sono cambiati. Il risultato non è più applicabile.</value>
   </data>
   <data name="resumeDiscard" xml:space="preserve">
     <value>Scarta</value>
   </data>
   <data name="resumeFinished" xml:space="preserve">
-    <value>Un'ottimizzazione è terminata mentre eri via.</value>
+    <value>Una pianificazione automatica è terminata mentre eri via.</value>
   </data>
   <data name="resumeFollow" xml:space="preserve">
     <value>Segui</value>
@@ -778,7 +745,7 @@
     <value>Rivedi</value>
   </data>
   <data name="resumeRunning" xml:space="preserve">
-    <value>Un'ottimizzazione è in corso per questi turni.</value>
+    <value>Una pianificazione automatica è in corso per questi turni.</value>
   </data>
   <data name="rosterOpenShifts" xml:space="preserve">
     <value>Turni non assegnati</value>
@@ -786,29 +753,26 @@
   <data name="save" xml:space="preserve">
     <value>Salva</value>
   </data>
-  <data name="savedViews" xml:space="preserve">
-    <value>Viste</value>
-  </data>
   <data name="solve" xml:space="preserve">
-    <value>Ottimizza</value>
+    <value>Pianificazione automatica</value>
   </data>
   <data name="solveCapabilitiesLine" xml:space="preserve">
-    <value>Ottimizzazione con: {list}</value>
+    <value>Pianificazione automatica con: {list}</value>
   </data>
   <data name="solveFailed" xml:space="preserve">
-    <value>Ottimizzazione fallita: {message}</value>
+    <value>Pianificazione automatica non riuscita: {message}</value>
   </data>
   <data name="solveQuotaExhausted" xml:space="preserve">
-    <value>Ottimizzazioni gratuite di oggi esaurite. Torna domani o passa al piano illimitato.</value>
+    <value>Esecuzioni gratuite di oggi esaurite. Torna domani o passa al piano illimitato.</value>
   </data>
   <data name="solveQuotaRemaining" xml:space="preserve">
-    <value>Restano {remaining} ottimizzazioni gratuite su {limit} oggi</value>
+    <value>Restano {remaining} esecuzioni gratuite su {limit} oggi</value>
   </data>
   <data name="solveQuotaUpgrade" xml:space="preserve">
     <value>Cambia piano</value>
   </data>
   <data name="solveSolving" xml:space="preserve">
-    <value>Ottimizzazione…</value>
+    <value>Pianificazione automatica…</value>
   </data>
   <data name="solveStop" xml:space="preserve">
     <value>Interrompi e rivedi</value>
@@ -870,6 +834,9 @@
   <data name="unscheduleConfirmMessage" xml:space="preserve">
     <value>Rimuovere l'assegnazione di {title}? Il turno mantiene l'orario e torna in Non pianificati per riassegnarlo.</value>
   </data>
+  <data name="unscheduleConfirmCountTitle" xml:space="preserve">
+    <value>Rimuovere l’assegnazione di {count} elementi?</value>
+  </data>
   <data name="unscheduleConfirmTitle" xml:space="preserve">
     <value>Rimuovi assegnazione</value>
   </data>
@@ -896,9 +863,6 @@
   </data>
   <data name="unscheduledTitle" xml:space="preserve">
     <value>Non pianificati</value>
-  </data>
-  <data name="unscheduledToggle" xml:space="preserve">
-    <value>Non pianificati ({count})</value>
   </data>
   <data name="weekdaysShort" xml:space="preserve">
     <value>dom|lun|mar|mer|gio|ven|sab</value>
@@ -958,7 +922,7 @@
     <value>Fissato (facoltativo)</value>
   </data>
   <data name="Prop_Pinned_Desc" xml:space="preserve">
-    <value>Colonna Sì/No. Una riga fissata mantiene persona e orario durante l'ottimizzazione.</value>
+    <value>Colonna Sì/No. Una riga fissata mantiene persona e orario nella pianificazione automatica.</value>
   </data>
   <data name="Prop_Bundle" xml:space="preserve">
     <value>Gruppo collegato (facoltativo)</value>
@@ -976,7 +940,7 @@
     <value>Provenienza (facoltativa)</value>
   </data>
   <data name="Prop_Provenance_Desc" xml:space="preserve">
-    <value>Colonna testo o scelta che registra chi ha modificato la riga: persona o ottimizzatore.</value>
+    <value>Colonna testo o scelta che registra chi ha modificato la riga: persona o pianificazione automatica.</value>
   </data>
   <data name="Prop_WindowStart" xml:space="preserve">
     <value>Inizio finestra (facoltativo)</value>
@@ -1204,7 +1168,7 @@
     <value>{name} si adatta altrettanto bene.</value>
   </data>
   <data name="whyNotVerdictEqualReview" xml:space="preserve">
-    <value>{name} si adatta altrettanto bene. L'ottimizzazione ha dovuto scegliere.</value>
+    <value>{name} si adatta altrettanto bene. La pianificazione automatica ha dovuto scegliere.</value>
   </data>
   <data name="whyNotVerdictBetter" xml:space="preserve">
     <value>{name} si adatta meglio.</value>

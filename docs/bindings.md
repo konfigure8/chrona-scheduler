@@ -35,11 +35,11 @@ A row with no start and no end waits in the unscheduled list under No date; drag
 | Group | A text or choice column | Buckets rows, for example by team. |
 | Subgroup | A text or choice column | The second lane level under Group. |
 | Role | A lookup to the Role table (Chrona Workforce Scheduler) | The role the row needs; people are matched by the roles they hold. |
-| Pinned | A Yes/No column | A pinned row keeps its person and time when optimizing, and a pinned open row stays open. |
+| Pinned | A Yes/No column | A pinned row keeps its person and time when Auto Schedule runs, and a pinned open row stays open. |
 | Duration | A whole number column, in minutes | How long a row with no start and end lasts once dropped on the board. Without it, one hour. |
 | Bundle | A text column | Links rows that are scheduled together. |
 | Publish state | A text or choice column | The row's lifecycle, for example draft or published. |
-| Provenance | A text or choice column | The scheduler writes who changed the row: a person or the optimizer. |
+| Provenance | A text or choice column | The scheduler writes who changed the row: a person or Auto Schedule. |
 | Window start | A date and time column | Earliest start the row may move to. |
 | Window end | A date and time column | Latest end the row may move to. |
 | Template | A lookup column | The template the row was generated from. Needs Chrona Workforce Scheduler. |

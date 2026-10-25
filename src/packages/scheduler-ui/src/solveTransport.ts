@@ -21,6 +21,7 @@ import type { SolveCapability } from "./capabilities";
 import type { ResourceKeyScheme } from "./redaction";
 import type { ScheduleProposal, SolveRunStatus } from "./solve";
 import { isPinned } from "./locks";
+import { boardRules, type ExtensionMatchKinds } from "./ruleRegistry";
 import {
   isMustRule,
   isShouldRule,
@@ -234,6 +235,15 @@ function readMustBreaches(value: unknown): MustBreachCounts | undefined {
   const weeklyRest = record.weeklyRest ?? 0;
   const averageHours = record.averageHours ?? 0;
   const nights = record.nights ?? 0;
+  // A package's own rows (ruleRegistry.ts), by name; an API from before a row sends none: 0.
+  const extensionCounts: Record<string, number> = {};
+  for (const entry of boardRules().mustRows ?? []) {
+    const count = (record as Readonly<Record<string, unknown>>)[entry.row] ?? 0;
+    if (!isCount(count)) {
+      return undefined;
+    }
+    extensionCounts[entry.row] = count;
+  }
   const { overlap, splitParts } = other;
   if (
     !isCount(daysInARow) ||
@@ -261,6 +271,7 @@ function readMustBreaches(value: unknown): MustBreachCounts | undefined {
     }
   }
   return {
+    ...extensionCounts,
     averageHours,
     daysInARow,
     daysOff,
@@ -284,6 +295,7 @@ const NIGHT_KINDS: ReadonlySet<string> = new Set<NightRuleKind>([
   "restAfterNights",
 ]);
 
+
 /** One readable match of a rule this board names; anything else is left out. */
 function readMatch(value: unknown): ScheduleRuleMatch | undefined {
   const record = asRecord(value);
@@ -304,6 +316,10 @@ function readMatch(value: unknown): ScheduleRuleMatch | undefined {
   return {
     ...(isTextList(days) ? { days } : {}),
     ...(rule === "nights" && isText(kind) && NIGHT_KINDS.has(kind) ? { kind: kind as NightRuleKind } : {}),
+    // A package's own rule names its kinds (ruleRegistry.ts).
+    ...(rule !== "nights" && isText(kind) && boardRules().matchKinds?.[rule]?.includes(kind)
+      ? { kind: kind as keyof ExtensionMatchKinds }
+      : {}),
     ...(isText(resourceId) ? { resourceId } : {}),
     rule,
     shiftIds,

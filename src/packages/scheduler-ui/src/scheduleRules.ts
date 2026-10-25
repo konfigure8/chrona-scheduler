@@ -11,9 +11,11 @@
  * are about the pairing. A scenario package adds its own rules
  * (extraRules), each taking its place in the order by number.
  */
+import { formatClock } from "./clock";
 import type { RuleResult } from "./interactions";
 import type { DragResult } from "./interactions";
 import { formatString } from "./stringResources";
+import type { HourFormat } from "./timeAxis";
 import type { SchedulerResource, SchedulerUiEvent } from "./types";
 
 export type RulePolicy = "block" | "off" | "warn";
@@ -301,6 +303,8 @@ export interface RuleEvaluationInput {
   >;
   /** A scenario package's rules, in the same time space as `proposed`. */
   readonly extraRules?: readonly ScheduleRule[];
+  /** The user's clock for the times a reason writes; 24-hour when absent. */
+  readonly hourFormat?: HourFormat;
   readonly proposed: DragResult;
   readonly resources: readonly SchedulerResource[];
   readonly strings?: RuleReasonStrings;
@@ -347,10 +351,12 @@ export function evaluateScheduleRules(
     });
     if (!inside) {
       const pad = (value: number): string => String(value).padStart(2, "0");
-      // 24:00 reads as the end of the day; later ends read as next morning's clock.
+      // 24:00 reads as the end of the day (12am on a 12-hour clock); later ends read as next morning's clock.
       const clock = (hours: number): string => {
         const minutes = Math.round((hours > 24 ? hours - 24 : hours) * 60);
-        return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
+        return input.hourFormat === "12"
+          ? formatClock(new Date(2000, 0, 1, 0, minutes % (24 * 60)), "12")
+          : `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
       };
       found.push({
         order: scheduleRuleOrder.workingHours,

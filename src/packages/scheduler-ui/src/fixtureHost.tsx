@@ -2,12 +2,11 @@
  * The fixture-backed host, extracted so every harness (Vite dev
  * harness, PCF sandbox preview) consumes ONE implementation of the demo
  * host semantics - status flips, rules, layout widths, preferences,
- * undo, saved views, and the display-timezone boundary - instead of
- * drifting hand-written copies. This is the fixture side of the Phase
- * F1 HostDataSource boundary; the Dataverse adapter replaces it behind
- * the same Surface props (saved views come from chr_chronaschedulerview
- * rows keyed to native view ids). A scenario package's fixture host
- * builds on this one through its extension options.
+ * undo, and the display-timezone boundary - instead of drifting
+ * hand-written copies. This is the fixture side of the Phase F1
+ * HostDataSource boundary; the Dataverse adapter replaces it behind
+ * the same Surface props. A scenario package's fixture host builds on
+ * this one through its extension options.
  */
 import * as React from "react";
 
@@ -76,37 +75,6 @@ import {
   type SchedulerPeriodConfig,
 } from "./periods";
 
-/**
- * Demo saved views proving the two timezone modes end to end: per-site
- * planning views pin a resource filter plus a display zone (mode 1);
- * the "all" view is the cross-site overview in one frame (mode 2). In
- * the Dataverse adapter these are chr_chronaschedulerview rows keyed
- * to native view ids.
- */
-export interface FixtureView {
-  /** Optional filter: only rows/work matching this set value. */
-  readonly filter?: { readonly set: string; readonly value: string };
-  readonly id: string;
-  readonly label: string;
-  readonly zone: string;
-}
-
-export const fixtureViews: readonly FixtureView[] = [
-  { id: "all", label: "All teams - site time", zone: "site" },
-  {
-    filter: { set: "Teams", value: "Front of house" },
-    id: "foh-akl",
-    label: "Front of house - Auckland",
-    zone: "Pacific/Auckland",
-  },
-  {
-    filter: { set: "Teams", value: "Kitchen" },
-    id: "kitchen-adl",
-    label: "Kitchen - Adelaide",
-    zone: "Australia/Adelaide",
-  },
-];
-
 interface UndoEntry {
   readonly after: readonly SchedulerUiEvent[];
   readonly before: readonly SchedulerUiEvent[];
@@ -115,12 +83,10 @@ interface UndoEntry {
 export interface FixtureHostOptions {
   /** Preference persistence scope; omit for an isolated default. */
   readonly preferenceKey?: string;
-  /** Maker-default grouping (ordered set names) before any user choice. */
+  /** Maker grouping (ordered set names); without it, the data's first set. */
   readonly defaultGroupBy?: readonly string[];
   /** Maker colours for tag pills; their keys are the dialogs' tag choices. */
   readonly tagColors?: TagColorMap;
-  /** Bench data-editor override for the saved views. */
-  readonly views?: readonly FixtureView[];
   /** Weekend columns shown (default true; also shades them off). */
   readonly showWeekends?: boolean;
   /**
@@ -201,7 +167,7 @@ export interface FixtureHostResult {
   /** The person's remembered choices for this board. */
   readonly preferences: PreferenceStore;
   readonly redo: () => void;
-  /** Manual zone override (the saved view applies its own on switch). */
+  /** Manual zone override. */
   readonly setDisplayZone: (zone: string) => void;
   /** A board date back to the real moment it stands for, as the wire carries it. */
   readonly toStored: (display: Date) => Date;
@@ -269,7 +235,6 @@ export function useFixtureScheduleHost(
   const defaultFixture = React.useMemo(() => buildPlainFixture(), []);
   const fixture = options?.dataset ?? defaultFixture;
   const hostTagColors = options?.tagColors;
-  const hostViews = options?.views ?? fixtureViews;
   const store = React.useMemo(
     () =>
       createPreferenceStore(
@@ -348,42 +313,11 @@ export function useFixtureScheduleHost(
     React.useState<UnscheduledFilter>(
       stored?.unscheduledInViewOnly ? "window" : "all",
     );
-  // Primary grouping set: "" = flat, undefined = data default.
-  const [groupBySet, setGroupBySet] = React.useState<string | undefined>(
-    stored?.groupBy,
-  );
-  const [panelVisible, setPanelVisibleState] = React.useState<boolean>(
-    !stored?.unscheduledPanelHidden,
-  );
   // The review's scorecard, open or folded, remembered per person per view.
   const [scorecardVisible, setScorecardVisibleState] = React.useState<boolean>(
     !stored?.scorecardHidden,
   );
-  const [activeViewId, setActiveViewIdState] = React.useState(
-    stored?.activeViewId ?? "all",
-  );
-  // The restored saved view brings its zone with it.
-  const [displayZone, setDisplayZone] = React.useState(
-    () =>
-      hostViews.find(
-        (view) => view.id === (stored?.activeViewId ?? "all"),
-      )?.zone ?? "site",
-  );
-  const activeView =
-    hostViews.find((view) => view.id === activeViewId) ?? hostViews[0];
-
-  const setActiveViewId = React.useCallback(
-    (next: string): void => {
-      setActiveViewIdState(next);
-      store.save({ activeViewId: next });
-      // A view change applies the view's zone; manual overrides after.
-      const view = hostViews.find((candidate) => candidate.id === next);
-      if (view) {
-        setDisplayZone(view.zone);
-      }
-    },
-    [store],
-  );
+  const [displayZone, setDisplayZone] = React.useState("site");
 
   /*
    * The host-boundary contract the Dataverse adapter follows: stored
@@ -624,27 +558,16 @@ export function useFixtureScheduleHost(
   const scheduled = displayEvents.filter(
     (event) => !event.undated && event.status !== "needsCover",
   );
-  const viewFilter = activeView?.filter;
   const undated = displayEvents.filter((event) => event.undated);
   const unscheduled = displayEvents.filter(
-    (event) =>
-      !event.undated &&
-      event.status === "needsCover" &&
-      (!viewFilter || event.groups?.[viewFilter.set] === viewFilter.value),
+    (event) => !event.undated && event.status === "needsCover",
   );
   const resources = React.useMemo(
-    () =>
-      fixture.resources.filter(
-        (resource) =>
-          resource.id !== "r-open" &&
-          (!viewFilter ||
-            resource.groups?.[viewFilter.set] === viewFilter.value),
-      ),
-    [fixture, viewFilter],
+    () => fixture.resources.filter((resource) => resource.id !== "r-open"),
+    [fixture],
   );
 
   const surfaceProps: Omit<SchedulerSurfaceProps, "view"> = {
-    activeViewId,
     availableTags: hostTagColors ? Object.keys(hostTagColors).sort() : undefined,
     anchor,
     announcement: message,
@@ -655,7 +578,6 @@ export function useFixtureScheduleHost(
     initialScrollHour: workingStartHour,
     interval,
     now: toDisplay(fixture.now),
-    onActiveViewChange: setActiveViewId,
     onAnchorChange: setAnchor,
     // A Roster grid showing the roster period steps by the period and
     // offers no interval switcher.
@@ -782,23 +704,6 @@ export function useFixtureScheduleHost(
       );
     },
     onIntervalChange: setIntervalState,
-    onAssignEvent: (event, resourceId) => {
-      const name =
-        fixture.resources.find((resource) => resource.id === resourceId)
-          ?.name ?? resourceId;
-      applyEvents(
-        events.map((candidate) =>
-          candidate.id === event.id
-            ? {
-                ...candidate,
-                resourceId,
-                status: "assigned" as const,
-              }
-            : candidate,
-        ),
-        `Assigned ${event.title} to ${name}`,
-      );
-    },
     onUnscheduleEvent: (event) => {
       // The lane and panel bucket by the event's classification map;
       // stamp it from the row the shift is leaving (the Dataverse
@@ -822,29 +727,8 @@ export function useFixtureScheduleHost(
         `Unscheduled ${event.title}`,
       );
     },
-    // Grouping is only offered when the data actually carries
-    // classification sets (the plain gallery fixture does not).
-    ...(fixture.resources.some(
-      (resource) => Object.keys(resource.groups ?? {}).length > 0,
-    )
-      ? {
-          groupBy:
-            groupBySet === undefined
-              ? options?.defaultGroupBy
-              : groupBySet === ""
-                ? []
-                : [groupBySet],
-          onGroupByChange: (set: string | undefined): void => {
-            setGroupBySet(set ?? "");
-            store.save({ groupBy: set ?? "" });
-          },
-        }
-      : {}),
-    unscheduledPanelVisible: panelVisible,
-    onUnscheduledPanelVisibleChange: (visible) => {
-      setPanelVisibleState(visible);
-      store.save({ unscheduledPanelHidden: !visible });
-    },
+    // The maker's grouping; without one, the board groups by the data's first set.
+    groupBy: options?.defaultGroupBy,
     scorecardVisible,
     onScorecardVisibleChange: (visible) => {
       setScorecardVisibleState(visible);
@@ -886,9 +770,6 @@ export function useFixtureScheduleHost(
     unscheduledPanelWidth: panelWidth,
     validateChange: (event, proposed) =>
       fixtureValidateChange(event, proposed, ruleData),
-    views: options?.plain
-      ? undefined
-      : hostViews.map((view) => ({ id: view.id, label: view.label })),
     window,
     wireTimeZone: zoneId,
   };

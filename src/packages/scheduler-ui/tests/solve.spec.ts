@@ -3,7 +3,10 @@ import {
   diffProposal,
   ghostIdOf,
   isGhostEvent,
+  openKindOf,
+  openShiftNote,
   isOpenRequired,
+  openShiftClass,
   openShiftCount,
   openShiftsAfter,
   openShiftsLeftOut,
@@ -440,6 +443,36 @@ function openOnCallShiftIsNotRequiredWork(): void {
   console.log("on-call open shift tests passed");
 }
 openOnCallShiftIsNotRequiredWork();
+
+/** An extension's own kind of open shift (BoardExtension.openShift): not required work, drawn its way. */
+function openShiftOfAnExtensionsKindIsNotRequiredWork(): void {
+  const window = { end: new Date(2026, 7, 18), start: new Date(2026, 7, 17) };
+  const own: SchedulerUiEvent = {
+    end: new Date(2026, 7, 17, 14),
+    id: "own",
+    resourceId: "open",
+    start: new Date(2026, 7, 17, 6),
+    status: "needsCover",
+    title: "Floor",
+  };
+  const required: SchedulerUiEvent = { ...own, id: "required" };
+  const kindOf = (event: SchedulerUiEvent): { kind: string; label: string } | undefined =>
+    event.id === "own" ? { kind: "quiet", label: "Quiet" } : undefined;
+  assertEqual(isOpenRequired(own, kindOf), false);
+  // Without the extension, required work.
+  assertEqual(isOpenRequired(own), true);
+  assertEqual(openKindOf(own, kindOf)?.kind, "quiet");
+  assertEqual(openKindOf(required, kindOf), undefined);
+  assertEqual(openShiftClass(own, "bar", kindOf), "chrona-sched__bar--quiet-open");
+  assertEqual(openShiftClass(required, "chip", kindOf), "chrona-sched__chip--needs-cover");
+  assertEqual(openShiftNote(own, { legendNeedsCover: "Needs cover", legendOnCall: "On call" }, kindOf), "Quiet");
+  const proposal: ScheduleProposal = { events: [own, required], feasible: true, runId: "run-own", window };
+  assertEqual(openShiftsAfter(proposal, [], { openKind: kindOf }).map((event) => event.id).join(","), "required");
+  // Filled against needed counts required work only.
+  assertEqual(proposalScore(proposal, [], { openKind: kindOf }, window).total, 1);
+  console.log("extension open shift kind tests passed");
+}
+openShiftOfAnExtensionsKindIsNotRequiredWork();
 
 /*
  * Matt 2026-10-13: open shifts that had ended, or are pinned, stay out of

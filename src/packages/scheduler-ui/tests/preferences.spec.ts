@@ -45,8 +45,6 @@ function roundTripsPreferences(): void {
   // Layout widths and the panel scope ride the same blob.
   store.save({ resourceColumnWidth: 248, unscheduledPanelWidth: 320 });
   store.save({ unscheduledInViewOnly: true });
-  store.save({ activeViewId: "kitchen-adl" });
-  assertEqual(store.load()?.activeViewId, "kitchen-adl");
   assertEqual(store.load()?.resourceColumnWidth, 248);
   assertEqual(store.load()?.unscheduledPanelWidth, 320);
   assertEqual(store.load()?.unscheduledInViewOnly, true);

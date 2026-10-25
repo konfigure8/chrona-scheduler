@@ -1,3 +1,4 @@
+import { compareSameStart, type OpenShiftKindOf } from "./solve";
 import { englishDateNames, formatDayLabel, type DateNames } from "./dateNames";
 import type { SchedulerUiEvent } from "./types";
 
@@ -80,10 +81,14 @@ export interface AgendaDayGroup {
   readonly label: string;
 }
 
+/** The minute a shift starts: shifts in the same minute start together. */
+const minuteOf = (event: SchedulerUiEvent): number => Math.floor(event.start.getTime() / 60_000);
+
 /** Events grouped by calendar day, both sorted, empty days omitted. */
 export function groupEventsByDay(
   events: readonly SchedulerUiEvent[],
   names: DateNames = englishDateNames,
+  kindOf?: OpenShiftKindOf,
 ): readonly AgendaDayGroup[] {
   const byDay = new Map<number, SchedulerUiEvent[]>();
   for (const event of events) {
@@ -99,7 +104,7 @@ export function groupEventsByDay(
     .map(([key, dayEvents]) => ({
       date: new Date(key),
       events: [...dayEvents].sort(
-        (first, second) => first.start.getTime() - second.start.getTime(),
+        (first, second) => minuteOf(first) - minuteOf(second) || compareSameStart(first, second, kindOf),
       ),
       label: formatDayLabel(new Date(key), names),
     }));

@@ -38,6 +38,7 @@ import {
   unredactCandidateCheck,
   unredactSolution,
   type RedactedProblem,
+  type RedactionExtension,
   type ResourcePlaceholderKey,
 } from "./redaction";
 import type { SolveCapability } from "./capabilities";
@@ -84,9 +85,17 @@ export interface SolveSession {
   readonly resourcePlaceholders?: ResourcePlaceholderKey;
 }
 
-/** HTTP 402 quota_exceeded (F19: enforcement is server-side; this
- * only carries the fact to the UI). */
-export class SolveQuotaExceededError extends Error {}
+/** HTTP 402 (F19: enforcement is server-side; this only carries the
+ * fact to the UI). `code` is the server's reason, as it sends it;
+ * quota_exceeded for the free daily allowance. */
+export class SolveQuotaExceededError extends Error {
+  constructor(
+    message: string,
+    readonly code?: string,
+  ) {
+    super(message);
+  }
+}
 
 /** HTTP 409 run_in_flight: another run is already queued or running
  * for this calendar; the UI follows that one instead. */
@@ -125,6 +134,8 @@ export interface SolveRunOptions {
    * can follow the run if the page is left before it completes. */
   readonly onSubmitted?: (runId: string) => void;
   readonly problem: ScheduleProblemV2;
+  /** A scenario package's own problem facts, sent with the board's (RedactionExtension). */
+  readonly redaction?: RedactionExtension;
   readonly runToken: string;
   readonly session: SolveSession;
   /** Aborting it stops the submit or the polling with SolveCancelledError. */
@@ -219,7 +230,7 @@ function throwForStatus(response: Response, body: { code?: string; message?: str
     throw new SolveSessionExpiredError("Solve session expired.");
   }
   if (response.status === 402) {
-    throw new SolveQuotaExceededError(body.message ?? "Daily free optimization limit reached.");
+    throw new SolveQuotaExceededError(body.message ?? "Daily free optimization limit reached.", body.code);
   }
   if (response.status === 409 && body.code === "run_in_flight" && body.runId) {
     throw new SolveInFlightError(body.runId, (body.status as SolveSessionRunStatus | undefined) ?? "running");
@@ -230,7 +241,7 @@ function throwForStatus(response: Response, body: { code?: string; message?: str
 /** Submit the problem under the session and poll until the solver answers. */
 export async function runSolve(options: SolveRunOptions): Promise<ScheduleProposal> {
   const fetchImpl = options.fetchImpl ?? fetch;
-  const redaction = await redactProblemForTenant(options.problem, options.session.resourcePlaceholders);
+  const redaction = await redactProblemForTenant(options.problem, options.session.resourcePlaceholders, options.redaction);
   const request = buildProductRunRequest(redaction.problem, {
     calendarName: options.calendarName,
     resourceKeyScheme: redaction.resourceKeyScheme,
@@ -416,6 +427,8 @@ export interface CandidateCheckOptions {
   readonly fetchImpl?: typeof fetch;
   /** The roster as it would be applied: the current one plus the kept changes. */
   readonly problem: ScheduleProblemV2;
+  /** A scenario package's own problem facts, sent with the board's (RedactionExtension). */
+  readonly redaction?: RedactionExtension;
   /** The version of the roster `problem` was built from. */
   readonly rosterVersion: RosterVersion;
   /** Names the request in the API's log (X-Request-Id). */
@@ -462,7 +475,7 @@ function retryAfterSeconds(value: string | null): number | undefined {
 export async function checkCandidate(options: CandidateCheckOptions): Promise<CandidateCheckResult> {
   const fetchImpl = options.fetchImpl ?? fetch;
   const changed = (): boolean => options.currentRosterVersion() !== options.rosterVersion;
-  const redaction = await redactProblemForTenant(options.problem, options.session.resourcePlaceholders);
+  const redaction = await redactProblemForTenant(options.problem, options.session.resourcePlaceholders, options.redaction);
   const request = buildCandidateRequest(redaction.problem, redactCandidate(options.candidate, redaction), {
     calendarName: options.calendarName,
     resourceKeyScheme: redaction.resourceKeyScheme,

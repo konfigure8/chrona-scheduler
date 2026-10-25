@@ -10,6 +10,8 @@ import {
 } from "@fluentui/react-icons";
 import * as React from "react";
 
+import { useBoardHourFormat, useBoardLocale } from "./boardLocale";
+import { formatClockRange } from "./clock";
 import { formatHours } from "./compactChip";
 import { dateNamesFrom, formatDayLabel } from "./dateNames";
 import { NightGlyph } from "./NightGlyph";
@@ -81,9 +83,21 @@ export interface ProposalPanelProps {
 /** Up to this many changes the list is a checklist; above it, one line per person. */
 export const PROPOSAL_CHECKLIST_LIMIT = 24;
 
-function formatTimeRange(event: SchedulerUiEvent): string {
-  const pad = (value: number): string => value.toString().padStart(2, "0");
-  return `${pad(event.start.getHours())}:${pad(event.start.getMinutes())}-${pad(event.end.getHours())}:${pad(event.end.getMinutes())}`;
+/**
+ * A drill-down heading ("Minimum engagement (1) · fixed"): its status after the last " · " keeps to
+ * one line, so a long row name never leaves "· fixed" alone on the next.
+ */
+function drillHeadingParts(heading: string): JSX.Element | string {
+  const cut = heading.lastIndexOf(" · ");
+  if (cut < 0) {
+    return heading;
+  }
+  return (
+    <>
+      {heading.slice(0, cut)}
+      <span className="chrona-sched__drill-status">{heading.slice(cut)}</span>
+    </>
+  );
 }
 
 /** A reason line: a 16px status icon and the reason, one treatment per state (design Pass 5). */
@@ -120,6 +134,9 @@ function ReasonLine(props: { readonly reason: ProposalReason }): JSX.Element {
 export function ProposalPanel(props: ProposalPanelProps): JSX.Element {
   const mountNode = useFullScreen()?.mountNode;
   const strings = useSchedulerStrings();
+  const locale = useBoardLocale();
+  const hourFormat = useBoardHourFormat();
+  const formatTimeRange = (event: SchedulerUiEvent): string => formatClockRange(event.start, event.end, hourFormat);
   const names = React.useMemo(() => dateNamesFrom(strings), [strings]);
   const { drillDown, entries, onFocus, onKeepAll, onToggleDrop, resourceNameById } = props;
   const nameOf = (resourceId: string): string => resourceNameById.get(resourceId) ?? resourceId;
@@ -263,7 +280,7 @@ export function ProposalPanel(props: ProposalPanelProps): JSX.Element {
             ref={drillHeading}
             tabIndex={-1}
           >
-            {drillDown.heading}
+            {drillHeadingParts(drillDown.heading)}
           </div>
           <Button
             appearance="subtle"
@@ -311,27 +328,30 @@ export function ProposalPanel(props: ProposalPanelProps): JSX.Element {
     >
       <div className="chrona-sched__proposal-head">
         <div className="chrona-sched__unscheduled-title">{strings.proposalPanelTitle}</div>
-        {!summarised && current.length > 0 && onKeepAll ? (
-          <Button
-            appearance="subtle"
-            data-testid="proposal-keep-all"
-            onClick={() => onKeepAll(!allKept)}
-            size="small"
-          >
-            {allKept ? strings.proposalKeepNone : strings.proposalKeepAll}
-          </Button>
-        ) : null}
-        {props.onCollapse ? (
-          <Tooltip content={strings.panelCollapse} mountNode={mountNode} relationship="label">
+        {/* The buttons keep together: beside the title, or on the next line when it needs the room. */}
+        <div className="chrona-sched__proposal-head-actions">
+          {!summarised && current.length > 0 && onKeepAll ? (
             <Button
               appearance="subtle"
-              data-testid="panel-collapse"
-              icon={<PanelRightContract20Regular />}
-              onClick={props.onCollapse}
+              data-testid="proposal-keep-all"
+              onClick={() => onKeepAll(!allKept)}
               size="small"
-            />
-          </Tooltip>
-        ) : null}
+            >
+              {allKept ? strings.proposalKeepNone : strings.proposalKeepAll}
+            </Button>
+          ) : null}
+          {props.onCollapse ? (
+            <Tooltip content={strings.panelCollapse} mountNode={mountNode} relationship="label">
+              <Button
+                appearance="subtle"
+                data-testid="panel-collapse"
+                icon={<PanelRightContract20Regular />}
+                onClick={props.onCollapse}
+                size="small"
+              />
+            </Tooltip>
+          ) : null}
+        </div>
       </div>
       {props.countsOnly ? (
         <div
@@ -376,11 +396,11 @@ export function ProposalPanel(props: ProposalPanelProps): JSX.Element {
                   <span className="chrona-sched__proposal-detail">
                     {line.changes === 1
                       ? formatString(strings.proposalPersonShiftOne, {
-                          hours: formatHours(line.minutes),
+                          hours: formatHours(line.minutes, locale),
                         })
                       : formatString(strings.proposalPersonShifts, {
                           count: String(line.changes),
-                          hours: formatHours(line.minutes),
+                          hours: formatHours(line.minutes, locale),
                         })}
                   </span>
                 </li>

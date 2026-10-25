@@ -237,6 +237,20 @@ const onCallRedaction = redactProblem(problemFromSchedule({
 }));
 assertEqual(onCallRedaction.problem.shifts[0]?.onCall, true, "the on-call mark kept");
 assertEqual(onCallRedaction.problem.shifts[1]?.onCall, undefined, "an ordinary shift carries none");
+// A scenario package's own facts (RedactionExtension): its hooks' facts travel, a person only by their key;
+// the board's own fields (id, title) stay the board's.
+const plain = problemFromSchedule({ events, resources, window: { end: at(24), start: at(0) } });
+const extended = redactProblem(plain, {
+  agreement: () => ({ term: "x" }),
+  problem: (problem, resourceKey) => ({ keys: problem.resources.map((resource) => resourceKey(resource.id) ?? "home"), gone: resourceKey("r-gone") ?? "home" }),
+  shift: (shift) => ({ id: "leak", mark: shift.id === plain.shifts[0]?.id }),
+});
+const extendedWire = extended.problem as unknown as Record<string, unknown> & { shifts: readonly Record<string, unknown>[] };
+assertEqual(JSON.stringify(extendedWire.keys), JSON.stringify(["p-1", "p-2"]), "people only by their key");
+assertEqual(extendedWire.gone, "home", "a person the problem does not hold has no key");
+assertEqual(extendedWire.shifts[0]?.mark, true, "a shift's own fact kept");
+assertEqual(extendedWire.shifts[0]?.id, "w-1", "the board's id wins over an extension's");
+assertEqual("keys" in redaction.problem, false, "no extension, no facts");
 
 // The run's rule checks map back to the real person and shifts; days and
 // counts stay as they are, and unknown ids pass through.
@@ -392,6 +406,24 @@ void (async () => {
   assertEqual(morning?.split?.id, "s-1", "F48 the split id is a pseudonym");
   assertEqual(JSON.stringify(sent.problem).includes(splitId), false, "F48 the real split id stays home");
   assertEqual(evening?.breaks, undefined, "F48 a part without breaks sends none");
+
+  // F126: the meter of people on published rosters hashes people outside the
+  // browser with the same scheme; its tests pin these same values, so a
+  // change here must change both.
+  const pinned: Array<[string, string, string]> = [
+    ["c2FtcGxlLXRlbmFudC1rZXktZm9yLXRlc3RzLW9ubHk", "6f1c2a3b-4d5e-4f60-8a71-92b3c4d5e6f7", "r-4KImxkTFsN3DYg1bbdrqdg"],
+    ["c2FtcGxlLXRlbmFudC1rZXktZm9yLXRlc3RzLW9ubHk", "{6F1C2A3B-4D5E-4F60-8A71-92B3C4D5E6F7}", "r-4KImxkTFsN3DYg1bbdrqdg"],
+    ["c2FtcGxlLXRlbmFudC1rZXktZm9yLXRlc3RzLW9ubHk", "  00000000-0000-4000-8000-000000000001 ", "r-9W_tMqKq0zDJctzfQqJN6A"],
+    ["3q2-7wABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhs", "6f1c2a3b-4d5e-4f60-8a71-92b3c4d5e6f7", "r-8ZdygRXxYlpWUSCeNsjHBQ"],
+    ["3q2-7wABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhs", "c0ffee00-0000-4000-8000-0000000000aa", "r-Pj5sqORNxrxasLZGe534ow"],
+  ];
+  for (const [key, id, expected] of pinned) {
+    const one = await redactProblemForTenant(
+      { ...problem, resources: [{ ...problem.resources[0]!, id }], shifts: [] },
+      { key, scheme: "hmac-sha256-v1" },
+    );
+    assertEqual(one.problem.resources[0]?.id, expected, `pinned placeholder for ${id.trim()}`);
+  }
   console.log("redaction tests passed");
 })().catch((error: unknown) => {
   console.error(error);

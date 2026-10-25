@@ -28,10 +28,8 @@ import {
   buildNonWorkingDecorations,
   computeCapabilityTiers,
   createPreferenceStore,
-  CAPABILITY_SOLVE,
   createEntitlementCache,
   deriveEntitlementStatus,
-  entitlementAllows,
   entitlementDueForRefresh,
   EntitlementExpiredError,
   markEntitlementFailure,
@@ -69,6 +67,8 @@ import {
   buildEventsByResource,
   evaluateScheduleRules,
   formatString,
+  dateNamesFrom,
+  formatDayTimeLabel,
   browserTimeZone,
   formatFixedOffsetZone,
   formatTimeZoneCity,
@@ -138,6 +138,7 @@ import {
   solveClickAction,
 } from "./solveBridge";
 import { resolveControlStrings } from "./controlStrings";
+import { showsRunButton, solveBlock } from "./solveGate";
 import { buildSolveProblem } from "./solveProblem";
 import {
   readPersonVersions,
@@ -1499,7 +1500,6 @@ export function useDataverseScheduleHost(
     () => deriveEntitlementStatus(entitlementSnapshot, new Date(entitlementClock)),
     [entitlementClock, entitlementSnapshot],
   );
-  const solveAllowed = entitlementAllows(entitlementStatus, CAPABILITY_SOLVE);
 
   /*
    * F31 rework: a solve plans the roster period holding the anchor or,
@@ -2011,6 +2011,39 @@ export function useDataverseScheduleHost(
     settingsReady,
   ]);
 
+  /*
+   * The run button's click (Matt 2026-10-21): the button always shows and
+   * stays active. A run that cannot start says why then, in the app's
+   * message bar; a period that has passed says so before the session is asked.
+   */
+  const optimize = React.useCallback((): void => {
+    const block = solveBlock({ entitlement: entitlementStatus, sessionFailure });
+    if (block === "noPrivilege") {
+      notify("warning", messages.msgSolveNoPrivilege);
+      return;
+    }
+    if (block === "paused") {
+      const since = entitlementStatus?.pausedSince;
+      notify(
+        "warning",
+        formatString(surfaceStrings.entitlementPaused, {
+          since: since ? formatDayTimeLabel(since, dateNamesFrom(surfaceStrings)) : "",
+        }),
+      );
+      return;
+    }
+    if (block === "lapsed") {
+      notify("warning", surfaceStrings.entitlementLapsed);
+      return;
+    }
+    if (solveWindowNow().end <= toDisplay(new Date())) {
+      notify("warning", surfaceStrings.solvePeriodPassed);
+      return;
+    }
+    requestSolve();
+  }, [entitlementStatus, messages, notify, requestSolve, sessionFailure, solveWindowNow, surfaceStrings, toDisplay]);
+  const runButton = showsRunButton({ hasClaims: entitlementSnapshot !== undefined, hasSession: session !== undefined, sessionFailure });
+
   // The held click replays once the settings load: it runs, or says why it cannot.
   React.useEffect(() => {
     if (solvePending && settingsReady) {
@@ -2326,32 +2359,24 @@ export function useDataverseScheduleHost(
     // F27: cached claims mean a connected instance whose Chrona is
     // unreachable; the free-control explainer is for the unconnected,
     // bound calendar or not: Connect creates the configuration it needs.
-    conversionSurface:
-      !session && !entitlementSnapshot
-        ? {
-            connected: false,
-            onConnect: sessionFailure === "noPrivilege" ? undefined : connectAndSample,
-          }
-        : undefined,
+    conversionSurface: !runButton
+      ? {
+          connected: false,
+          onConnect: connectAndSample,
+        }
+      : undefined,
     onCancelSolve: cancelSolve,
     onStopSolve: stopSolve,
     onDiscardProposal: discardProposal,
     onPublishProposal: publishProposal,
-    // Optimize is offered from the claims: with a live session, or with
-    // cached claims after an outage (the request mints a session first).
-    onRequestSolve: (session || entitlementSnapshot) && solveAllowed
-      ? sessionFailure === "noPrivilege"
-        ? undefined
-        : requestSolve
-      : undefined,
+    // The run button always shows once the board has a session or cached
+    // claims, or the user lacks the privilege, and is never greyed out: a
+    // run that cannot start says why when clicked (Matt 2026-10-21).
+    onRequestSolve: runButton ? optimize : undefined,
     proposal,
     proposalOutOfDate,
     proposalOverlapPolicy: hostConfig.policies.overlap,
     resumeRun,
-    solveUnavailableReason:
-      solveWindowNow().end <= toDisplay(new Date())
-        ? surfaceStrings.solvePeriodPassed
-        : undefined,
     // A paid tier reports no finite allowance; the entitlement line
     // carries the resource metric instead.
     solveQuota:

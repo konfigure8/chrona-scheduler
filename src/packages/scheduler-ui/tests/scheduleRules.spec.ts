@@ -322,6 +322,13 @@ function overnightWorkingHoursHoldShiftsAcrossMidnight(): void {
       .join(" | "),
     "Outside working hours (06:00-22:00)",
   );
+  // On a 12-hour clock the reason reads the user's clock; a 24:00 end is midnight.
+  const twelve = (window: SchedulerRulesConfig): string =>
+    evaluateScheduleRules({ config: window, event: undefined, events: [], hourFormat: "12", proposed: { end: day(8), resourceId: "r-1", start: day(6) }, resources })
+      .map((result) => result.reason)
+      .join(" | ");
+  assertEqual(twelve(overnight), "Outside working hours (9am-5am)");
+  assertEqual(twelve({ ...config, workingEndHour: 24, workingStartHour: 9.5 }), "Outside working hours (9:30am-12am)");
 }
 
 breakUnderMinimumWarnsWithTheGap();

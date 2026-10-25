@@ -1,8 +1,11 @@
 import * as React from "react";
 
+import { useBoardHourFormat } from "./boardLocale";
 import { useCellDrag } from "./ChronaRoster";
+import { formatClock } from "./clock";
 import { isDragLocked, showsPin } from "./locks";
 import { NightGlyph } from "./NightGlyph";
+import { ShiftMarkGlyph, useOpenShiftKind, useShiftMarks } from "./ShiftMark";
 import { PinGlyph } from "./PinGlyph";
 import { openShiftClass, openShiftNote } from "./solve";
 import { formatString, useSchedulerStrings } from "./strings";
@@ -37,10 +40,6 @@ export interface MonthViewProps {
   readonly weekStartsOn?: number;
 }
 
-function formatStart(event: SchedulerUiEvent): string {
-  const pad = (value: number): string => value.toString().padStart(2, "0");
-  return `${pad(event.start.getHours())}:${pad(event.start.getMinutes())}`;
-}
 
 function dayNumber(date: Date): number {
   const midnight = new Date(date.getTime());
@@ -63,6 +62,10 @@ export function MonthView(props: MonthViewProps): JSX.Element {
     weekStartsOn = 1,
   } = props;
   const strings = useSchedulerStrings();
+  const shiftMarkOf = useShiftMarks();
+  const kindOf = useOpenShiftKind();
+  const hourFormat = useBoardHourFormat();
+  const formatStart = (event: SchedulerUiEvent): string => formatClock(event.start, hourFormat);
   const weeks = React.useMemo(
     () => buildMonthMatrix(anchor, showWeekends, weekStartsOn),
     [anchor, showWeekends, weekStartsOn],
@@ -155,7 +158,7 @@ export function MonthView(props: MonthViewProps): JSX.Element {
                     </div>
                     {dayEvents.slice(0, maxChipsPerDay).map((event) => (
                       <button
-                        aria-label={[event.title, formatStart(event), event.night ? strings.nightShift : undefined, openShiftNote(event, strings)]
+                        aria-label={[event.title, formatStart(event), event.night ? strings.nightShift : undefined, shiftMarkOf(event)?.label, openShiftNote(event, strings, kindOf)]
                           .filter(Boolean)
                           .join(", ")}
                         data-event-id={event.id}
@@ -163,7 +166,7 @@ export function MonthView(props: MonthViewProps): JSX.Element {
                         className={[
                           "chrona-sched__chip",
                           "chrona-sched__chip--month",
-                          openShiftClass(event, "chip"),
+                          openShiftClass(event, "chip", kindOf),
                           cellDrag.draggingEventId === event.id
                             ? "chrona-sched__chip--dragging"
                             : "",
@@ -200,6 +203,7 @@ export function MonthView(props: MonthViewProps): JSX.Element {
                         </span>{" "}
                         <span className="chrona-sched__title-text">{event.title}</span>
                         {event.night ? <NightGlyph title={strings.nightShift} /> : null}
+                        <ShiftMarkGlyph mark={shiftMarkOf(event)} />
                       </button>
                     ))}
                     {overflow > 0 ? (

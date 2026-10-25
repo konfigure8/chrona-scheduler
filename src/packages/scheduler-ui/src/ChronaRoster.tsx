@@ -8,6 +8,7 @@ import {
   type DragResult,
   type ValidateChange,
 } from "./interactions";
+import { formatClockRange } from "./clock";
 import { chipCode, chipStartTime } from "./compactChip";
 import { dateNamesFrom } from "./dateNames";
 import {
@@ -26,6 +27,7 @@ import { isDragLocked, showsPin } from "./locks";
 import { FlagGlyph } from "./FlagGlyph";
 import { flagReasonText } from "./stringResources";
 import { NightGlyph } from "./NightGlyph";
+import { ShiftMarkGlyph, useOpenShiftKind, useShiftMarks } from "./ShiftMark";
 import { PinGlyph } from "./PinGlyph";
 import { openShiftClass } from "./solve";
 import { useSchedulerStrings } from "./strings";
@@ -56,6 +58,8 @@ export interface ChronaRosterProps {
   /** Review: the shifts the proposal leaves alone step back. */
   readonly changesOnly?: boolean;
   readonly editable?: boolean;
+  /** Under the empty grid's message: what to do about it (an extension's action). */
+  readonly emptyAction?: React.ReactNode;
   readonly events: readonly SchedulerUiEvent[];
   /** A scenario package's columns, groups and person details. */
   readonly extension?: RosterExtension;
@@ -90,9 +94,8 @@ interface CellHover {
   readonly verdict: ChangeVerdict;
 }
 
-function formatTimeRange(event: SchedulerUiEvent): string {
-  const pad = (value: number): string => value.toString().padStart(2, "0");
-  return `${pad(event.start.getHours())}:${pad(event.start.getMinutes())}-${pad(event.end.getHours())}:${pad(event.end.getMinutes())}`;
+function formatTimeRange(event: SchedulerUiEvent, hourFormat: HourFormat | undefined): string {
+  return formatClockRange(event.start, event.end, hourFormat);
 }
 
 /**
@@ -217,6 +220,9 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
   // A mark after a person's name, such as a scenario's glyph with its reason.
   const personMark = useBoardExtension()?.personMark;
   const fit = useBoardExtension()?.fit;
+  const shiftMarkOf = useShiftMarks();
+  const kindOf = useOpenShiftKind();
+  const chipStyle = props.extension?.chip;
   const days = buildRosterDays(window, showWeekends, dateNamesFrom(strings));
   // The review marks each change with a ring and a dot, and Hold to
   // compare shows where it was, so the grid shows no ghosts.
@@ -399,15 +405,26 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
     const color = resolveEventColor(event, statusColorRules);
     // Text that reads on the maker's colour in any theme.
     const ink = readableTextOn(color);
+    const shiftMark = shiftMarkOf(event);
+    const chipMarks = (
+      <>
+        {showsPin(event) ? <PinGlyph /> : null}
+        {event.flag ? <FlagGlyph title={flagReasonText(strings, event.flag)} /> : null}
+        <span className="chrona-sched__chip-code">{chipCode(event)}</span>
+        {event.night ? <NightGlyph size={10} title={strings.nightShift} /> : null}
+        <ShiftMarkGlyph mark={shiftMark} />
+      </>
+    );
     return (
       <button
-        aria-label={`${event.title}, ${formatTimeRange(event)}${event.night ? `, ${strings.nightShift}` : ""}`}
+        aria-label={`${event.title}, ${formatTimeRange(event, hourFormat)}${event.night ? `, ${strings.nightShift}` : ""}${shiftMark ? `, ${shiftMark.label}` : ""}`}
         data-event-id={event.id}
         className={[
           "chrona-sched__chip",
           "chrona-sched__chip--compact",
+          chipStyle?.className ?? "",
           color ? "chrona-sched__chip--colored" : "",
-          openShiftClass(event, "chip"),
+          openShiftClass(event, "chip", kindOf),
           event.flag ? "chrona-sched__chip--flagged" : "",
           cellDrag.draggingEventId === event.id ? "chrona-sched__chip--dragging" : "",
           editable ? "chrona-sched__bar--editable" : "",
@@ -429,12 +446,14 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
         style={{ background: color, color: ink }}
         type="button"
       >
-        {showsPin(event) ? <PinGlyph /> : null}
-        {event.flag ? <FlagGlyph title={flagReasonText(strings, event.flag)} /> : null}
-        <span className="chrona-sched__chip-code">{chipCode(event)}</span>
-        {event.night ? <NightGlyph size={10} title={strings.nightShift} /> : null}
+        {chipStyle ? (
+          // An extension's chip: the code and its marks in a line of their own.
+          <span className="chrona-sched__chip-line">{chipMarks}</span>
+        ) : (
+          chipMarks
+        )}
         <span className="chrona-sched__chip-time">
-          {chipStartTime(event.start, hourFormat)}
+          {chipStyle ? chipStyle.time(event.start, hourFormat) : chipStartTime(event.start, hourFormat)}
         </span>
       </button>
     );
@@ -599,7 +618,10 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
   if (resources.length === 0 && !(openCells ?? []).some((cell) => cell.length > 0)) {
     return (
       <div className="chrona-sched__roster">
-        <div className="chrona-sched__empty">{strings.emptyResources}</div>
+        <div className="chrona-sched__empty">
+          <span>{strings.emptyResources}</span>
+          {props.emptyAction}
+        </div>
       </div>
     );
   }

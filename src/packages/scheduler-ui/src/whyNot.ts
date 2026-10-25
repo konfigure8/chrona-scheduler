@@ -8,6 +8,7 @@
  * own Must checks, or name the shift that would be left open. Nothing
  * here calls the solver; the extension asks it.
  */
+import { formatClockRange } from "./clock";
 import { formatHours } from "./compactChip";
 import { formatDayLabel, type DateNames } from "./dateNames";
 import { allowVerdict, type TimelineChange, type ValidateChange } from "./interactions";
@@ -19,8 +20,10 @@ import {
   type ScheduleRuleMatch,
   type ShouldRuleName,
 } from "./schedulingContract";
+import { boardRules } from "./ruleRegistry";
 import { shiftsOverlap } from "./scheduleRules";
 import { formatString, type SchedulerStrings } from "./stringResources";
+import type { HourFormat } from "./timeAxis";
 import type { SchedulerResource, SchedulerUiEvent } from "./types";
 
 /**
@@ -96,7 +99,7 @@ const SPREAD: ShouldRuleName = "spreadOfShifts";
 function addedText(match: ScheduleRuleMatch, context: ReasonContext): string {
   const gap = match.rule === "restBetweenShifts" ? restGapMinutes(match, context) : undefined;
   return gap !== undefined && match.resourceId !== undefined
-    ? formatString(context.strings.reasonAddsRest, { hours: formatHours(gap), name: context.nameOf(match.resourceId) })
+    ? formatString(context.strings.reasonAddsRest, { hours: formatHours(gap, context.locale), name: context.nameOf(match.resourceId) })
     : mustRuleLabel(match.rule, context.strings);
 }
 
@@ -110,7 +113,8 @@ function shouldRuleLabel(rule: ShouldRuleName, strings: SchedulerStrings): strin
     case "splitPartsOnePerson":
       return strings.mustKindSplitParts;
     default:
-      return undefined;
+      // A package's own Should rule names itself (ruleRegistry.ts).
+      return boardRules().shouldRules?.find((entry) => entry.rule === rule)?.label(strings);
   }
 }
 
@@ -216,12 +220,9 @@ export function rosterVersionOf(events: readonly SchedulerUiEvent[]): string {
   return `${events.length}:${(4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36)}`;
 }
 
-const pad = (value: number): string => value.toString().padStart(2, "0");
-const clock = (date: Date): string => `${pad(date.getHours())}:${pad(date.getMinutes())}`;
-
-/** "Night · Tue 3 Nov 22:00-06:00": a shift as the answer names it. */
-export function whyNotShiftLabel(event: SchedulerUiEvent, names: DateNames): string {
-  return `${event.title} · ${formatDayLabel(event.start, names)} ${clock(event.start)}-${clock(event.end)}`;
+/** "Night · Tue 3 Nov 22:00-06:00": a shift as the answer names it, in the user's hour format. */
+export function whyNotShiftLabel(event: SchedulerUiEvent, names: DateNames, hourFormat?: HourFormat): string {
+  return `${event.title} · ${formatDayLabel(event.start, names)} ${formatClockRange(event.start, event.end, hourFormat)}`;
 }
 
 /**
@@ -257,6 +258,10 @@ export interface WhyNotActionInput {
   readonly checkMust?: (events: readonly SchedulerUiEvent[]) => { readonly matches: readonly ScheduleRuleMatch[] };
   /** The roster as it stands: every item, open ones included. */
   readonly events: readonly SchedulerUiEvent[];
+  /** The user's number locale for the fix lines' hours; absent = the browser's. */
+  readonly locale?: string;
+  /** The user's hour format for the shifts it names; absent = 24-hour. */
+  readonly hourFormat?: HourFormat;
   readonly names: DateNames;
   readonly nameOf: (resourceId: string) => string;
   readonly picked: SchedulerResource;
@@ -303,7 +308,7 @@ export function whyNotAction(input: WhyNotActionInput): WhyNotAction {
     kind: "leftOpen",
     text: formatString(strings.whyNotLeftOpen, {
       name: pickedName,
-      shift: whyNotShiftLabel(first, input.names),
+      shift: whyNotShiftLabel(first, input.names, input.hourFormat),
     }),
   };
   const holder = works(shift) ? input.resources.find((resource) => resource.id === shift.resourceId) : undefined;
@@ -334,6 +339,8 @@ export function whyNotAction(input: WhyNotActionInput): WhyNotAction {
   const eventsById = new Map(events.map((event) => [event.id, event]));
   const context: ReasonContext = {
     eventsById,
+    hourFormat: input.hourFormat,
+    locale: input.locale,
     nameOf: input.nameOf,
     strings,
     toInstant: input.toInstant,
@@ -345,9 +352,9 @@ export function whyNotAction(input: WhyNotActionInput): WhyNotAction {
     changes: [moveTo(shift, picked.id, undefined), moveTo(first, holder.id, undefined)],
     kind: "swap",
     lines: [
-      { text: formatString(strings.whyNotTakes, { name: pickedName, shift: whyNotShiftLabel(shift, input.names) }), tone: "move" },
+      { text: formatString(strings.whyNotTakes, { name: pickedName, shift: whyNotShiftLabel(shift, input.names, input.hourFormat) }), tone: "move" },
       {
-        text: formatString(strings.whyNotTakes, { name: input.nameOf(holder.id), shift: whyNotShiftLabel(first, input.names) }),
+        text: formatString(strings.whyNotTakes, { name: input.nameOf(holder.id), shift: whyNotShiftLabel(first, input.names, input.hourFormat) }),
         tone: "move",
       },
       ...fixes,

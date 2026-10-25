@@ -60,15 +60,7 @@ for (const file of files) {
 // The English file agrees with the defaults in code, so the fallbacks
 // and the resource file can never disagree.
 const englishFile = readResx("SchedulerControl.1033.resx");
-// The Workforce roster is written in roles: the control words the package's
-// generic skill strings as roles in its own resx (every language), while the
-// package keeps its defaults for the bench.
-const SCENARIO_OVERRIDES = new Set(["requiredSkills"]);
 for (const key of codeKeys) {
-  if (SCENARIO_OVERRIDES.has(key)) {
-    assert.notEqual(englishFile[key], english[key], `1033: ${key} is worded for roles`);
-    continue;
-  }
   assert.equal(englishFile[key], english[key], `1033: ${key} differs from the code default`);
 }
 

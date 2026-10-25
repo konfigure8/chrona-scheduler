@@ -241,10 +241,10 @@ function aWrongSiteIsItsOwnRule(): void {
 }
 
 function personLinesCountTheirFixes(): void {
-  // Both of Ava's changes are hers; the one rest fix counts once.
+  // The rest fix was Sam's rule break: it counts once, for Sam, not for Ava who takes the night.
   const fixes = personFixCounts(changes, analysis);
-  assert.equal(fixes.get("ava"), 1);
-  assert.equal(fixes.has("sam"), false);
+  assert.equal(fixes.get("sam"), 1);
+  assert.equal(fixes.has("ava"), false);
 }
 
 function theOpenShiftsFollowDropAndKeep(): void {

@@ -13,14 +13,18 @@ import {
 } from "@fluentui/react-icons";
 import * as React from "react";
 
+import { useBoardHourFormat } from "./boardLocale";
+import { formatClockRange } from "./clock";
 import { dateNamesFrom, formatDayLabel, type DateNames } from "./dateNames";
+import type { HourFormat } from "./timeAxis";
 import type { PreferencesMet, ScorecardTile, UncheckedPeople } from "./extension";
 import { DRILL_DOWN_LIMIT } from "./proposalReasons";
+import { extensionMustRow } from "./ruleRegistry";
 import { mustBreachTotal, type MustBreachCounts, type SolveSearch } from "./schedulingContract";
 import {
-  MUST_ROWS,
+  isOptionalMustRow,
   mustRowCount,
-  OPTIONAL_MUST_ROWS,
+  mustRows,
   mustRowMatches,
   type MustReport,
   type MustRow,
@@ -274,7 +278,8 @@ export function mustRowLabel(strings: SchedulerStrings, row: MustRow): string {
     case "nights":
       return strings.mustRowNights;
     default:
-      return strings.mustRowOther;
+      // A package's own row names itself (ruleRegistry.ts).
+      return extensionMustRow(row)?.label(strings) ?? strings.mustRowOther;
   }
 }
 
@@ -304,7 +309,7 @@ export function uncheckedNote(strings: SchedulerStrings, unchecked: UncheckedPeo
 }
 
 /** A preference band's time: whole days as their days ("Thu 5 Nov", "Thu 5 Nov – Fri 6 Nov"), else the day and hours. */
-function formatBand(band: { readonly end: Date; readonly start: Date }, names: DateNames): string {
+function formatBand(band: { readonly end: Date; readonly start: Date }, names: DateNames, hourFormat: HourFormat): string {
   const midnight = (date: Date): boolean =>
     date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0;
   if (midnight(band.start) && midnight(band.end)) {
@@ -312,12 +317,7 @@ function formatBand(band: { readonly end: Date; readonly start: Date }, names: D
     const first = formatDayLabel(band.start, names);
     return last.toDateString() === band.start.toDateString() ? first : `${first} – ${formatDayLabel(last, names)}`;
   }
-  return `${formatDayLabel(band.start, names)} ${formatTimeRange(band)}`;
-}
-
-function formatTimeRange(event: { readonly end: Date; readonly start: Date }): string {
-  const pad = (value: number): string => value.toString().padStart(2, "0");
-  return `${pad(event.start.getHours())}:${pad(event.start.getMinutes())}-${pad(event.end.getHours())}:${pad(event.end.getMinutes())}`;
+  return `${formatDayLabel(band.start, names)} ${formatClockRange(band.start, band.end, hourFormat)}`;
 }
 
 /**
@@ -340,6 +340,7 @@ function formatTimeRange(event: { readonly end: Date; readonly start: Date }): s
  */
 export function ProposalScorecard(props: ProposalScorecardProps): JSX.Element {
   const strings = useSchedulerStrings();
+  const hourFormat = useBoardHourFormat();
   const names = React.useMemo(() => dateNamesFrom(strings), [strings]);
   const { mustReport, openShifts, preferences, score, unchecked } = props;
   const [open, setOpen] = React.useState<"must" | "open" | "preferences" | undefined>();
@@ -431,11 +432,11 @@ export function ProposalScorecard(props: ProposalScorecardProps): JSX.Element {
       >
         <div className="chrona-sched__breakdown-title">{strings.mustBreakdownTitle}</div>
         <ul className="chrona-sched__breakdown-list">
-          {MUST_ROWS.map((row) => {
+          {mustRows().map((row) => {
             const label = mustRowLabel(strings, row);
             const nowCount = now ? mustRowCount(now, row) : undefined;
             const proposedCount = mustRowCount(proposed, row);
-            if (OPTIONAL_MUST_ROWS.has(row) && proposedCount === 0 && !nowCount && props.ruleRows?.has(row) !== true) {
+            if (isOptionalMustRow(row) && proposedCount === 0 && !nowCount && props.ruleRows?.has(row) !== true) {
               return null;
             }
             const nowText = nowCount === undefined ? "—" : String(nowCount);
@@ -515,7 +516,7 @@ export function ProposalScorecard(props: ProposalScorecardProps): JSX.Element {
               >
                 <span className="chrona-sched__breakdown-label">{event.title}</span>
                 <span className="chrona-sched__breakdown-value">
-                  {formatDayLabel(event.start, names)} {formatTimeRange(event)}
+                  {formatDayLabel(event.start, names)} {formatClockRange(event.start, event.end, hourFormat)}
                 </span>
               </button>
             </li>
@@ -598,7 +599,7 @@ export function ProposalScorecard(props: ProposalScorecardProps): JSX.Element {
                     name: nameOf(miss.resourceId),
                   })}
                 </span>
-                <span className="chrona-sched__breakdown-value">{formatBand(miss, names)}</span>
+                <span className="chrona-sched__breakdown-value">{formatBand(miss, names, hourFormat)}</span>
               </div>
             </li>
           ))}

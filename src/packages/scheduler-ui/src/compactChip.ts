@@ -50,8 +50,11 @@ export function chipStartTime(start: Date, format: HourFormat = "24"): string {
   return minutes === "00" ? `${twelve}${suffix}` : `${twelve}:${minutes}${suffix}`;
 }
 
-/** Hours for display: whole hours plain, else one decimal. */
-export function formatHours(minutes: number): string {
+/**
+ * Hours for display: whole hours plain, else one decimal, in the user's
+ * number format (`locale`, the board's; absent = the browser's).
+ */
+export function formatHours(minutes: number, locale?: string): string {
   const hours = Math.round((minutes / 60) * 10) / 10;
-  return hours.toLocaleString(undefined, { maximumFractionDigits: 1 });
+  return hours.toLocaleString(locale, { maximumFractionDigits: 1 });
 }

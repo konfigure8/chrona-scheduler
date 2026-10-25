@@ -27,6 +27,11 @@ export type EntitlementPaymentState = "current" | "free" | "grace" | "lapsed";
 /** What the session endpoint returns under `entitlement`; the server's shape, verbatim. */
 export interface EntitlementSession {
   readonly capabilities: readonly string[];
+  /**
+   * Everything the server sent but the bearer, as it sent it, for a
+   * scenario package's own claims; the board reads only the fields here.
+   */
+  readonly claims?: Readonly<Record<string, unknown>>;
   readonly expiresAt: string;
   readonly graceUntil?: string;
   readonly metrics: {
@@ -296,8 +301,15 @@ export function parseEntitlementSession(value: unknown): EntitlementSession | un
     : [];
   const metrics = (record.metrics ?? {}) as Record<string, unknown>;
   const graceUntil = asString(record.graceUntil);
+  // What a cache saved, else the server's own record, its bearer left out.
+  const { token: _bearer, ...sent } = record;
+  const claims =
+    record.claims && typeof record.claims === "object" && !Array.isArray(record.claims)
+      ? (record.claims as Record<string, unknown>)
+      : sent;
   return {
     capabilities,
+    claims,
     expiresAt,
     ...(graceUntil ? { graceUntil } : {}),
     metrics: {

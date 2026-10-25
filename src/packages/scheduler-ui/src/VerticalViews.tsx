@@ -1,5 +1,6 @@
 import * as React from "react";
 
+import { formatClockRange } from "./clock";
 import { useDragController } from "./dragContext";
 import {
   allowVerdict,
@@ -17,9 +18,10 @@ import { buildRosterDays } from "./rosterLayout";
 import { isDragLocked, showsPin } from "./locks";
 import { gapFractions } from "./spans";
 import { NightGlyph } from "./NightGlyph";
+import { ShiftMarkGlyph, useOpenShiftKind, useShiftMarks } from "./ShiftMark";
 import { PinGlyph } from "./PinGlyph";
 import { dateNamesFrom } from "./dateNames";
-import { isOpenOnCall, openShiftClass, openShiftNote } from "./solve";
+import { isOpenOnCall, openKindOf, openShiftClass, openShiftNote } from "./solve";
 import { useSchedulerStrings } from "./strings";
 import {
   formatHourLabel,
@@ -60,6 +62,8 @@ interface VerticalGridProps {
   readonly editable?: boolean;
   /** Shown when there are no columns (e.g. no resources configured). */
   readonly emptyMessage?: string;
+  /** Under the empty message: what to do about it (an extension's action). */
+  readonly emptyAction?: React.ReactNode;
   readonly endHour: number;
   readonly hourFormat: HourFormat;
   readonly onDraftRange?: (result: DragResult) => void;
@@ -87,11 +91,6 @@ interface VerticalPreview {
 const minimumLaneWidthPx = 96;
 const resizeZonePx = 8;
 const dragThresholdPx = 3;
-
-function formatTimeRange(start: Date, end: Date): string {
-  const pad = (value: number): string => value.toString().padStart(2, "0");
-  return `${pad(start.getHours())}:${pad(start.getMinutes())}-${pad(end.getHours())}:${pad(end.getMinutes())}`;
-}
 
 function VerticalGrid(props: VerticalGridProps): JSX.Element {
   const {
@@ -151,6 +150,10 @@ function VerticalGrid(props: VerticalGridProps): JSX.Element {
   }, [resolution.labelMinutes, resolution.slotMinutes, pxPerHourVertical]);
 
   const strings = useSchedulerStrings();
+  const shiftMarkOf = useShiftMarks();
+  const kindOf = useOpenShiftKind();
+  // Every time the columns write reads in the user's hour format.
+  const formatTimeRange = (start: Date, end: Date): string => formatClockRange(start, end, hourFormat);
   const drag = useDragController();
   const fit = useBoardExtension()?.fit;
   const canvasRefs = React.useRef(new Map<string, HTMLDivElement>());
@@ -435,7 +438,8 @@ function VerticalGrid(props: VerticalGridProps): JSX.Element {
     return (
       <div className="chrona-sched__vertical">
         <div className="chrona-sched__empty">
-          {emptyMessage ?? strings.emptyResources}
+          <span>{emptyMessage ?? strings.emptyResources}</span>
+          {props.emptyAction}
         </div>
       </div>
     );
@@ -464,7 +468,7 @@ function VerticalGrid(props: VerticalGridProps): JSX.Element {
           pxPerHourVertical,
         );
         const columnMinWidth = Math.max(
-          150,
+          120,
           packed.laneCount * minimumLaneWidthPx,
         );
         const columnPreview =
@@ -538,7 +542,8 @@ function VerticalGrid(props: VerticalGridProps): JSX.Element {
                       positioned.event.title,
                       formatTimeRange(positioned.event.start, positioned.event.end),
                       positioned.event.night ? strings.nightShift : undefined,
-                      openShiftNote(positioned.event, strings),
+                      shiftMarkOf(positioned.event)?.label,
+                      openShiftNote(positioned.event, strings, kindOf),
                     ]
                       .filter(Boolean)
                       .join(", ")}
@@ -546,7 +551,7 @@ function VerticalGrid(props: VerticalGridProps): JSX.Element {
                     disabled={positioned.event.review === "ghost"}
                     className={[
                       "chrona-sched__vertical-event",
-                      openShiftClass(positioned.event, "bar"),
+                      openShiftClass(positioned.event, "bar", kindOf),
                       editable && !isDragLocked(positioned.event)
                         ? "chrona-sched__bar--editable"
                         : "",
@@ -649,16 +654,19 @@ function VerticalGrid(props: VerticalGridProps): JSX.Element {
                       {showsPin(positioned.event) ? <PinGlyph /> : null}
                       <span className="chrona-sched__title-text">{positioned.event.title}</span>
                       {positioned.event.night ? <NightGlyph title={strings.nightShift} /> : null}
+                      <ShiftMarkGlyph mark={shiftMarkOf(positioned.event)} />
                     </span>
-                    {column.showResourceName && openShiftNote(positioned.event, strings) ? (
+                    {column.showResourceName && openShiftNote(positioned.event, strings, kindOf) ? (
                       <span
                         className={
                           isOpenOnCall(positioned.event)
                             ? "chrona-sched__bar-time chrona-sched__open-note--on-call"
-                            : "chrona-sched__bar-time chrona-sched__open-note--needs-cover"
+                            : openKindOf(positioned.event, kindOf)
+                              ? `chrona-sched__bar-time chrona-sched__open-note--${openKindOf(positioned.event, kindOf)?.kind ?? ""}`
+                              : "chrona-sched__bar-time chrona-sched__open-note--needs-cover"
                         }
                       >
-                        {openShiftNote(positioned.event, strings)}
+                        {openShiftNote(positioned.event, strings, kindOf)}
                       </span>
                     ) : (
                       <span className="chrona-sched__bar-time">
@@ -759,6 +767,8 @@ function VerticalGrid(props: VerticalGridProps): JSX.Element {
 export interface TopDownViewProps {
   readonly draftRange?: DragResult;
   readonly editable?: boolean;
+  /** Under the empty view's message: what to do about it (an extension's action). */
+  readonly emptyAction?: React.ReactNode;
   readonly events: readonly SchedulerUiEvent[];
   readonly hourFormat?: HourFormat;
   readonly onDraftRange?: (result: DragResult) => void;
@@ -808,6 +818,7 @@ export function TopDownView(props: TopDownViewProps): JSX.Element {
       }))}
       draftRange={props.draftRange}
       editable={props.editable}
+      emptyAction={props.emptyAction}
       endHour={hourRange.endHour}
       hourFormat={props.hourFormat ?? "24"}
       onDraftRange={props.onDraftRange}

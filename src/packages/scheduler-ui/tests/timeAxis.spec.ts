@@ -156,6 +156,8 @@ function buildsWeekSpansClippedToTheWindow(): void {
   assertEqual(spans.length, 6);
   assertEqual(spans[0]?.label, "W31");
   assertEqual(spans[5]?.label, "W36");
+  // The label is the user's language's: German writes "KW 31".
+  assertEqual(buildWeekSpans(august, 2.5, "KW {week}")[0]?.label, "KW 31");
   // First span covers Sat+Sun only: 48h at 2.5px/h.
   assertEqual(spans[0]?.width, 120);
   // Middle spans are full weeks.
@@ -163,6 +165,24 @@ function buildsWeekSpansClippedToTheWindow(): void {
   // Total width equals the window width exactly.
   const total = spans.reduce((sum, span) => sum + span.width, 0);
   assertEqual(total, 31 * 24 * 2.5);
+  // A site whose weeks start on Sunday (Buyer Checklist gap 7): Sat 1st closes the week from Sun 26 July.
+  const sunday = buildWeekSpans(august, 2.5, "W{week}", 0);
+  assertEqual(sunday.length, 6);
+  assertEqual(sunday[0]?.width, 24 * 2.5);
+  // Each week is numbered by the ISO week of its Wednesday, the week holding most of its days.
+  assertEqual(sunday[0]?.label, "W31");
+  assertEqual(sunday[1]?.label, "W32");
+  assertEqual(sunday[5]?.label, "W36");
+  assertEqual(sunday[1]?.width, 7 * 24 * 2.5);
+  assertEqual(sunday.reduce((sum, span) => sum + span.width, 0), 31 * 24 * 2.5);
+  // October 2026 opens on Thursday: Thu 1 to Sat 3 close the week from Sun 27 September, W40.
+  const october = buildWeekSpans({ end: new Date(2026, 10, 1), start: new Date(2026, 9, 1) }, 2.5, "W{week}", 0);
+  assertEqual(october[0]?.label, "W40");
+  assertEqual(october[0]?.width, 3 * 24 * 2.5);
+  // The week from Sunday 27 December 2026 holds Wednesday 30 December: ISO week 53 of 2026.
+  const turn = buildWeekSpans({ end: new Date(2027, 0, 9), start: new Date(2026, 11, 27) }, 2.5, "W{week}", 0);
+  assertEqual(turn[0]?.label, "W53");
+  assertEqual(turn[1]?.label, "W1");
 }
 
 convertsDatesToOffsetsAndBack();

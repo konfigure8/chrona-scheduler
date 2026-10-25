@@ -1,6 +1,10 @@
+import { Tooltip } from "@fluentui/react-components";
 import * as React from "react";
 
+import { useBoardHourFormat } from "./boardLocale";
+import { formatClockRange } from "./clock";
 import { useDragController } from "./dragContext";
+import { useFullScreen } from "./fullScreen";
 import { VerticalSplitter } from "./Splitter";
 import { FlagGlyph } from "./FlagGlyph";
 import { NightGlyph } from "./NightGlyph";
@@ -10,7 +14,8 @@ import { useSchedulerStrings } from "./strings";
 import { tagPillStyle, type TagColorMap } from "./tagColors";
 import { beginAssignSession } from "./interactions";
 import { dateNamesFrom, formatDayLabel } from "./dateNames";
-import { isOpenOnCall } from "./solve";
+import { useOpenShiftKind } from "./ShiftMark";
+import { compareSameStart, isOpenOnCall, openKindOf } from "./solve";
 import { eventIntersectsWindow } from "./timelineLayout";
 import { clockMinutesBetween } from "./timeZone";
 import type { SchedulerUiEvent, TimeWindow } from "./types";
@@ -31,8 +36,6 @@ export interface UnscheduledPanelProps {
    * everything is covered. Called only while the list is empty.
    */
   readonly isShort?: () => boolean;
-  /** Renders the header dismiss; the host persists the visibility. */
-  readonly onClose?: () => void;
   /** Plain click (no drag): hosts navigate the calendar to the item. */
   readonly onItemClick?: (event: SchedulerUiEvent) => void;
   /** Renders the left-edge splitter; the host owns and persists the width. */
@@ -52,11 +55,6 @@ const UNDATED_GROUP = "chrona:undated";
 const panelMinWidth = 160;
 const panelMaxWidth = 480;
 
-function formatTimeRange(event: SchedulerUiEvent): string {
-  const pad = (value: number): string => value.toString().padStart(2, "0");
-  return `${pad(event.start.getHours())}:${pad(event.start.getMinutes())}-${pad(event.end.getHours())}:${pad(event.end.getMinutes())}`;
-}
-
 function formatDuration(event: SchedulerUiEvent): string {
   const minutes = Math.round(clockMinutesBetween(event.start, event.end));
   const hours = Math.floor(minutes / 60);
@@ -72,6 +70,10 @@ function formatDuration(event: SchedulerUiEvent): string {
 export function UnscheduledPanel(props: UnscheduledPanelProps): JSX.Element {
   const drag = useDragController();
   const strings = useSchedulerStrings();
+  const mountNode = useFullScreen()?.mountNode;
+  const hourFormat = useBoardHourFormat();
+  const kindOf = useOpenShiftKind();
+  const formatTimeRange = (event: SchedulerUiEvent): string => formatClockRange(event.start, event.end, hourFormat);
   const {
     events,
     filter = "all",
@@ -142,8 +144,11 @@ export function UnscheduledPanel(props: UnscheduledPanelProps): JSX.Element {
     const rank = (key: string | undefined): number =>
       key === UNDATED_GROUP ? 2 : key === UNGROUPED ? 1 : 0;
     order.sort((first, second) => rank(first) - rank(second));
+    // Shifts that start together: the ones that need cover first.
+    const byStart = (first: SchedulerUiEvent, second: SchedulerUiEvent): number =>
+      Math.floor(first.start.getTime() / 60_000) - Math.floor(second.start.getTime() / 60_000) || compareSameStart(first, second, kindOf);
     return order.map((name) => ({
-      items: buckets.get(name) ?? [],
+      items: [...(buckets.get(name) ?? [])].sort(byStart),
       label:
         name === UNDATED_GROUP
           ? strings.noDate
@@ -177,17 +182,6 @@ export function UnscheduledPanel(props: UnscheduledPanelProps): JSX.Element {
     >
       <h3 className="chrona-sched__unscheduled-title">
         {title} ({visibleEvents.length})
-        {props.onClose ? (
-          <button
-            aria-label={strings.hideUnscheduledPanel}
-            className="chrona-sched__panel-close"
-            data-testid="panel-close"
-            onClick={props.onClose}
-            type="button"
-          >
-            ×
-          </button>
-        ) : null}
       </h3>
       {onFilterChange && props.window ? (
         <div
@@ -235,7 +229,11 @@ export function UnscheduledPanel(props: UnscheduledPanelProps): JSX.Element {
             <span aria-hidden="true" className="chrona-sched__unscheduled-caret">
               &#9662;
             </span>
-            {group.label} ({group.items.length})
+            {/* One line: a long name shortens, its tip holds it whole, and the count stays in view. */}
+            <Tooltip content={group.label ?? ""} mountNode={mountNode} relationship="inaccessible">
+              <span className="chrona-sched__unscheduled-group-name">{group.label}</span>
+            </Tooltip>{" "}
+            <span className="chrona-sched__unscheduled-group-count">({group.items.length})</span>
           </button>
         </h4>
       ) : null}
@@ -244,13 +242,14 @@ export function UnscheduledPanel(props: UnscheduledPanelProps): JSX.Element {
         {group.items.map((event) => (
           <li key={event.id}>
             <button
-              aria-label={`${event.title}, ${event.undated ? strings.noDate : formatTimeRange(event)}, ${formatDuration(event)}${event.night ? `, ${strings.nightShift}` : ""}${isOpenOnCall(event) ? `, ${strings.legendOnCall}` : ""}`}
+              aria-label={`${event.title}, ${event.undated ? strings.noDate : formatTimeRange(event)}, ${formatDuration(event)}${event.night ? `, ${strings.nightShift}` : ""}${isOpenOnCall(event) ? `, ${strings.legendOnCall}` : openKindOf(event, kindOf) ? `, ${openKindOf(event, kindOf)?.label ?? ""}` : ""}`}
               className={[
                 "chrona-sched__unscheduled-item",
                 drag.session?.sourceEvent?.id === event.id ? "chrona-sched__unscheduled-item--dragging" : "",
                 event.flag ? "chrona-sched__unscheduled-item--flagged" : "",
                 // F24 Repair mode: an open on-call shift is backup cover, neutral as on the board.
                 isOpenOnCall(event) ? "chrona-sched__unscheduled-item--on-call" : "",
+                openKindOf(event, kindOf) ? `chrona-sched__unscheduled-item--${openKindOf(event, kindOf)?.kind ?? ""}` : "",
               ].filter(Boolean).join(" ")}
               data-event-id={event.id}
               onClick={(clickEvent) => {
@@ -300,6 +299,8 @@ export function UnscheduledPanel(props: UnscheduledPanelProps): JSX.Element {
               )}
               {isOpenOnCall(event) ? (
                 <span className="chrona-sched__unscheduled-time">{strings.legendOnCall}</span>
+              ) : openKindOf(event, kindOf) ? (
+                <span className="chrona-sched__unscheduled-time">{openKindOf(event, kindOf)?.label}</span>
               ) : null}
               {event.requiredTags && event.requiredTags.length > 0 ? (
                 <span className="chrona-sched__unscheduled-tags">

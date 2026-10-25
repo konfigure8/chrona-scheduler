@@ -15,7 +15,6 @@ import {
   rosterPeopleWidthPx,
 } from "./ChronaRoster";
 import { ChronaTimeline, type TimelineChange } from "./ChronaTimeline";
-import { AssignDialog } from "./AssignDialog";
 import { ConversionDialog } from "./ConversionDialog";
 import type { SolveCapability } from "./capabilities";
 import { formatCapabilityList } from "./capabilityText";
@@ -31,7 +30,7 @@ import {
   type BoardExtension,
   type BoardState,
 } from "./extension";
-import { EventDialog, type DraftEventInput } from "./EventDialog";
+import { BoardEventDialog, type DraftEventInput } from "./EventDialog";
 import { EventHoverCard, type HoverAnchorRect } from "./EventHoverCard";
 import { buildRosterDays } from "./rosterLayout";
 import { FullScreenProvider, useFullScreen, useFullScreenRoot } from "./fullScreen";
@@ -84,6 +83,7 @@ import { SolveProgressIndicator, useElapsedSeconds } from "./SolveProgress";
 import { SchedulerLegend } from "./SchedulerLegend";
 import { SchedulerToolbar } from "./SchedulerToolbar";
 import { colorSchemeOf, themeToCssVariables, type SchedulerTheme } from "./theme";
+import { BoardLocaleProvider } from "./boardLocale";
 import {
   SchedulerStringsProvider,
   formatString,
@@ -96,9 +96,10 @@ import {
 } from "./UnscheduledPanel";
 import { DayColumnsView, TopDownView } from "./VerticalViews";
 import type { HourFormat } from "./timeAxis";
-import type { DragResult, ValidateChange } from "./interactions";
+import { allowVerdict, type DragResult, type ValidateChange } from "./interactions";
 import type { RulePolicy } from "./scheduleRules";
 import {
+  drawsOneDay,
   resolveTimeScaleOptions,
   type SchedulerTimeScale,
   type StatusColorRule,
@@ -290,11 +291,6 @@ export interface SchedulerSurfaceProps {
   readonly onIntervalChange?: (interval: SchedulerTimeScale) => void;
   /** Selection is a set: click replaces, ctrl toggles, shift extends. */
   readonly onSelectionChange?: (ids: readonly string[]) => void;
-  /** Saved-view switch; the host owns and applies what a view means. */
-  readonly onActiveViewChange?: (id: string) => void;
-  readonly activeViewId?: string;
-  /** Saved views offered by the toolbar switcher (host-defined). */
-  readonly views?: readonly { readonly id: string; readonly label: string }[];
   /** Renders the resource-column splitter; the host persists the width. */
   readonly onResourceColumnWidthChange?: (width: number) => void;
   /**
@@ -324,21 +320,10 @@ export interface SchedulerSurfaceProps {
   };
   /** Ordered grouping-set names; [] = flat. Omitted: first set. */
   readonly groupBy?: readonly string[];
-  /** Renders the "Group rows" toolbar select; the host persists. */
-  readonly onGroupByChange?: (set: string | undefined) => void;
-  /** Renders the panel toggle; the host persists the visibility. */
-  readonly onUnscheduledPanelVisibleChange?: (visible: boolean) => void;
-  /** Unscheduled side panel visibility (default true; lanes stay). */
-  readonly unscheduledPanelVisible?: boolean;
   /** The review's scorecard is open (default true); the host remembers the person's choice. */
   readonly scorecardVisible?: boolean;
   /** The scorecard's chevron folded or opened it. */
   readonly onScorecardVisibleChange?: (visible: boolean) => void;
-  /** Assigns an unscheduled event to the chosen resource. */
-  readonly onAssignEvent?: (
-    event: SchedulerUiEvent,
-    resourceId: string,
-  ) => void;
   /** Sends a scheduled event back to the unscheduled list. */
   readonly onUnscheduleEvent?: (event: SchedulerUiEvent) => void;
   /** Deterministic "today" for the toolbar; defaults to the real clock. */
@@ -357,6 +342,11 @@ export interface SchedulerSurfaceProps {
   readonly statusColorRules?: readonly StatusColorRule[];
   /** Maker-configured colors for skill/tag pills, keyed by exact tag. */
   readonly tagColors?: TagColorMap;
+  /**
+   * The colour a lane group's shifts take while the maker colours by group: a swatch before
+   * the group's name says which colour is which. Absent, or undefined for a group = no swatch.
+   */
+  readonly groupColor?: (group: string) => string | undefined;
   /** Resource column width in px (user preference over the maker default). */
   readonly resourceColumnWidth?: number;
   /** Unscheduled panel width in px (user preference over the maker default). */
@@ -366,6 +356,12 @@ export interface SchedulerSurfaceProps {
    * feeds resx resources here in Phase F; components read via context.
    */
   readonly strings?: Partial<SchedulerStrings>;
+  /**
+   * The user's locale for numbers (hours, counts), as a BCP 47 tag: the
+   * host reads it from the user's settings (localeForLanguage). Absent =
+   * the browser's.
+   */
+  readonly locale?: string;
   /** Fluent token overrides applied as CSS custom properties on the root. */
   readonly theme?: Partial<SchedulerTheme>;
   /** Display-zone label chip shown in the toolbar (host converts dates). */
@@ -520,9 +516,6 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
   const [dialogEvent, setDialogEvent] = React.useState<
     SchedulerUiEvent | undefined
   >();
-  const [assignFor, setAssignFor] = React.useState<
-    SchedulerUiEvent | undefined
-  >(undefined);
   const [conversionOpen, setConversionOpen] = React.useState(false);
   const conversion = props.conversionSurface;
   // Hiding the conversion surface is a connected-instance privilege.
@@ -531,7 +524,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     !props.onRequestSolve &&
     !(conversion.hidden && conversion.connected);
   const [pendingUnschedule, setPendingUnschedule] = React.useState<
-    SchedulerUiEvent | undefined
+    readonly SchedulerUiEvent[] | undefined
   >(undefined);
   const [draftRange, setDraftRange] = React.useState<DragResult | undefined>();
   const [hover, setHover] = React.useState<HoverState | undefined>();
@@ -704,7 +697,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     }
     return proposalMustReport(
       props.proposal,
-      { dropped: droppedChangeIds, withheld: withheldChangeIds },
+      { dropped: droppedChangeIds, openKind: boardExtension?.openShift, withheld: withheldChangeIds },
       () =>
         review.checkMust({
           events: appliedAll,
@@ -726,6 +719,13 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     () =>
       review && proposalChanges
         ? review.unchecked({ resources: props.resources, window: reviewPeriod })
+        : undefined,
+    [proposalChanges, props.resources, review, reviewPeriod],
+  );
+  const ruleRows = React.useMemo(
+    () =>
+      review?.ruleRows && proposalChanges
+        ? new Set(review.ruleRows({ resources: props.resources, window: reviewPeriod }))
         : undefined,
     [proposalChanges, props.resources, review, reviewPeriod],
   );
@@ -752,7 +752,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     return openShiftsAfter(
       { ...props.proposal, events: props.proposal.events.filter(inPeriod) },
       proposalChanges.filter((change) => inPeriod(change.current)),
-      { dropped: droppedChangeIds, withheld: withheldChangeIds },
+      { dropped: droppedChangeIds, openKind: boardExtension?.openShift, withheld: withheldChangeIds },
     );
   }, [droppedChangeIds, proposalChanges, props.proposal, reviewPeriod, withheldChangeIds]);
   // F24 Repair mode: the on-call shifts Apply would leave open; the open-shift list says they are not counted.
@@ -765,7 +765,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     return openOnCallAfter(
       { ...props.proposal, events: props.proposal.events.filter(inPeriod) },
       proposalChanges.filter((change) => inPeriod(change.current)),
-      { dropped: droppedChangeIds, withheld: withheldChangeIds },
+      { dropped: droppedChangeIds, openKind: boardExtension?.openShift, withheld: withheldChangeIds },
     ).length;
   }, [droppedChangeIds, proposalChanges, props.proposal, reviewPeriod, withheldChangeIds]);
   // What Apply leaves in the period, handed to the host with the changes (F53 saved counts).
@@ -799,7 +799,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
         ? proposalScore(
             props.proposal,
             proposalChanges,
-            { dropped: droppedChangeIds, withheld: withheldChangeIds },
+            { dropped: droppedChangeIds, openKind: boardExtension?.openShift, withheld: withheldChangeIds },
             props.proposal.window ?? props.window,
           )
         : undefined,
@@ -816,7 +816,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
         ? previewProposal(
             [...props.events, ...(props.unscheduledEvents ?? [])],
             proposalChanges,
-            { dropped: droppedChangeIds, withheld: withheldChangeIds },
+            { dropped: droppedChangeIds, openKind: boardExtension?.openShift, withheld: withheldChangeIds },
           )
         : undefined,
     [
@@ -1043,6 +1043,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     anchor: props.anchor,
     canEdit,
     events: boardEvents,
+    locale: props.locale,
     resources: props.resources,
     reviewing: proposalChanges !== undefined,
     sidePanel: { collapsed: sideCollapsed, expand: expandSide },
@@ -1396,6 +1397,8 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       ? { id: "why-not", label: strings.menuWhyNot, onSelect: () => openWhyNot(event.id, menu?.origin) }
       : undefined;
     if (reviewing) {
+      // The board's own edit first, then the record's form.
+      items.push({ id: "open", label: strings.menuOpen, onSelect: () => openDialog(event) });
       if (props.onOpenRecord) {
         const openRecord = leavingFullScreen(props.onOpenRecord);
         items.push({
@@ -1404,7 +1407,6 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           onSelect: () => openRecord(event),
         });
       }
-      items.push({ id: "open", label: strings.menuOpen, onSelect: () => openDialog(event) });
       const change = proposalChanges?.find(
         (candidate) => candidate.current.id === event.id,
       );
@@ -1421,6 +1423,8 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       }
       return items;
     }
+    // The board's own edit first, then the record's form.
+    items.push({ id: "open", label: strings.menuOpen, onSelect: () => openDialog(event) });
     if (props.onOpenRecord) {
       const openRecord = leavingFullScreen(props.onOpenRecord);
       items.push({
@@ -1429,31 +1433,14 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
         onSelect: () => openRecord(event),
       });
     }
-    items.push({ id: "open", label: strings.menuOpen, onSelect: () => openDialog(event) });
     if (whyNotItem) {
       items.push(whyNotItem);
     }
     // An extension's own items for the shift, such as marking its person absent.
-    items.push(...(boardExtension?.shiftMenu?.(event) ?? []));
-    if (
-      canEdit &&
-      props.onAssignEvent &&
-      event.status === "needsCover" &&
-      !isPinned(event)
-    ) {
-      items.unshift({
-        id: "assign",
-        label: strings.menuAssign,
-        onSelect: () => setAssignFor(event),
-      });
-    }
-    if (canEdit && props.onDuplicateEvent) {
-      items.push({
-        id: "duplicate",
-        label: strings.menuDuplicate,
-        onSelect: () => props.onDuplicateEvent?.(event),
-      });
-    }
+    const extensionItems = boardExtension?.shiftMenu?.(event) ?? [];
+    items.push(...extensionItems);
+    // After the extension's items, the edits start a group of their own.
+    const editsFrom = extensionItems.length > 0 ? items.length : undefined;
     // A pin holds an open shift too: the solver leaves it open.
     if (canEdit && props.onTogglePin) {
       const setPinned = (
@@ -1564,10 +1551,21 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       event.status !== "needsCover" &&
       !isDeleteLocked(event)
     ) {
+      // Inside a multi-selection it unschedules the set, as the other set actions do; pinned and open ones sit out.
+      const groupUnschedule = selectedIdSet.has(event.id) && selectedIdSet.size > 1;
+      const unscheduleTargets = groupUnschedule
+        ? props.events.filter(
+            (candidate) =>
+              selectedIdSet.has(candidate.id) && candidate.status !== "needsCover" && !isDeleteLocked(candidate),
+          )
+        : [event];
       items.push({
         id: "unschedule",
-        label: strings.menuUnschedule,
-        onSelect: () => setPendingUnschedule(event),
+        label:
+          unscheduleTargets.length > 1
+            ? formatString(strings.menuUnscheduleCount, { count: unscheduleTargets.length })
+            : strings.menuUnschedule,
+        onSelect: () => setPendingUnschedule(unscheduleTargets),
       });
     }
     if (canEdit && props.onDeleteEvent && !isDeleteLocked(event)) {
@@ -1580,6 +1578,8 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       );
       items.push({
         danger: true,
+        // Delete stands apart from the edits before it.
+        dividerBefore: true,
         id: "delete",
         label: groupDelete
           ? formatString(strings.menuDeleteCount, {
@@ -1590,7 +1590,10 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           requestDelete(groupDelete ? selectedEvents : [event]),
       });
     }
-    return items.concat(
+    const grouped = items.map((item, index) =>
+      index === editsFrom && index > 0 && !item.dividerBefore ? { ...item, dividerBefore: true } : item,
+    );
+    return grouped.concat(
       props.contextMenuItems?.(event) ?? [],
       loadedMenuItems?.eventId === event.id ? loadedMenuItems.items : [],
     );
@@ -1601,14 +1604,17 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     props.unscheduledEvents !== undefined;
   // While a proposal is reviewed with nothing left open, the empty panel gives its width to the board.
   const nothingOpen = (boardUnscheduled?.length ?? 0) + (props.undatedEvents?.length ?? 0) === 0;
-  const showPanel = panelAllowed && (props.unscheduledPanelVisible ?? true) && !(reviewing && nothingOpen);
+  const showPanel = panelAllowed && !(reviewing && nothingOpen);
 
+  // The extension's way out of an empty board (nobody on it), under the board's message.
+  const emptyAction = extension?.empty?.(boardState);
   const renderView = (): JSX.Element => {
     if (props.view === "roster") {
       return (
         <ChronaRoster
           changesOnly={preview !== undefined && changesOnly}
           editable={canEdit}
+          emptyAction={emptyAction}
           events={boardEvents}
           extension={extension?.roster?.(boardState)}
           hourFormat={props.hourFormat}
@@ -1630,6 +1636,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
         <TopDownView
           draftRange={draftRange}
           editable={canEdit}
+          emptyAction={emptyAction}
           events={boardEvents}
           hourFormat={props.hourFormat}
           onDraftRange={canCreate ? handleDraftRange : undefined}
@@ -1695,13 +1702,16 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     return (
       <ChronaTimeline
         periodBoundaries={periodBoundaries}
+        weekStartsOn={props.weekStartsOn}
         config={effectiveConfig}
         decorations={props.decorations}
         draftRange={draftRange}
         editable={canEdit}
+        emptyAction={emptyAction}
         events={boardEvents}
         extension={extension?.timeline?.(boardState)}
         groupBy={props.groupBy}
+        groupColor={props.groupColor}
         hourFormat={props.hourFormat}
         initialScrollHour={props.initialScrollHour}
         labelColumnWidth={props.resourceColumnWidth}
@@ -1787,17 +1797,19 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
   };
 
   const handleNewEvent = (): void => {
-    // No lane yet: the draft goes to the host's unassigned id when it has one.
-    const resourceId = props.resources[0]?.id ?? props.unassignedResourceId;
+    // From the toolbar no row is picked: the draft belongs to nobody yet, the host's unassigned lane,
+    // else the first row when the host has none.
+    const resourceId = props.unassignedResourceId ?? props.resources[0]?.id;
     if (!resourceId) {
       return;
     }
-    const start = new Date(props.window.start.getTime());
+    const inView = (date: Date): boolean =>
+      date.getTime() >= props.window.start.getTime() && date.getTime() < props.window.end.getTime();
+    // Today at 09:00 on the board's clock when today is in view, else the window's first day.
+    const day = props.today && inView(props.today) ? props.today : props.window.start;
+    const start = new Date(day.getTime());
     start.setHours(9, 0, 0, 0);
-    if (
-      start.getTime() < props.window.start.getTime() ||
-      start.getTime() >= props.window.end.getTime()
-    ) {
+    if (!inView(start)) {
       start.setTime(props.window.start.getTime());
     }
     openDraft({
@@ -1820,12 +1832,14 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       proposalChanges && review
         ? proposalReasons(proposalChanges, props.proposal?.analysis, {
             eventsById: proposalEventsById,
+            hourFormat: props.hourFormat,
+            locale: props.locale,
             nameOf: nameOfResource,
             strings,
             toInstant: props.toInstant,
           })
         : undefined,
-    [nameOfResource, proposalChanges, proposalEventsById, props.proposal, props.toInstant, review, strings],
+    [nameOfResource, proposalChanges, proposalEventsById, props.locale, props.proposal, props.toInstant, review, strings],
   );
   const personFixes = React.useMemo(
     () => (proposalChanges && review ? personFixCounts(proposalChanges, props.proposal?.analysis) : undefined),
@@ -1929,6 +1943,8 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
               ? (events) => review.checkMust({ events, resources: props.resources, window: whyNotWindow })
               : undefined,
             events: currentAll,
+            hourFormat: props.hourFormat,
+            locale: props.locale,
             names: dateNamesFrom(strings),
             nameOf: nameOfResource,
             picked,
@@ -2005,10 +2021,13 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
                       match,
                       { events: drillMatches.roster === "now" ? props.events : appliedAll, resources: props.resources, window: reviewPeriod },
                       dateNamesFrom(strings),
+                      props.locale,
                     ),
                 }
               : {}),
             eventsById: proposalEventsById,
+            hourFormat: props.hourFormat,
+            locale: props.locale,
             nameOf: nameOfResource,
             names: dateNamesFrom(strings),
             strings,
@@ -2131,7 +2150,10 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
 
   const toolbarAnchor = props.anchor;
   const toolbarAnchorChange = props.onAnchorChange;
-  const toolbarInterval = props.interval;
+  // Top-down draws one day: the toolbar steps by the day and offers no other range.
+  const oneDay = drawsOneDay(props.view);
+  const toolbarInterval = oneDay && props.interval ? "day" : props.interval;
+  const toolbarIntervals = oneDay ? [] : props.intervals;
   const toolbarIntervalChange = props.onIntervalChange;
 
   return (
@@ -2149,7 +2171,6 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       toolbarInterval &&
       toolbarIntervalChange ? (
         <SchedulerToolbar
-          activeViewId={props.activeViewId}
           anchor={toolbarAnchor}
           undoRedo={props.undoRedo}
           settings={
@@ -2168,25 +2189,14 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
               : undefined
           }
           afterIntervals={extension?.toolbar?.afterIntervals?.(boardState)}
-          beforeIntervals={extension?.toolbar?.beforeIntervals?.(boardState)}
-          start={extension?.toolbar?.start?.(boardState)}
-          groupBy={
-            props.onGroupByChange
-              ? {
-                  onChange: props.onGroupByChange,
-                  options: groupSetOptions,
-                  value: (props.groupBy ?? groupSetOptions.slice(0, 1))[0],
-                }
-              : undefined
-          }
           daySpanDays={props.navigationStepDays}
           interval={toolbarInterval}
-          intervals={props.intervals}
+          intervals={toolbarIntervals}
           onAnchorChange={toolbarAnchorChange}
-          onStep={props.onStep}
+          // Top-down steps a day, the range it draws, whatever the host steps by.
+          onStep={oneDay ? undefined : props.onStep}
           weekStartsOn={props.weekStartsOn}
           onIntervalChange={toolbarIntervalChange}
-          onActiveViewChange={props.onActiveViewChange}
           onNewEvent={
             canEdit && props.onCreateEvent
               ? handleNewEvent
@@ -2204,7 +2214,6 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           timeZoneDetail={props.timeZoneDetail}
           timeZoneLabel={props.timeZoneLabel}
           today={props.today}
-          views={props.views}
           window={props.window}
         />
       ) : null}
@@ -2436,7 +2445,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
               >
                 {formatString(strings.entitlementPaused, {
                   since: props.entitlement.pausedSince
-                    ? formatDayTimeLabel(props.entitlement.pausedSince, dateNamesFrom(strings))
+                    ? formatDayTimeLabel(props.entitlement.pausedSince, dateNamesFrom(strings), props.hourFormat)
                     : "",
                 })}
               </span>
@@ -2719,7 +2728,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           id={scorecardId}
           must={proposalMust}
           mustReport={mustReport}
-          {...(review?.ruleRows ? { ruleRows: new Set(review.ruleRows) } : {})}
+          {...(ruleRows ? { ruleRows } : {})}
           nameOf={nameOfResource}
           onFocusShift={(event) => focusShifts([event.id])}
           onOpenRow={openMustRow}
@@ -2830,11 +2839,6 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
               }));
               props.onEventClick?.(event);
             }}
-            onClose={
-              props.onUnscheduledPanelVisibleChange
-                ? () => props.onUnscheduledPanelVisibleChange?.(false)
-                : undefined
-            }
             groupSet={(props.groupBy ?? groupSetOptions.slice(0, 1))[0]}
             isShort={() =>
               extension?.timeline?.(boardState)?.strip?.short?.({
@@ -2849,22 +2853,6 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
             width={props.unscheduledPanelWidth}
             window={props.window}
           />
-        ) : null}
-        {panelAllowed &&
-        !showPanel &&
-        props.unscheduledEvents !== undefined &&
-        props.onUnscheduledPanelVisibleChange ? (
-          <button
-            aria-expanded={false}
-            className="chrona-sched__panel-reopen"
-            data-testid="panel-reopen"
-            onClick={() => props.onUnscheduledPanelVisibleChange?.(true)}
-            type="button"
-          >
-            {formatString(strings.unscheduledToggle, {
-              count: props.unscheduledEvents.length,
-            })}
-          </button>
         ) : null}
       </div>
       {props.showLegend !== false ? (
@@ -2912,7 +2900,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
         />
       ) : null}
       {dialogEvent ? (
-        <EventDialog
+        <BoardEventDialog
           availableTags={props.availableTags}
           tagMode={props.tagMode}
           onRequiredTagsChange={props.onRequiredTagsChange}
@@ -2940,14 +2928,21 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           onClick={() => setPendingDelete(undefined)}
         >
           <div
-            aria-label={strings.deleteConfirmTitle}
+            aria-label={
+              pendingDelete.length === 1
+                ? strings.deleteConfirmTitle
+                : formatString(strings.deleteConfirmCount, { count: pendingDelete.length })
+            }
             className="chrona-sched__dialog chrona-sched__confirm-dialog"
             onClick={(clickEvent) => clickEvent.stopPropagation()}
             role="alertdialog"
           >
             <div className="chrona-sched__dialog-header">
               <span className="chrona-sched__dialog-title">
-                {strings.deleteConfirmTitle}
+                {/* A set is counted in the title, the body and the button alike. */}
+                {pendingDelete.length === 1
+                  ? strings.deleteConfirmTitle
+                  : formatString(strings.deleteConfirmCount, { count: pendingDelete.length })}
               </span>
             </div>
             <p>
@@ -2955,9 +2950,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
                 ? formatString(strings.deleteConfirmMessage, {
                     title: pendingDelete[0]?.title ?? "",
                   })
-                : formatString(strings.deleteConfirmCount, {
-                    count: pendingDelete.length,
-                  })}
+                : strings.deleteConfirmUndone}
             </p>
             <div className="chrona-sched__dialog-actions">
               <button
@@ -2971,28 +2964,39 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
                 onClick={confirmPendingDelete}
                 type="button"
               >
-                {strings.deleteConfirmAction}
+                {pendingDelete.length === 1
+                  ? strings.deleteConfirmAction
+                  : formatString(strings.menuDeleteCount, { count: pendingDelete.length })}
               </button>
             </div>
           </div>
         </div>
       ) : null}
-      {pendingUnschedule ? (
+      {pendingUnschedule && pendingUnschedule.length > 0 ? (
         <div className="chrona-sched__dialog-backdrop">
           <div
-            aria-label={strings.unscheduleConfirmTitle}
+            aria-label={
+              pendingUnschedule.length > 1
+                ? formatString(strings.unscheduleConfirmCountTitle, { count: pendingUnschedule.length })
+                : strings.unscheduleConfirmTitle
+            }
             className="chrona-sched__dialog chrona-sched__confirm-dialog"
             role="alertdialog"
           >
             <div className="chrona-sched__dialog-header">
               <span className="chrona-sched__dialog-title">
-                {strings.unscheduleConfirmTitle}
+                {/* A set is counted in the title and the button, as Delete is; the body says what happens. */}
+                {pendingUnschedule.length > 1
+                  ? formatString(strings.unscheduleConfirmCountTitle, { count: pendingUnschedule.length })
+                  : strings.unscheduleConfirmTitle}
               </span>
             </div>
             <p>
-              {formatString(strings.unscheduleConfirmMessage, {
-                title: pendingUnschedule.title,
-              })}
+              {pendingUnschedule.length > 1
+                ? strings.unscheduleConfirmCount
+                : formatString(strings.unscheduleConfirmMessage, {
+                    title: pendingUnschedule[0]?.title ?? "",
+                  })}
             </p>
             <div className="chrona-sched__dialog-actions">
               <button
@@ -3005,12 +3009,31 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
                 className="chrona-sched__dialog-primary"
                 data-testid="confirm-unschedule"
                 onClick={() => {
-                  props.onUnscheduleEvent?.(pendingUnschedule);
+                  const [single] = pendingUnschedule;
+                  if (pendingUnschedule.length === 1 && single) {
+                    props.onUnscheduleEvent?.(single);
+                  } else if (props.unassignedResourceId && props.onEventsChange) {
+                    // The set goes to nobody in one change, one undo step: the host writes each as Unschedule does.
+                    const nobody = props.unassignedResourceId;
+                    props.onEventsChange(
+                      pendingUnschedule.map((event) => ({
+                        event,
+                        result: { end: event.end, resourceId: nobody, start: event.start },
+                        verdict: allowVerdict,
+                      })),
+                    );
+                  } else {
+                    for (const event of pendingUnschedule) {
+                      props.onUnscheduleEvent?.(event);
+                    }
+                  }
                   setPendingUnschedule(undefined);
                 }}
                 type="button"
               >
-                {strings.unscheduleConfirmAction}
+                {pendingUnschedule.length > 1
+                  ? formatString(strings.menuUnscheduleCount, { count: pendingUnschedule.length })
+                  : strings.unscheduleConfirmAction}
               </button>
             </div>
           </div>
@@ -3042,20 +3065,6 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           window={props.window}
         />
       ) : null}
-      {assignFor && props.onAssignEvent ? (
-        <AssignDialog
-          decorations={props.decorations}
-          event={assignFor}
-          events={props.events}
-          onAssign={(resourceId) => {
-            props.onAssignEvent?.(assignFor, resourceId);
-            setAssignFor(undefined);
-          }}
-          onClose={() => setAssignFor(undefined)}
-          resources={props.resources}
-          tagColors={props.tagColors}
-        />
-      ) : null}
       {groupAction ? (
         <GroupActionDialog
           events={groupAction.events}
@@ -3075,7 +3084,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
         />
       ) : null}
       {draftDialogEvent ? (
-        <EventDialog
+        <BoardEventDialog
           availableTags={props.availableTags}
           tagMode={props.tagMode}
           onRequiredTagsChange={props.onRequiredTagsChange}
@@ -3100,6 +3109,8 @@ export function SchedulerSurface(props: SchedulerSurfaceProps): JSX.Element {
   return (
     <div
       className="chrona-sched"
+      // The user's language on the control, so the browser hyphenates its words as that language does.
+      lang={props.locale}
       ref={rootRef}
       style={
         props.theme
@@ -3112,9 +3123,11 @@ export function SchedulerSurface(props: SchedulerSurfaceProps): JSX.Element {
           <SchedulerStringsProvider
             strings={props.extension?.strings ? { ...props.strings, ...props.extension.strings } : props.strings}
           >
-            <BoardExtensionProvider extension={props.extension}>
-              <InteractionShell {...props} />
-            </BoardExtensionProvider>
+            <BoardLocaleProvider hourFormat={props.hourFormat} locale={props.locale}>
+              <BoardExtensionProvider extension={props.extension}>
+                <InteractionShell {...props} />
+              </BoardExtensionProvider>
+            </BoardLocaleProvider>
           </SchedulerStringsProvider>
         </DragProvider>
       </FullScreenProvider>

@@ -164,6 +164,24 @@ const run = async (): Promise<void> => {
     assert.equal(calls[0]?.body?.includes("res-ann"), false, "F23: no real ids on the wire");
   }
 
+  // F126: the 402's reason travels with the error, so the board tells the free people from the daily allowance.
+  for (const code of ["free_people_exceeded", "quota_exceeded"]) {
+    const { fetchImpl } = failingFetch(402, { code, message: "Refused." });
+    await assert.rejects(
+      runSolve({ currentEvents, fetchImpl, problem, runToken: "tp", session }),
+      (error: unknown) => error instanceof SolveQuotaExceededError && error.code === code && error.message === "Refused.",
+      `402 ${code}`,
+    );
+  }
+  {
+    const { fetchImpl } = failingFetch(402, {});
+    await assert.rejects(
+      runSolve({ currentEvents, fetchImpl, problem, runToken: "tq", session }),
+      (error: unknown) => error instanceof SolveQuotaExceededError && error.code === undefined,
+      "402 without a body",
+    );
+  }
+
   // F38: with the tenant's key the body carries stable placeholders, the scheme and the calendar's product.
   {
     const keyed: SolveSession = { ...session, resourcePlaceholders: { key: "c2FtcGxlLXRlbmFudC1rZXktZm9yLXRlc3RzLW9ubHk", scheme: "hmac-sha256-v1" } };

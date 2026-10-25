@@ -1,17 +1,17 @@
 # Chrona Scheduler
 
-> A drag-and-drop scheduler for any Dataverse table with a start and an end. It installs as one managed solution and runs inside model-driven apps. No Chrona account is needed to use it; Optimize, which fills and balances the schedule, connects to the Chrona service.
+> A drag-and-drop scheduler for any Dataverse table with a start and an end. It installs as one managed solution and runs inside model-driven apps. No Chrona account is needed to use it; Auto Schedule, which fills and balances the schedule, connects to the Chrona service.
 
 Every page below is plain Markdown. Read them in order for an install; each stands alone for a question.
 
 ## Install
 
-- [Overview](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/README.md): what it is, why builders pick it, the ten-minute setup, what you get, Optimize, staff rostering, performance, trust.
-- [Install guide](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/install.md): import the solution, give people roles, bind the scheduler to a view, open it in an app, connect for Optimize.
+- [Overview](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/README.md): what it is, why builders pick it, the ten-minute setup, what you get, Auto Schedule, staff rostering, performance, trust.
+- [Install guide](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/install.md): import the solution, give people roles, bind the scheduler to a view, open it in an app, connect for Auto Schedule.
 - [Bindings](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/bindings.md): every binding in the property pane, the three that matter, and what the rest are for.
 - [Layouts](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/layouts.md): the four layouts (timeline, roster grid, top-down, agenda), when each fits, and the view row setting that picks one.
 - [Where things are set up](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/configure.md): the property pane, the calendar and view configuration rows with every setting, the toolbar's per-user choices, the Workforce tables, sites, agreements and the roster import from Excel.
-- [Questions](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/faq.md): what the platform shows along the way, removing the solution, languages, what Optimize sends.
+- [Questions](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/faq.md): what the platform shows along the way, removing the solution, languages, what Auto Schedule sends.
 
 ## Chrona Workforce Mobile
 

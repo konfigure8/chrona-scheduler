@@ -37,23 +37,10 @@ import {
 } from "./viewConfig";
 import type { TimeWindow } from "./types";
 
-export interface SchedulerViewOption {
-  readonly id: string;
-  readonly label: string;
-}
-
 export interface ToolbarTimeScale {
   readonly effective: number;
   readonly onChange: (minutes: number) => void;
   readonly options: readonly TimeScaleOption[];
-}
-
-export interface ToolbarGroupBy {
-  /** Grouping-set names offered by the data (chr_groupset rows). */
-  readonly options: readonly string[];
-  readonly onChange: (set: string | undefined) => void;
-  /** Active primary set; undefined = flat list. */
-  readonly value: string | undefined;
 }
 
 export interface ToolbarConversionOptimize {
@@ -82,16 +69,10 @@ export interface SchedulerToolbarProps {
   readonly settings?: ToolbarSettings;
   /** Undo/redo buttons; keyboard shortcuts stay host-side. */
   readonly undoRedo?: ToolbarUndoRedo;
-  /** Team-groups vs flat rows; the host persists the choice. */
-  readonly groupBy?: ToolbarGroupBy;
   /** Standalone conversion surface: quiet Optimize opening the explainer. */
   readonly conversionOptimize?: ToolbarConversionOptimize;
   /** An extension's items after the interval switcher. */
   readonly afterIntervals?: React.ReactNode;
-  /** An extension's items before the interval switcher. */
-  readonly beforeIntervals?: React.ReactNode;
-  /** An extension's first items. */
-  readonly start?: React.ReactNode;
   /** Span used when the "daySpan" interval is offered. */
   readonly daySpanDays?: number;
   readonly interval: SchedulerTimeScale;
@@ -109,10 +90,6 @@ export interface SchedulerToolbarProps {
   /** The week's first day for the date picker, 0 Sunday to 6 Saturday. */
   readonly weekStartsOn?: number;
   readonly onIntervalChange: (interval: SchedulerTimeScale) => void;
-  /** Saved-view switcher; the host owns what a view change applies. */
-  readonly onActiveViewChange?: (id: string) => void;
-  readonly activeViewId?: string;
-  readonly views?: readonly SchedulerViewOption[];
   readonly onNewEvent?: () => void;
   /** Teams-style time-scale menu; omitted when the view has no sub-day axis. */
   readonly timeScale?: ToolbarTimeScale;
@@ -362,7 +339,6 @@ function TimeScaleMenu(props: {
  */
 export function SchedulerToolbar(props: SchedulerToolbarProps): JSX.Element {
   const {
-    activeViewId,
     anchor,
     daySpanDays,
     interval,
@@ -371,14 +347,12 @@ export function SchedulerToolbar(props: SchedulerToolbarProps): JSX.Element {
     onIntervalChange,
     onStep,
     weekStartsOn,
-    onActiveViewChange,
     onNewEvent,
     settings,
     timeScale,
     timeZoneDetail,
     timeZoneLabel,
     today,
-    views,
     window,
   } = props;
   const strings = useSchedulerStrings();
@@ -387,44 +361,9 @@ export function SchedulerToolbar(props: SchedulerToolbarProps): JSX.Element {
     [strings.monthsLong, strings.monthsShort, strings.weekdaysLong, strings.weekdaysShort],
   );
 
-  const { conversionOptimize, groupBy, undoRedo } = props;
+  const { conversionOptimize, undoRedo } = props;
   return (
     <div className="chrona-sched__toolbar">
-      {props.start}
-      {views && views.length > 0 && onActiveViewChange ? (
-        <select
-          aria-label={strings.savedViews}
-          className="chrona-sched__toolbar-viewselect"
-          onChange={(changeEvent) =>
-            onActiveViewChange(changeEvent.target.value)
-          }
-          value={activeViewId ?? views[0]?.id}
-        >
-          {views.map((view) => (
-            <option key={view.id} value={view.id}>
-              {view.label}
-            </option>
-          ))}
-        </select>
-      ) : null}
-      {groupBy ? (
-        <select
-          aria-label={strings.groupByLabel}
-          className="chrona-sched__toolbar-groupselect"
-          data-testid="group-by"
-          onChange={(changeEvent) =>
-            groupBy.onChange(changeEvent.target.value || undefined)
-          }
-          value={groupBy.value ?? ""}
-        >
-          {groupBy.options.map((set) => (
-            <option key={set} value={set}>
-              {set}
-            </option>
-          ))}
-          <option value="">{strings.groupByNone}</option>
-        </select>
-      ) : null}
       {/* A secondary button: the run (Optimize, Repair) or Publish is the surface's one primary. */}
       {onNewEvent ? (
         <button
@@ -501,9 +440,9 @@ export function SchedulerToolbar(props: SchedulerToolbarProps): JSX.Element {
           {timeZoneLabel}
         </span>
       ) : null}
-      {timeScale ? <TimeScaleMenu timeScale={timeScale} /> : null}
+      {/* The time scale is a view control: it sits with the interval tabs and wraps with them as one cluster. */}
       <div className="chrona-sched__toolbar-trailing">
-      {props.beforeIntervals}
+      {timeScale ? <TimeScaleMenu timeScale={timeScale} /> : null}
       {intervals.length > 0 ? (
       <div
         aria-label={strings.interval}

@@ -12,8 +12,6 @@
  */
 
 export interface SchedulerPreferencesV1 {
-  /** Last active saved view (scheduler-level views, not Dataverse ones). */
-  readonly activeViewId?: string;
   /** The zoom saved before zoom was kept per interval; a Day zoom now. */
   readonly pxPerHour?: number;
   /** The zoom the planner chose in each interval (day, week, month, span). */
@@ -24,12 +22,8 @@ export interface SchedulerPreferencesV1 {
   /** True folds the review's scorecard; the summary line stays. */
   readonly scorecardHidden?: boolean;
   readonly slotMinutes?: number;
-  /** Primary grouping-set name; "" = flat; unset = data default. */
-  readonly groupBy?: string;
   /** True filters the unscheduled panel to the visible window. */
   readonly unscheduledInViewOnly?: boolean;
-  /** True hides the unscheduled side panel (lanes stay). */
-  readonly unscheduledPanelHidden?: boolean;
   readonly unscheduledPanelWidth?: number;
   readonly v: 1;
 }
@@ -82,13 +76,10 @@ export function createPreferenceStore(
       if (!raw || raw["v"] !== 1) {
         return undefined;
       }
-      const activeViewId = raw["activeViewId"];
       const pxPerHour = raw["pxPerHour"];
       const resourceColumnWidth = raw["resourceColumnWidth"];
       const slotMinutes = raw["slotMinutes"];
-      const groupBy = raw["groupBy"];
       const unscheduledInViewOnly = raw["unscheduledInViewOnly"];
-      const unscheduledPanelHidden = raw["unscheduledPanelHidden"];
       const unscheduledPanelWidth = raw["unscheduledPanelWidth"];
       const scorecardHidden = raw["scorecardHidden"];
       const rosterStatsRaw = raw["rosterStats"];
@@ -108,7 +99,6 @@ export function createPreferenceStore(
             )
           : undefined;
       return {
-        ...(typeof activeViewId === "string" ? { activeViewId } : {}),
         ...(typeof pxPerHour === "number" ? { pxPerHour } : {}),
         ...(typeof resourceColumnWidth === "number"
           ? { resourceColumnWidth }
@@ -116,12 +106,8 @@ export function createPreferenceStore(
         ...(rosterStats ? { rosterStats } : {}),
         ...(typeof scorecardHidden === "boolean" ? { scorecardHidden } : {}),
         ...(typeof slotMinutes === "number" ? { slotMinutes } : {}),
-        ...(typeof groupBy === "string" ? { groupBy } : {}),
         ...(typeof unscheduledInViewOnly === "boolean"
           ? { unscheduledInViewOnly }
-          : {}),
-        ...(typeof unscheduledPanelHidden === "boolean"
-          ? { unscheduledPanelHidden }
           : {}),
         ...(typeof unscheduledPanelWidth === "number"
           ? { unscheduledPanelWidth }

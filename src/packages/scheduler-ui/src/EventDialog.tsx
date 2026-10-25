@@ -16,6 +16,8 @@ import type {
   SchedulerUiEvent,
 } from "./types";
 import { isDeleteLocked, isPinned, showsPin } from "./locks";
+import { useBoardExtension } from "./extension";
+import { ShiftMarkNote, useShiftMarks } from "./ShiftMark";
 
 export interface DraftEventInput {
   readonly end: Date;
@@ -62,6 +64,12 @@ export interface EventDialogProps {
   readonly validateChange?: ValidateChange;
 }
 
+/** The extension's own dialog where it has one (BoardExtension.shiftDialog), else the board's. */
+export function BoardEventDialog(props: EventDialogProps): JSX.Element {
+  const own = useBoardExtension()?.shiftDialog?.(props);
+  return own !== undefined ? <>{own}</> : <EventDialog {...props} />;
+}
+
 function toLocalInputValue(date: Date): string {
   const pad = (value: number): string => value.toString().padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
@@ -101,6 +109,7 @@ export function EventDialog(props: EventDialogProps): JSX.Element {
     availableTags !== undefined &&
     availableTags.length > 0;
   const strings = useSchedulerStrings();
+  const shiftMark = useShiftMarks()(event);
   const [title, setTitle] = React.useState(event.title);
   const [start, setStart] = React.useState(toLocalInputValue(event.start));
   const [end, setEnd] = React.useState(toLocalInputValue(event.end));
@@ -344,6 +353,8 @@ export function EventDialog(props: EventDialogProps): JSX.Element {
           </button>
         </div>
         <div className="chrona-sched__dialog-body">
+          {/* An extension's read-only mark first, as in the hover card: what is happening before the fields. */}
+          {mode !== "create" && shiftMark ? <ShiftMarkNote className="chrona-sched__dialog-mark" mark={shiftMark} /> : null}
           <label className="chrona-sched__dialog-field">
             <span>{strings.name}</span>
             <input

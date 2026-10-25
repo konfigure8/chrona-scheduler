@@ -1,4 +1,5 @@
 import {
+  drawsOneDay,
   formatWindowLabel,
   isSameDay,
   resolveEventColor,
@@ -51,6 +52,19 @@ function resolvesMonthWindow(): void {
   assertEqual(window.start.getDate(), 1);
   assertEqual(window.start.getMonth(), 7);
   assertEqual(window.end.getMonth(), 8);
+}
+
+// Top-down draws one day, a column per person: whatever the interval, its window is the anchor's day.
+function resolvesTopDownToItsOneDay(): void {
+  const wednesday = new Date(2026, 10, 4, 9, 0);
+  for (const timeScale of ["day", "week", "month", "daySpan"] as const) {
+    const window = resolveWindowForScale(wednesday, { representation: "topDown", timeScale, weekStartsOn: 0 });
+    assertEqual(window.start.getTime(), new Date(2026, 10, 4).getTime());
+    assertEqual(window.end.getTime(), new Date(2026, 10, 5).getTime());
+  }
+  assertEqual(drawsOneDay("topDown"), true);
+  assertEqual(drawsOneDay("timeline"), false);
+  assertEqual(drawsOneDay(undefined), false);
 }
 
 function resolvesColorsByStatusAndFieldRules(): void {
@@ -299,6 +313,7 @@ resolvesVerticalHourRangeFromEvents();
 resolvesDayAndDaySpanWindows();
 resolvesWeekWindowStartingMonday();
 resolvesMonthWindow();
+resolvesTopDownToItsOneDay();
 resolvesColorsByStatusAndFieldRules();
 resolvesInitialScrollHour();
 comparesSameDay();

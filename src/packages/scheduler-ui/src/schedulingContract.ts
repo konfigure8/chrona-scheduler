@@ -41,6 +41,13 @@ import type {
   SchedulerUiEvent,
   TagSpan,
 } from "./types";
+import {
+  boardRules,
+  extensionMustRow,
+  type ExtensionMatchKinds,
+  type ExtensionMustRows,
+  type ExtensionShouldRules,
+} from "./ruleRegistry";
 import { maxHoursPerWindow } from "./windowHours";
 
 /** Contract polarity per Docs/domain_model.md section 1. */
@@ -70,7 +77,7 @@ const BOARD_CHECKED_KINDS: ReadonlySet<AgreementRuleKind> = new Set<AgreementRul
 
 /** True for a rule kind the solver checks. */
 export function isSolverRuleKind(kind: AgreementRuleKind): kind is SolverRuleKind {
-  return SOLVER_RULE_KINDS.has(kind);
+  return SOLVER_RULE_KINDS.has(kind) || (boardRules().agreementRuleKinds ?? []).includes(kind);
 }
 
 /** The kinds that only ever weigh as a cost, as in Timefold's contracts. */
@@ -121,10 +128,14 @@ export interface ScheduleContractAgreementRule {
   readonly start?: string;
   /**
    * Above 0, in the units SchedulerAgreementRule.value names: minutes,
-   * or days for days in a row and days off.
+   * days for days in a row and days off, or night shifts.
    */
   readonly value: number;
-  /** weeklyRest and averageHours: the weeks of each window. Absent = 1. */
+  /**
+   * weeklyRest and averageHours: the weeks of each window. Absent = 1.
+   * nightShifts with weeks and no period: every rolling window of that
+   * many weeks.
+   */
   readonly weeks?: number;
   /** A Should rule's weight (Timefold weight). Absent = 1. */
   readonly weight?: number;
@@ -338,7 +349,8 @@ export type MustRuleName =
   | "skills"
   | "splitParts"
   | "unlisted"
-  | "weeklyRest";
+  | "weeklyRest"
+  | keyof ExtensionMustRows;
 
 /** Chrona's names for the Should rules an answer explains; it leaves others out. */
 export type ShouldRuleName =
@@ -346,11 +358,12 @@ export type ShouldRuleName =
   | "preferredTime"
   | "splitPartsOnePerson"
   | "spreadOfShifts"
-  | "unpreferredTime";
+  | "unpreferredTime"
+  | keyof ExtensionShouldRules;
 
 export type ScheduleRuleName = MustRuleName | ShouldRuleName;
 
-const MUST_RULES: ReadonlySet<string> = new Set<MustRuleName>([
+const MUST_RULES: ReadonlySet<string> = new Set<string>([
   "averageHours",
   "daysInARow",
   "daysOff",
@@ -366,7 +379,7 @@ const MUST_RULES: ReadonlySet<string> = new Set<MustRuleName>([
   "weeklyRest",
 ]);
 
-const SHOULD_RULES: ReadonlySet<string> = new Set<ShouldRuleName>([
+const SHOULD_RULES: ReadonlySet<string> = new Set<string>([
   "minimumHours",
   "preferredTime",
   "splitPartsOnePerson",
@@ -374,14 +387,14 @@ const SHOULD_RULES: ReadonlySet<string> = new Set<ShouldRuleName>([
   "unpreferredTime",
 ]);
 
-/** True for a Must rule's name. */
+/** True for a Must rule's name: the board's, or a package's own row (ruleRegistry.ts). */
 export function isMustRule(rule: string): rule is MustRuleName {
-  return MUST_RULES.has(rule);
+  return MUST_RULES.has(rule) || extensionMustRow(rule) !== undefined;
 }
 
-/** True for a Should rule's name. */
+/** True for a Should rule's name: the board's, or a package's own (ruleRegistry.ts). */
 export function isShouldRule(rule: string): rule is ShouldRuleName {
-  return SHOULD_RULES.has(rule);
+  return SHOULD_RULES.has(rule) || (boardRules().shouldRules ?? []).some((entry) => entry.rule === rule);
 }
 
 /** Must breaches outside the named counts, one per match. */
@@ -444,6 +457,7 @@ export function mustBreachTotal(counts: MustBreachCounts): number {
     counts.weeklyRest +
     counts.averageHours +
     (counts.nights ?? 0) +
+    extensionRowsTotal(counts) +
     counts.skills +
     counts.site +
     counts.onLeaveOrUnavailable +
@@ -451,6 +465,16 @@ export function mustBreachTotal(counts: MustBreachCounts): number {
     other.splitParts +
     other.unlisted
   );
+}
+
+/** A registered row's count (ruleRegistry.ts); absent = 0. */
+export function extensionRowCount(counts: MustBreachCounts, row: string): number {
+  const value = (counts as unknown as Readonly<Record<string, unknown>>)[row];
+  return typeof value === "number" ? value : 0;
+}
+
+function extensionRowsTotal(counts: MustBreachCounts): number {
+  return (boardRules().mustRows ?? []).reduce((total, entry) => total + extensionRowCount(counts, entry.row), 0);
 }
 
 /**
@@ -461,8 +485,11 @@ export function mustBreachTotal(counts: MustBreachCounts): number {
 export interface ScheduleRuleMatch {
   /** daysInARow: the run's working days, "YYYY-MM-DD" on the problem's clock. */
   readonly days?: readonly string[];
-  /** nights: which of the five Nights rules the match breaks. Absent = not known. */
-  readonly kind?: NightRuleKind;
+  /**
+   * nights: which of the five Nights rules the match breaks; a package's
+   * own rule, which of its kinds (ruleRegistry.ts). Absent = not known.
+   */
+  readonly kind?: NightRuleKind | keyof ExtensionMatchKinds;
   /** The person the match is about. Absent = no one. */
   readonly resourceId?: string;
   readonly rule: ScheduleRuleName;

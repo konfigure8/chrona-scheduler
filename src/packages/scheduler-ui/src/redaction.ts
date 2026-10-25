@@ -19,6 +19,8 @@
 import type {
   ScheduleCandidate,
   ScheduleCandidateCheck,
+  ScheduleContractAgreement,
+  ScheduleContractShift,
   ScheduleProblemV2,
   ScheduleRosterCheck,
   ScheduleRuleMatch,
@@ -49,11 +51,29 @@ export interface RedactedProblem {
  * returned maps local. Solves use redactProblemForTenant, which keys
  * resources stably when the session carries the tenant's key.
  */
-export function redactProblem(problem: ScheduleProblemV2): RedactedProblem {
+export function redactProblem(problem: ScheduleProblemV2, extension?: RedactionExtension): RedactedProblem {
   return redactWith(
     problem,
     new Map(problem.resources.map((resource, index) => [resource.id, `p-${index + 1}`])),
+    extension,
   );
+}
+
+/**
+ * A scenario package's own problem facts, which the redaction otherwise
+ * leaves out. Each hook returns the facts to send as they are; they must
+ * name no person, or name one only by the key `resourceKey` gives.
+ */
+export interface RedactionExtension {
+  /** An agreement's facts beside its id and rules. */
+  readonly agreement?: (agreement: ScheduleContractAgreement) => Readonly<Record<string, unknown>>;
+  /** Facts on the problem itself; `resourceKey` is undefined for a person the problem does not hold. */
+  readonly problem?: (
+    problem: ScheduleProblemV2,
+    resourceKey: (realId: string) => string | undefined,
+  ) => Readonly<Record<string, unknown>>;
+  /** A shift's facts beside the board's. */
+  readonly shift?: (shift: ScheduleContractShift) => Readonly<Record<string, unknown>>;
 }
 
 /**
@@ -66,10 +86,11 @@ export function redactProblem(problem: ScheduleProblemV2): RedactedProblem {
 export async function redactProblemForTenant(
   problem: ScheduleProblemV2,
   placeholderKey: ResourcePlaceholderKey | undefined,
+  extension?: RedactionExtension,
 ): Promise<RedactedProblem> {
   const subtle = globalThis.crypto?.subtle;
   if (!placeholderKey || placeholderKey.scheme !== "hmac-sha256-v1" || !subtle) {
-    return redactProblem(problem);
+    return redactProblem(problem, extension);
   }
   const cryptoKey = await subtle.importKey(
     "raw",
@@ -86,7 +107,7 @@ export async function redactProblemForTenant(
       pseudonyms.set(resource.id, `r-${bytesToBase64Url(new Uint8Array(signature).slice(0, 16))}`);
     }
   }
-  return { ...redactWith(problem, pseudonyms), resourceKeyScheme: "hmac-sha256-v1" };
+  return { ...redactWith(problem, pseudonyms, extension), resourceKeyScheme: "hmac-sha256-v1" };
 }
 
 /** One record, one placeholder: Dataverse ids differ only by case and braces between sources. */
@@ -111,6 +132,7 @@ function bytesToBase64Url(bytes: Uint8Array): string {
 function redactWith(
   problem: ScheduleProblemV2,
   resourcePseudonyms: ReadonlyMap<string, string>,
+  extension: RedactionExtension | undefined,
 ): RedactedProblem {
   const toRealResourceId = new Map<string, string>();
   resourcePseudonyms.forEach((pseudonym, realId) => toRealResourceId.set(pseudonym, realId));
@@ -130,9 +152,13 @@ function redactWith(
     return pseudonym;
   };
   const agreements = problem.agreements?.map((agreement) => ({
+    ...extension?.agreement?.(agreement),
     id: pseudoAgreement(agreement.id),
     rules: agreement.rules,
   }));
+  // A person the problem does not hold has no key: the extension drops what names them, so their real id stays home.
+  const resourceKey = (realId: string): string | undefined => resourcePseudonyms.get(realId);
+  const extraFacts = extension?.problem?.(problem, resourceKey);
   const timePreferences = problem.timePreferences
     ?.filter((band) => resourcePseudonyms.has(band.resourceId))
     .map((band) => ({
@@ -154,6 +180,7 @@ function redactWith(
   };
   return {
     problem: {
+      ...extraFacts,
       ...(agreements ? { agreements } : {}),
       contractVersion: "2",
       // How the agreement rules count periods: a weekday and a date, not personal data.
@@ -180,6 +207,7 @@ function redactWith(
         const pseudonym = `w-${index + 1}`;
         toRealShiftId.set(pseudonym, shift.id);
         return {
+          ...extension?.shift?.(shift),
           ...(shift.assignment
             ? {
                 assignment: {

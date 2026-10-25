@@ -1,6 +1,6 @@
 # Install Chrona Scheduler
 
-Chrona Scheduler is a drag-and-drop scheduler for any Dataverse table that has a start and an end column. It runs inside your model-driven apps. You do not need a Chrona account to use it. Optimize connects your environment to the Chrona service in one step; there is no sign-up form.
+Chrona Scheduler is a drag-and-drop scheduler for any Dataverse table that has a start and an end column. It runs inside your model-driven apps. You do not need a Chrona account to use it. Auto Schedule connects your environment to the Chrona service in one step; there is no sign-up form.
 
 [![Play the install video: import, access, binding and first drag in about six minutes](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/images/install-video.png)](https://youtu.be/PaablRQmC1o)
 
@@ -68,9 +68,9 @@ Drag to move and resize, create and edit rows, and switch between the day, week,
 
 Working hours, weekends, the time scale, the time zone, grouping, capacity and the collision policies live in two rows the scheduler reads: the Chrona Scheduler Calendar row for your table and the Chrona Scheduler View row for the view. Connect creates them; edit them in the maker portal under **Tables**. Every setting is listed at https://github.com/konfigure8/chrona-scheduler/blob/main/docs/configure.md.
 
-## Optimize
+## Auto Schedule
 
-Optimize asks the Chrona service to fill and balance the schedule. Select **Optimize**, read what it does, and select **Try a free sample run**. That connects your environment to Chrona, creates the scheduler configuration it needs, and runs a first sample optimization. A connected environment gets a free daily allowance of optimizations; nothing about the scheduler itself changes. Connecting does not ask you to sign up; a Chrona account matters only for plans and usage. If your organisation already has a Chrona account, an owner or admin of that account approves each new environment in the Chrona Portal first. Then select **Try a free sample run** again within 24 hours. When the day's free allowance is used, the scheduler says so and Optimize returns the next day. An answer arrives as a proposal on the board: review it, drop what you disagree with, and select **Apply**. Nothing is written before that.
+Auto Schedule asks the Chrona service to fill and balance the schedule. Select **Auto Schedule**, read what it does, and select **Try a free sample run**. That connects your environment to Chrona, creates the scheduler configuration it needs, and runs a first sample run. A connected environment gets a free daily allowance of Auto Schedule runs; nothing about the scheduler itself changes. Connecting does not ask you to sign up; a Chrona account matters only for plans and usage. If your organisation already has a Chrona account, an owner or admin of that account approves each new environment in the Chrona Portal first. Then select **Try a free sample run** again within 24 hours. When the day's free allowance is used, the board says so beside **Auto Schedule**, which runs again the next day. An answer arrives as a proposal on the board: review it, drop what you disagree with, and select **Apply**. Nothing is written before that.
 
 ## Help
 

@@ -140,6 +140,16 @@ const run = async (): Promise<void> => {
   assertEqual(parseEntitlementSession("text"), undefined, "non-object refused");
   assertEqual(parseEntitlementSession({ ...paid, capabilities: ["solve", 7, ""] })?.capabilities.join(","), "solve", "capabilities filtered to names");
 
+  // The server's other fields, verbatim and without the bearer, for a scenario package's own claims;
+  // a cached session keeps them.
+  {
+    const extra = parseEntitlementSession({ ...paid, metrics: { other: 8 }, plan: "x" });
+    assertEqual(extra?.claims?.plan, "x", "other fields kept");
+    assertEqual((extra?.claims?.metrics as Record<string, unknown> | undefined)?.other, 8, "other figures kept");
+    assertEqual(extra?.claims?.token, undefined, "the bearer stays out of the claims");
+    assertEqual(parseEntitlementSession(JSON.parse(JSON.stringify(extra)))?.claims?.plan, "x", "a cached session keeps them");
+  }
+
   // The cache round-trips a snapshot, ignores foreign payloads, and survives a missing store.
   const store = new Map<string, string>();
   const storage = {

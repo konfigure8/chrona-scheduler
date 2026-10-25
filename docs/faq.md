@@ -15,7 +15,7 @@ The solution appears in the Solutions list, under the **Managed** filter, and th
 The platform finishes the import in the background for a minute or so after the banner. Wait a minute and select **Save** again.
 
 ### Does anyone need a Chrona account?
-No. The scheduler works without one. **Try a free sample run** in the Optimize dialog connects your environment to the Chrona service without a sign-up form. A Chrona account matters only for plans and usage.
+No. The scheduler works without one. **Try a free sample run** in the Auto Schedule dialog connects your environment to the Chrona service without a sign-up form. A Chrona account matters only for plans and usage.
 
 ### Connect says my organisation already has a Chrona account
 Each organisation has one Chrona account. Its first environment connects at once. Each further environment needs an owner or admin of the account to approve it in the Chrona Portal, under **Needs your attention**. Then select **Try a free sample run** again within 24 hours.
@@ -45,14 +45,14 @@ Keep Web and Tablet and untick Mobile. A phone layout is not part of this releas
 ### What is saved when I drag a row?
 The row's start, end and, with a Resource binding, its lookup. Every edit writes to your table at once; Undo and Redo write back the same way.
 
-### What does Optimize send?
-A pseudonymous copy of the rows in the period: each person or asset becomes the same placeholder in every run, a keyed one-way hash of its id, and no personal names or titles travel. The run also carries the calendar's name, so Plan and billing can show usage by calendar. You can read the exact payload before the first run from the Optimize dialog. The answer comes back as a proposal on the board; nothing is written until you select **Apply**.
+### What does Auto Schedule send?
+A pseudonymous copy of the rows in the period: each person or asset becomes the same placeholder in every run, a keyed one-way hash of its id, and no personal names or titles travel. The run also carries the calendar's name, so Plan and billing can show usage by calendar. You can read the exact payload before the first run from the Auto Schedule dialog. The answer comes back as a proposal on the board; nothing is written until you select **Apply**.
 
 ### What does a connected environment cost?
-Nothing for the scheduler. A connected environment gets a free daily allowance of optimizations. Scenario solutions such as Chrona Workforce Scheduler are licensed separately.
+Nothing for the scheduler. A connected environment gets a free daily allowance of Auto Schedule runs. Scenario solutions such as Chrona Workforce Scheduler are licensed separately.
 
 ### What happens when the day's free allowance is used up?
-The scheduler says so and Optimize returns the next day. Scheduling itself keeps working.
+The board says so beside **Auto Schedule**, which runs again the next day. Scheduling itself keeps working.
 
 ## Languages
 

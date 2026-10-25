@@ -6,7 +6,7 @@ A timeline and calendar control for Power Apps: put it on a view of your booking
 
 ![The Chrona Scheduler board: people in lanes, shifts as bars, coverage per hour, an unscheduled panel on the right](docs/images/hero.png)
 
-**On this page:** [Why builders pick it](#why-builders-pick-it) · [Try it in ten minutes](#try-it-in-ten-minutes) · [What you get](#what-you-get) · [See it](#see-it) · [When you need optimization](#when-you-need-optimization) · [Staff rostering](#staff-rostering) · [Performance](#performance) · [Trust](#trust) · [Support](#support)
+**On this page:** [Why builders pick it](#why-builders-pick-it) · [Try it in ten minutes](#try-it-in-ten-minutes) · [What you get](#what-you-get) · [See it](#see-it) · [Auto Schedule](#auto-schedule) · [Staff rostering](#staff-rostering) · [Performance](#performance) · [Trust](#trust) · [Support](#support)
 
 **Documentation:** [Install guide](docs/install.md) · [Bindings](docs/bindings.md) · [Layouts](docs/layouts.md) · [Where things are set up](docs/configure.md) · [Questions](docs/faq.md) · [All pages](docs/README.md) · [llms.txt](llms.txt) for agents
 
@@ -14,7 +14,7 @@ A timeline and calendar control for Power Apps: put it on a view of your booking
 
 - **Your table, your app.** It works on any table with a title, a start and an end. No new tables to fill, no second system, no sync. Every drag is saved to your row as it happens, with who made it.
 - **Ten minutes from import to first drag.** Import one managed solution, bind three columns in the view designer, open the view. No code.
-- **Free and self-contained.** No Chrona account, no sign-up, nothing leaves your environment until you choose to connect for optimization.
+- **Free and self-contained.** No Chrona account, no sign-up, nothing leaves your environment until you choose to connect for Auto Schedule.
 
 ## Try it in ten minutes
 
@@ -38,7 +38,7 @@ The [install guide](docs/install.md) walks every step with the platform's own wo
 - Drag open work from the unscheduled panel onto a person to assign it.
 - Create by dragging on an empty slot or with **New event**; edit the details in a dialog.
 - Select several bars and move them together by hours, days or weeks, or reassign them to another person in one go.
-- Copy and paste, undo and redo, all saved to your table.
+- Undo and redo, all saved to your table.
 
 **Keep it right**
 - **Collision detection** on every drop: two shifts on the same person, a shift outside working hours, a person without the required role, a shift over booked leave. Each check is off, a warning or a block, your choice per scheduler. A block snaps the bar back with the reason; a warning lands it with a note.
@@ -65,11 +65,11 @@ The day calendar, for a table without a resource lookup:
 
 ![The day calendar layout](docs/images/day-calendar.png)
 
-## When you need optimization
+## Auto Schedule
 
-Optimize fills open work and balances the schedule against the rules you have. It is one click, free to try, and it asks nothing until you choose to connect: the dialog shows what a sample run does before and after, and exactly what a real run would use.
+**Auto Schedule** fills open work and balances the schedule against the rules you have. It is one click, free to try, and it asks nothing until you choose to connect: the dialog shows what a sample run does before and after, and exactly what a real run would use.
 
-![The Optimize explainer: a sample run before and after, what a real run would use, and the free trial button](docs/images/optimize.png)
+![The Auto Schedule explainer: a sample run before and after, what a real run would use, and the free trial button](docs/images/optimize.png)
 
 While it runs, **Stop and review** ends the run and opens the best roster found so far, if it has found one. **Cancel** ends the run and keeps nothing. The answer arrives as a proposal on the same board. Proposed placements carry a dashed ring, a moved shift leaves a ghost at its old place, and the list names every change with its notes. Drop the ones you disagree with, then **Apply**. Nothing is written before that. On the Roster grid, a dot marks each change, **Changes only** dims the rest, and **Hold to compare** shows today's roster while you hold it. A connected environment gets a free daily allowance of runs.
 
@@ -77,9 +77,9 @@ While it runs, **Stop and review** ends the run and opens the best roster found 
 
 ## Staff rostering
 
-When scheduling turns into rostering, **Chrona Workforce Scheduler** adds the tables and the app for it: roles built from skills, with mismatch highlighting, availability and preferences, contracts with guaranteed and maximum hours and hourly rates, agreements with rest, hours, overtime and night shift rules, demand and the coverage strip, shift types and coverage with rotating patterns and generation, roster periods with publish, a roster import from Excel, **Mark absent** with a repair that moves only open shifts and on-call shifts, wages and overtime hours, and the **Outcomes** of each roster. Same board. It is licensed per scheduled person; ask us at support@chrona365.com.
+When scheduling turns into rostering, **Chrona Workforce Scheduler** adds the tables and the app for it: roles built from skills, with mismatch highlighting, availability and preferences, contracts with guaranteed and maximum hours and hourly rates, agreements with rest, hours, overtime and night shift rules, demand and the coverage strip, shift types and coverage with rotating patterns and generation, roster periods with publish and a planning horizon of the coming rosters, a roster import from Excel, **Mark absent** with a repair that moves only open shifts and on-call shifts, wages and overtime hours, and the **Outcomes** of each roster. Same board. It is licensed per scheduled person; ask us at support@chrona365.com.
 
-![Planning a roster: the horizon of roster periods, coverage per hour, people with skills and hours, the unscheduled panel](docs/images/planning.png)
+![Planning a roster: the planning horizon of coming rosters, coverage per hour, people with skills and hours, the unscheduled panel](docs/images/planning.png)
 
 ## Performance
 
@@ -96,7 +96,7 @@ Only the rows in view are on the page: 59 bars on screen for 20,000 shifts. In P
 
 ## Trust
 
-- **Your data stays put.** The free scheduler makes no calls outside your environment. When you connect for optimization, a run sends a copy of the period with ids replaced by placeholders, and the calendar's name: no personal names, no notes, no contact details, no unrelated records. You can read the exact payload before the first run.
+- **Your data stays put.** The free scheduler makes no calls outside your environment. When you connect for Auto Schedule, a run sends a copy of the period with ids replaced by placeholders, and the calendar's name: no personal names, no notes, no contact details, no unrelated records. You can read the exact payload before the first run.
 - **No licence of its own.** The scheduler is a code component in your model-driven app and runs under the Power Apps licences the app already has. There is no Chrona licence for it.
 - **A managed solution.** It installs, updates and uninstalls the way every managed solution does. Take it off the views that use it, and the platform deletes it cleanly.
 - **Source you can read.** The control's source for each release is in [src](src/), under [PolyForm Shield 1.0.0](LICENSE.md): use it, change it and share it for anything except a product that competes with Chrona.

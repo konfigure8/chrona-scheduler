@@ -1,11 +1,11 @@
 # Chrona Scheduler source
 
-The source of the Chrona Scheduler control in release 0.1.32. To use the scheduler, install the managed solution from the [releases](https://github.com/konfigure8/chrona-scheduler/releases); you do not need to build it.
+The source of the Chrona Scheduler control in release 0.1.33. To use the scheduler, install the managed solution from the [releases](https://github.com/konfigure8/chrona-scheduler/releases); you do not need to build it.
 
 | Folder | What it holds |
 | --- | --- |
 | `pcf/ChronaSchedulerControl` | The Power Apps component framework (PCF) control: the manifest, the Dataverse binding and the strings for each language |
-| `packages/scheduler-ui` | The scheduler the control shows: the layouts, drag and drop, collision detection, Optimize and the review |
+| `packages/scheduler-ui` | The scheduler the control shows: the layouts, drag and drop, collision detection, Auto Schedule and the review |
 
 ## Build
 

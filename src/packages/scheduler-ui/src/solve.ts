@@ -9,8 +9,10 @@
  * local path.
  */
 import { isPinned } from "./locks";
+import { boardRules, extensionMustRow, type ExtensionMustRows } from "./ruleRegistry";
 import type { RulePolicy } from "./scheduleRules";
 import {
+  extensionRowCount,
   isMustRule,
   type MustBreachCounts,
   type MustRuleName,
@@ -174,6 +176,8 @@ export interface ProposalPreviewOptions {
    * event's id: out of date, or a double booking the maker blocks.
    */
   readonly withheld?: ReadonlySet<string>;
+  /** The extension's kinds of open shift (BoardExtension.openShift): not required work. */
+  readonly openKind?: OpenShiftKindOf;
 }
 
 export interface ProposalPreview {
@@ -230,10 +234,11 @@ export function previewProposal(
 /**
  * An open shift that is required work. An open on-call shift is not
  * (domain model 6.6, F24 Repair mode): it weighs as a Should rule, and
- * the solver's analysis leaves it out of its open shifts too.
+ * the solver's analysis leaves it out of its open shifts too. Nor is an
+ * open shift of an extension's own kind (`kindOf`, BoardExtension.openShift).
  */
-export function isOpenRequired(event: SchedulerUiEvent): boolean {
-  return event.status === "needsCover" && event.onCall !== true;
+export function isOpenRequired(event: SchedulerUiEvent, kindOf?: OpenShiftKindOf): boolean {
+  return event.status === "needsCover" && event.onCall !== true && kindOf?.(event) === undefined;
 }
 
 /** An on-call shift left open: backup cover, drawn neutral, not as needing cover. */
@@ -241,17 +246,68 @@ export function isOpenOnCall(event: SchedulerUiEvent): boolean {
   return event.status === "needsCover" && event.onCall === true;
 }
 
-/** The open look of a shift's chip or bar: needing cover, an open on-call shift, or none. */
-/** What an open shift's accessible name adds: on call, or needs cover; nothing for a covered shift. */
+/**
+ * A shift of an extension's own kind (BoardExtension.openShift). Like an
+ * open on-call shift it is not required work: the board neither counts it
+ * as needing cover nor names it so.
+ */
+export interface OpenShiftKind {
+  /**
+   * One class word: the board gives the open shift its kind's classes in
+   * place of the needs-cover ones ("chrona-sched__bar--{kind}-open",
+   * "chrona-sched__chip--{kind}-open", "chrona-sched__lane-bar--{kind}-open",
+   * "chrona-sched__unscheduled-item--{kind}", "chrona-sched__open-note--{kind}",
+   * "chrona-sched__agenda-{kind}"), and the extension styles them.
+   */
+  readonly kind: string;
+  /** Its words: in the legend, the agenda, the open shifts and the shift's accessible name. */
+  readonly label: string;
+}
+
+/** An extension's kind of a shift (BoardExtension.openShift). */
+export type OpenShiftKindOf = (event: SchedulerUiEvent) => OpenShiftKind | undefined;
+
+/** A shift of an extension's own kind, open or not: not required work. */
+function isOwnKind(event: SchedulerUiEvent, kindOf?: OpenShiftKindOf): boolean {
+  return kindOf !== undefined && event.onCall !== true && kindOf(event) !== undefined;
+}
+
+/** The extension's kind of an open shift that is not on call; undefined for any other shift. */
+export function openKindOf(event: SchedulerUiEvent, kindOf?: OpenShiftKindOf): OpenShiftKind | undefined {
+  return kindOf && event.status === "needsCover" && event.onCall !== true ? kindOf(event) : undefined;
+}
+
+/**
+ * The order of shifts that start together: a shift that needs cover first,
+ * then another open one, then a covered one; then by title.
+ */
+export function compareSameStart(first: SchedulerUiEvent, second: SchedulerUiEvent, kindOf?: OpenShiftKindOf): number {
+  const rank = (event: SchedulerUiEvent): number =>
+    isOpenRequired(event, kindOf) ? 0 : event.status === "needsCover" ? 1 : 2;
+  return rank(first) - rank(second) || first.title.localeCompare(second.title);
+}
+
+/** What an open shift's accessible name adds: on call, its kind's words or needs cover; nothing for a covered shift. */
 export function openShiftNote(
   event: SchedulerUiEvent,
   strings: { readonly legendNeedsCover: string; readonly legendOnCall: string },
+  kindOf?: OpenShiftKindOf,
 ): string | undefined {
-  return isOpenOnCall(event) ? strings.legendOnCall : isOpenRequired(event) ? strings.legendNeedsCover : undefined;
+  return isOpenOnCall(event)
+    ? strings.legendOnCall
+    : (openKindOf(event, kindOf)?.label ?? (isOpenRequired(event) ? strings.legendNeedsCover : undefined));
 }
 
-export function openShiftClass(event: SchedulerUiEvent, kind: "bar" | "chip"): string {
-  return isOpenOnCall(event) ? `chrona-sched__${kind}--on-call-open` : event.status === "needsCover" ? `chrona-sched__${kind}--needs-cover` : "";
+/** The open look of a shift's chip or bar: needing cover, an open on-call shift, an extension's kind, or none. */
+export function openShiftClass(event: SchedulerUiEvent, kind: "bar" | "chip", kindOf?: OpenShiftKindOf): string {
+  const own = openKindOf(event, kindOf);
+  return isOpenOnCall(event)
+    ? `chrona-sched__${kind}--on-call-open`
+    : own
+      ? `chrona-sched__${kind}--${own.kind}-open`
+      : event.status === "needsCover"
+        ? `chrona-sched__${kind}--needs-cover`
+        : "";
 }
 
 /**
@@ -265,7 +321,7 @@ export function openShiftsAfter(
   changes: readonly ProposalChange[],
   options: ProposalPreviewOptions = {},
 ): readonly SchedulerUiEvent[] {
-  return shiftsAfter(proposal, changes, options, isOpenRequired);
+  return shiftsAfter(proposal, changes, options, (event) => isOpenRequired(event, options.openKind));
 }
 
 /** The on-call shifts left open if the planner applies the proposal as it stands now; not counted as open. */
@@ -338,7 +394,8 @@ export type MustRow =
   | "restBetweenShifts"
   | "site"
   | "skills"
-  | "weeklyRest";
+  | "weeklyRest"
+  | keyof ExtensionMustRows;
 
 /**
  * The rows in order. The site row (F63 Person sites) and the agreement
@@ -370,6 +427,17 @@ export const OPTIONAL_MUST_ROWS: ReadonlySet<MustRow> = new Set<MustRow>([
   "weeklyRest",
 ]);
 
+/** The board's rows with a package's own (ruleRegistry.ts), each after the row it names. */
+export function mustRows(): readonly MustRow[] {
+  const own = boardRules().mustRows ?? [];
+  return MUST_ROWS.flatMap((row) => [row, ...own.filter((entry) => entry.after === row).map((entry) => entry.row as MustRow)]);
+}
+
+/** Whether a row hides while nothing breaks it, unless the roster's rules name it. */
+export function isOptionalMustRow(row: MustRow): boolean {
+  return OPTIONAL_MUST_ROWS.has(row) || extensionMustRow(row)?.optional === true;
+}
+
 /** The row a Must rule's matches count in: the named rows, else "Other Must rules". */
 export function mustRowOf(rule: MustRuleName): MustRow {
   return rule === "overlap" || rule === "splitParts" || rule === "unlisted" ? "other" : rule;
@@ -384,7 +452,10 @@ export function mustRowCount(counts: MustBreachCounts, row: MustRow): number {
   if (row === "nights") {
     return counts.nights ?? 0;
   }
-  return counts[row];
+  if (extensionMustRow(row)) {
+    return extensionRowCount(counts, row);
+  }
+  return counts[row as Exclude<MustRow, "nights" | "other" | keyof ExtensionMustRows>];
 }
 
 /**
@@ -535,8 +606,8 @@ export function proposalScore(
       }
     }
   }
-  // Required shifts only: an on-call shift is not filled or open work.
-  const answered = scoped.events.filter((event) => event.onCall !== true).length;
+  // Required shifts only: an on-call shift, or one of an extension's own kind, is not filled or open work.
+  const answered = scoped.events.filter((event) => event.onCall !== true && !isOwnKind(event, options.openKind)).length;
   // The open shifts the run left out stay open, so they count as unfilled.
   const leftEnded = proposal.leftOpen?.ended ?? 0;
   const leftPinned = proposal.leftOpen?.pinned ?? 0;

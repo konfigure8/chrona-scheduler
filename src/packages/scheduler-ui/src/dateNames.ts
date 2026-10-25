@@ -8,7 +8,9 @@
  * bundle; a malformed list or pattern falls back to English rather
  * than rendering blanks.
  */
+import { formatClock } from "./clock";
 import type { SchedulerStrings } from "./stringResources";
+import type { HourFormat } from "./timeAxis";
 
 export interface DateNames {
   readonly monthsLong: readonly string[];
@@ -140,8 +142,7 @@ export function formatDayRange(first: Date, last: Date, names: DateNames = engli
     : `${formatDateLabel(first, names)} – ${formatDateLabel(last, names)}`;
 }
 
-/** "Mon 17 Aug 08:00" */
-export function formatDayTimeLabel(date: Date, names: DateNames = englishDateNames): string {
-  const pad = (value: number): string => value.toString().padStart(2, "0");
-  return `${formatDayLabel(date, names)} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+/** "Mon 17 Aug 08:00", or "Mon 17 Aug 8am" in the 12-hour format */
+export function formatDayTimeLabel(date: Date, names: DateNames = englishDateNames, format: HourFormat = "24"): string {
+  return `${formatDayLabel(date, names)} ${formatClock(date, format)}`;
 }

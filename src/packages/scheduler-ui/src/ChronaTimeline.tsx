@@ -24,7 +24,8 @@ import {
   type RowDecoration,
 } from "./decorations";
 import type { TimelineExtension } from "./extension";
-import { dateNamesFrom } from "./dateNames";
+import { dateNamesFrom, formatDateLabel } from "./dateNames";
+import { labelWidth, overlaps } from "./labelWidth";
 import {
   buildTimeTicksEvery,
   buildWeekSpans,
@@ -40,8 +41,9 @@ import {
   windowWidth,
   type HourFormat,
 } from "./timeAxis";
+import { formatClockRange } from "./clock";
 import { buildResourceGroups, groupCollapseKey } from "./resourceGrouping";
-import { isOpenOnCall, openShiftClass, openShiftNote } from "./solve";
+import { isOpenOnCall, openKindOf, openShiftClass, openShiftNote } from "./solve";
 import { formatString, useSchedulerStrings } from "./strings";
 import {
   isDeleteLocked,
@@ -52,6 +54,7 @@ import { gapFractions, normalizeGaps } from "./spans";
 import { FlagGlyph } from "./FlagGlyph";
 import { flagReasonText } from "./stringResources";
 import { NightGlyph } from "./NightGlyph";
+import { ShiftMarkGlyph, useOpenShiftKind, useShiftMarks } from "./ShiftMark";
 import { PinGlyph } from "./PinGlyph";
 import { VerticalSplitter } from "./Splitter";
 import { RolePill } from "./RolePill";
@@ -79,13 +82,19 @@ import type {
 
 export interface ChronaTimelineProps {
   readonly config: TimelineConfig;
+  /** The week band's first day of the week, 0 = Sunday; Monday when absent. */
+  readonly weekStartsOn?: number;
   readonly decorations?: readonly RowDecoration[];
   /** Temporary create-dialog range rendered as a ghost until confirmed. */
   readonly draftRange?: DragResult;
   readonly editable?: boolean;
+  /** Under the empty board's message: what to do about it (an extension's action). */
+  readonly emptyAction?: React.ReactNode;
   readonly events: readonly SchedulerUiEvent[];
   /** A scenario package's strips. */
   readonly extension?: TimelineExtension;
+  /** A lane group's colour while shifts are coloured by group: its swatch leads the group's name. */
+  readonly groupColor?: (group: string) => string | undefined;
   readonly hourFormat?: HourFormat;
   readonly now?: Date;
   /** Roster-period starts to mark as vertical boundary lines. */
@@ -185,10 +194,6 @@ const dragStartThresholdPx = 3;
 const autoScrollZonePx = 40;
 const autoScrollStepPx = 24;
 
-function formatTimeRange(start: Date, end: Date): string {
-  const pad = (value: number): string => value.toString().padStart(2, "0");
-  return `${pad(start.getHours())}:${pad(start.getMinutes())}-${pad(end.getHours())}:${pad(end.getMinutes())}`;
-}
 
 function flattenSelectableEvents(
   rows: readonly TimelineRowLayout[],
@@ -237,6 +242,8 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
   } = props;
 
   const strings = useSchedulerStrings();
+  // Every time the timeline writes reads in the user's hour format.
+  const formatTimeRange = (start: Date, end: Date): string => formatClockRange(start, end, hourFormat);
   const labelColumnWidth = labelColumnWidthProp ?? defaultLabelColumnWidth;
   const selection = React.useMemo(
     () => new Set(selectedEventIds ?? []),
@@ -250,6 +257,8 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
   const fit = boardExtension?.fit;
   // A mark after a person's name, such as a scenario's glyph with its reason.
   const personMark = boardExtension?.personMark;
+  const shiftMarkOf = useShiftMarks();
+  const kindOf = useOpenShiftKind();
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
   const pointerMovedRef = React.useRef(false);
   const pointerDownLeftRef = React.useRef(0);
@@ -303,6 +312,8 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
       ? fittedPxPerHour
       : config.pxPerHour;
 
+  // Where the canvas is scrolled across: an hour label cut by the viewport's edge hides.
+  const [scrollLeft, setScrollLeft] = React.useState(0);
   const handleScroll = React.useCallback((): void => {
     if (scrollFrameRef.current) {
       return;
@@ -310,7 +321,17 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
     scrollFrameRef.current = requestAnimationFrame(() => {
       scrollFrameRef.current = 0;
       setScrollTop(scrollRef.current?.scrollTop ?? 0);
+      setScrollLeft(scrollRef.current?.scrollLeft ?? 0);
     });
+  }, []);
+  // The board's font, to measure the axis labels in (they hide rather than clip).
+  const [boardFont, setBoardFont] = React.useState("'Segoe UI', sans-serif");
+  React.useLayoutEffect(() => {
+    const outer = scrollRef.current;
+    const family = outer && typeof getComputedStyle === "function" ? getComputedStyle(outer).fontFamily : "";
+    if (family) {
+      setBoardFont(family);
+    }
   }, []);
 
   /*
@@ -349,8 +370,8 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
   const showWeekBand = dailyLabels;
   const weekSpans = React.useMemo(
     () =>
-      showWeekBand ? buildWeekSpans(timeWindow, pxPerHour) : [],
-    [showWeekBand, timeWindow, pxPerHour],
+      showWeekBand ? buildWeekSpans(timeWindow, pxPerHour, strings.weekNumberLabel, props.weekStartsOn) : [],
+    [showWeekBand, timeWindow, pxPerHour, strings.weekNumberLabel, props.weekStartsOn],
   );
   const headerHeight = axisRowHeight * 2;
   /*
@@ -510,6 +531,7 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
 
   // An extension's strip, in each top-level group header or above ungrouped rows.
   const strip = props.extension?.strip;
+  const decorationContent = props.extension?.decorationContent;
   const renderStrip = (group: string | undefined): React.ReactNode =>
     strip?.render({
       events,
@@ -595,6 +617,11 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
       return entries;
     }
 
+    // What the whole board needs has its own row above the groups.
+    if (strip?.boardRow) {
+      entries.push({ height: groupHeaderHeight, kind: "coverage", top: cursor });
+      cursor += groupHeaderHeight;
+    }
     // A group whose open shifts have nobody in it still gets its header and lane.
     for (const group of buildResourceGroups(resources, effectiveGroupBy, [...laneBuckets.keys()])) {
       const collapsed = collapsedGroups.has(group.name);
@@ -1170,18 +1197,88 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
   const previewByRow = (resourceId: string): DragPreview | undefined =>
     preview && preview.result.resourceId === resourceId ? preview : undefined;
 
-  const boundaryOffsets = React.useMemo(
+  const boundaryMarks = React.useMemo(
     () =>
       (props.periodBoundaries ?? [])
         .filter(
           (boundary) =>
             boundary >= timeWindow.start && boundary <= timeWindow.end,
         )
-        .map((boundary) =>
-          dateToOffset(boundary, timeWindow, pxPerHour),
-        ),
+        .map((boundary) => ({
+          date: boundary,
+          offset: dateToOffset(boundary, timeWindow, pxPerHour),
+        })),
     [pxPerHour, props.periodBoundaries, timeWindow],
   );
+  const boundaryOffsets = React.useMemo(
+    () => boundaryMarks.map((mark) => mark.offset),
+    [boundaryMarks],
+  );
+  /*
+   * The week band names where a new roster period starts ("Period from 16 Nov"). A week that
+   * starts on the same day leads the tick ("W47 · Period from 16 Nov"). The words always sit
+   * right of the line: with too little room before the window's end the tick says only its week
+   * ("W49"), and with less still it keeps the line and drops the words. So does a tick that
+   * would run into the one before it. A week label hides where it would collide with a tick or
+   * not fit its own span.
+   */
+  const periodTicks = React.useMemo(() => {
+    if (!showWeekBand) {
+      return [];
+    }
+    let lastEnd = Number.NEGATIVE_INFINITY;
+    // A tick's width: its text, its 6px padding on each side and its 2px line.
+    const tickWidth = (text: string): number => labelWidth(text, `600 12px ${boardFont}`) + 14;
+    return boundaryMarks.map((mark) => {
+      const week = weekSpans.find((span) => Math.abs(span.left - mark.offset) < 1);
+      const period = formatString(strings.periodBoundaryLabel, {
+        date: formatDateLabel(mark.date, dateNames),
+      });
+      const room = canvasWidth - mark.offset;
+      const full = tickWidth(week ? `${week.label} · ${period}` : period);
+      const weekOnly = week ? tickWidth(week.label) : Number.POSITIVE_INFINITY;
+      const words: "full" | "week" | "none" = full <= room ? "full" : weekOnly <= room ? "week" : "none";
+      const range = [mark.offset, mark.offset + (words === "full" ? full : words === "week" ? weekOnly : 0)] as const;
+      const shown = words !== "none" && range[0] >= lastEnd - 0.5;
+      if (shown) {
+        lastEnd = range[1];
+      }
+      return {
+        left: mark.offset,
+        period: words === "full" ? period : undefined,
+        range,
+        shown,
+        week: week?.label,
+        weekLeft: week?.left,
+      };
+    });
+  }, [boardFont, boundaryMarks, canvasWidth, dateNames, showWeekBand, strings.periodBoundaryLabel, weekSpans]);
+  const shownTicks = periodTicks.filter((tick) => tick.shown);
+  const weekLabelShown = (span: { readonly label: string; readonly left: number; readonly width: number }): boolean => {
+    // A week that starts a period is named in its tick.
+    if (shownTicks.some((tick) => tick.weekLeft === span.left)) {
+      return false;
+    }
+    const width = labelWidth(span.label, `600 12px ${boardFont}`);
+    // As a tick's words do: the span holds the label after its 8px and 4px clear of the next line.
+    if (span.width < width + 12) {
+      return false;
+    }
+    const range = [span.left + 8, span.left + 8 + width] as const;
+    return !shownTicks.some((tick) => overlaps(range, tick.range));
+  };
+  // An hour label the viewport's edge would cut hides; it shows whole once scrolled into view.
+  const tickLabelShown = (cell: { readonly date: Date }, label: string): boolean => {
+    if (visibleWidth <= 0) {
+      return true;
+    }
+    const cellWidth = (resolution.labelMinutes / 60) * pxPerHour;
+    const centre = dateToOffset(cell.date, timeWindow, pxPerHour) + cellWidth / 2;
+    const half = labelWidth(label, `12px ${boardFont}`) / 2;
+    const [start, end] = [centre - half, centre + half];
+    const cutAt = (edge: number): boolean => start < edge - 0.5 && end > edge + 0.5;
+    return !cutAt(scrollLeft) && !cutAt(scrollLeft + visibleWidth);
+  };
   const nowOffset =
     now && now >= timeWindow.start && now <= timeWindow.end
       ? dateToOffset(now, timeWindow, pxPerHour)
@@ -1228,15 +1325,38 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                   key={span.left}
                   style={{ width: span.width }}
                 >
-                  {/* Sticky: a week cell can be wider than the viewport. */}
-                  <span
-                    className="chrona-sched__tick-label"
-                    style={{ left: labelColumnWidth + 8 }}
-                  >
-                    {span.label}
-                  </span>
+                  {/* Sticky: a week cell can be wider than the viewport. A label that would not fit hides. */}
+                  {weekLabelShown(span) ? (
+                    <span
+                      className="chrona-sched__tick-label"
+                      style={{ left: labelColumnWidth + 8 }}
+                    >
+                      {span.label}
+                    </span>
+                  ) : null}
                 </div>
               ))}
+              {periodTicks.map((tick) =>
+                tick.shown ? (
+                  <div
+                    className="chrona-sched__period-tick"
+                    data-testid="period-tick"
+                    key={`period-tick-${tick.left}`}
+                    style={{ left: tick.left }}
+                  >
+                    {tick.week ? <span className="chrona-sched__period-tick-week">{tick.week}</span> : null}
+                    {tick.period ? `${tick.week ? " · " : ""}${tick.period}` : null}
+                  </div>
+                ) : (
+                  // No room for words: the line alone, through the band too.
+                  <div
+                    aria-hidden="true"
+                    className="chrona-sched__period-tick chrona-sched__period-tick--bare"
+                    key={`period-tick-${tick.left}`}
+                    style={{ left: tick.left }}
+                  />
+                ),
+              )}
             </div>
           ) : null}
           <div className="chrona-sched__axis-days">
@@ -1263,15 +1383,18 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
           </div>
           {dailyLabels ? null : (
             <div className="chrona-sched__axis-times">
-              {timeCells.map((cell) => (
-                <div
-                  className="chrona-sched__axis-cell chrona-sched__tick"
-                  key={cell.date.getTime()}
-                  style={{ width: (resolution.labelMinutes / 60) * pxPerHour }}
-                >
-                  {formatHourLabel(cell.date, hourFormat)}
-                </div>
-              ))}
+              {timeCells.map((cell) => {
+                const label = formatHourLabel(cell.date, hourFormat);
+                return (
+                  <div
+                    className="chrona-sched__axis-cell chrona-sched__tick"
+                    key={cell.date.getTime()}
+                    style={{ width: (resolution.labelMinutes / 60) * pxPerHour }}
+                  >
+                    {tickLabelShown(cell, label) ? label : null}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -1314,6 +1437,14 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                   type="button"
                 >
                   <span aria-hidden="true">{isCollapsed ? "▸" : "▾"}</span>{" "}
+                  {(() => {
+                    // Coloured by group: the swatch says which colour is this group's.
+                    const swatch =
+                      entry.depth === 0 && groupName !== UNGROUPED ? props.groupColor?.(groupName) : undefined;
+                    return swatch ? (
+                      <span aria-hidden="true" className="chrona-sched__group-swatch" data-testid="group-swatch" style={{ background: swatch }} />
+                    ) : null;
+                  })()}
                   <span className="chrona-sched__group-title">
                     <span className="chrona-sched__group-name">
                       {groupName === UNGROUPED ? strings.ungrouped : groupName} ({entry.memberCount})
@@ -1406,14 +1537,18 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                           positioned.event.start,
                           positioned.event.end,
                         ),
-                        // Everything in the lane is open: on call, or needing cover.
-                        openShiftNote(positioned.event, strings) ?? strings.legendNeedsCover,
+                        // Everything in the lane is open: on call, an extension's kind, or needing cover.
+                        openShiftNote(positioned.event, strings, kindOf) ?? strings.legendNeedsCover,
                         ...(positioned.event.requiredTags ?? []),
                       ].join(", ")}
                       className={[
                         "chrona-sched__lane-bar",
                         // F24 Repair mode: an open on-call shift is backup cover, neutral as on the board.
                         isOpenOnCall(positioned.event) ? "chrona-sched__lane-bar--on-call-open" : "",
+                        // An open shift of an extension's own kind: its look.
+                        openKindOf(positioned.event, kindOf)
+                          ? `chrona-sched__lane-bar--${openKindOf(positioned.event, kindOf)?.kind ?? ""}-open`
+                          : "",
                         positioned.event.review === "proposed" ? "chrona-sched__bar--proposed" : "",
                       ].filter(Boolean).join(" ")}
                       data-event-id={positioned.event.id}
@@ -1579,13 +1714,23 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                             timeWindow,
                             pxPerHour,
                           ) - left;
+                        // An extension's content inside the span (TimelineExtension.decorationContent).
+                        const content = decorationContent?.({
+                          bars: row.events.filter((positioned) => positioned.lane === 0),
+                          boardFont,
+                          decoration,
+                          span: { left, width },
+                          stickyLeft: labelColumnWidth,
+                        });
                         return (
                           <div
                             className={`chrona-sched__decoration chrona-sched__decoration--${decoration.kind}`}
                             key={`${decoration.kind}-${decorationIndex}-${clampedStart}`}
                             style={{ left, width }}
                             title={decoration.label}
-                          />
+                          >
+                            {content ?? null}
+                          </div>
                         );
                       },
                     )
@@ -1617,7 +1762,7 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                     positioned.event.end.getTime() > timeWindow.end.getTime();
                   const barClasses = [
                     "chrona-sched__bar",
-                    openShiftClass(positioned.event, "bar"),
+                    openShiftClass(positioned.event, "bar", kindOf),
                     selection.has(positioned.event.id)
                       ? "chrona-sched__bar--selected"
                       : "",
@@ -1636,6 +1781,7 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                   ]
                     .filter(Boolean)
                     .join(" ");
+                  const shiftMark = shiftMarkOf(positioned.event);
                   const barLabel = [
                     positioned.event.title,
                     formatTimeRange(
@@ -1643,6 +1789,7 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                       positioned.event.end,
                     ),
                     ...(positioned.event.night ? [strings.nightShift] : []),
+                    ...(shiftMark ? [shiftMark.label] : []),
                     ...(positioned.event.requiredTags ?? []),
                     ...normalizeGaps(positioned.event).map(
                       (gap) => gap.label ?? "break",
@@ -1747,6 +1894,7 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                       ) : null}
                       <span>{positioned.event.title}</span>
                       {positioned.event.night ? <NightGlyph title={strings.nightShift} /> : null}
+                      <ShiftMarkGlyph mark={shiftMark} />
                       <span className="chrona-sched__bar-time">
                         {formatTimeRange(
                           positioned.event.start,
@@ -1841,22 +1989,40 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                       ),
                     }}
                   >
-                    <span>
-                      {formatTimeRange(
-                        rowPreview.result.start,
-                        rowPreview.result.end,
-                      )}
+                    {/* With a reason, the words sit in a label beside the box, which keeps its true width;
+                        the label goes on the box's left when the box is in the right half of what is in view. */}
+                    <span
+                      className={
+                        rowPreview.verdict.reason
+                          ? `chrona-sched__preview-label${
+                              (dateToOffset(rowPreview.result.start, timeWindow, pxPerHour) +
+                                dateToOffset(rowPreview.result.end, timeWindow, pxPerHour)) /
+                                2 -
+                                scrollLeft >
+                              (visibleWidth > 0 ? visibleWidth : dateToOffset(timeWindow.end, timeWindow, pxPerHour)) / 2
+                                ? " chrona-sched__preview-label--start"
+                                : ""
+                            }`
+                          : "chrona-sched__preview-inline"
+                      }
+                    >
+                      <span>
+                        {formatTimeRange(
+                          rowPreview.result.start,
+                          rowPreview.result.end,
+                        )}
+                      </span>
+                      {rowPreview.groupCount > 1 ? (
+                        <span className="chrona-sched__preview-count">
+                          x{rowPreview.groupCount}
+                        </span>
+                      ) : null}
+                      {rowPreview.verdict.reason ? (
+                        <span className="chrona-sched__preview-reason">
+                          {rowPreview.verdict.reason}
+                        </span>
+                      ) : null}
                     </span>
-                    {rowPreview.groupCount > 1 ? (
-                      <span className="chrona-sched__preview-count">
-                        x{rowPreview.groupCount}
-                      </span>
-                    ) : null}
-                    {rowPreview.verdict.reason ? (
-                      <span className="chrona-sched__preview-reason">
-                        {rowPreview.verdict.reason}
-                      </span>
-                    ) : null}
                   </div>
                 ) : null}
               </div>
@@ -1878,7 +2044,8 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
         // as the scrollport (not the canvas), and sticky keeps it in view
         // however far the axis is scrolled.
         <div className="chrona-sched__empty chrona-sched__empty--pinned">
-          {strings.emptyResources}
+          <span>{strings.emptyResources}</span>
+          {props.emptyAction}
         </div>
       ) : null}
     </div>

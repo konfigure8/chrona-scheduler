@@ -2,10 +2,13 @@ import * as React from "react";
 
 import type { ContextMenuItem } from "./ContextMenu";
 import type { DateNames } from "./dateNames";
+import type { RowDecoration } from "./decorations";
+import type { EventDialogProps } from "./EventDialog";
+import type { HourFormat } from "./timeAxis";
 import type { TimelineChange } from "./interactions";
 import type { RosterDay } from "./rosterLayout";
 import type { MustBreachCounts, ScheduleCandidate, ScheduleRuleMatch } from "./schedulingContract";
-import type { MustRow, ProposalChange, SolveProgress } from "./solve";
+import type { MustRow, OpenShiftKind, ProposalChange, SolveProgress } from "./solve";
 import type { CandidateAnswer, RosterVersion } from "./solveClient";
 import type { SchedulerStrings } from "./stringResources";
 import type {
@@ -32,6 +35,8 @@ export interface BoardState {
   readonly solveProgress?: SolveProgress;
   /** The board's strings, resolved. */
   readonly strings: SchedulerStrings;
+  /** The user's number locale (SchedulerSurfaceProps.locale); absent = the browser's. */
+  readonly locale?: string;
   /** The open shifts on the board; the proposal's while one is previewed. Absent when the host has none to show. */
   readonly unscheduled?: readonly SchedulerUiEvent[];
   readonly view: SchedulerViewKind;
@@ -70,12 +75,6 @@ export interface ResourceFit {
  * the host's rule.
  */
 export interface FitExtension {
-  /** The assign picker's reason a person cannot take the item, given what they lack for it. */
-  readonly assignReason: (
-    missing: readonly string[],
-    resource?: SchedulerResource,
-    event?: SchedulerUiEvent,
-  ) => string;
   /** What the person lacks for the item; empty when they fit. */
   readonly missing: (
     resource: SchedulerResource | undefined,
@@ -93,7 +92,7 @@ export interface FitExtension {
 /** What the timeline hands an extension for one strip. */
 export interface TimelineStripInput {
   readonly events: readonly SchedulerUiEvent[];
-  /** The top-level group the strip heads; absent for the strip above ungrouped rows. */
+  /** The top-level group the strip heads; absent for the board's row (above ungrouped rows, or above the groups). */
   readonly group?: string;
   /** The grouping set the rows are grouped by. */
   readonly groupSet?: string;
@@ -109,7 +108,12 @@ export interface TimelineExtension {
    * people when the rows are not grouped.
    */
   readonly strip?: {
-    /** The label of the row above ungrouped rows. */
+    /**
+     * Also a row above grouped rows, for what applies to the whole board;
+     * there the strip renders with no group and the grouping set.
+     */
+    readonly boardRow?: boolean;
+    /** The label of the row above ungrouped rows, and of the board's row. */
     readonly label: string;
     /** The strip's content on the canvas. */
     readonly render: (input: TimelineStripInput) => React.ReactNode;
@@ -120,6 +124,8 @@ export interface TimelineExtension {
      */
     readonly short?: (input: Omit<TimelineStripInput, "group" | "pxPerHour">) => boolean;
   };
+  /** What a row decoration (an availability span) shows inside itself. Absent, or null = nothing; its label stays its tooltip. */
+  readonly decorationContent?: (input: DecorationContentInput) => React.ReactNode;
 }
 
 /** A group of people in the Roster grid, as an extension forms it. */
@@ -161,6 +167,8 @@ export interface RosterExtension {
   readonly groups?: (input: RosterGroupInput) => readonly RosterGroup[];
   /** Under a person's name. */
   readonly personDetail?: (resource: SchedulerResource) => React.ReactNode;
+  /** The compact chips' own style and start time. Absent = the board's. */
+  readonly chip?: RosterChipStyle;
   /**
    * A last row that stays at the bottom of the grid: a label under the
    * names, a note across the days, and a figure under each column that
@@ -232,11 +240,12 @@ export interface ReviewExtension {
   readonly checkMust: (roster: ReviewRoster) => BoardMustCheck;
   /**
    * A drill-down line's words for a match, such as an agreement period
-   * and how far it is off (R2.18 Decision 6); undefined = the board's.
+   * and how far it is off (R2.18 Decision 6), its numbers in the user's
+   * locale (absent = the browser's); undefined = the board's.
    */
-  readonly describe?: (match: ScheduleRuleMatch, roster: ReviewRoster, names: DateNames) => string | undefined;
-  /** The agreement rows the roster's rules name, shown at 0 too. Absent = only rows with a count. */
-  readonly ruleRows?: readonly MustRow[];
+  readonly describe?: (match: ScheduleRuleMatch, roster: ReviewRoster, names: DateNames, locale?: string) => string | undefined;
+  /** The agreement rows the rules of the roster's people name, shown at 0 too. Absent = only rows with a count. */
+  readonly ruleRows?: (roster: Omit<ReviewRoster, "events">) => readonly MustRow[];
   /** Who the report does not check in a period, and whether anyone is. */
   readonly unchecked: (roster: Omit<ReviewRoster, "events">) => UncheckedPeople;
 }
@@ -330,6 +339,56 @@ export interface SidePanelControls {
   readonly onCollapse: () => void;
 }
 
+/** A read-only mark on a shift (BoardExtension.shiftMark). */
+export interface ShiftMark {
+  /** A small glyph in the text's own color (currentColor), so it reads on every chip. */
+  readonly glyph: React.ReactNode;
+  /** What the mark says, in a few words. */
+  readonly label: string;
+  /** "attention" draws the glyph in the warm warning tone, for a state that wants the planner's action. */
+  readonly tone?: "attention";
+  /** True = words only, in the hover card and the dialog: no glyph on the shift and no legend entry, so the board stays quiet. */
+  readonly quiet?: boolean;
+  /**
+   * Times that go with the mark, as board instants; the board writes
+   * each in its hour format into `label`'s {time}, and its day ("Mon 2
+   * Nov") into {date}. The first follows the
+   * mark's words ("Clocked in at 6:58am"), the rest after a dot.
+   */
+  readonly times?: readonly { readonly at: Date; readonly label: string }[];
+}
+
+export type { OpenShiftKind } from "./solve";
+
+/** A line of a shift's hover card. */
+export interface HoverCardEntry {
+  readonly label: string;
+  readonly value: string;
+  /** Full width, on a line of its own. */
+  readonly wide?: boolean;
+}
+
+/** What the Roster grid hands an extension's compact chip (RosterExtension.chip). */
+export interface RosterChipStyle {
+  /** A class after the board's on every compact chip; the code and its marks then sit in one line of their own. */
+  readonly className: string;
+  /** The chip's start time, in place of the board's. */
+  readonly time: (start: Date, hourFormat: HourFormat | undefined) => string;
+}
+
+/** What the timeline hands an extension for a row decoration's content. */
+export interface DecorationContentInput {
+  /** The board's font, for measuring words. */
+  readonly boardFont: string;
+  /** Where the bars on the decoration's first line sit, in pixels from the row's start. */
+  readonly bars: readonly { readonly left: number; readonly width: number }[];
+  readonly decoration: RowDecoration;
+  /** The people column's width: content kept beside it stays in view while the timeline scrolls. */
+  readonly stickyLeft: number;
+  /** The decoration's own place, in pixels from the row's start. */
+  readonly span: { readonly left: number; readonly width: number };
+}
+
 export interface BoardExtension {
   /**
    * Groups at the top of the change list, before the board's own, such
@@ -373,6 +432,30 @@ export interface BoardExtension {
   readonly whyNot?: WhyNotExtension;
   /** The extension's own items in a shift's menu, after the board's. Absent = none. */
   readonly shiftMenu?: (event: SchedulerUiEvent) => readonly ContextMenuItem[];
+  /**
+   * A read-only mark on a shift, such as whether its person is at work:
+   * a glyph after the title, its words in the shift's name, the hover
+   * card and the dialog, with times that go with it. Absent, or
+   * undefined for a shift = no mark.
+   */
+  readonly shiftMark?: (event: SchedulerUiEvent) => ShiftMark | undefined;
+  /**
+   * A shift of the extension's own kind: not required work, so neither
+   * counted as needing cover nor as filled work, and drawn its way while
+   * open. Asked for any shift that is not on call. Absent, or undefined
+   * for a shift = required work, with the board's needs-cover look.
+   */
+  readonly openShift?: (event: SchedulerUiEvent) => OpenShiftKind | undefined;
+  /**
+   * The lines after the board's own in a shift's hover card, in place of
+   * the shift's fields. Absent, or undefined for a shift = its fields.
+   */
+  readonly hoverEntries?: (event: SchedulerUiEvent) => readonly HoverCardEntry[] | undefined;
+  /**
+   * The extension's own shift dialog, in place of the board's, with the
+   * board's dialog props. Absent, or undefined = the board's dialog.
+   */
+  readonly shiftDialog?: (props: EventDialogProps) => React.ReactNode;
   /** A person's menu, opened from their name. Absent, or no items for the person = no menu. */
   readonly personMenu?: (resource: SchedulerResource) => readonly ContextMenuItem[];
   /**
@@ -384,6 +467,8 @@ export interface BoardExtension {
   readonly overlays?: Slot;
   /** A notice of the extension's own at the top of the board, under the period bar. */
   readonly notice?: Slot;
+  /** Under the empty board's message (nobody on the board): the extension's way out, such as adding people. */
+  readonly empty?: Slot;
   /** The Roster grid's columns, groups and person details. */
   readonly roster?: (board: BoardState) => RosterExtension | undefined;
   /**
@@ -400,10 +485,6 @@ export interface BoardExtension {
   readonly toolbar?: {
     /** After the day, week and month switcher. */
     readonly afterIntervals?: Slot;
-    /** Before the day, week and month switcher. */
-    readonly beforeIntervals?: Slot;
-    /** The toolbar's first item. */
-    readonly start?: Slot;
   };
 }
 

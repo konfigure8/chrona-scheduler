@@ -292,6 +292,8 @@ export interface TimelineChange {
   readonly result: DragResult;
   /** Set when a dialog save renamed the item. */
   readonly title?: string;
+  /** Set when a dialog save changed editable fields: the new values by field key. */
+  readonly fields?: Readonly<Record<string, string>>;
   readonly verdict: ChangeVerdict;
 }
 

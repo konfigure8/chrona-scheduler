@@ -18,42 +18,6 @@
   <data name="apply" xml:space="preserve">
     <value>Aplicar</value>
   </data>
-  <data name="assignAction" xml:space="preserve">
-    <value>Atribuir a {name}</value>
-  </data>
-  <data name="assignActionNone" xml:space="preserve">
-    <value>Atribuir</value>
-  </data>
-  <data name="assignBestOptions" xml:space="preserve">
-    <value>Melhores opções</value>
-  </data>
-  <data name="assignEmpty" xml:space="preserve">
-    <value>Nenhuma pessoa encontrada.</value>
-  </data>
-  <data name="assignHoursLeft" xml:space="preserve">
-    <value>Restam {left} h de {capacity} h</value>
-  </data>
-  <data name="assignNotAvailable" xml:space="preserve">
-    <value>Indisponível</value>
-  </data>
-  <data name="assignReasonBusy" xml:space="preserve">
-    <value>Já trabalha {range}</value>
-  </data>
-  <data name="assignReasonHours" xml:space="preserve">
-    <value>Excederia {capacity} h</value>
-  </data>
-  <data name="assignReasonUnavailable" xml:space="preserve">
-    <value>Indisponível {range}</value>
-  </data>
-  <data name="assignSearchPlaceholder" xml:space="preserve">
-    <value>Pesquisar pessoas</value>
-  </data>
-  <data name="assignShowEveryone" xml:space="preserve">
-    <value>Ver todos ({count})</value>
-  </data>
-  <data name="assignTitle" xml:space="preserve">
-    <value>Atribuir pessoa</value>
-  </data>
   <data name="assignedTo" xml:space="preserve">
     <value>Atribuído a</value>
   </data>
@@ -80,6 +44,9 @@
   </data>
   <data name="legendOnCall" xml:space="preserve">
     <value>Sobreaviso</value>
+  </data>
+  <data name="legendName" xml:space="preserve">
+    <value>Legenda</value>
   </data>
   <data name="unassigned" xml:space="preserve">
     <value>Sem atribuição</value>
@@ -148,7 +115,7 @@
     <value>Agora não</value>
   </data>
   <data name="conversionOptimize" xml:space="preserve">
-    <value>Otimizar</value>
+    <value>Agendar automaticamente</value>
   </data>
   <data name="conversionPayloadNote" xml:space="preserve">
     <value>Este JSON exato. Nada é enviado antes de conectar.</value>
@@ -160,7 +127,7 @@
     <value>Agendar um item por vez ignora as interações entre eles.</value>
   </data>
   <data name="conversionSampleAfter" xml:space="preserve">
-    <value>Após otimizar</value>
+    <value>Após o agendamento automático</value>
   </data>
   <data name="conversionSampleBefore" xml:space="preserve">
     <value>Antes</value>
@@ -169,7 +136,7 @@
     <value>{open} itens sem atribuição · {conflicts} conflitos</value>
   </data>
   <data name="conversionSampleTitle" xml:space="preserve">
-    <value>Exemplo de otimização</value>
+    <value>Exemplo de execução</value>
   </data>
   <data name="conversionSentNothingElse" xml:space="preserve">
     <value>Nada mais: sem nomes, notas, contatos ou registros não relacionados</value>
@@ -178,7 +145,7 @@
     <value>Pessoas: IDs, competências, disponibilidade, horas e valores por hora</value>
   </data>
   <data name="conversionSentTitle" xml:space="preserve">
-    <value>Dados de uma otimização real</value>
+    <value>Dados de uma execução real</value>
   </data>
   <data name="conversionSentWork" xml:space="preserve">
     <value>Tarefas: horários, requisitos e ID da pessoa atribuída</value>
@@ -193,10 +160,13 @@
     <value>Excluir</value>
   </data>
   <data name="deleteConfirmCount" xml:space="preserve">
-    <value>Excluir {count} itens? Isso não pode ser desfeito.</value>
+    <value>Excluir {count} itens?</value>
   </data>
   <data name="deleteConfirmMessage" xml:space="preserve">
     <value>Excluir {title}? Isso não pode ser desfeito.</value>
+  </data>
+  <data name="deleteConfirmUndone" xml:space="preserve">
+    <value>Isso não pode ser desfeito.</value>
   </data>
   <data name="deleteConfirmTitle" xml:space="preserve">
     <value>Confirmar exclusão</value>
@@ -235,10 +205,10 @@
     <value>Pagamento em atraso. Carência até {date}</value>
   </data>
   <data name="entitlementLapsed" xml:space="preserve">
-    <value>Assinatura do Chrona expirada. Otimização e geração pausadas até regularizar o pagamento.</value>
+    <value>Assinatura do Chrona expirada. Agendamento automático e geração pausados até regularizar o pagamento.</value>
   </data>
   <data name="entitlementPaused" xml:space="preserve">
-    <value>Otimizador pausado desde {since}. Chrona inacessível; você pode continuar agendando.</value>
+    <value>Agendamento automático pausado desde {since}. Chrona inacessível; você pode continuar agendando.</value>
   </data>
   <data name="entitlementPlanUsage" xml:space="preserve">
     <value>Plano e uso</value>
@@ -263,15 +233,6 @@
   </data>
   <data name="goToDate" xml:space="preserve">
     <value>Ir para data</value>
-  </data>
-  <data name="groupByLabel" xml:space="preserve">
-    <value>Agrupar linhas</value>
-  </data>
-  <data name="groupByNone" xml:space="preserve">
-    <value>Sem grupos</value>
-  </data>
-  <data name="hideUnscheduledPanel" xml:space="preserve">
-    <value>Ocultar itens não agendados</value>
   </data>
   <data name="interval" xml:space="preserve">
     <value>Intervalo</value>
@@ -318,14 +279,8 @@
   <data name="listAnd" xml:space="preserve">
     <value>e</value>
   </data>
-  <data name="menuAssign" xml:space="preserve">
-    <value>Atribuir pessoa…</value>
-  </data>
   <data name="menuDeleteCount" xml:space="preserve">
     <value>Excluir {count} itens</value>
-  </data>
-  <data name="menuDuplicate" xml:space="preserve">
-    <value>Duplicar</value>
   </data>
   <data name="menuMoveTo" xml:space="preserve">
     <value>Mover para…</value>
@@ -360,6 +315,12 @@
   <data name="menuUnschedule" xml:space="preserve">
     <value>Desatribuir</value>
   </data>
+  <data name="menuUnscheduleCount" xml:space="preserve">
+    <value>Desatribuir {count} itens</value>
+  </data>
+  <data name="unscheduleConfirmCount" xml:space="preserve">
+    <value>Eles mantêm o horário e voltam para Não agendados.</value>
+  </data>
   <data name="monthMore" xml:space="preserve">
     <value>+{count} mais</value>
   </data>
@@ -391,10 +352,10 @@
     <value>Falha ao conectar o Chrona: {message}</value>
   </data>
   <data name="msgConnected" xml:space="preserve">
-    <value>Chrona conectado ({limit} otimizações grátis por dia). Iniciando o primeiro teste…</value>
+    <value>Chrona conectado ({limit} execuções grátis por dia). Iniciando o primeiro teste…</value>
   </data>
   <data name="msgConnectedUnlimited" xml:space="preserve">
-    <value>Chrona conectado. Iniciando a primeira otimização…</value>
+    <value>Chrona conectado. Iniciando o primeiro agendamento automático…</value>
   </data>
   <data name="msgCreateFailed" xml:space="preserve">
     <value>Não foi possível criar {title} (faltam colunas obrigatórias?)</value>
@@ -421,7 +382,7 @@
     <value>Lote</value>
   </data>
   <data name="fieldProvenance" xml:space="preserve">
-    <value>Alterado por</value>
+    <value>Origem</value>
   </data>
   <data name="fieldPublishState" xml:space="preserve">
     <value>Status de publicação</value>
@@ -445,7 +406,7 @@
     <value>Restaurado</value>
   </data>
   <data name="msgResumeChanged" xml:space="preserve">
-    <value>Uma otimização terminou na sua ausência, mas a escala mudou. O resultado não se aplica mais.</value>
+    <value>Um agendamento automático terminou na sua ausência, mas a escala mudou. O resultado não se aplica mais.</value>
   </data>
   <data name="msgRowCapReached" xml:space="preserve">
     <value>Apenas as primeiras {count} linhas são mostradas. Filtre a exibição para ver as demais.</value>
@@ -457,13 +418,13 @@
     <value>{title} selecionado</value>
   </data>
   <data name="msgSessionFailed" xml:space="preserve">
-    <value>Não foi possível iniciar a otimização do Chrona: {message}</value>
+    <value>Não foi possível iniciar o agendamento automático: {message}</value>
   </data>
   <data name="msgSolveNoPrivilege" xml:space="preserve">
-    <value>Otimizar exige a função Chrona Scheduler User.</value>
+    <value>O agendamento automático exige a função Chrona Scheduler User.</value>
   </data>
   <data name="msgSolveNoCalendar" xml:space="preserve">
-    <value>Esta exibição ainda não tem calendário Chrona, por isso não é possível otimizar.</value>
+    <value>Esta exibição ainda não tem calendário Chrona, por isso o agendamento automático não pode ser executado.</value>
   </data>
   <data name="msgUndid" xml:space="preserve">
     <value>Alteração desfeita</value>
@@ -512,6 +473,12 @@
   </data>
   <data name="periodPrevious" xml:space="preserve">
     <value>Período anterior</value>
+  </data>
+  <data name="periodBoundaryLabel" xml:space="preserve">
+    <value>Período a partir de {date}</value>
+  </data>
+  <data name="weekNumberLabel" xml:space="preserve">
+    <value>Sem. {week}</value>
   </data>
   <data name="pinnedNotice" xml:space="preserve">
     <value>Fixado. Desafixe para editar.</value>
@@ -763,13 +730,13 @@
     <value>Recurso</value>
   </data>
   <data name="resumeChanged" xml:space="preserve">
-    <value>Uma otimização terminou na sua ausência, mas a escala mudou. O resultado não se aplica mais.</value>
+    <value>Um agendamento automático terminou na sua ausência, mas a escala mudou. O resultado não se aplica mais.</value>
   </data>
   <data name="resumeDiscard" xml:space="preserve">
     <value>Descartar</value>
   </data>
   <data name="resumeFinished" xml:space="preserve">
-    <value>Uma otimização terminou na sua ausência.</value>
+    <value>Um agendamento automático terminou na sua ausência.</value>
   </data>
   <data name="resumeFollow" xml:space="preserve">
     <value>Acompanhar</value>
@@ -778,7 +745,7 @@
     <value>Revisar</value>
   </data>
   <data name="resumeRunning" xml:space="preserve">
-    <value>Uma otimização desta escala está em andamento.</value>
+    <value>Um agendamento automático desta escala está em andamento.</value>
   </data>
   <data name="rosterOpenShifts" xml:space="preserve">
     <value>Turnos não atribuídos</value>
@@ -786,29 +753,26 @@
   <data name="save" xml:space="preserve">
     <value>Salvar</value>
   </data>
-  <data name="savedViews" xml:space="preserve">
-    <value>Exibições</value>
-  </data>
   <data name="solve" xml:space="preserve">
-    <value>Otimizar</value>
+    <value>Agendar automaticamente</value>
   </data>
   <data name="solveCapabilitiesLine" xml:space="preserve">
-    <value>Otimizando com: {list}</value>
+    <value>Agendamento automático com: {list}</value>
   </data>
   <data name="solveFailed" xml:space="preserve">
-    <value>Falha na otimização: {message}</value>
+    <value>Falha no agendamento automático: {message}</value>
   </data>
   <data name="solveQuotaExhausted" xml:space="preserve">
-    <value>As otimizações grátis de hoje acabaram. Volte amanhã ou mude de plano para uso ilimitado.</value>
+    <value>As execuções grátis de hoje acabaram. Volte amanhã ou mude de plano para uso ilimitado.</value>
   </data>
   <data name="solveQuotaRemaining" xml:space="preserve">
-    <value>Restam {remaining} de {limit} otimizações grátis hoje</value>
+    <value>Restam {remaining} de {limit} execuções grátis hoje</value>
   </data>
   <data name="solveQuotaUpgrade" xml:space="preserve">
     <value>Mudar de plano</value>
   </data>
   <data name="solveSolving" xml:space="preserve">
-    <value>Otimizando…</value>
+    <value>Agendando automaticamente…</value>
   </data>
   <data name="solveStop" xml:space="preserve">
     <value>Parar e revisar</value>
@@ -870,6 +834,9 @@
   <data name="unscheduleConfirmMessage" xml:space="preserve">
     <value>Desatribuir {title}? O turno mantém o horário e volta para Não agendados para nova atribuição.</value>
   </data>
+  <data name="unscheduleConfirmCountTitle" xml:space="preserve">
+    <value>Desatribuir {count} itens?</value>
+  </data>
   <data name="unscheduleConfirmTitle" xml:space="preserve">
     <value>Desatribuir turno</value>
   </data>
@@ -883,7 +850,7 @@
     <value>Nada neste período.</value>
   </data>
   <data name="unscheduledEmptyShort" xml:space="preserve">
-    <value>Nenhum turno em aberto.</value>
+    <value>Nenhum turno disponível.</value>
   </data>
   <data name="unscheduledFilterLabel" xml:space="preserve">
     <value>Filtrar itens não agendados</value>
@@ -896,9 +863,6 @@
   </data>
   <data name="unscheduledTitle" xml:space="preserve">
     <value>Não agendados</value>
-  </data>
-  <data name="unscheduledToggle" xml:space="preserve">
-    <value>Não agendados ({count})</value>
   </data>
   <data name="weekdaysShort" xml:space="preserve">
     <value>dom.|seg.|ter.|qua.|qui.|sex.|sáb.</value>
@@ -958,7 +922,7 @@
     <value>Fixado (opcional)</value>
   </data>
   <data name="Prop_Pinned_Desc" xml:space="preserve">
-    <value>Coluna Sim/Não. Uma linha fixada mantém pessoa e horário ao otimizar.</value>
+    <value>Coluna Sim/Não. Uma linha fixada mantém pessoa e horário no agendamento automático.</value>
   </data>
   <data name="Prop_Bundle" xml:space="preserve">
     <value>Lote (opcional)</value>
@@ -976,7 +940,7 @@
     <value>Alterado por (opcional)</value>
   </data>
   <data name="Prop_Provenance_Desc" xml:space="preserve">
-    <value>Coluna de texto ou opção que registra quem alterou a linha: pessoa ou otimizador.</value>
+    <value>Coluna de texto ou opção que registra quem alterou a linha: pessoa ou agendamento automático.</value>
   </data>
   <data name="Prop_WindowStart" xml:space="preserve">
     <value>Início da janela (opcional)</value>
@@ -1204,7 +1168,7 @@
     <value>{name} se encaixa igualmente bem.</value>
   </data>
   <data name="whyNotVerdictEqualReview" xml:space="preserve">
-    <value>{name} se encaixa igualmente bem. A otimização teve que escolher.</value>
+    <value>{name} se encaixa igualmente bem. O agendamento automático teve que escolher.</value>
   </data>
   <data name="whyNotVerdictBetter" xml:space="preserve">
     <value>{name} se encaixa melhor.</value>

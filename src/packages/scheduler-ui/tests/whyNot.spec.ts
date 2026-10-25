@@ -64,7 +64,7 @@ function verdictLeadsWithAMustRule(): void {
     tone: "strain",
   });
   // As good a fit: in review Optimize had to pick; on the roster as it stands it just fits.
-  assert.equal(whyNotVerdict(check({ fit: "equal" }), "Ava", strings, true).text, "Ava fits as well. Optimize had to pick one.");
+  assert.equal(whyNotVerdict(check({ fit: "equal" }), "Ava", strings, true).text, "Ava fits as well. Auto Schedule had to pick one.");
   assert.equal(whyNotVerdict(check({ fit: "equal" }), "Ava", strings, false).text, "Ava fits as well.");
   assert.deepEqual(whyNotVerdict(check({ fit: "better" }), "Ava", strings, false), { text: "Ava fits better.", tone: "fix" });
 }

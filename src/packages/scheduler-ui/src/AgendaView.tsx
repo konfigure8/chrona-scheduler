@@ -1,8 +1,11 @@
 import * as React from "react";
 
+import { useBoardHourFormat } from "./boardLocale";
+import { formatClockRange } from "./clock";
 import { dateNamesFrom } from "./dateNames";
 import { groupEventsByDay } from "./monthLayout";
-import { isOpenOnCall } from "./solve";
+import { useOpenShiftKind } from "./ShiftMark";
+import { isOpenOnCall, openKindOf } from "./solve";
 import { useSchedulerStrings } from "./strings";
 import { eventIntersectsWindow } from "./timelineLayout";
 import type {
@@ -18,14 +21,12 @@ export interface AgendaViewProps {
   readonly window: TimeWindow;
 }
 
-function formatTimeRange(event: SchedulerUiEvent): string {
-  const pad = (value: number): string => value.toString().padStart(2, "0");
-  return `${pad(event.start.getHours())}:${pad(event.start.getMinutes())}-${pad(event.end.getHours())}:${pad(event.end.getMinutes())}`;
-}
-
 export function AgendaView(props: AgendaViewProps): JSX.Element {
   const { events, onEventClick, resources, window } = props;
   const strings = useSchedulerStrings();
+  const hourFormat = useBoardHourFormat();
+  const kindOf = useOpenShiftKind();
+  const formatTimeRange = (event: SchedulerUiEvent): string => formatClockRange(event.start, event.end, hourFormat);
   const resourcesById = React.useMemo(
     () => new Map(resources.map((resource) => [resource.id, resource])),
     [resources],
@@ -35,8 +36,9 @@ export function AgendaView(props: AgendaViewProps): JSX.Element {
       groupEventsByDay(
         events.filter((event) => eventIntersectsWindow(event, window)),
         dateNamesFrom(strings),
+        kindOf,
       ),
-    [events, window, strings],
+    [events, kindOf, window, strings],
   );
 
   return (
@@ -71,6 +73,10 @@ export function AgendaView(props: AgendaViewProps): JSX.Element {
                   </span>
                   {isOpenOnCall(event) ? (
                     <span className="chrona-sched__agenda-on-call">{strings.legendOnCall}</span>
+                  ) : openKindOf(event, kindOf) ? (
+                    <span className={`chrona-sched__agenda-${openKindOf(event, kindOf)?.kind ?? ""}`}>
+                      {openKindOf(event, kindOf)?.label}
+                    </span>
                   ) : event.status === "needsCover" ? (
                     <span className="chrona-sched__agenda-needs-cover">{strings.legendNeedsCover}</span>
                   ) : (

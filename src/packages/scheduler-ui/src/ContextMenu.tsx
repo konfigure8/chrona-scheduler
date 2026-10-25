@@ -3,6 +3,8 @@ import * as React from "react";
 export interface ContextMenuItem {
   readonly danger?: boolean;
   readonly disabled?: boolean;
+  /** A line before the item: it starts a new group of the menu's items. */
+  readonly dividerBefore?: boolean;
   readonly id: string;
   readonly label: string;
   readonly onSelect: () => void;
@@ -59,28 +61,30 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
       role="menu"
       style={{ left: x, top: y }}
     >
-      {items.map((item) => (
-        <button
-          className={
-            item.danger
-              ? "chrona-sched__menu-item chrona-sched__menu-item--danger"
-              : "chrona-sched__menu-item"
-          }
-          data-item-id={item.id}
-          disabled={item.disabled}
-          key={item.id}
-          onClick={() => {
-            // Focus goes back to what opened the menu before the item acts, so a dialog it opens
-            // hands focus back there when it closes.
-            restore();
-            onClose();
-            item.onSelect();
-          }}
-          role="menuitem"
-          type="button"
-        >
-          {item.label}
-        </button>
+      {items.map((item, index) => (
+        <React.Fragment key={item.id}>
+          {item.dividerBefore && index > 0 ? <div className="chrona-sched__menu-separator" role="separator" /> : null}
+          <button
+            className={
+              item.danger
+                ? "chrona-sched__menu-item chrona-sched__menu-item--danger"
+                : "chrona-sched__menu-item"
+            }
+            data-item-id={item.id}
+            disabled={item.disabled}
+            onClick={() => {
+              // Focus goes back to what opened the menu before the item acts, so a dialog it opens
+              // hands focus back there when it closes.
+              restore();
+              onClose();
+              item.onSelect();
+            }}
+            role="menuitem"
+            type="button"
+          >
+            {item.label}
+          </button>
+        </React.Fragment>
       ))}
     </div>
   );

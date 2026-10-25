@@ -15,6 +15,7 @@ import { useFullScreen } from "./fullScreen";
 import type { RosterVersion } from "./solveClient";
 import { formatString } from "./stringResources";
 import { useSchedulerStrings } from "./strings";
+import { useBoardHourFormat, useBoardLocale } from "./boardLocale";
 import type { SchedulerResource, SchedulerUiEvent } from "./types";
 import {
   whyNotLines,
@@ -107,6 +108,8 @@ function Lines(props: { readonly lines: readonly WhyNotLine[] }): JSX.Element | 
  */
 export function WhyNotGroup(props: WhyNotGroupProps): JSX.Element {
   const strings = useSchedulerStrings();
+  const locale = useBoardLocale();
+  const hourFormat = useBoardHourFormat();
   const names = React.useMemo(() => dateNamesFrom(strings), [strings]);
   const fullScreen = useFullScreen();
   const { people, shift } = props;
@@ -231,6 +234,8 @@ export function WhyNotGroup(props: WhyNotGroupProps): JSX.Element {
         const lines = whyNotLines(check, {
           describe: (match) => props.extension.describe?.(match, props.roster),
           eventsById: new Map(props.roster.events.map((event) => [event.id, event])),
+          hourFormat,
+          locale,
           nameOf: props.nameOf,
           strings,
           takenOffId: holder,
@@ -333,7 +338,7 @@ export function WhyNotGroup(props: WhyNotGroupProps): JSX.Element {
         />
       </div>
       <div className="chrona-sched__proposal-caption" data-testid="why-not-shift">
-        {whyNotShiftLabel(shift, names)}
+        {whyNotShiftLabel(shift, names, hourFormat)}
         {" · "}
         {holder !== undefined ? formatString(strings.whyNotNow, { name: props.nameOf(holder) }) : strings.unassigned}
       </div>
