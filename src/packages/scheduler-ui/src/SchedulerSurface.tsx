@@ -33,6 +33,7 @@ import {
 import { BoardEventDialog, type DraftEventInput } from "./EventDialog";
 import { EventHoverCard, type HoverAnchorRect } from "./EventHoverCard";
 import { buildRosterDays } from "./rosterLayout";
+import { BoardLookProvider, DialogLayer, type BoardLook } from "./dialogLayer";
 import { FullScreenProvider, useFullScreen, useFullScreenRoot } from "./fullScreen";
 import {
   GroupActionDialog,
@@ -67,6 +68,7 @@ import {
   type MustRow,
   type ProposalChange,
   type ProposalDoubleBooking,
+  type ProposalPreviewOptions,
   type ScheduleProposal,
   type ResumeRunDisplay,
   type SolveProgress,
@@ -656,6 +658,18 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
    * roster as Apply would leave it, at once and with no call.
    */
   const boardExtension = useBoardExtension();
+  // Drop and Keep, the extension's kinds of open shift and the shifts a proposal adds or removes, for the review's figures.
+  const openShiftKind = boardExtension?.openShift;
+  const proposalShift = boardExtension?.proposalShift;
+  const reviewOptions = React.useMemo<ProposalPreviewOptions>(
+    () => ({
+      dropped: droppedChangeIds,
+      ...(openShiftKind ? { openKind: openShiftKind } : {}),
+      ...(proposalShift ? { proposalShift } : {}),
+      withheld: withheldChangeIds,
+    }),
+    [droppedChangeIds, openShiftKind, proposalShift, withheldChangeIds],
+  );
   const review = boardExtension?.review;
   const reviewPeriod = props.proposal?.window ?? props.window;
   // Every item as it stands, and as Apply would leave it (the current roster when no proposal is open).
@@ -697,7 +711,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     }
     return proposalMustReport(
       props.proposal,
-      { dropped: droppedChangeIds, openKind: boardExtension?.openShift, withheld: withheldChangeIds },
+      reviewOptions,
       () =>
         review.checkMust({
           events: appliedAll,
@@ -707,13 +721,12 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     );
   }, [
     appliedAll,
-    droppedChangeIds,
     proposalChanges,
     props.proposal,
     props.resources,
     review,
+    reviewOptions,
     reviewPeriod,
-    withheldChangeIds,
   ]);
   const unchecked = React.useMemo(
     () =>
@@ -747,27 +760,15 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     if (!props.proposal || !proposalChanges) {
       return [];
     }
-    const inPeriod = (event: SchedulerUiEvent): boolean =>
-      event.start >= reviewPeriod.start && event.start < reviewPeriod.end;
-    return openShiftsAfter(
-      { ...props.proposal, events: props.proposal.events.filter(inPeriod) },
-      proposalChanges.filter((change) => inPeriod(change.current)),
-      { dropped: droppedChangeIds, openKind: boardExtension?.openShift, withheld: withheldChangeIds },
-    );
-  }, [droppedChangeIds, proposalChanges, props.proposal, reviewPeriod, withheldChangeIds]);
+    return openShiftsAfter(props.proposal, proposalChanges, reviewOptions, reviewPeriod);
+  }, [proposalChanges, props.proposal, reviewOptions, reviewPeriod]);
   // F24 Repair mode: the on-call shifts Apply would leave open; the open-shift list says they are not counted.
   const openOnCall = React.useMemo(() => {
     if (!props.proposal || !proposalChanges) {
       return 0;
     }
-    const inPeriod = (event: SchedulerUiEvent): boolean =>
-      event.start >= reviewPeriod.start && event.start < reviewPeriod.end;
-    return openOnCallAfter(
-      { ...props.proposal, events: props.proposal.events.filter(inPeriod) },
-      proposalChanges.filter((change) => inPeriod(change.current)),
-      { dropped: droppedChangeIds, openKind: boardExtension?.openShift, withheld: withheldChangeIds },
-    ).length;
-  }, [droppedChangeIds, proposalChanges, props.proposal, reviewPeriod, withheldChangeIds]);
+    return openOnCallAfter(props.proposal, proposalChanges, reviewOptions, reviewPeriod).length;
+  }, [proposalChanges, props.proposal, reviewOptions, reviewPeriod]);
   // What Apply leaves in the period, handed to the host with the changes (F53 saved counts).
   const outcomeFigures = boardExtension?.outcomeFigures;
   const appliedOutcome = React.useMemo<AppliedOutcome>(
@@ -799,11 +800,11 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
         ? proposalScore(
             props.proposal,
             proposalChanges,
-            { dropped: droppedChangeIds, openKind: boardExtension?.openShift, withheld: withheldChangeIds },
+            reviewOptions,
             props.proposal.window ?? props.window,
           )
         : undefined,
-    [droppedChangeIds, proposalChanges, props.proposal, props.window, withheldChangeIds],
+    [proposalChanges, props.proposal, props.window, reviewOptions],
   );
   // High-level only (Matt): the canvas is the detail; the bar
   // carries counts.
@@ -816,20 +817,31 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
         ? previewProposal(
             [...props.events, ...(props.unscheduledEvents ?? [])],
             proposalChanges,
-            { dropped: droppedChangeIds, openKind: boardExtension?.openShift, withheld: withheldChangeIds },
+            reviewOptions,
           )
         : undefined,
-    [
-      droppedChangeIds,
-      peek,
-      proposalChanges,
-      props.events,
-      props.unscheduledEvents,
-      reviewView,
-      withheldChangeIds,
-    ],
+    [peek, proposalChanges, props.events, props.unscheduledEvents, reviewOptions, reviewView],
   );
   const reviewing = proposalChanges !== undefined;
+  /*
+   * A removal the planner unticks or Apply holds back (BoardExtension.proposalShift) leaves the
+   * shift as it is today. The extension's kind of it was the removal's, so the board draws it, in
+   * both views, as the shift it is.
+   */
+  const drawnExtension = React.useMemo(() => {
+    if (!boardExtension || !openShiftKind || !proposalShift || !proposalChanges) {
+      return boardExtension;
+    }
+    const staying = new Set(
+      proposalChanges
+        .filter((change) => droppedChangeIds.has(change.current.id) || withheldChangeIds.has(change.current.id))
+        .filter((change) => proposalShift(change.current) === "removed")
+        .map((change) => change.current.id),
+    );
+    return staying.size === 0
+      ? boardExtension
+      : { ...boardExtension, openShift: (event: SchedulerUiEvent) => (staying.has(event.id) ? undefined : openShiftKind(event)) };
+  }, [boardExtension, droppedChangeIds, openShiftKind, proposalChanges, proposalShift, withheldChangeIds]);
 
   /*
    * F31 rework, on the Roster grid: the change list stays beside the
@@ -948,13 +960,34 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [changesOpen]);
-  const boardEvents = preview ? preview.scheduled : props.events;
+  // The current roster leaves out an added shift whose change is dropped (BoardExtension.proposalShift), as the proposed one does.
+  const notAdded = React.useMemo(() => {
+    if (!proposalShift || !proposalChanges) {
+      return undefined;
+    }
+    const ids = new Set(
+      proposalChanges
+        .filter((change) => droppedChangeIds.has(change.current.id) || withheldChangeIds.has(change.current.id))
+        .filter((change) => proposalShift(change.current) === "added")
+        .map((change) => change.current.id),
+    );
+    return ids.size > 0 ? ids : undefined;
+  }, [droppedChangeIds, proposalChanges, proposalShift, withheldChangeIds]);
+  const currentEvents = React.useMemo(
+    () => (notAdded ? props.events.filter((event) => !notAdded.has(event.id)) : props.events),
+    [notAdded, props.events],
+  );
+  const currentUnscheduled = React.useMemo(
+    () => (notAdded ? props.unscheduledEvents?.filter((event) => !notAdded.has(event.id)) : props.unscheduledEvents),
+    [notAdded, props.unscheduledEvents],
+  );
+  const boardEvents = preview ? preview.scheduled : currentEvents;
 
   const boardUnscheduled = preview
     ? props.unscheduledEvents === undefined
       ? undefined
       : preview.unscheduled
-    : props.unscheduledEvents;
+    : currentUnscheduled;
   const canEdit = props.editable !== false && !reviewing;
   const canCreate = canEdit && Boolean(props.onCreateEvent);
   /* A running solve shows as progress with Cancel; the board stays live. */
@@ -2156,7 +2189,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
   const toolbarIntervals = oneDay ? [] : props.intervals;
   const toolbarIntervalChange = props.onIntervalChange;
 
-  return (
+  const shell = (
     <div
       className="chrona-sched__shell"
       onClick={handleLaneClick}
@@ -2923,16 +2956,15 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
         />
       ) : null}
       {pendingDelete ? (
-        <div
-          className="chrona-sched__dialog-backdrop"
-          onClick={() => setPendingDelete(undefined)}
-        >
+        // An alert dialog: a click outside leaves it open, as in Fluent.
+        <DialogLayer onEscape={() => setPendingDelete(undefined)}>
           <div
             aria-label={
               pendingDelete.length === 1
                 ? strings.deleteConfirmTitle
                 : formatString(strings.deleteConfirmCount, { count: pendingDelete.length })
             }
+            aria-modal="true"
             className="chrona-sched__dialog chrona-sched__confirm-dialog"
             onClick={(clickEvent) => clickEvent.stopPropagation()}
             role="alertdialog"
@@ -2970,16 +3002,17 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
               </button>
             </div>
           </div>
-        </div>
+        </DialogLayer>
       ) : null}
       {pendingUnschedule && pendingUnschedule.length > 0 ? (
-        <div className="chrona-sched__dialog-backdrop">
+        <DialogLayer onEscape={() => setPendingUnschedule(undefined)}>
           <div
             aria-label={
               pendingUnschedule.length > 1
                 ? formatString(strings.unscheduleConfirmCountTitle, { count: pendingUnschedule.length })
                 : strings.unscheduleConfirmTitle
             }
+            aria-modal="true"
             className="chrona-sched__dialog chrona-sched__confirm-dialog"
             role="alertdialog"
           >
@@ -3037,7 +3070,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
               </button>
             </div>
           </div>
-        </div>
+        </DialogLayer>
       ) : null}
       {extension?.overlays?.(boardState)}
       {conversionOpen && conversion ? (
@@ -3100,36 +3133,45 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       ) : null}
     </div>
   );
+  return <BoardExtensionProvider extension={drawnExtension}>{shell}</BoardExtensionProvider>;
 }
 
 export function SchedulerSurface(props: SchedulerSurfaceProps): JSX.Element {
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const portalsRef = React.useRef<HTMLDivElement | null>(null);
   const fullScreen = useFullScreenRoot(rootRef, portalsRef);
+  const { locale, theme } = props;
+  // The board's look, which its dialogs carry over the window (dialogLayer.tsx).
+  const look = React.useMemo<BoardLook>(
+    () => ({
+      lang: locale,
+      root: rootRef,
+      style: theme ? { ...themeToCssVariables(theme), colorScheme: colorSchemeOf(theme.background) } : undefined,
+    }),
+    [locale, theme],
+  );
   return (
     <div
       className="chrona-sched"
       // The user's language on the control, so the browser hyphenates its words as that language does.
       lang={props.locale}
       ref={rootRef}
-      style={
-        props.theme
-          ? { ...themeToCssVariables(props.theme), colorScheme: colorSchemeOf(props.theme.background) }
-          : undefined
-      }
+      style={look.style}
     >
       <FullScreenProvider value={fullScreen}>
-        <DragProvider>
-          <SchedulerStringsProvider
-            strings={props.extension?.strings ? { ...props.strings, ...props.extension.strings } : props.strings}
-          >
-            <BoardLocaleProvider hourFormat={props.hourFormat} locale={props.locale}>
-              <BoardExtensionProvider extension={props.extension}>
-                <InteractionShell {...props} />
-              </BoardExtensionProvider>
-            </BoardLocaleProvider>
-          </SchedulerStringsProvider>
-        </DragProvider>
+        <BoardLookProvider value={look}>
+          <DragProvider>
+            <SchedulerStringsProvider
+              strings={props.extension?.strings ? { ...props.strings, ...props.extension.strings } : props.strings}
+            >
+              <BoardLocaleProvider hourFormat={props.hourFormat} locale={props.locale}>
+                <BoardExtensionProvider extension={props.extension}>
+                  <InteractionShell {...props} />
+                </BoardExtensionProvider>
+              </BoardLocaleProvider>
+            </SchedulerStringsProvider>
+          </DragProvider>
+        </BoardLookProvider>
       </FullScreenProvider>
       <div aria-live="polite" className="chrona-sched__live" role="status">
         {props.announcement}

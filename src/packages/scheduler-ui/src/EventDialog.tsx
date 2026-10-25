@@ -1,5 +1,6 @@
 import * as React from "react";
 
+import { DialogLayer } from "./dialogLayer";
 import { flagReasonText, formatString, useSchedulerStrings } from "./strings";
 import { tagPillStyle, type TagColorMap } from "./tagColors";
 
@@ -333,9 +334,10 @@ export function EventDialog(props: EventDialogProps): JSX.Element {
   };
 
   return (
-    <div className="chrona-sched__dialog-backdrop" role="presentation">
+    <DialogLayer role="presentation">
       <div
         aria-label={mode === "create" ? strings.draftItem : event.title}
+        aria-modal="true"
         className="chrona-sched__dialog"
         role="dialog"
       >
@@ -579,6 +581,6 @@ export function EventDialog(props: EventDialogProps): JSX.Element {
           </button>
         </div>
       </div>
-    </div>
+    </DialogLayer>
   );
 }

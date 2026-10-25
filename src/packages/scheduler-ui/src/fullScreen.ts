@@ -9,6 +9,8 @@ import * as React from "react";
  */
 export interface FullScreenControl {
   readonly active: boolean;
+  /** The full-screen board, where the board's dialogs open meanwhile (dialogLayer.tsx). */
+  readonly board: HTMLElement | undefined;
   /** Where Fluent pop-ups mount: the board while full screen, else the page. */
   readonly mountNode: HTMLElement | undefined;
   /** Leaves full screen, before the host opens a page or dialog of its own. */
@@ -74,11 +76,12 @@ export function useFullScreenRoot(
       supported
         ? {
             active,
+            board: active ? (rootRef.current ?? undefined) : undefined,
             exit,
             mountNode: active ? (portalsRef.current ?? undefined) : undefined,
             toggle,
           }
         : undefined,
-    [active, exit, portalsRef, supported, toggle],
+    [active, exit, portalsRef, rootRef, supported, toggle],
   );
 }

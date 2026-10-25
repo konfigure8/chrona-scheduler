@@ -297,6 +297,8 @@ export {
   type ProposalPreview,
   type ProposalPreviewOptions,
   type ProposalScore,
+  type ProposalShift,
+  type ProposalShiftOf,
   type OpenShiftsLeftOut,
   type ScheduleProposal,
   type SolveProgress,
@@ -542,4 +544,5 @@ export {
   type FixtureHostResult,
 } from "./fixtureHost";
 export { useFullScreen, type FullScreenControl } from "./fullScreen";
+export { DialogLayer, keepTabInside, useBoardRoot, type DialogLayerProps } from "./dialogLayer";
 export { mustRowLabel } from "./ProposalScorecard";

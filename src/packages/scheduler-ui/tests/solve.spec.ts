@@ -475,6 +475,136 @@ function openShiftOfAnExtensionsKindIsNotRequiredWork(): void {
 openShiftOfAnExtensionsKindIsNotRequiredWork();
 
 /*
+ * A run that adds shifts to the roster and takes some off it
+ * (BoardExtension.proposalShift): the scorecard counts the roster Apply
+ * would leave, so Shifts filled, Unscheduled and People affected follow
+ * Drop and Keep for those changes as for ordinary ones. An added shift
+ * stands on the board as an open item until Apply; a removed one sits in
+ * the proposal at a time no board shows, with its person, or with no
+ * person of the board's when it was open.
+ */
+function shiftsAProposalAddsAndRemovesFollowKeepAndDrop(): void {
+  const away = new Date(Date.UTC(2000, 0, 1));
+  const shift = (id: string, resourceId: string, start: number, open = false): SchedulerUiEvent => ({
+    end: at(start + 4),
+    id,
+    resourceId,
+    start: at(start),
+    status: open ? "needsCover" : "assigned",
+    title: id,
+  });
+  const leaving = (event: SchedulerUiEvent, resourceId: string): SchedulerUiEvent => ({
+    ...event,
+    end: new Date(away.getTime() + 4 * 3_600_000),
+    resourceId,
+    start: away,
+    status: "assigned",
+  });
+  const current = [
+    shift("s-a", "mia", 8),
+    shift("s-b", "open", 12, true),
+    shift("rem-filled", "noah", 9),
+    shift("rem-open", "open", 13, true),
+    shift("add-1", "open", 18, true),
+    shift("add-2", "open", 19, true),
+  ];
+  const byId = new Map(current.map((event) => [event.id, event]));
+  const proposal: ScheduleProposal = {
+    events: [
+      byId.get("s-a")!,
+      { ...byId.get("s-b")!, resourceId: "noah", status: "assigned" },
+      leaving(byId.get("rem-filled")!, "noah"),
+      leaving(byId.get("rem-open")!, "gone"),
+      { ...byId.get("add-1")!, resourceId: "mia", status: "assigned" },
+      { ...byId.get("add-2")!, resourceId: "noah", status: "assigned" },
+    ],
+    feasible: true,
+    runId: "run-made",
+  };
+  const changes = diffProposal(current, proposal);
+  assertEqual(changes.length, 5);
+  const period = { end: at(24), start: at(0) };
+  const proposalShift = (event: SchedulerUiEvent): "added" | "removed" | undefined =>
+    event.id.startsWith("add-") ? "added" : event.id.startsWith("rem-") ? "removed" : undefined;
+  // As the host draws them: an added shift's open item, and a removed shift on either side, are its own kinds.
+  const openKind = (event: SchedulerUiEvent): { kind: string; label: string } | undefined =>
+    event.id.startsWith("rem-") || event.resourceId === "gone"
+      ? { kind: "removed", label: "No longer needed" }
+      : event.id.startsWith("add-") && event.status === "needsCover"
+        ? { kind: "new", label: "New" }
+        : undefined;
+  const score = (dropped: readonly string[]) =>
+    proposalScore(proposal, changes, { dropped: new Set(dropped), openKind, proposalShift }, period);
+  const unscheduled = (dropped: readonly string[]): string =>
+    previewProposal(current, changes, { dropped: new Set(dropped), openKind, proposalShift })
+      .unscheduled.map((event) => event.id)
+      .join(",");
+  const placed = (dropped: readonly string[]): string =>
+    previewProposal(current, changes, { dropped: new Set(dropped), openKind, proposalShift })
+      .scheduled.map((event) => event.id)
+      .join(",");
+
+  // Default: Apply leaves s-a, s-b and the two added shifts, all filled; today only s-a of them is.
+  const all = score([]);
+  assertEqual(all.total, 4);
+  assertEqual(all.filledProposed, 4);
+  assertEqual(all.filledNow, 1);
+  assertEqual(all.kept, 5);
+  // Noah takes s-b and add-2 and loses rem-filled, Mia takes add-1; the open removal names no one.
+  assertEqual(all.peopleAffected, 2);
+  assertEqual(unscheduled([]), "");
+
+  // An added shift unticked: on neither roster, so not counted, not unscheduled and not placed.
+  const noAdd = score(["add-1"]);
+  assertEqual(noAdd.total, 3);
+  assertEqual(noAdd.filledProposed, 3);
+  assertEqual(noAdd.filledNow, 1);
+  assertEqual(noAdd.kept, 4);
+  assertEqual(noAdd.peopleAffected, 1);
+  assertEqual(unscheduled(["add-1"]), "");
+  assertEqual(placed(["add-1"]).includes("add-1"), false);
+
+  // A filled removal unticked: the shift stays, filled now and after.
+  const keepFilled = score(["rem-filled"]);
+  assertEqual(keepFilled.total, 5);
+  assertEqual(keepFilled.filledProposed, 5);
+  assertEqual(keepFilled.filledNow, 2);
+  assertEqual(keepFilled.peopleAffected, 2);
+  assertEqual(unscheduled(["rem-filled"]), "");
+
+  // An open removal unticked: the shift stays open, required work again, and Unscheduled lists it.
+  const keepOpen = score(["rem-open"]);
+  assertEqual(keepOpen.total, 5);
+  assertEqual(keepOpen.filledProposed, 4);
+  assertEqual(keepOpen.filledNow, 1);
+  assertEqual(keepOpen.peopleAffected, 2);
+  assertEqual(unscheduled(["rem-open"]), "rem-open");
+  assertEqual(
+    openShiftsAfter(proposal, changes, { dropped: new Set(["rem-open"]), openKind, proposalShift }, period)
+      .map((event) => event.id)
+      .join(","),
+    "rem-open",
+  );
+  assertEqual(openShiftsAfter(proposal, changes, { openKind, proposalShift }, period).length, 0);
+
+  // An ordinary change unticked: as today, the shift stays open.
+  const noFill = score(["s-b"]);
+  assertEqual(noFill.total, 4);
+  assertEqual(noFill.filledProposed, 3);
+  assertEqual(noFill.filledNow, 1);
+  assertEqual(noFill.peopleAffected, 2);
+  assertEqual(unscheduled(["s-b"]), "s-b");
+
+  // Everything unticked: today's roster, no change.
+  const none = score(changes.map((change) => change.current.id));
+  assertEqual(none.total, 4);
+  assertEqual(none.filledProposed, none.filledNow);
+  assertEqual(none.peopleAffected, 0);
+  console.log("added and removed shift tests passed");
+}
+shiftsAProposalAddsAndRemovesFollowKeepAndDrop();
+
+/*
  * Matt 2026-10-13: open shifts that had ended, or are pinned, stay out of
  * a solve; one still running goes in (a sick call or an accident on the
  * way). The counts match what problemFromSchedule leaves out, so "No

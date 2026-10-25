@@ -15,6 +15,7 @@ import { countOverlappingShifts, countUnscheduled } from "./conversion";
 import type { RowDecoration } from "./decorations";
 import { redactProblem } from "./redaction";
 import { problemFromSchedule } from "./schedulingContract";
+import { DialogLayer } from "./dialogLayer";
 import { formatString, useSchedulerStrings } from "./strings";
 import type { SchedulerResource, SchedulerUiEvent } from "./types";
 
@@ -239,7 +240,7 @@ export function ConversionDialog(props: ConversionDialogProps): JSX.Element {
   }, [payloadOpen, events, unscheduledEvents, resources, decorations, timeWindow, timeZone, toInstant]);
 
   return (
-    <div className="chrona-sched__dialog-backdrop">
+    <DialogLayer>
       <div
         aria-label={strings.conversionTitle}
         aria-modal="true"
@@ -439,6 +440,6 @@ export function ConversionDialog(props: ConversionDialogProps): JSX.Element {
           </div>
         </div>
       </div>
-    </div>
+    </DialogLayer>
   );
 }

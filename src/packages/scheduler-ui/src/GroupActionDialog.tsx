@@ -9,6 +9,7 @@ import {
   type ValidateChange,
 } from "./interactions";
 import { useBoardExtension, type ResourceFit } from "./extension";
+import { DialogLayer } from "./dialogLayer";
 import { formatString, useSchedulerStrings } from "./strings";
 import type { SchedulerResource, SchedulerUiEvent } from "./types";
 
@@ -106,8 +107,8 @@ export function GroupActionDialog(props: GroupActionDialogProps): JSX.Element {
     kind === "move" ? strings.moveDialogTitle : strings.reassignDialogTitle;
 
   return (
-    <div className="chrona-sched__dialog-backdrop" role="presentation">
-      <div aria-label={title} className="chrona-sched__dialog" role="dialog">
+    <DialogLayer role="presentation">
+      <div aria-label={title} aria-modal="true" className="chrona-sched__dialog" role="dialog">
         <div className="chrona-sched__dialog-header">
           <span className="chrona-sched__dialog-title">{title}</span>
           <button
@@ -212,6 +213,6 @@ export function GroupActionDialog(props: GroupActionDialogProps): JSX.Element {
           </button>
         </div>
       </div>
-    </div>
+    </DialogLayer>
   );
 }

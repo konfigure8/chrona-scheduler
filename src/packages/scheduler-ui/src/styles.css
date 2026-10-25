@@ -1724,26 +1724,67 @@
 }
 
 /*
- * Dialogs open inside the board, never on the browser window: a host
- * draws its own bars above the control (Power Apps shows the board's
- * warnings in its notification bar), and those stay readable while a
- * dialog is open. A dialog taller than the board scrolls inside it.
+ * Dialogs open over the whole window (F156, Matt 2026-10-25): inside
+ * the board a dialog was only as large as the board, and on a form at
+ * a small screen it was squashed. The layer (dialogLayer.tsx) mounts
+ * through Fluent's Portal on the page body, in Fluent's layer above the
+ * host's bars, or in the board while the board is full screen. It
+ * carries the board's tokens; the scrim covers the window, and the
+ * dialog sits in the middle, as Fluent's dialog does. A dialog taller
+ * than the window scrolls inside itself.
  */
+.chrona-sched.chrona-sched__dialog-layer {
+  background: transparent;
+  height: auto;
+  inset: 0;
+  position: fixed;
+  z-index: 1000000;
+}
+
 .chrona-sched__dialog-backdrop {
-  align-items: flex-start;
+  align-items: center;
   background: var(--csui-overlay);
   display: flex;
   inset: 0;
   justify-content: center;
   padding: 24px 16px;
   position: absolute;
-  z-index: 30;
 }
 
-/* In full screen the board's own notice stands in for the host's bar. */
-.chrona-sched__shell:has(> .chrona-sched__dialog-backdrop) > .chrona-sched__board-notice {
-  position: relative;
-  z-index: 31;
+/* The scrim and the dialog come in as Fluent's do: the scrim fades in
+   (FadeRelaxed), the dialog fades and scales up from 85% (Scale,
+   durationGentle, curveDecelerateMid). */
+@keyframes chrona-sched-scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes chrona-sched-dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+
+.chrona-sched__dialog-backdrop {
+  animation: chrona-sched-scrim-in 250ms cubic-bezier(0, 0, 0, 1);
+}
+
+.chrona-sched__dialog-backdrop > .chrona-sched__dialog {
+  animation: chrona-sched-dialog-in 250ms cubic-bezier(0, 0, 0, 1);
+}
+
+/* A dialog that follows another keeps the scrim still. */
+.chrona-sched__dialog-layer--follows > .chrona-sched__dialog-backdrop {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chrona-sched__dialog-backdrop,
+  .chrona-sched__dialog-backdrop > .chrona-sched__dialog {
+    animation: none;
+  }
 }
 
 .chrona-sched__dialog {
@@ -1837,6 +1878,23 @@
   gap: 8px;
   justify-content: flex-end;
   padding: 12px 16px;
+}
+
+/* A dialog taller than the window scrolls between its title and its
+   actions, which stay in view, as in Fluent's dialog. */
+.chrona-sched__dialog > .chrona-sched__dialog-header,
+.chrona-sched__dialog > .chrona-sched__dialog-actions {
+  background: var(--csui-bg);
+  position: sticky;
+  z-index: 1;
+}
+
+.chrona-sched__dialog > .chrona-sched__dialog-header {
+  top: 0;
+}
+
+.chrona-sched__dialog > .chrona-sched__dialog-actions {
+  bottom: 0;
 }
 
 .chrona-sched__dialog-actions button {

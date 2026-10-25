@@ -178,6 +178,71 @@ export interface ProposalPreviewOptions {
   readonly withheld?: ReadonlySet<string>;
   /** The extension's kinds of open shift (BoardExtension.openShift): not required work. */
   readonly openKind?: OpenShiftKindOf;
+  /** The shifts the proposal adds to the roster or takes off it (BoardExtension.proposalShift). */
+  readonly proposalShift?: ProposalShiftOf;
+}
+
+/**
+ * A change that adds a shift to the roster or takes one off it, beyond
+ * the solver's moves (BoardExtension.proposalShift): "added", the open
+ * item stands for a shift the proposal adds; "removed", Apply takes the
+ * shift off the roster.
+ */
+export type ProposalShift = "added" | "removed";
+
+/** A change's shift as it stands now, to its ProposalShift; undefined = an ordinary change. */
+export type ProposalShiftOf = (event: SchedulerUiEvent) => ProposalShift | undefined;
+
+/** A shift of the roster Apply would leave, as it stands now and as Apply leaves it. */
+interface AppliedShift {
+  /** The proposal's own item for the shift. */
+  readonly event: SchedulerUiEvent;
+  /** The shift as it stands now: an added shift's open item. */
+  readonly now: SchedulerUiEvent;
+  /** The shift as Apply would leave it: a kept change counts as proposed, a dropped or withheld one as it is now. */
+  readonly shown: SchedulerUiEvent;
+  readonly shift?: ProposalShift;
+}
+
+/**
+ * The shifts on the roster Apply would leave: an added shift only while
+ * its change is kept, a removed one only once its change is dropped or
+ * withheld. With a period, only the shifts that start in it; a removed
+ * shift by its time now.
+ */
+function appliedShifts(
+  proposal: ScheduleProposal,
+  changes: readonly ProposalChange[],
+  options: ProposalPreviewOptions,
+  period?: { readonly end: Date; readonly start: Date },
+): readonly AppliedShift[] {
+  const inPeriod = (event: SchedulerUiEvent): boolean =>
+    !period || (event.start >= period.start && event.start < period.end);
+  const changeById = new Map(changes.filter((change) => inPeriod(change.current)).map((change) => [change.current.id, change]));
+  const shifts: AppliedShift[] = [];
+  for (const event of proposal.events) {
+    const change = changeById.get(event.id);
+    const kept = change !== undefined && !options.dropped?.has(event.id) && !options.withheld?.has(event.id);
+    const shift = change ? options.proposalShift?.(change.current) : undefined;
+    if ((shift === "added" && !kept) || (shift === "removed" && kept)) {
+      continue;
+    }
+    const now = change ? change.current : event;
+    if (!inPeriod(shift === "removed" ? now : event)) {
+      continue;
+    }
+    shifts.push({ event, now, shown: change && kept ? change.proposed : now, ...(shift ? { shift } : {}) });
+  }
+  return shifts;
+}
+
+/**
+ * Whether a shift is required work. A removed shift whose change is
+ * dropped is the shift it is today: the extension's kind of it was the
+ * removal's, so only on call leaves it out.
+ */
+function requiredWork(applied: AppliedShift, event: SchedulerUiEvent, kindOf?: OpenShiftKindOf): boolean {
+  return applied.shift === "removed" ? event.onCall !== true : event.onCall !== true && !isOwnKind(event, kindOf);
 }
 
 export interface ProposalPreview {
@@ -191,8 +256,10 @@ export interface ProposalPreview {
  * The board as it would be after Apply (F31): every kept change shows
  * at its proposed place marked "proposed", a moved or unassigned item
  * also leaves a "ghost" at its current place, and a dropped or withheld
- * change shows the current item unchanged. Pure, so hosts and tests
- * can read it.
+ * change shows the current item unchanged. A shift the proposal adds
+ * (BoardExtension.proposalShift) shows only while its change is kept, so
+ * a dropped one is neither placed nor unscheduled. Pure, so hosts and
+ * tests can read it.
  */
 export function previewProposal(
   current: readonly SchedulerUiEvent[],
@@ -200,9 +267,13 @@ export function previewProposal(
   options: ProposalPreviewOptions = {},
 ): ProposalPreview {
   const active = new Map<string, ProposalChange>();
+  const notAdded = new Set<string>();
   for (const change of changes) {
     const id = change.current.id;
     if (options.dropped?.has(id) || options.withheld?.has(id)) {
+      if (options.proposalShift?.(change.current) === "added") {
+        notAdded.add(id);
+      }
       continue;
     }
     active.set(id, change);
@@ -211,6 +282,9 @@ export function previewProposal(
   const unscheduled: SchedulerUiEvent[] = [];
   const ghosts: SchedulerUiEvent[] = [];
   for (const event of current) {
+    if (notAdded.has(event.id)) {
+      continue;
+    }
     const change = active.get(event.id);
     const shown: SchedulerUiEvent = change
       ? { ...change.proposed, review: "proposed" }
@@ -314,14 +388,23 @@ export function openShiftClass(event: SchedulerUiEvent, kind: "bar" | "chip", ki
  * The required shifts left open if the planner applies the proposal as
  * it stands now (F40 Three-level score): a kept change counts as
  * proposed, a dropped or withheld one as it is today, so the list
- * follows Drop and Keep. Earliest first.
+ * follows Drop and Keep. Only the shifts on the roster Apply would
+ * leave (appliedShifts), and with a period those that start in it.
+ * Earliest first.
  */
 export function openShiftsAfter(
   proposal: ScheduleProposal,
   changes: readonly ProposalChange[],
   options: ProposalPreviewOptions = {},
+  period?: { readonly end: Date; readonly start: Date },
 ): readonly SchedulerUiEvent[] {
-  return shiftsAfter(proposal, changes, options, (event) => isOpenRequired(event, options.openKind));
+  return shiftsAfter(
+    proposal,
+    changes,
+    options,
+    (applied) => applied.shown.status === "needsCover" && requiredWork(applied, applied.shown, options.openKind),
+    period,
+  );
 }
 
 /** The on-call shifts left open if the planner applies the proposal as it stands now; not counted as open. */
@@ -329,30 +412,22 @@ export function openOnCallAfter(
   proposal: ScheduleProposal,
   changes: readonly ProposalChange[],
   options: ProposalPreviewOptions = {},
+  period?: { readonly end: Date; readonly start: Date },
 ): readonly SchedulerUiEvent[] {
-  return shiftsAfter(proposal, changes, options, isOpenOnCall);
+  return shiftsAfter(proposal, changes, options, (applied) => isOpenOnCall(applied.shown), period);
 }
 
 function shiftsAfter(
   proposal: ScheduleProposal,
   changes: readonly ProposalChange[],
   options: ProposalPreviewOptions,
-  wanted: (event: SchedulerUiEvent) => boolean,
+  wanted: (applied: AppliedShift) => boolean,
+  period?: { readonly end: Date; readonly start: Date },
 ): readonly SchedulerUiEvent[] {
-  const changeById = new Map(changes.map((change) => [change.current.id, change]));
-  const open: SchedulerUiEvent[] = [];
-  for (const event of proposal.events) {
-    const change = changeById.get(event.id);
-    const kept =
-      change !== undefined &&
-      !options.dropped?.has(event.id) &&
-      !options.withheld?.has(event.id);
-    const shown = change ? (kept ? change.proposed : change.current) : event;
-    if (wanted(shown)) {
-      open.push(shown);
-    }
-  }
-  return open.sort((first, second) => first.start.getTime() - second.start.getTime());
+  return appliedShifts(proposal, changes, options, period)
+    .filter(wanted)
+    .map((applied) => applied.shown)
+    .sort((first, second) => first.start.getTime() - second.start.getTime());
 }
 
 /** How many shifts openShiftsAfter leaves open. */
@@ -591,29 +666,48 @@ export function proposalScore(
 ): ProposalScore {
   const inPeriod = (event: SchedulerUiEvent): boolean =>
     !period || (event.start >= period.start && event.start < period.end);
-  const scoped: ScheduleProposal = { ...proposal, events: proposal.events.filter(inPeriod) };
   const scopedChanges = changes.filter((change) => inPeriod(change.current));
-  const allDropped = new Set(scopedChanges.map((change) => change.current.id));
   const kept = scopedChanges.filter(
     (change) =>
       !options.dropped?.has(change.current.id) && !options.withheld?.has(change.current.id),
   );
   const people = new Set<string>();
   for (const change of kept) {
-    for (const side of [change.current, change.proposed]) {
+    // A removed shift's person loses it; its proposed side names no one, as the shift is gone.
+    const sides = options.proposalShift?.(change.current) === "removed" ? [change.current] : [change.current, change.proposed];
+    for (const side of sides) {
       if (side.status !== "needsCover") {
         people.add(side.resourceId);
       }
     }
   }
-  // Required shifts only: an on-call shift, or one of an extension's own kind, is not filled or open work.
-  const answered = scoped.events.filter((event) => event.onCall !== true && !isOwnKind(event, options.openKind)).length;
+  /*
+   * The shifts on the roster Apply would leave (appliedShifts), required
+   * work only: an on-call shift, or one of an extension's own kind, is
+   * not filled or open work. Now, a dropped change counts as it is today
+   * (the extension's kinds aside, as before) and an added shift is open.
+   */
+  let answered = 0;
+  let openNow = 0;
+  let openProposed = 0;
+  for (const applied of appliedShifts(proposal, changes, options, period)) {
+    const required = requiredWork(applied, applied.shift === "removed" ? applied.now : applied.event, options.openKind);
+    if (required) {
+      answered += 1;
+    }
+    if (applied.shift === "added" ? required : isOpenRequired(applied.now)) {
+      openNow += 1;
+    }
+    if (applied.shown.status === "needsCover" && requiredWork(applied, applied.shown, options.openKind)) {
+      openProposed += 1;
+    }
+  }
   // The open shifts the run left out stay open, so they count as unfilled.
   const leftEnded = proposal.leftOpen?.ended ?? 0;
   const leftPinned = proposal.leftOpen?.pinned ?? 0;
   return {
-    filledNow: answered - openShiftCount(scoped, scopedChanges, { dropped: allDropped }),
-    filledProposed: answered - openShiftCount(scoped, scopedChanges, options),
+    filledNow: answered - openNow,
+    filledProposed: answered - openProposed,
     kept: kept.length,
     leftEnded,
     leftPinned,

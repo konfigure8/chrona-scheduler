@@ -8,7 +8,7 @@ import type { HourFormat } from "./timeAxis";
 import type { TimelineChange } from "./interactions";
 import type { RosterDay } from "./rosterLayout";
 import type { MustBreachCounts, ScheduleCandidate, ScheduleRuleMatch } from "./schedulingContract";
-import type { MustRow, OpenShiftKind, ProposalChange, SolveProgress } from "./solve";
+import type { MustRow, OpenShiftKind, ProposalChange, ProposalShift, SolveProgress } from "./solve";
 import type { CandidateAnswer, RosterVersion } from "./solveClient";
 import type { SchedulerStrings } from "./stringResources";
 import type {
@@ -446,6 +446,20 @@ export interface BoardExtension {
    * for a shift = required work, with the board's needs-cover look.
    */
   readonly openShift?: (event: SchedulerUiEvent) => OpenShiftKind | undefined;
+  /**
+   * A change that adds a shift to the roster or takes one off it, beyond
+   * the solver's moves (a host whose run makes and removes shifts), asked
+   * of each change's shift as it stands now: "added" for the open item
+   * that stands for a shift the proposal adds, "removed" for a shift Apply
+   * takes off the roster. The review counts the roster Apply would leave:
+   * an added shift while its change is kept, a removed one once its change
+   * is dropped, then as the shift it is today; and the proposed board's
+   * Unscheduled leaves out an added shift whose change is dropped. The
+   * board asks openShift of a removed shift only while its change is kept:
+   * once dropped, it draws as the shift it is. Absent, or undefined for a
+   * shift = an ordinary change.
+   */
+  readonly proposalShift?: (event: SchedulerUiEvent) => ProposalShift | undefined;
   /**
    * The lines after the board's own in a shift's hover card, in place of
    * the shift's fields. Absent, or undefined for a shift = its fields.
