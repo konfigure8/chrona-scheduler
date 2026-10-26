@@ -199,6 +199,7 @@ export const brazilianPortugueseStrings: SchedulerStrings = {
   "proposalDoubleBooks": "Sobreposição de {person} com {title}",
   "proposalGroupOutOfDate": "Desatualizadas ({count})",
   "proposalOutOfDate": "{count} desatualizadas",
+  "proposalOutOfDateOne": "1 desatualizada",
   "proposalReasonChanged": "Alterado depois que o plano foi criado",
   "proposalReasonNewShift": "{person} agora tem outro turno neste horário",
   "proposalReasonPersonChanged": "Os dados de {person} mudaram depois que o plano foi criado",

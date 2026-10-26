@@ -2596,9 +2596,11 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
               className="chrona-sched__proposal-note--block"
               data-testid="proposal-out-of-date"
             >
-              {formatString(strings.proposalOutOfDate, {
-                count: String(outOfDateIds.size),
-              })}
+              {outOfDateIds.size === 1
+                ? strings.proposalOutOfDateOne
+                : formatString(strings.proposalOutOfDate, {
+                    count: String(outOfDateIds.size),
+                  })}
             </span>
           ) : null}
           {doubleBookings.size > 0 ? (

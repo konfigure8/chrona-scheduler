@@ -214,6 +214,7 @@ export const germanStrings: SchedulerStrings = {
   proposalDoubleBooks: "Doppelbuchung von {person} mit {title}",
   proposalGroupOutOfDate: "Veraltet ({count})",
   proposalOutOfDate: "{count} veraltet",
+  proposalOutOfDateOne: "1 veraltet",
   proposalReasonChanged: "Nach Erstellung des Plans geändert",
   proposalReasonNewShift: "{person} hat jetzt eine andere Schicht zu dieser Zeit",
   proposalReasonPersonChanged: "Daten von {person} nach Erstellung des Plans geändert",

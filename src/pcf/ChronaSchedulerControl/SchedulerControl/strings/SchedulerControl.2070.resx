@@ -424,7 +424,7 @@
     <value>O agendamento automático exige a função Chrona Scheduler User.</value>
   </data>
   <data name="msgSolveNoCalendar" xml:space="preserve">
-    <value>Esta vista ainda não tem calendário Chrona, por isso o agendamento automático não pode ser executado.</value>
+    <value>Esta vista ainda não tem agendador, por isso o agendamento automático não pode ser executado.</value>
   </data>
   <data name="msgUndid" xml:space="preserve">
     <value>Alteração anulada</value>
@@ -678,6 +678,9 @@
   <data name="proposalOutOfDate" xml:space="preserve">
     <value>{count} desatualizadas</value>
   </data>
+  <data name="proposalOutOfDateOne" xml:space="preserve">
+    <value>1 desatualizada</value>
+  </data>
   <data name="proposalReasonChanged" xml:space="preserve">
     <value>Alterado depois de o plano ser criado</value>
   </data>
@@ -874,10 +877,10 @@
     <value>Tarefas</value>
   </data>
   <data name="Prop_CalendarConfig" xml:space="preserve">
-    <value>Configuração do calendário (opcional)</value>
+    <value>Configuração do agendador (opcional)</value>
   </data>
   <data name="Prop_CalendarConfig_Desc" xml:space="preserve">
-    <value>ID ou nome do calendário Chrona Scheduler. Vazio: Connect cria um para esta vista.</value>
+    <value>ID ou nome do Chrona Scheduler. Vazio: Connect cria um para esta vista.</value>
   </data>
   <data name="Prop_Title" xml:space="preserve">
     <value>Título (obrigatório)</value>

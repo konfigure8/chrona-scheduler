@@ -74,7 +74,7 @@ export const defaultControlMessages: ControlMessages = {
   msgResumeChanged: "An Auto Schedule run finished while you were away, but the schedule has changed since. Its result no longer applies.",
   msgSessionFailed: "Could not start Auto Schedule: {message}",
   msgSolveNoPrivilege: "Auto Schedule needs the Chrona Scheduler User role.",
-  msgSolveNoCalendar: "This view has no Chrona calendar yet, so Auto Schedule can't run.",
+  msgSolveNoCalendar: "This view has no scheduler yet, so Auto Schedule can't run.",
   msgCreateFailed: "Could not create {title} (missing required columns?)",
   msgCreated: "Created {title}",
   msgDeletedMany: "Deleted {count} items",

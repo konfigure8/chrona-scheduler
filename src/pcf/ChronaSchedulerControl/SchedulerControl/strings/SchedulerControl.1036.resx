@@ -424,7 +424,7 @@
     <value>Le rôle Chrona Scheduler User est requis pour la planification automatique.</value>
   </data>
   <data name="msgSolveNoCalendar" xml:space="preserve">
-    <value>Cette vue n'a pas encore de calendrier Chrona : planification automatique impossible.</value>
+    <value>Cette vue n'a pas encore de planning : planification automatique impossible.</value>
   </data>
   <data name="msgUndid" xml:space="preserve">
     <value>Modification annulée</value>
@@ -678,6 +678,9 @@
   <data name="proposalOutOfDate" xml:space="preserve">
     <value>{count} obsolètes</value>
   </data>
+  <data name="proposalOutOfDateOne" xml:space="preserve">
+    <value>1 obsolète</value>
+  </data>
   <data name="proposalReasonChanged" xml:space="preserve">
     <value>Modifié après la création du plan</value>
   </data>
@@ -874,10 +877,10 @@
     <value>Tâches</value>
   </data>
   <data name="Prop_CalendarConfig" xml:space="preserve">
-    <value>Configuration du calendrier (facultatif)</value>
+    <value>Configuration du planning (facultatif)</value>
   </data>
   <data name="Prop_CalendarConfig_Desc" xml:space="preserve">
-    <value>ID ou nom du calendrier Chrona Scheduler. Vide : Connect en crée un pour cette vue.</value>
+    <value>ID ou nom du Chrona Scheduler. Vide : Connect en crée un pour cette vue.</value>
   </data>
   <data name="Prop_Title" xml:space="preserve">
     <value>Titre (requis)</value>

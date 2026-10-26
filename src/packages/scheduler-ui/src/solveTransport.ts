@@ -1,5 +1,5 @@
 /**
- * The v2 wire (PLAN: solver boundary doctrine). The canonical contract
+ * The v2 wire. The canonical contract
  * IS the wire: the problem travels verbatim, and the result is the
  * contract's assignments with the run's outcome (F40: whether a Must
  * rule broke and what is left open). No vendor or solver-mechanics

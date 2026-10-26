@@ -330,6 +330,7 @@ export interface SchedulerStrings {
   readonly proposalDoubleBooks: string;
   readonly proposalGroupOutOfDate: string;
   readonly proposalOutOfDate: string;
+  readonly proposalOutOfDateOne: string;
   readonly proposalReasonChanged: string;
   readonly proposalReasonNewShift: string;
   readonly proposalReasonPersonChanged: string;
@@ -678,6 +679,7 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   proposalDoubleBooks: "Double-books {person} with {title}",
   proposalGroupOutOfDate: "Out of date ({count})",
   proposalOutOfDate: "{count} out of date",
+  proposalOutOfDateOne: "1 out of date",
   proposalReasonChanged: "Changed after the plan was made",
   proposalReasonNewShift: "{person} now has another shift at this time",
   proposalReasonPersonChanged: "{person}'s details changed after the plan was made",

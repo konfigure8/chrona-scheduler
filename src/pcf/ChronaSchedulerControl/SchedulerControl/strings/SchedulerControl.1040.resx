@@ -97,7 +97,7 @@
     <value>{gaps} carenze di copertura</value>
   </data>
   <data name="conversionInfoBody" xml:space="preserve">
-    <value>Collegare Chrona non cambia il funzionamento del calendario.</value>
+    <value>Collegare Chrona non cambia il funzionamento del pianificatore.</value>
   </data>
   <data name="conversionInfoLead" xml:space="preserve">
     <value>Facoltativo. Prova gratis.</value>
@@ -424,7 +424,7 @@
     <value>La pianificazione automatica richiede il ruolo Chrona Scheduler User.</value>
   </data>
   <data name="msgSolveNoCalendar" xml:space="preserve">
-    <value>Questa vista non ha ancora un calendario Chrona, quindi la pianificazione automatica non può partire.</value>
+    <value>Questa vista non ha ancora un pianificatore, quindi la pianificazione automatica non può partire.</value>
   </data>
   <data name="msgUndid" xml:space="preserve">
     <value>Modifica annullata</value>
@@ -678,6 +678,9 @@
   <data name="proposalOutOfDate" xml:space="preserve">
     <value>{count} non aggiornate</value>
   </data>
+  <data name="proposalOutOfDateOne" xml:space="preserve">
+    <value>1 non aggiornata</value>
+  </data>
   <data name="proposalReasonChanged" xml:space="preserve">
     <value>Modificato dopo la creazione del piano</value>
   </data>
@@ -877,7 +880,7 @@
     <value>Configurazione (facoltativa)</value>
   </data>
   <data name="Prop_CalendarConfig_Desc" xml:space="preserve">
-    <value>ID o nome di un calendario Chrona Scheduler. Lascia vuoto: Connect ne crea uno per questa vista.</value>
+    <value>ID o nome di un Chrona Scheduler. Lascia vuoto: Connect ne crea uno per questa vista.</value>
   </data>
   <data name="Prop_Title" xml:space="preserve">
     <value>Titolo (obbligatorio)</value>
@@ -988,7 +991,7 @@
     <value>Mese precedente</value>
   </data>
   <data name="schedulerSettings" xml:space="preserve">
-    <value>Impostazioni del calendario</value>
+    <value>Impostazioni del pianificatore</value>
   </data>
   <data name="fullScreen" xml:space="preserve">
     <value>Schermo intero</value>
@@ -1000,7 +1003,7 @@
     <value>domenica|lunedì|martedì|mercoledì|giovedì|venerdì|sabato</value>
   </data>
   <data name="msgSettingsFailed" xml:space="preserve">
-    <value>Impossibile aprire le impostazioni del calendario</value>
+    <value>Impossibile aprire le impostazioni del pianificatore</value>
   </data>
   <data name="noDate" xml:space="preserve">
     <value>Senza data</value>

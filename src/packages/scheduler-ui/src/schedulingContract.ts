@@ -1,6 +1,6 @@
 /**
- * The Chrona canonical scheduling contract, v2 (PLAN: solver
- * boundary doctrine). It models scheduling FACTS AND INTENT in our
+ * The Chrona canonical scheduling contract, v2. It models scheduling
+ * FACTS AND INTENT in our
  * names - never solver mechanics, vendor field names, constraint
  * names, or score levels. Adapters translate it to whatever a
  * solver backend speaks (today: the v0 POC payload in

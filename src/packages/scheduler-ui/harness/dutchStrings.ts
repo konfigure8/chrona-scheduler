@@ -199,6 +199,7 @@ export const dutchStrings: SchedulerStrings = {
   "proposalDoubleBooks": "Dubbele boeking van {person} met {title}",
   "proposalGroupOutOfDate": "Verouderd ({count})",
   "proposalOutOfDate": "{count} verouderd",
+  "proposalOutOfDateOne": "1 verouderd",
   "proposalReasonChanged": "Gewijzigd nadat het plan is gemaakt",
   "proposalReasonNewShift": "{person} heeft nu een andere dienst op dit tijdstip",
   "proposalReasonPersonChanged": "Gegevens van {person} gewijzigd nadat het plan is gemaakt",

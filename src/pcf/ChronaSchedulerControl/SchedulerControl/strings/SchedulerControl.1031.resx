@@ -424,7 +424,7 @@
     <value>Für die automatische Planung ist die Rolle Chrona Scheduler User erforderlich.</value>
   </data>
   <data name="msgSolveNoCalendar" xml:space="preserve">
-    <value>Diese Ansicht hat noch keinen Chrona-Kalender, darum ist automatische Planung nicht möglich.</value>
+    <value>Diese Ansicht hat noch keinen Planer, darum ist automatische Planung nicht möglich.</value>
   </data>
   <data name="msgUndid" xml:space="preserve">
     <value>Änderung rückgängig gemacht</value>
@@ -678,6 +678,9 @@
   <data name="proposalOutOfDate" xml:space="preserve">
     <value>{count} veraltet</value>
   </data>
+  <data name="proposalOutOfDateOne" xml:space="preserve">
+    <value>1 veraltet</value>
+  </data>
   <data name="proposalReasonChanged" xml:space="preserve">
     <value>Nach Erstellung des Plans geändert</value>
   </data>
@@ -874,10 +877,10 @@
     <value>Arbeitseinträge</value>
   </data>
   <data name="Prop_CalendarConfig" xml:space="preserve">
-    <value>Kalenderkonfiguration (optional)</value>
+    <value>Planerkonfiguration (optional)</value>
   </data>
   <data name="Prop_CalendarConfig_Desc" xml:space="preserve">
-    <value>Id oder Name einer Chrona-Scheduler-Kalender-Zeile. Leer lassen: Verbinden legt eine für diese Ansicht an.</value>
+    <value>Id oder Name einer Chrona Scheduler-Zeile. Leer lassen: Verbinden legt eine für diese Ansicht an.</value>
   </data>
   <data name="Prop_Title" xml:space="preserve">
     <value>Titel (erforderlich)</value>

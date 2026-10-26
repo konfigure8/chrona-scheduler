@@ -424,7 +424,7 @@
     <value>Auto Schedule needs the Chrona Scheduler User role.</value>
   </data>
   <data name="msgSolveNoCalendar" xml:space="preserve">
-    <value>This view has no Chrona calendar yet, so Auto Schedule can't run.</value>
+    <value>This view has no scheduler yet, so Auto Schedule can't run.</value>
   </data>
   <data name="msgUndid" xml:space="preserve">
     <value>Undid change</value>
@@ -678,6 +678,9 @@
   <data name="proposalOutOfDate" xml:space="preserve">
     <value>{count} out of date</value>
   </data>
+  <data name="proposalOutOfDateOne" xml:space="preserve">
+    <value>1 out of date</value>
+  </data>
   <data name="proposalReasonChanged" xml:space="preserve">
     <value>Changed after the plan was made</value>
   </data>
@@ -874,10 +877,10 @@
     <value>Work items</value>
   </data>
   <data name="Prop_CalendarConfig" xml:space="preserve">
-    <value>Calendar configuration (optional)</value>
+    <value>Scheduler configuration (optional)</value>
   </data>
   <data name="Prop_CalendarConfig_Desc" xml:space="preserve">
-    <value>Id or name of a Chrona Scheduler Calendar row. Leave empty: Connect creates one for this view.</value>
+    <value>Id or name of a Chrona Scheduler row. Leave empty: Connect creates one for this view.</value>
   </data>
   <data name="Prop_Title" xml:space="preserve">
     <value>Title (required)</value>

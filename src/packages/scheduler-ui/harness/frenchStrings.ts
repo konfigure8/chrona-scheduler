@@ -199,6 +199,7 @@ export const frenchStrings: SchedulerStrings = {
   "proposalDoubleBooks": "Double affectation de {person} avec {title}",
   "proposalGroupOutOfDate": "Obsolètes ({count})",
   "proposalOutOfDate": "{count} obsolètes",
+  "proposalOutOfDateOne": "1 obsolète",
   "proposalReasonChanged": "Modifié après la création du plan",
   "proposalReasonNewShift": "{person} a maintenant un autre poste à cette heure",
   "proposalReasonPersonChanged": "Les informations de {person} ont changé après la création du plan",
