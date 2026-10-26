@@ -205,6 +205,8 @@ export interface SchedulerStrings {
   readonly proposalLeftPinned: string;
   readonly scorecardLabel: string;
   readonly scoreFilled: string;
+  /** F158: today's Shifts filled beside Apply's, when the run takes shifts off the roster. */
+  readonly scoreFilledToday: string;
   readonly scoreMustBroken: string;
   readonly scoreNone: string;
   readonly scoreSome: string;
@@ -577,6 +579,7 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   proposalLeftPinned: "{count} pinned, left open",
   scorecardLabel: "Against today's roster",
   scoreFilled: "Shifts filled",
+  scoreFilledToday: "(now {filled} / {total})",
   scoreMustBroken: "Must rules broken",
   scoreNone: "None",
   scoreSome: "Some",

@@ -170,7 +170,8 @@ function Score(props: ScoreProps): JSX.Element {
         )}
       </dt>
       <dd className="chrona-sched__score-value" id={`${base}-value`}>
-        {props.value}
+        <span className="chrona-sched__score-figure">{props.value}</span>
+        {/* The space keeps the words apart for a screen reader and a copy; the flex row draws only the gap. */}
         {props.unit ? (
           <>
             {" "}
@@ -641,6 +642,15 @@ export function ProposalScorecard(props: ProposalScorecardProps): JSX.Element {
           label={strings.scoreFilled}
           {...deltaNote(strings, gained, false)}
           testId="score-filled"
+          // F158: a run that takes shifts off the roster also shows today's figure beside Apply's.
+          {...(score.today
+            ? {
+                unit: formatString(strings.scoreFilledToday, {
+                  filled: String(score.today.filled),
+                  total: String(score.today.total),
+                }),
+              }
+            : {})}
           value={`${score.filledProposed} / ${score.total}`}
         />
         {preferencesTile()}

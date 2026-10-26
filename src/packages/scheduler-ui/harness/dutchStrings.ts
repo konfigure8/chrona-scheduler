@@ -177,6 +177,7 @@ export const dutchStrings: SchedulerStrings = {
   "proposalLeftPinned": "{count} vastgezet, open gelaten",
   "scorecardLabel": "T.o.v. huidig rooster",
   "scoreFilled": "Bezette diensten",
+  "scoreFilledToday": "(nu {filled} / {total})",
   "scoreMustBroken": "Overtreden verplichte regels",
   "scoreNone": "Geen",
   "scoreSome": "Enkele",

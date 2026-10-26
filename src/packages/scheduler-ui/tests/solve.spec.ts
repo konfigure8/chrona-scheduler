@@ -600,6 +600,23 @@ function shiftsAProposalAddsAndRemovesFollowKeepAndDrop(): void {
   assertEqual(none.total, 4);
   assertEqual(none.filledProposed, none.filledNow);
   assertEqual(none.peopleAffected, 0);
+
+  // F158: a run that removes shifts also gives today's figure: s-a, s-b and both removals, two
+  // filled; the added shifts are not there yet. It stays, and stays today's, whatever the planner
+  // ticks, so the scorecard never changes height under the keep boxes.
+  for (const dropped of [[], ["add-1"], ["rem-filled"], ["rem-open"], ["s-b"], ["rem-filled", "rem-open"], changes.map((change) => change.current.id)]) {
+    assertEqual(JSON.stringify(score(dropped).today), JSON.stringify({ filled: 2, total: 4 }));
+  }
+  // The open shifts the run left out are on today's roster too, open.
+  const leftOut = proposalScore({ ...proposal, leftOpen: { ended: 1, pinned: 2 } }, changes, { openKind, proposalShift }, period);
+  assertEqual(JSON.stringify(leftOut.today), JSON.stringify({ filled: 2, total: 7 }));
+  // A run that only adds shifts gives no today's figure: Shifts filled stays as before.
+  const addsOnly = (event: SchedulerUiEvent): "added" | undefined => (event.id.startsWith("add-") ? "added" : undefined);
+  assertEqual(proposalScore(proposal, changes, { openKind, proposalShift: addsOnly }, period).today, undefined);
+  // Without the slot, as on the free board: no today's figure.
+  assertEqual(proposalScore(proposal, changes, { openKind }, period).today, undefined);
+  // A removal outside the period is not this run's: no today's figure.
+  assertEqual(proposalScore(proposal, changes, { openKind, proposalShift }, { end: at(24), start: at(14) }).today, undefined);
   console.log("added and removed shift tests passed");
 }
 shiftsAProposalAddsAndRemovesFollowKeepAndDrop();

@@ -133,7 +133,7 @@
     <value>Antes</value>
   </data>
   <data name="conversionSampleCounts" xml:space="preserve">
-    <value>{open} itens por atribuir · {conflicts} conflitos</value>
+    <value>{open} itens abertos · {conflicts} conflitos</value>
   </data>
   <data name="conversionSampleTitle" xml:space="preserve">
     <value>Exemplo de execução</value>
@@ -612,6 +612,9 @@
   <data name="scoreFilled" xml:space="preserve">
     <value>Turnos preenchidos</value>
   </data>
+  <data name="scoreFilledToday" xml:space="preserve">
+    <value>(agora {filled} / {total})</value>
+  </data>
   <data name="scoreMustBroken" xml:space="preserve">
     <value>Regras obrigatórias violadas</value>
   </data>
@@ -748,7 +751,7 @@
     <value>Está em curso um agendamento automático desta escala.</value>
   </data>
   <data name="rosterOpenShifts" xml:space="preserve">
-    <value>Turnos por atribuir</value>
+    <value>Turnos abertos</value>
   </data>
   <data name="save" xml:space="preserve">
     <value>Guardar</value>
@@ -850,7 +853,7 @@
     <value>Nada neste período.</value>
   </data>
   <data name="unscheduledEmptyShort" xml:space="preserve">
-    <value>Nenhum turno por atribuir.</value>
+    <value>Nenhum turno aberto.</value>
   </data>
   <data name="unscheduledFilterLabel" xml:space="preserve">
     <value>Filtrar itens por agendar</value>
@@ -1123,7 +1126,7 @@
     <value>Evita o horário não preferido de {name}</value>
   </data>
   <data name="reasonFillsOpen" xml:space="preserve">
-    <value>Preenche um turno por atribuir</value>
+    <value>Preenche um turno aberto</value>
   </data>
   <data name="reasonPersonFixesOne" xml:space="preserve">
     <value>Corrige 1 violação</value>
@@ -1222,7 +1225,7 @@
     <value>{name} fica com {shift}</value>
   </data>
   <data name="whyNotLeftOpen" xml:space="preserve">
-    <value>{shift} de {name} ficaria por atribuir</value>
+    <value>{shift} de {name} ficaria em aberto</value>
   </data>
   <data name="whyNotInReview" xml:space="preserve">
     <value>Para usar {name}, descarte esta alteração e edite depois de aplicar.</value>

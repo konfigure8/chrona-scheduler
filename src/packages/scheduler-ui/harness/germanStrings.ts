@@ -192,6 +192,7 @@ export const germanStrings: SchedulerStrings = {
   proposalLeftPinned: "{count} angeheftet, offen gelassen",
   scorecardLabel: "Gegenüber dem aktuellen Dienstplan",
   scoreFilled: "Besetzte Schichten",
+  scoreFilledToday: "(aktuell {filled} / {total})",
   scoreMustBroken: "Verletzte Muss-Regeln",
   scoreNone: "Keine",
   scoreSome: "Einige",

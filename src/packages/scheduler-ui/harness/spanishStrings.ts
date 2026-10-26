@@ -177,6 +177,7 @@ export const spanishStrings: SchedulerStrings = {
   "proposalLeftPinned": "Fijados, sin cubrir: {count}",
   "scorecardLabel": "Frente al cuadrante actual",
   "scoreFilled": "Turnos cubiertos",
+  "scoreFilledToday": "(ahora {filled} / {total})",
   "scoreMustBroken": "Reglas obligatorias incumplidas",
   "scoreNone": "Ninguna",
   "scoreSome": "Algunas",

@@ -3164,11 +3164,19 @@
   line-height: 16px;
 }
 .chrona-sched__score-value {
+  /* The value, then its unit on the same baseline; a unit too wide for the tile wraps whole under it. */
+  align-items: baseline;
+  column-gap: 4px;
+  display: flex;
+  flex-wrap: wrap;
   font-size: 24px;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   line-height: 32px;
   margin: 0;
+}
+.chrona-sched__score-figure {
+  min-width: 0;
   overflow-wrap: anywhere;
 }
 .chrona-sched__score-unit {
@@ -3177,6 +3185,8 @@
   font-weight: 400;
   /* Its own line height, or the small word makes its tile taller. */
   line-height: 16px;
+  /* Whole, beside the value or under it when the tile is narrow: "(now 15 / 16)" never splits. */
+  white-space: nowrap;
 }
 .chrona-sched__score-note {
   color: var(--csui-text-soft);

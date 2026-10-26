@@ -612,6 +612,9 @@
   <data name="scoreFilled" xml:space="preserve">
     <value>Turnos cubiertos</value>
   </data>
+  <data name="scoreFilledToday" xml:space="preserve">
+    <value>(ahora {filled} / {total})</value>
+  </data>
   <data name="scoreMustBroken" xml:space="preserve">
     <value>Reglas obligatorias incumplidas</value>
   </data>

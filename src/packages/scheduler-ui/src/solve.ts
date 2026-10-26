@@ -650,6 +650,12 @@ export interface ProposalScore {
   readonly peopleAffected: number;
   /** Shifts in the period: the ones the solver answered for and the open ones it left out. */
   readonly total: number;
+  /**
+   * Shifts filled on today's roster, of its shifts, when the run takes shifts off the roster
+   * (BoardExtension.proposalShift, F158): `filled` and `total` then count the roster Apply would
+   * leave, and this the one there is now. Absent when the run removes no shift.
+   */
+  readonly today?: { readonly filled: number; readonly total: number };
 }
 
 /**
@@ -705,6 +711,7 @@ export function proposalScore(
   // The open shifts the run left out stay open, so they count as unfilled.
   const leftEnded = proposal.leftOpen?.ended ?? 0;
   const leftPinned = proposal.leftOpen?.pinned ?? 0;
+  const today = removesShifts(scopedChanges, options) ? todayFilled(proposal, changes, options, period) : undefined;
   return {
     filledNow: answered - openNow,
     filledProposed: answered - openProposed,
@@ -713,7 +720,40 @@ export function proposalScore(
     leftPinned,
     peopleAffected: people.size,
     total: answered + leftEnded + leftPinned,
+    ...(today ? { today: { filled: today.filled, total: today.total + leftEnded + leftPinned } } : {}),
   };
+}
+
+/**
+ * Whether the run takes a shift off the roster (BoardExtension.proposalShift), ticked or not: the
+ * figure stays while the planner ticks, so the scorecard never jumps under the keep boxes.
+ */
+function removesShifts(changes: readonly ProposalChange[], options: ProposalPreviewOptions): boolean {
+  return changes.some((change) => options.proposalShift?.(change.current) === "removed");
+}
+
+/**
+ * Shifts filled on today's roster (F158), required work only: every change as it is now, so a
+ * shift the run adds is not there yet and one it removes still is.
+ */
+function todayFilled(
+  proposal: ScheduleProposal,
+  changes: readonly ProposalChange[],
+  options: ProposalPreviewOptions,
+  period?: { readonly end: Date; readonly start: Date },
+): { readonly filled: number; readonly total: number } {
+  const asNow: ProposalPreviewOptions = { ...options, dropped: new Set(changes.map((change) => change.current.id)) };
+  let total = 0;
+  let open = 0;
+  for (const applied of appliedShifts(proposal, changes, asNow, period)) {
+    if (requiredWork(applied, applied.shift === "removed" ? applied.now : applied.event, options.openKind)) {
+      total += 1;
+    }
+    if (isOpenRequired(applied.now)) {
+      open += 1;
+    }
+  }
+  return { filled: total - open, total };
 }
 
 /**

@@ -177,6 +177,7 @@ export const frenchStrings: SchedulerStrings = {
   "proposalLeftPinned": "Épinglés, laissés à pourvoir : {count}",
   "scorecardLabel": "Par rapport au planning actuel",
   "scoreFilled": "Postes pourvus",
+  "scoreFilledToday": "(actuel {filled} / {total})",
   "scoreMustBroken": "Règles impératives enfreintes",
   "scoreNone": "Aucune",
   "scoreSome": "Certaines",

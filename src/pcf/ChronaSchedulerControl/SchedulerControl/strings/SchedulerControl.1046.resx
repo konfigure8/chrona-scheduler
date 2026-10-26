@@ -612,6 +612,9 @@
   <data name="scoreFilled" xml:space="preserve">
     <value>Turnos preenchidos</value>
   </data>
+  <data name="scoreFilledToday" xml:space="preserve">
+    <value>(agora {filled} / {total})</value>
+  </data>
   <data name="scoreMustBroken" xml:space="preserve">
     <value>Regras obrigatórias violadas</value>
   </data>
@@ -748,7 +751,7 @@
     <value>Um agendamento automático desta escala está em andamento.</value>
   </data>
   <data name="rosterOpenShifts" xml:space="preserve">
-    <value>Turnos não atribuídos</value>
+    <value>Turnos abertos</value>
   </data>
   <data name="save" xml:space="preserve">
     <value>Salvar</value>
@@ -850,7 +853,7 @@
     <value>Nada neste período.</value>
   </data>
   <data name="unscheduledEmptyShort" xml:space="preserve">
-    <value>Nenhum turno disponível.</value>
+    <value>Nenhum turno aberto.</value>
   </data>
   <data name="unscheduledFilterLabel" xml:space="preserve">
     <value>Filtrar itens não agendados</value>
@@ -1123,7 +1126,7 @@
     <value>Evita o horário não preferido de {name}</value>
   </data>
   <data name="reasonFillsOpen" xml:space="preserve">
-    <value>Preenche um turno não atribuído</value>
+    <value>Preenche um turno aberto</value>
   </data>
   <data name="reasonPersonFixesOne" xml:space="preserve">
     <value>Corrige 1 violação</value>
