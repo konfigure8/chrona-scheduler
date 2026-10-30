@@ -1641,6 +1641,8 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
 
   // The extension's way out of an empty board (nobody on it), under the board's message.
   const emptyAction = extension?.empty?.(boardState);
+  // The Roster grid's extension; its day marks put the decorations in the legend too.
+  const rosterExtension = props.view === "roster" ? extension?.roster?.(boardState) : undefined;
   const renderView = (): JSX.Element => {
     if (props.view === "roster") {
       return (
@@ -1649,7 +1651,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           editable={canEdit}
           emptyAction={emptyAction}
           events={boardEvents}
-          extension={extension?.roster?.(boardState)}
+          extension={rosterExtension}
           hourFormat={props.hourFormat}
           onEventChange={props.onEventChange}
           onEventClick={props.onEventClick}
@@ -2892,7 +2894,13 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       </div>
       {props.showLegend !== false ? (
         <SchedulerLegend
-          decorations={props.view === "timeline" ? props.decorations : undefined}
+          decorations={
+            props.view === "timeline"
+              ? props.decorations
+              : rosterExtension?.dayMarks
+                ? props.decorations?.filter((decoration) => decoration.kind !== "nonWorking")
+                : undefined
+          }
           events={allEvents}
         />
       ) : null}

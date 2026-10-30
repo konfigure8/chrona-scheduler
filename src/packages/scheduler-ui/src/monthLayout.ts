@@ -45,7 +45,8 @@ export function buildMonthMatrix(
           isWeekend,
         });
       }
-      cursor.setTime(cursor.getTime() + millisecondsPerDay);
+      // Calendar days: a daylight-saving day runs 23 or 25 hours.
+      cursor.setDate(cursor.getDate() + 1);
     }
     weeks.push(week);
   } while (cursor.getTime() < monthEnd.getTime());
@@ -65,7 +66,8 @@ export function eventsForDay(
 ): readonly SchedulerUiEvent[] {
   const dayStart = new Date(day.getTime());
   dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(dayStart.getTime() + millisecondsPerDay);
+  const dayEnd = new Date(dayStart.getTime());
+  dayEnd.setDate(dayEnd.getDate() + 1);
   return events
     .filter((event) =>
       event.end.getTime() - event.start.getTime() >= millisecondsPerDay

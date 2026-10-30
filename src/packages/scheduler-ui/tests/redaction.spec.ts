@@ -180,6 +180,7 @@ const agreed = problemFromSchedule({
     { end: at(14), kind: "preferred", resourceId: "r-alex", start: at(9) },
     { end: at(23), kind: "unpreferred", resourceId: "r-riley", start: at(20) },
     { end: at(23), kind: "preferred", resourceId: "r-gone", start: at(20) },
+    { end: at(23), kind: "unavailable", resourceId: "r-gone", start: at(20) },
   ],
   window: { end: at(24), start: at(0) },
 });
@@ -205,6 +206,9 @@ assertEqual(preferences[0]?.kind, "preferred", "kind kept");
 assertEqual(preferences[0]?.start, agreed.timePreferences?.[0]?.start, "times kept");
 assertEqual(preferences[1]?.resourceId, "p-2", "unpreferred time on the pseudonym");
 assertEqual(preferences[1]?.kind, "unpreferred", "unpreferred kept");
+assertEqual(agreedRedaction.problem.unavailability.length, 1, "unavailability of a person the problem does not hold stays home");
+assertEqual(agreedRedaction.problem.unavailability[0]?.resourceId, "p-2", "unavailability on the pseudonym");
+assertEqual(JSON.stringify(agreedRedaction.problem).includes("r-gone"), false, "no real id of a person outside the problem leaves");
 assertEqual(agreedRedaction.problem.shifts[0]?.history, true, "history mark kept");
 assertEqual(agreedRedaction.problem.shifts[0]?.assignment?.pinned, true, "history stays pinned");
 assertEqual(agreedRedaction.problem.shifts[1]?.history, undefined, "a shift to come is not history");
@@ -243,13 +247,14 @@ const plain = problemFromSchedule({ events, resources, window: { end: at(24), st
 const extended = redactProblem(plain, {
   agreement: () => ({ term: "x" }),
   problem: (problem, resourceKey) => ({ keys: problem.resources.map((resource) => resourceKey(resource.id) ?? "home"), gone: resourceKey("r-gone") ?? "home" }),
-  shift: (shift) => ({ id: "leak", mark: shift.id === plain.shifts[0]?.id }),
+  shift: (shift, resourceKey) => ({ id: "leak", mark: shift.id === plain.shifts[0]?.id, people: [resourceKey(resources[0]!.id), resourceKey("r-gone")].filter(Boolean) }),
 });
 const extendedWire = extended.problem as unknown as Record<string, unknown> & { shifts: readonly Record<string, unknown>[] };
 assertEqual(JSON.stringify(extendedWire.keys), JSON.stringify(["p-1", "p-2"]), "people only by their key");
 assertEqual(extendedWire.gone, "home", "a person the problem does not hold has no key");
 assertEqual(extendedWire.shifts[0]?.mark, true, "a shift's own fact kept");
 assertEqual(extendedWire.shifts[0]?.id, "w-1", "the board's id wins over an extension's");
+assertEqual(JSON.stringify(extendedWire.shifts[0]?.people), JSON.stringify(["p-1"]), "shift extensions use the same resource keys and omit unknown people");
 assertEqual("keys" in redaction.problem, false, "no extension, no facts");
 
 // The run's rule checks map back to the real person and shifts; days and
@@ -340,6 +345,11 @@ void (async () => {
   const again = await redactProblemForTenant(problem, tenantKey);
   const other = await redactProblemForTenant(problem, otherKey);
   const alex = first.problem.resources[0]?.id ?? "";
+  const keyedExtension = await redactProblemForTenant(problem, tenantKey, {
+    shift: (_shift, resourceKey) => ({ people: [resourceKey(problem.resources[0]!.id)] }),
+  });
+  const keyedShift = keyedExtension.problem.shifts[0] as unknown as { people: string[] };
+  assertEqual(keyedShift.people[0], alex, "shift extensions use the tenant's resource key, not a per-run key or real ID");
   assertEqual(first.resourceKeyScheme, "hmac-sha256-v1", "scheme set");
   assertEqual(/^r-[A-Za-z0-9_-]{22}$/.test(alex), true, "placeholder shape");
   assertEqual(first.problem.resources[0]?.name, alex, "no real name");

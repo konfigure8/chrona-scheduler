@@ -2,7 +2,7 @@ import * as React from "react";
 
 import type { ContextMenuItem } from "./ContextMenu";
 import type { DateNames } from "./dateNames";
-import type { RowDecoration } from "./decorations";
+import type { RowDecoration, RowDecorationKind } from "./decorations";
 import type { EventDialogProps } from "./EventDialog";
 import type { HourFormat } from "./timeAxis";
 import type { TimelineChange } from "./interactions";
@@ -141,6 +141,41 @@ export interface RosterGroup {
     readonly cells: readonly React.ReactNode[];
     readonly label: string;
   };
+  /**
+   * The heading row's content in place of the plain heading: what sits in
+   * the people column (it stays in view on a wide period) and, optionally,
+   * across the days. Absent = the heading text. The row carries the level
+   * (data-level) for the host's look.
+   */
+  readonly header?: {
+    readonly days?: React.ReactNode;
+    readonly resource: React.ReactNode;
+  };
+  /** 1, a group (the default), or 2, a subgroup of the group before it. */
+  readonly level?: 1 | 2;
+  /**
+   * True shows the heading and the footer only: no open row and no people,
+   * so the footer stays as the group's summary. A heading over subgroups
+   * with nobody of its own uses it with no footer.
+   */
+  readonly collapsed?: boolean;
+}
+
+/**
+ * A span of a person's day an extension marks in their Roster day cell,
+ * behind the shifts: the day runs across the cell's width, from midnight
+ * on the left to the next midnight on the right, as the Timeline runs it.
+ */
+export interface RosterDayMark {
+  /** Drawn as the Timeline draws a row decoration of this kind. */
+  readonly kind: RowDecorationKind;
+  /** Where it starts and ends in the day: 0 is midnight, 1 the next midnight. */
+  readonly from: number;
+  readonly to: number;
+  /** Its tooltip, and what a screen reader hears in the cell. */
+  readonly label: string;
+  /** A word the cell shows when no shift is in it, such as the leave's type on its first day. */
+  readonly caption?: string;
 }
 
 /** What the Roster grid hands an extension to form its groups. */
@@ -163,10 +198,14 @@ export interface RosterExtension {
   ) => Readonly<Record<string, React.ReactNode>>;
   /** The id of the group whose open row takes a dragged shift. */
   readonly groupOf?: (event: SchedulerUiEvent) => string;
+  /** Under the people column's title when the grid shows groups, such as Expand all and Collapse all. */
+  readonly groupsHeader?: React.ReactNode;
   /** Groups the people: each group has a heading row, its own open row and its footer. */
   readonly groups?: (input: RosterGroupInput) => readonly RosterGroup[];
   /** Under a person's name. */
   readonly personDetail?: (resource: SchedulerResource) => React.ReactNode;
+  /** Marks in a person's day cell, behind the shifts. Absent = none: the grid draws nothing of its own. */
+  readonly dayMarks?: (resource: SchedulerResource, day: RosterDay) => readonly RosterDayMark[];
   /** The compact chips' own style and start time. Absent = the board's. */
   readonly chip?: RosterChipStyle;
   /**

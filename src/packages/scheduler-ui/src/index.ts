@@ -73,6 +73,7 @@ export {
   type SidePanelControls,
   type FitExtension,
   type ResourceFit,
+  type RosterDayMark,
   type RosterExtension,
   type ScorecardTile,
   type ShiftMark,

@@ -12,8 +12,8 @@
  * site's time zone, on-call shifts and the repair intent (F24 Repair
  * mode). A repair's
  * current person is each shift's assignment, re-keyed like any other.
- * Preferred and unpreferred time travel as times on the pseudonym;
- * that of a person the problem does not hold stays home.
+ * Unavailable, preferred and unpreferred time travel as times on the
+ * pseudonym; that of a person the problem does not hold stays home.
  * The solver never needed names, so nothing functional changes.
  */
 import type {
@@ -72,8 +72,8 @@ export interface RedactionExtension {
     problem: ScheduleProblemV2,
     resourceKey: (realId: string) => string | undefined,
   ) => Readonly<Record<string, unknown>>;
-  /** A shift's facts beside the board's. */
-  readonly shift?: (shift: ScheduleContractShift) => Readonly<Record<string, unknown>>;
+  /** A shift's facts beside the board's; map any resource references through resourceKey. Unknown IDs have no key. */
+  readonly shift?: (shift: ScheduleContractShift, resourceKey: (realId: string) => string | undefined) => Readonly<Record<string, unknown>>;
 }
 
 /**
@@ -207,7 +207,7 @@ function redactWith(
         const pseudonym = `w-${index + 1}`;
         toRealShiftId.set(pseudonym, shift.id);
         return {
-          ...extension?.shift?.(shift),
+          ...extension?.shift?.(shift, resourceKey),
           ...(shift.assignment
             ? {
                 assignment: {
@@ -235,11 +235,14 @@ function redactWith(
         };
       }),
       ...(timePreferences ? { timePreferences } : {}),
-      unavailability: problem.unavailability.map((band) => ({
-        end: band.end,
-        resourceId: pseudoResource(band.resourceId),
-        start: band.start,
-      })),
+      // Unavailability of a person the problem does not hold limits nothing: it stays home.
+      unavailability: problem.unavailability
+        .filter((band) => resourcePseudonyms.has(band.resourceId))
+        .map((band) => ({
+          end: band.end,
+          resourceId: pseudoResource(band.resourceId),
+          start: band.start,
+        })),
       // The site's time zone is a place's clock, not personal data.
       ...(problem.timeZone ? { timeZone: problem.timeZone } : {}),
       window: problem.window,

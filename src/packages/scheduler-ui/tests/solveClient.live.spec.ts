@@ -18,8 +18,8 @@ import type { ScheduleProblemV2 } from "../src/schedulingContract";
  *
  *   SOLVER_API_BASE_URL=http://127.0.0.1:3001 pnpm --filter @chrona/scheduler-ui run test:live
  *
- * The session is the bench's: no bearer, the local API's tenant header
- * (tenant-dev-a, a paid plan in database/seeds/002_seed_dev.sql) and a
+ * The session uses CHRONA_ENVIRONMENT_API_KEY for a registered local
+ * environment, with no human bearer, and a
  * placeholder key (F38). The tests watch the wire; the solver answers.
  *
  * The roster: one bar shift that needs the Bar skill, given to Ben, who
@@ -27,7 +27,7 @@ import type { ScheduleProblemV2 } from "../src/schedulingContract";
  */
 
 const apiBaseUrl = process.env.SOLVER_API_BASE_URL;
-const headers = { "X-Tenant-Id": "tenant-dev-a" };
+const headers = { "X-Chrona-Api-Key": process.env.CHRONA_ENVIRONMENT_API_KEY ?? "" };
 /** Every run has its own key, so a run never reuses an earlier run's idempotency key. */
 const token = (name: string): string => `live-${name}-${Date.now()}`;
 
@@ -357,6 +357,7 @@ const run = async (): Promise<void> => {
 if (!apiBaseUrl) {
   console.log("solveClient live tests skipped: set SOLVER_API_BASE_URL with the local stack up");
 } else {
+  assert.ok(headers["X-Chrona-Api-Key"], "Set CHRONA_ENVIRONMENT_API_KEY for the connected local environment.");
   // A run that ends without reaching the last line (a wait nothing resolves) fails, never passes quietly.
   process.exitCode = 1;
   run().then(() => {

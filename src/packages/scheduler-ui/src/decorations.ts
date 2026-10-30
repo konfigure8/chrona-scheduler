@@ -30,8 +30,6 @@ export interface WorkingWindow {
   readonly startHour: number;
 }
 
-const millisecondsPerDay = 86_400_000;
-
 /** The day's moment that many hours in, by the clock (daylight saving safe). */
 function atHour(dayStart: Date, hours: number): Date {
   const moment = new Date(dayStart.getTime());
@@ -56,7 +54,9 @@ export function buildNonWorkingDecorations(
 
   while (cursor.getTime() < window.end.getTime()) {
     const dayStart = new Date(cursor.getTime());
-    const dayEnd = new Date(cursor.getTime() + millisecondsPerDay);
+    // The next calendar midnight: a daylight-saving day runs 23 or 25 hours.
+    const dayEnd = new Date(cursor.getTime());
+    dayEnd.setDate(dayEnd.getDate() + 1);
     const isWeekend = dayStart.getDay() === 0 || dayStart.getDay() === 6;
     const dayBefore = (dayStart.getDay() + 6) % 7;
     const dayBeforeOff = weekendsNonWorking && (dayBefore === 0 || dayBefore === 6);

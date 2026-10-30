@@ -2,6 +2,7 @@ import { UNGROUPED } from "../src/groupSets";
 import {
   buildResourceGroups,
   groupCollapseKey,
+  showsGroupHeader,
 } from "../src/resourceGrouping";
 import type { SchedulerResource } from "../src/types";
 
@@ -151,6 +152,28 @@ function collapseKeysCannotCollide(): void {
   assertEqual(groupCollapseKey("Team"), "Team");
 }
 
+function peopleWithNoSubgroupComeFirstUnderTheirGroup(): void {
+  // Matt 2026-10-27, "Yes, fix the free board grouping": a group's people with no subgroup sit directly under its
+  // header, before its subgroups, whatever order the people come in.
+  const groups = buildResourceGroups(
+    [resource("a", "Site 1", "Front"), resource("b", "Site 1"), resource("c", "Site 1", "Kitchen"), resource("d", "Site 1")],
+    ["Sites", "Teams"],
+  );
+  assertEqual(groups[0]?.subgroups[0]?.name, undefined);
+  assertEqual(groups[0]?.subgroups[0]?.members.map((member) => member.id).join(","), "b,d");
+  assertEqual(groups[0]?.subgroups[1]?.name, "Front");
+  assertEqual(groups[0]?.subgroups[2]?.name, "Kitchen");
+}
+
+function anEmptyUngroupedHasNoHeader(): void {
+  // No "Ungrouped (0)" header, also not over the open shifts' lane; a named group keeps its header with no people.
+  const groups = buildResourceGroups([resource("a", "Site 1")], ["Sites"], ["Site 2", UNGROUPED]);
+  assertEqual(showsGroupHeader(groups.find((group) => group.name === UNGROUPED)!), false);
+  assertEqual(showsGroupHeader(groups.find((group) => group.name === "Site 2")!), true);
+  const withPerson = buildResourceGroups([resource("a")], ["Sites"]);
+  assertEqual(showsGroupHeader(withPerson[0]!), true);
+}
+
 bucketsTwoLevelsInFirstSeenOrder();
 oneLevelDataStaysOneLevel();
 ungroupedTrailsWithSentinel();
@@ -160,5 +183,7 @@ ungroupedStaysLastWithOpenShiftGroups();
 groupWithPeopleAndOpenShiftsAppearsOnce();
 noExtraNamesKeepsPeopleGroupsOnly();
 collapseKeysCannotCollide();
+peopleWithNoSubgroupComeFirstUnderTheirGroup();
+anEmptyUngroupedHasNoHeader();
 
 console.log("resourceGrouping tests passed");

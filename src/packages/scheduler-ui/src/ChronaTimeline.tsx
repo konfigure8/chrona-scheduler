@@ -42,7 +42,7 @@ import {
   type HourFormat,
 } from "./timeAxis";
 import { formatClockRange } from "./clock";
-import { buildResourceGroups, groupCollapseKey } from "./resourceGrouping";
+import { buildResourceGroups, groupCollapseKey, showsGroupHeader } from "./resourceGrouping";
 import { isOpenOnCall, openKindOf, openShiftClass, openShiftNote } from "./solve";
 import { formatString, useSchedulerStrings } from "./strings";
 import {
@@ -624,6 +624,11 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
     }
     // A group whose open shifts have nobody in it still gets its header and lane.
     for (const group of buildResourceGroups(resources, effectiveGroupBy, [...laneBuckets.keys()])) {
+      // No "Ungrouped (0)" header: an Ungrouped with nobody in it shows only its open shifts' lane.
+      if (!showsGroupHeader(group)) {
+        pushLane(laneBuckets.get(group.name) ?? []);
+        continue;
+      }
       const collapsed = collapsedGroups.has(group.name);
       entries.push({
         collapseKey: group.name,
@@ -1434,6 +1439,8 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
                     })
                   }
                   style={{ height: groupHeaderHeight }}
+                  // The full name and count, for a name the column cuts off.
+                  title={`${groupName === UNGROUPED ? strings.ungrouped : groupName} (${entry.memberCount ?? 0})`}
                   type="button"
                 >
                   <span aria-hidden="true">{isCollapsed ? "▸" : "▾"}</span>{" "}

@@ -133,7 +133,12 @@ export function resolveTimeScaleOptions(
   };
 }
 
-const millisecondsPerDay = 86_400_000;
+/** Midnight `days` calendar days after `dayStart` (daylight saving safe). */
+function addDays(dayStart: Date, days: number): Date {
+  const date = new Date(dayStart.getTime());
+  date.setDate(date.getDate() + days);
+  return date;
+}
 
 /** A week's first day, 0 Sunday to 6 Saturday; anything else means Monday. */
 export function weekStartFrom(value: unknown): number {
@@ -171,21 +176,21 @@ export function resolveWindowForScale(
   const scale = drawsOneDay(config.representation) ? "day" : (config.timeScale ?? "day");
   if (scale === "day") {
     return {
-      end: new Date(dayStart.getTime() + millisecondsPerDay),
+      end: addDays(dayStart, 1),
       start: dayStart,
     };
   }
   if (scale === "daySpan") {
     const days = Math.max(1, config.daySpanDays ?? 3);
     return {
-      end: new Date(dayStart.getTime() + days * millisecondsPerDay),
+      end: addDays(dayStart, days),
       start: dayStart,
     };
   }
   if (scale === "week") {
     const weekStart = startOfWeek(dayStart, config.weekStartsOn);
     return {
-      end: new Date(weekStart.getTime() + 7 * millisecondsPerDay),
+      end: addDays(weekStart, 7),
       start: weekStart,
     };
   }

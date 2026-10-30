@@ -2615,6 +2615,74 @@
   vertical-align: middle;
 }
 
+/*
+ * A host's marks in a person's day cell (RosterExtension.dayMarks): the
+ * day runs across the cell, drawn as the Timeline's decorations, behind
+ * the shifts. The chips stay above them and take the pointer.
+ */
+.chrona-sched__roster-table td.chrona-sched__roster-cell--marked {
+  position: relative;
+}
+
+.chrona-sched__roster-mark {
+  z-index: 0;
+}
+
+/* A whole day unavailable: the Timeline's hatch, a step stronger so a narrow cell reads in a dark theme too. */
+.chrona-sched__roster-mark.chrona-sched__decoration--unavailable:not(.chrona-sched__roster-mark--part) {
+  background: repeating-linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--csui-danger) 9%, transparent),
+    color-mix(in srgb, var(--csui-danger) 9%, transparent) 6px,
+    color-mix(in srgb, var(--csui-danger) 17%, transparent) 6px,
+    color-mix(in srgb, var(--csui-danger) 17%, transparent) 12px
+  );
+}
+
+/*
+ * Part of a day: a strip along the cell's foot, under the chips, so a chip
+ * (which always sits at the cell's start) never looks inside the marked time.
+ * A whole day shades the whole cell.
+ */
+.chrona-sched__roster-mark--part {
+  height: 4px;
+  top: auto;
+}
+
+.chrona-sched__roster-mark--part.chrona-sched__decoration--unavailable {
+  background: color-mix(in srgb, var(--csui-danger) 55%, transparent);
+}
+
+.chrona-sched__roster-mark--part.chrona-sched__decoration--preferred {
+  background: color-mix(in srgb, var(--csui-success) 60%, transparent);
+}
+
+.chrona-sched__roster-mark--part.chrona-sched__decoration--unpreferred {
+  background: color-mix(in srgb, var(--csui-warn) 60%, transparent);
+}
+
+.chrona-sched__roster-mark--part.chrona-sched__decoration--busyElsewhere {
+  background: color-mix(in srgb, var(--csui-text-soft) 55%, transparent);
+}
+
+/* A mark's word in an empty cell, such as the leave's type on its first day. */
+.chrona-sched__roster-mark-caption {
+  color: var(--csui-text-soft);
+  display: block;
+  font-size: 10px;
+  line-height: 14px;
+  overflow: hidden;
+  position: relative;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.chrona-sched__roster-cell--marked > .chrona-sched__chip {
+  position: relative;
+  z-index: 1;
+}
+
 /* Day headers: the weekday over the date, centred, one fixed 66px width. */
 .chrona-sched__roster-table thead th {
   background: var(--csui-surface);

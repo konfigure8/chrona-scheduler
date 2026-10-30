@@ -150,7 +150,7 @@ const run = async (): Promise<void> => {
     assert.equal(calls.length, 1, `status ${status}: no poll after a refused submit`);
     // R2.15: a run goes to the product's API, version 1; no product named = the recorded wire's Workforce.
     assert.equal(calls[0]?.method, "POST");
-    assert.equal(calls[0]?.url, "https://api.example/api/workforce-scheduling/v1/schedules");
+    assert.equal(calls[0]?.url, "https://api.example/solve/workforce-scheduling/v1/schedules");
     assert.equal(calls[0]?.headers.Authorization, "Bearer session-token");
     assert.equal(calls[0]?.headers["Idempotency-Key"], "control-t2");
     const submitted = JSON.parse(calls[0]?.body ?? "{}") as {
@@ -194,18 +194,18 @@ const run = async (): Promise<void> => {
       config: { context: { resourceKeyScheme?: string } };
       modelInput: { resources: { id: string }[] };
     };
-    assert.equal(calls[0]?.url, "https://api.example/api/scheduler/v1/schedules", "the free scheduler's API");
+    assert.equal(calls[0]?.url, "https://api.example/solve/scheduler/v1/schedules", "the free scheduler's API");
     assert.equal(submitted.config.context.resourceKeyScheme, "hmac-sha256-v1");
     assert.match(submitted.modelInput.resources[0]?.id ?? "", /^r-[A-Za-z0-9_-]{22}$/);
   }
 
   // Stop: DELETE on the run in its product's API. A run that already ended needs nothing;
-  // a run an earlier control started through /api/solve says it cannot be stopped.
+  // a run an earlier control started without cancellation support says it cannot be stopped.
   {
     const { calls, fetchImpl } = failingFetch(404);
     await stopRun({ fetchImpl, runId: "run-1", session, solutionType: "scheduler" });
     assert.equal(calls[0]?.method, "DELETE");
-    assert.equal(calls[0]?.url, "https://api.example/api/scheduler/v1/schedules/run-1");
+    assert.equal(calls[0]?.url, "https://api.example/solve/scheduler/v1/schedules/run-1");
     assert.equal(calls[0]?.headers.Authorization, "Bearer session-token");
   }
   // F41 Cancel: the same stop, keeping nothing.
@@ -213,7 +213,7 @@ const run = async (): Promise<void> => {
     const { calls, fetchImpl } = failingFetch(404);
     await stopRun({ discard: true, fetchImpl, runId: "run-2", session, solutionType: "scheduler" });
     assert.equal(calls[0]?.method, "DELETE");
-    assert.equal(calls[0]?.url, "https://api.example/api/scheduler/v1/schedules/run-2?discard=true");
+    assert.equal(calls[0]?.url, "https://api.example/solve/scheduler/v1/schedules/run-2?discard=true");
   }
   {
     const { fetchImpl } = failingFetch(409, { code: "run_not_stoppable", message: "This run was not started through this API." });
@@ -232,7 +232,7 @@ const run = async (): Promise<void> => {
       followRun({ currentEvents, fetchImpl: stopped.fetchImpl, redaction, runId: "run-s", runToken: "t-s", session }),
       (error: unknown) => error instanceof SolveStoppedError,
     );
-    assert.equal(stopped.calls[0]?.url, "https://api.example/api/workforce-scheduling/v1/schedules/run-s");
+    assert.equal(stopped.calls[0]?.url, "https://api.example/solve/workforce-scheduling/v1/schedules/run-s");
     const failed = failingFetch(200, { metadata: { failureMessage: "The solver stopped.", id: "run-f", solverStatus: "SOLVING_FAILED" }, modelOutput: null });
     await assert.rejects(
       followRun({ currentEvents, fetchImpl: failed.fetchImpl, redaction, runId: "run-f", runToken: "t-f", session }),
@@ -253,9 +253,17 @@ const run = async (): Promise<void> => {
   // reviewed: POST with bearer; 404 tolerated (run aged out)
   {
     const { calls, fetchImpl } = failingFetch(404);
-    await markRunReviewed(session, "run-old", fetchImpl);
+    await markRunReviewed(session, "run-old", "workforce-scheduling", fetchImpl);
     assert.equal(calls[0]?.method, "POST");
-    assert.equal(calls[0]?.url, "https://api.example/api/solve/run-old/reviewed");
+    assert.equal(calls[0]?.url, "https://api.example/solve/workforce-scheduling/v1/schedules/run-old/reviewed");
+    assert.equal(calls[0]?.headers.Authorization, "Bearer session-token");
+  }
+
+  // A free scheduler's review stays on its own product API and escapes the run id.
+  {
+    const { calls, fetchImpl } = failingFetch(404);
+    await markRunReviewed(session, "run/old", "scheduler", fetchImpl);
+    assert.equal(calls[0]?.url, "https://api.example/solve/scheduler/v1/schedules/run%2Fold/reviewed");
     assert.equal(calls[0]?.headers.Authorization, "Bearer session-token");
   }
 
@@ -318,7 +326,7 @@ const run = async (): Promise<void> => {
     const { calls, fetchImpl } = failingFetch(401, {});
     await assert.rejects(checkCandidate(candidateOptions(fetchImpl)), (error: unknown) => error instanceof SolveSessionExpiredError);
     assert.equal(calls.length, 1);
-    assert.equal(calls[0]?.url, "https://api.example/api/solve/analyze");
+    assert.equal(calls[0]?.url, "https://api.example/solve/workforce-scheduling/v1/schedules/candidate-analysis");
     assert.equal(calls[0]?.method, "POST");
     assert.equal(calls[0]?.headers.Authorization, "Bearer session-token");
     assert.equal(calls[0]?.headers["Idempotency-Key"], undefined, "a check starts no run");

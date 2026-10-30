@@ -19,6 +19,8 @@ export interface SchedulerPreferencesV1 {
   readonly resourceColumnWidth?: number;
   /** Workforce: the stats right of the Roster grid's last day, in order. */
   readonly rosterStats?: readonly string[];
+  /** The Roster grid's collapsed groups, by the ids the host gave them. */
+  readonly rosterCollapsed?: readonly string[];
   /** True folds the review's scorecard; the summary line stays. */
   readonly scorecardHidden?: boolean;
   readonly slotMinutes?: number;
@@ -88,6 +90,10 @@ export function createPreferenceStore(
             .filter((entry): entry is string => typeof entry === "string")
             .slice(0, 40)
         : undefined;
+      const collapsedRaw = raw["rosterCollapsed"];
+      const rosterCollapsed = Array.isArray(collapsedRaw)
+        ? collapsedRaw.filter((entry): entry is string => typeof entry === "string").slice(0, 200)
+        : undefined;
       const zoomRaw = raw["zoomByInterval"];
       const zoomByInterval =
         typeof zoomRaw === "object" && zoomRaw !== null
@@ -103,6 +109,7 @@ export function createPreferenceStore(
         ...(typeof resourceColumnWidth === "number"
           ? { resourceColumnWidth }
           : {}),
+        ...(rosterCollapsed ? { rosterCollapsed } : {}),
         ...(rosterStats ? { rosterStats } : {}),
         ...(typeof scorecardHidden === "boolean" ? { scorecardHidden } : {}),
         ...(typeof slotMinutes === "number" ? { slotMinutes } : {}),

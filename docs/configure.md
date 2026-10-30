@@ -76,6 +76,8 @@ A calendar with a site shows only the shifts at that site. A calendar with no si
 
 | Setting | Column | What it does | If empty |
 | --- | --- | --- | --- |
+| Region | `chr_region` | The site's country, or its state or province where public holidays differ by region, such as Bavaria (`DE-BY`). Set it first: the Holiday calendar and Time zone lists then show only the region's. | The Holiday calendar list is turned off. |
+| Holiday calendar | `chr_holidaycalendar` | The site's public holidays. Pick one of the region's holiday calendars, or a calendar with no region. | No public holidays. |
 | Time zone | `chr_timezone` | The site's time zone. Its calendars and shifts take it. | Required. |
 | Week starts on | `chr_weekstart` | The first day of the site's weeks: the board's weeks and week numbers, the rules that count per week, Auto Schedule and the worker app. | Monday. |
 | Currency | `chr_currency` | The currency of the site's wages and hourly rates. The board shows wages and overtime cost in it. Pick one of your environment's currencies. To add one, open the Power Platform admin center, select your environment, then **Settings** > **Business** > **Currencies**. | The organization's base currency. A new site gets it. |
@@ -86,6 +88,19 @@ A calendar with a site shows only the shifts at that site. A calendar with no si
 | More than the night hours | `chr_nightmore` | Yes: more than the night hours. No: at least. | The country's. |
 
 A site's own night time counts only when **Night time from**, **Night time to** and **Night hours** are all set. Otherwise it takes its country's, from its time zone: Germany 23:00 to 06:00, more than 2 hours; the Netherlands 00:00 to 06:00, more than 1 hour; France 21:00 to 06:00, at least 3 hours; anywhere else 23:00 to 06:00, at least 3 hours. A shift is a night shift when that much of its work falls in the night time, or when its shift type's **Night shift** is **Always**.
+
+#### Holiday calendars
+
+A holiday calendar holds a list of public holidays. Open **Holiday calendars** in the Chrona Workforce Scheduler app. A Chrona Workforce Admin creates and changes them.
+
+| Setting | Column | What it does | If empty |
+| --- | --- | --- | --- |
+| Name | `chr_name` | The calendar's name, such as Bavaria. | Required. |
+| Region | `chr_region` | The region whose public holidays Chrona gets. When you set or change it, Chrona gets the public holidays of this year and next year from Nager.Date (date.nager.at): the country's and the region's own. | Chrona gets no days. You add each day yourself. |
+
+To get the newest days, select **Fetch latest** on the calendar. Chrona adds a day only on a date that has no day yet. To add a day yourself, add it to the calendar's **Public holidays** list with its date and name. To remove a day, deactivate it: Chrona does not add it again.
+
+A shift that starts on a public holiday of its site's calendar, on the site's clock, counts in the **Sundays and public holidays worked** rule: on the board, in Auto Schedule and in Chrona Workforce Mobile.
 
 ### Planning horizon
 
@@ -106,13 +121,13 @@ An agreement holds the rostering rules of an award, an enterprise agreement or y
 Set agreements up on the app's **Agreements** page, with the **Chrona Workforce Admin** role. Turn on auditing before the first rule: see [Install Chrona Workforce Scheduler](https://chrona365.com/docs/workforce/install).
 
 1. Add an agreement and give it a **Name**. Save it.
-2. On its **Rules** tab, add each rule to its group: **Rest**, **Days on and off**, **Hours**, **Overtime**, **Night shifts** or **Weekends**. Each group has its own button, such as **Add rest rule**. A rule reads as one sentence with its numbers, its **Must** or **Should** level, its dates, its clause and its On switch. Each rule is one row of the **Agreement rule** table, with these columns:
+2. On its **Rules** tab, add each rule to its group: **Rest**, **Days on and off**, **Hours**, **Overtime**, **Night shifts**, **Weekends** or **Hours balance**. Each group has its own button, such as **Add rest rule**. A rule reads as one sentence with its numbers, its **Must** or **Should** level, its dates, its clause and its On switch. The Hours balance rules have no level and are not solver rules. Each rule is one row of the **Agreement rule** table, with these columns:
 
 | Column | What it holds | When empty |
 | --- | --- | --- |
-| Rule | One of the seventeen rules below. | Required. |
-| Value | Hours; whole days for **Days in a row** and **Days off**; night shifts for **Night shifts in a row** and **Night shifts in a period**; weekends for **Weekends worked** and **Weekends in a row**; days for **Sundays and public holidays worked**. **Complete weekends** sets no number. Above 0. | Required. |
-| Must or Should | **Must** always holds: Auto Schedule leaves a shift open rather than break it. **Should** gives way when the roster is better for it. | Must. **Minimum hours** and **Overtime** are always Should. |
+| Rule | One of the 21 rules below. | Required. |
+| Value | Hours; whole days for **Days in a row** and **Days off**; night shifts for **Night shifts in a row** and **Night shifts in a period**; weekends for **Weekends worked** and **Weekends in a row**; days for **Sundays and public holidays worked**; hours for **Most hours over** and **Most hours under**; months for **Settle within**; roster periods for **Pay back within**. **Complete weekends** sets no number. Above 0. | Required. |
+| Must or Should | **Must** always holds: Auto Schedule leaves a shift open rather than break it. **Should** gives way when the roster is better for it. | Must. **Minimum hours** and **Overtime** are always Should. The four **Hours balance** rules have none. |
 | Period | For **Maximum hours** and **Overtime**: Day, Week, Fortnight, Month or Roster period. For **Minimum hours** and **Days off**: Week, Fortnight, Month or Roster period. For **Night shifts in a period**: Week, Fortnight, Month, Roster period or Rolling weeks. For **Weekends worked**: Month, Roster period or Rolling weeks. For **Weekends in a row** and **Sundays and public holidays worked**: Month or Roster period. | Week; Month for the weekend rules. |
 | Over (weeks) | For **Weekly rest**, **Average hours**, and **Night shifts in a period** or **Weekends worked** with Rolling weeks: how many weeks each window runs, 1 to 52. | 1. |
 | Nights in a row | For **Rest after a run of nights**: the night shifts in a row that start the rest, 1 to 14. | 1. |
@@ -142,7 +157,11 @@ The rules:
 | Weekends worked | Weekends | The most weekends worked in each period or window, such as 2 a month. |
 | Weekends in a row | Weekends | The most weekends worked one after another in each period. |
 | Complete weekends | None | All of the weekend or none of it: a person who works one weekend day works the others too. |
-| Sundays and public holidays worked | Days | The most Sundays and public holidays worked in each period, such as 3 a month. Public holidays are not counted: the rule counts Sundays. |
+| Sundays and public holidays worked | Days | The most Sundays and public holidays worked in each period, such as 3 a month. Public holidays are the days of the site's holiday calendar. A Sunday that is also a public holiday counts once. |
+| Most hours over | Hours | The most plus hours a person's hours balance holds (see **Hours balance**). |
+| Most hours under | Hours | The most hours a person's hours balance can be under their guaranteed hours. |
+| Settle within | Months | The months within which an hours balance is settled. |
+| Pay back within | Roster periods | The roster periods over which Auto Schedule spreads a person's balance. |
 
 3. On its **Applies to** tab, select **Add a person** or **Add everyone in a role**. **Add everyone in a role** adds those people now. A person who joins the role later needs their own agreement. Adding a person moves them from the agreement they had. You can also set **Agreement** on a person.
 4. On its **Source** tab, select **Attach document** to keep the agreement as published, up to 32 megabytes (MB). The tab lists each clause the rules cite, with its words and its rules.
@@ -174,7 +193,7 @@ With an agent: the `agreement_reading` tool of the Chrona Model Context Protocol
 
 A contract holds one person's own terms: their employment type, their dates, their guaranteed and maximum hours, their hourly rate and their minimum engagement. The agreement holds the rules everyone on it shares. A contract adds limits to them and cannot loosen them. In Chrona Workforce Scheduler, a person's hours and hourly rate come only from their contracts.
 
-First, set up your employment types on the app's **Employment types** page, with the **Chrona Workforce Admin** role. Name each one your way, such as Full-time, Part-time and Casual. Its **Availability** is where a person starts: **Available unless marked unavailable** or **Unavailable unless marked available**. A person's first contract gives them the availability of its employment type. A person who starts unavailable works only in the **Available** time they give in Chrona Workforce Mobile or that you add in the **Availability** grid on their form; with none, they get no shifts.
+First, set up your employment types on the app's **Availability** page, under **People**, with the **Chrona Workforce Admin** role. Name each one your way, such as Full-time, Part-time and Casual. A type can name a **Default pattern**: people of the type who have no availability pattern of their own work only inside it. **Changes from the phone** lets its people ask in Chrona Workforce Mobile to change their pattern or add one-off times; you approve each request. A person with no pattern can work any time they are not unavailable.
 
 Then open a person and select the **Contracts** tab:
 
@@ -185,7 +204,7 @@ Then open a person and select the **Contracts** tab:
 
 | Field | What it holds | When empty |
 | --- | --- | --- |
-| Employment type | The type from the **Employment types** page. | No type. |
+| Employment type | The type from the **Availability** page, under **People**. | No type. |
 | Start | The contract's first day. | Required. |
 | End | The contract's last day. On or after the start. | Ongoing. |
 | Guaranteed hours | The hours Auto Schedule gives the person in each period where it can, a Should rule. | None, as for a casual. |
@@ -204,6 +223,22 @@ How contracts apply:
 - The Roster grid shows each person's hours against the contract in force on the roster's first day: the bar runs to the maximum, with a mark at the guaranteed hours. Its tip names each figure.
 - **Wages** count each shift at the rate of the contract in force on its day. The wages note names each person with no rate.
 - The **Chrona Workforce User** role reads contracts. The **Chrona Workforce Admin** role adds, changes, ends and deletes them.
+
+### Hours balance
+
+Each person with guaranteed hours has an hours balance: the hours they worked against the hours their contract guarantees, carried from one pay period to the next. Open a person and select the **Hours balance** tab to see the balance and each entry, with the **Chrona Workforce Admin** role.
+
+- When a person's timesheet for a pay period is approved, Chrona adds an **Accrual**: the approved hours, plus leave that counts as worked, less the guaranteed hours for the pay period's days. Each day owes its share of the contract in force that day: the guaranteed hours spread over the days the person works in **Hours per**. Those are the days their availability pattern makes available, or with no pattern the days outside their agreement's weekend.
+- A leave type counts as worked when **Counts as worked** is Yes on it, under **Availability** types. A day of such leave credits the hours of the shifts it took off. A working day of it with no shift credits that day's share.
+- A later change to a counted pay period, such as a corrected timesheet or a leave approved or cancelled afterwards, adds an **Adjustment** for the difference.
+- When a person joins with a balance from before Chrona, select **Add entry** and add an **Opening** entry. To correct a balance, add an **Adjustment**. Each needs a reason. No one changes an entry: a correction is a new entry.
+- A public holiday of the site's holiday calendar on one of the person's working days credits that day's share. A holiday they worked counts as worked, once.
+- Four agreement rules hold the balance: **Most hours over** (hours), **Most hours under** (hours), **Settle within** (months) and **Pay back within** (roster periods). When an **Accrual** takes the balance above **Most hours over**, Chrona adds a **Payout** entry for the hours above it. For payroll codes and payout source requirements, see [Export hours and staffing reports](https://chrona365.com/docs/workforce/exports). The four rules are not solver rules; **Settle within** is stored, and the settlement at the end of each window is not yet in Chrona. Add them in the **Hours balance** group of the agreement's **Rules** tab, or with your agent's `generate_agreement`.
+- With **Pay back within**, Auto Schedule moves each person's guaranteed hours for the roster period by their balance over that many roster periods: +12 hours over 3 periods lowers a 154-hour target to 150. A raised target stops at the maximum hours. A person on schedulers with different roster periods pays back by the week.
+- With **Most hours over**, hours past the guaranteed hours go to the balance first: overtime counts only past the hours the balance can still take. Auto Schedule and the board's **Wages** and **Overtime** count the same.
+- On the board's **Roster** layout, each person shows their balance under the hours bar, amber at a limit and red past it. The hours bar reads the moved target; its tip says what it moved from.
+- In Chrona Mobile, a person sees their balance, the date it is paid back by, this period's target and each entry on the **More** page (My contract).
+- A person with no guaranteed hours in a pay period gets no **Accrual** for it.
 
 ### Import a roster from Excel
 

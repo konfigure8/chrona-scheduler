@@ -41,7 +41,9 @@ export function buildRosterDays(
 
   while (cursor.getTime() < window.end.getTime()) {
     const start = new Date(cursor.getTime());
-    const end = new Date(cursor.getTime() + millisecondsPerDay);
+    // The next calendar midnight: a daylight-saving day runs 23 or 25 hours.
+    const end = new Date(cursor.getTime());
+    end.setDate(end.getDate() + 1);
     const isWeekend = start.getDay() === 0 || start.getDay() === 6;
     if (showWeekends || !isWeekend) {
       days.push({
@@ -64,6 +66,32 @@ export function buildRosterDays(
  * day it starts, so a night shift shows once; an item longer than 24
  * hours on every day it covers (Matt 2026-09-30).
  */
+/**
+ * Where a host's mark sits in a person's day cell (RosterExtension.dayMarks):
+ * its start and width in percent of the cell, the day running from midnight
+ * on the left. Undefined when it covers none of the day.
+ */
+export function rosterMarkPlacement(mark: { readonly from: number; readonly to: number }): { readonly left: string; readonly width: string } | undefined {
+  const clamp = (value: number): number => Math.max(0, Math.min(1, value));
+  const from = clamp(mark.from);
+  const to = clamp(mark.to);
+  if (!(to > from)) return undefined;
+  const percent = (value: number): string => `${Math.round(value * 10000) / 100}%`;
+  return { left: percent(from), width: percent(to - from) };
+}
+
+/**
+ * The rows a Roster group draws (RosterExtension.groups): its heading, then,
+ * unless it is collapsed, its open row (when the grid has one) and its people,
+ * then its footer when it has one.
+ */
+export function rosterGroupRows(
+  group: { readonly collapsed?: boolean; readonly footer?: unknown },
+  hasOpenRow: boolean,
+): { readonly footer: boolean; readonly open: boolean; readonly people: boolean } {
+  return { footer: group.footer !== undefined, open: hasOpenRow && group.collapsed !== true, people: group.collapsed !== true };
+}
+
 export function showsOnDay(event: SchedulerUiEvent, day: RosterDay): boolean {
   return event.end.getTime() - event.start.getTime() > millisecondsPerDay
     ? event.start.getTime() < day.end.getTime() &&

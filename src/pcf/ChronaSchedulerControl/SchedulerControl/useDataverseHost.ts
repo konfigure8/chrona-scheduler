@@ -1709,10 +1709,10 @@ export function useDataverseScheduleHost(
   const markReviewed = React.useCallback(
     (runId: string | undefined): void => {
       if (session && runId) {
-        void markRunReviewed(session, runId).catch(() => undefined);
+        void markRunReviewed(session, runId, hostConfig.product).catch(() => undefined);
       }
     },
-    [session],
+    [session, hostConfig.product],
   );
 
   const publishProposal = React.useCallback(
@@ -1811,7 +1811,7 @@ export function useDataverseScheduleHost(
   /*
    * Stops waiting: a start still reading stops where it is. A run that
    * cannot be stopped (an earlier control started it through
-   * /api/solve) finishes on the server; reviewed keeps it out of the
+   * the solve API) finishes on the server; reviewed keeps it out of the
    * resume prompt.
    */
   const cancelWait = React.useCallback((): void => {
@@ -2290,7 +2290,7 @@ export function useDataverseScheduleHost(
           onDiscard: () => {
             setResumeDismissed(latestRun.runId);
             if (session) {
-              void markRunReviewed(session, latestRun.runId).catch(() => undefined);
+              void markRunReviewed(session, latestRun.runId, hostConfig.product).catch(() => undefined);
             }
           },
           onReview: () => {
@@ -2323,7 +2323,7 @@ export function useDataverseScheduleHost(
                 if (latestRun.payloadHash && hash && hash !== latestRun.payloadHash) {
                   setSolveState(idleSolveState);
                   notify("info", messages.msgResumeChanged);
-                  void markRunReviewed(session, latestRun.runId).catch(() => undefined);
+                  void markRunReviewed(session, latestRun.runId, hostConfig.product).catch(() => undefined);
                   return null;
                 }
                 return followRun({

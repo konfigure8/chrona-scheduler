@@ -9,10 +9,9 @@
  * Runs go through each product's API, version 1 (F61 Product APIs,
  * R2.15): Timefold's run lifecycle - submit, read, stop - with the
  * problem as `modelInput` and the run's length as
- * `config.run.termination.spentLimit`. /api/solve stays for controls
- * released before it.
+ * `config.run.termination.spentLimit`.
  *
- * /api/solve/analyze answers "Why not…?" at once: the same envelope
+ * /solve/workforce-scheduling/v1/schedules/candidate-analysis answers "Why not…?" at once: the same envelope
  * with one candidate (a person on a shift) in place of a run, and the
  * rule matches the move adds and removes in place of a roster. It
  * queues nothing and starts no run.
@@ -41,8 +40,8 @@ import type { SchedulerUiEvent, TimeWindow } from "./types";
 
 /** F61 Product APIs: each product's API, version 1. */
 const PRODUCT_API_PATHS: Readonly<Record<string, string>> = {
-  scheduler: "/api/scheduler/v1",
-  "workforce-scheduling": "/api/workforce-scheduling/v1",
+  scheduler: "/solve/scheduler/v1",
+  "workforce-scheduling": "/solve/workforce-scheduling/v1",
 };
 
 /**
@@ -51,7 +50,7 @@ const PRODUCT_API_PATHS: Readonly<Record<string, string>> = {
  * reads it; a product without its own API is the free scheduler's.
  */
 export function productApiPath(solutionType: string | undefined): string {
-  return PRODUCT_API_PATHS[solutionType ?? "workforce-scheduling"] ?? "/api/scheduler/v1";
+  return PRODUCT_API_PATHS[solutionType ?? "workforce-scheduling"] ?? "/solve/scheduler/v1";
 }
 
 /** A run as a product's v1 API takes it: Timefold's model request on Chrona's contract. */
@@ -490,7 +489,7 @@ export function buildCandidateRequest(
   };
 }
 
-/** The /api/solve/analyze answer: a candidate check in the problem's ids. */
+/** The /solve/workforce-scheduling/v1/schedules/candidate-analysis answer: a candidate check in the problem's ids. */
 export interface CandidateResponseV2 extends ScheduleCandidateCheck {
   readonly contractVersion: "2";
 }

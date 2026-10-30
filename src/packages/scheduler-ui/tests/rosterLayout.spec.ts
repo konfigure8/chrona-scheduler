@@ -2,6 +2,8 @@ import {
   buildRosterDays,
   layoutOpenRow,
   layoutRoster,
+  rosterGroupRows,
+  rosterMarkPlacement,
 } from "../src/rosterLayout";
 import type {
   SchedulerResource,
@@ -123,7 +125,34 @@ function assertEqual<T>(actual: T, expected: T): void {
   }
 }
 
+// A host's day mark (RosterExtension.dayMarks) sits at its time of day across the cell; outside the day it is clipped, empty it is not drawn.
+function placesAHostsDayMarkAcrossTheCell(): void {
+  assertEqual(rosterMarkPlacement({ from: 0, to: 16 / 24 })?.left, "0%");
+  assertEqual(rosterMarkPlacement({ from: 0, to: 16 / 24 })?.width, "66.67%");
+  assertEqual(rosterMarkPlacement({ from: 22 / 24, to: 1 })?.left, "91.67%");
+  assertEqual(rosterMarkPlacement({ from: 0.5, to: 1.5 })?.width, "50%");
+  assertEqual(rosterMarkPlacement({ from: -0.25, to: 0.25 })?.left, "0%");
+  assertEqual(rosterMarkPlacement({ from: 0.5, to: 0.5 }), undefined);
+  assertEqual(rosterMarkPlacement({ from: 1, to: 2 }), undefined);
+}
+
+// A host's group heading (RosterExtension.groups): collapsed shows the heading and the footer only.
+function drawsACollapsedGroupAsItsHeadingAndSummary(): void {
+  const open = rosterGroupRows({ footer: {} }, true);
+  assertEqual(open.open && open.people && open.footer, true);
+  const collapsed = rosterGroupRows({ collapsed: true, footer: {} }, true);
+  assertEqual(collapsed.open || collapsed.people, false);
+  assertEqual(collapsed.footer, true);
+  // A heading over subgroups, with nobody of its own: the heading alone.
+  const heading = rosterGroupRows({ collapsed: true }, true);
+  assertEqual(heading.open || heading.people || heading.footer, false);
+  // A grid with no open row never draws one.
+  assertEqual(rosterGroupRows({}, false).open, false);
+}
+
 buildsOneColumnPerDay();
+drawsACollapsedGroupAsItsHeadingAndSummary();
+placesAHostsDayMarkAcrossTheCell();
 groupsEventsIntoResourceDayCells();
 showsANightShiftOnItsStartDayOnly();
 laysOutTheOpenRowByStartDay();

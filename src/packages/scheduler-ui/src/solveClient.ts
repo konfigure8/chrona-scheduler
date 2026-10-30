@@ -119,8 +119,8 @@ export class SolveCancelledError extends Error {}
 export class SolveStoppedError extends Error {}
 
 /**
- * HTTP 409 run_not_stoppable: the run was started through /api/solve
- * by an earlier control, so only that control's wait can be cancelled.
+ * HTTP 409 run_not_stoppable: the run does not support cancellation,
+ * so only the client's wait can be cancelled.
  */
 export class SolveNotStoppableError extends Error {}
 
@@ -375,7 +375,7 @@ export interface StopRunOptions {
  * and keeps the best roster found so far; the run's follower reads it as
  * it reads any answer. With `discard` (F41 Cancel) it keeps nothing. A
  * run that already ended needs nothing; a run an earlier control started
- * through /api/solve cannot be stopped here.
+ * without cancellation support cannot be stopped here.
  */
 export async function stopRun(options: StopRunOptions): Promise<void> {
   const fetchImpl = options.fetchImpl ?? fetch;
@@ -486,7 +486,7 @@ export async function checkCandidate(options: CandidateCheckOptions): Promise<Ca
   try {
     response = await fetchOrCancelled(
       fetchImpl,
-      `${options.session.apiBaseUrl}/api/solve/analyze`,
+      `${runsUrl(options.session, options.solutionType)}/candidate-analysis`,
       {
         body: JSON.stringify(request),
         headers: {
@@ -568,11 +568,12 @@ export async function askCandidate(options: CandidateCheckOptions): Promise<Cand
 export async function markRunReviewed(
   session: SolveSession,
   runId: string,
+  solutionType: string | undefined,
   fetchImpl: typeof fetch = fetch,
   extraHeaders?: Record<string, string>,
 ): Promise<void> {
   const response = await fetchImpl(
-    `${session.apiBaseUrl}/api/solve/${encodeURIComponent(runId)}/reviewed`,
+    `${runsUrl(session, solutionType)}/${encodeURIComponent(runId)}/reviewed`,
     { headers: authHeaders(session, runId, "reviewed", extraHeaders), method: "POST" },
   );
   if (!response.ok && response.status !== 404) {

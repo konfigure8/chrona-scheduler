@@ -21,6 +21,8 @@ import {
   buildRosterDays,
   layoutOpenRow,
   layoutRoster,
+  rosterGroupRows,
+  rosterMarkPlacement,
   type RosterRowLayout,
 } from "./rosterLayout";
 import { isDragLocked, showsPin } from "./locks";
@@ -542,6 +544,12 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
           {extension?.personDetail?.(row.resource)}
         </td>
         {row.cells.map((cell, dayIndex) => {
+          // The extension's marks: the person's day across the cell, behind the shifts.
+          const day = days[dayIndex];
+          const marks = (day ? (extension?.dayMarks?.(row.resource, day) ?? []) : []).flatMap((mark) => {
+            const placement = rosterMarkPlacement(mark);
+            return placement ? [{ ...mark, placement }] : [];
+          });
           const isHovered =
             hover &&
             hover.dayIndex === dayIndex &&
@@ -562,6 +570,7 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
                   days[dayIndex]?.weekend
                     ? "chrona-sched__roster-cell--weekend"
                     : "",
+                  marks.length > 0 ? "chrona-sched__roster-cell--marked" : "",
                 ]
                   .filter(Boolean)
                   .join(" ") || undefined
@@ -571,6 +580,22 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
               key={days[dayIndex]?.start.getTime() ?? dayIndex}
               title={isHovered ? hover.verdict.reason : undefined}
             >
+              {marks.map((mark, index) => (
+                <span
+                  aria-hidden="true"
+                  className={`chrona-sched__decoration chrona-sched__decoration--${mark.kind} chrona-sched__roster-mark${mark.from <= 0 && mark.to >= 1 ? "" : " chrona-sched__roster-mark--part"}`}
+                  data-roster-mark={mark.kind}
+                  key={`mark-${index}`}
+                  style={mark.placement}
+                  title={mark.label}
+                />
+              ))}
+              {marks.length > 0 ? <span className="chrona-sched__sr-only">{marks.map((mark) => mark.label).join(", ")}</span> : null}
+              {cell.length === 0 && marks.some((mark) => mark.caption) ? (
+                <span aria-hidden="true" className="chrona-sched__roster-mark-caption">
+                  {marks.find((mark) => mark.caption)?.caption}
+                </span>
+              ) : null}
               {cell.map((event) => renderChip(event, dayIndex))}
             </td>
           );
@@ -587,16 +612,22 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
   // A group's heading, its open shifts, its people, then its footer.
   const renderGroup = (group: RosterGroup): JSX.Element => {
     const members = new Set(group.resources.map((resource) => resource.id));
+    const shows = rosterGroupRows(group, openEvents !== undefined);
     return (
       <React.Fragment key={`group-${group.id}`}>
-        <tr className="chrona-sched__roster-group" data-testid="roster-group">
-          <td className="chrona-sched__roster-resource">{group.heading}</td>
-          <td colSpan={days.length + shownStats.length} />
+        <tr
+          className={group.collapsed ? "chrona-sched__roster-group chrona-sched__roster-group--collapsed" : "chrona-sched__roster-group"}
+          data-group-id={group.id}
+          data-level={group.level ?? 1}
+          data-testid="roster-group"
+        >
+          <td className="chrona-sched__roster-resource">{group.header ? group.header.resource : group.heading}</td>
+          <td colSpan={days.length + shownStats.length}>{group.header?.days}</td>
         </tr>
-        {openEvents
+        {shows.open && openEvents
           ? renderOpenRow(layoutOpenRow(group.open, days), `open-${group.id}`, draggingGroup === group.id)
           : null}
-        {rows.filter((row) => members.has(row.resource.id)).map(renderPersonRow)}
+        {shows.people ? rows.filter((row) => members.has(row.resource.id)).map(renderPersonRow) : null}
         {group.footer ? (
           <tr className="chrona-sched__roster-need" data-testid="roster-need-row">
             <td className="chrona-sched__roster-resource">
@@ -651,7 +682,10 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
       >
         <thead>
           <tr ref={headRef}>
-            <th className="chrona-sched__roster-resource">{strings.resourceHeader}</th>
+            <th className="chrona-sched__roster-resource">
+              {strings.resourceHeader}
+              {groups ? extension?.groupsHeader : null}
+            </th>
             {days.map((day, dayIndex) => (
               <th
                 className={

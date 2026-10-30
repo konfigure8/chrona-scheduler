@@ -57,6 +57,11 @@ function roundTripsPreferences(): void {
   assertEqual(JSON.stringify(store.load()?.rosterStats), "[]");
   store.save({ rosterStats: ["nights", 7] as unknown as string[] });
   assertEqual(JSON.stringify(store.load()?.rosterStats), JSON.stringify(["nights"]));
+  // The Roster grid's folded group bands, by the host's ids; anything but text drops.
+  store.save({ rosterCollapsed: ["Tower ", "Tower Leads"] });
+  assertEqual(JSON.stringify(store.load()?.rosterCollapsed), JSON.stringify(["Tower ", "Tower Leads"]));
+  store.save({ rosterCollapsed: ["Tower ", 3] as unknown as string[] });
+  assertEqual(JSON.stringify(store.load()?.rosterCollapsed), JSON.stringify(["Tower "]));
   // The review's scorecard fold is a person's choice too; only a boolean counts.
   assertEqual(store.load()?.scorecardHidden, undefined);
   store.save({ scorecardHidden: true });

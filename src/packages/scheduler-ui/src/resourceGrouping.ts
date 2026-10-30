@@ -12,6 +12,14 @@ export interface ResourceGroup {
   readonly subgroups: readonly ResourceSubgroup[];
 }
 
+/**
+ * Whether a group gets a header row: every group does, except an Ungrouped with nobody in it, so no
+ * "Ungrouped (0)" stands over the open shifts' lane.
+ */
+export function showsGroupHeader(group: ResourceGroup): boolean {
+  return group.name !== UNGROUPED || group.subgroups.some((subgroup) => subgroup.members.length > 0);
+}
+
 /** Collapse-state key for a group or subgroup header. */
 export function groupCollapseKey(group: string, subgroup?: string): string {
   // Control-character delimiter: never collides with real names.
@@ -79,9 +87,15 @@ export function buildResourceGroups(
 
   return groupOrder.map((name) => {
     const entry = groupBuckets.get(name);
+    // A group's people with no subgroup sit directly under its header, before its subgroups.
+    // (Array sort puts undefined last whatever the comparator says, so the order is built, not sorted.)
+    const order = [
+      ...(entry?.order ?? []).filter((subgroupName) => subgroupName === undefined),
+      ...(entry?.order ?? []).filter((subgroupName) => subgroupName !== undefined),
+    ];
     return {
       name,
-      subgroups: (entry?.order ?? []).map((subgroupName) => ({
+      subgroups: order.map((subgroupName) => ({
         members: entry?.buckets.get(subgroupName) ?? [],
         name: subgroupName,
       })),

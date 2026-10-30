@@ -1,6 +1,6 @@
 /**
  * Solve/proposal lifecycle, copied from the real exchange (the
- * solver-api /api/solve endpoint and the POC client that consumes
+ * solver-api product endpoints and the POC client that consumes
  * it): submit returns a run id and a poll hint; polling returns
  * queued | running | succeeded | failed; a succeeded result carries
  * the COMPLETE solved schedule. The solver never sends a change
