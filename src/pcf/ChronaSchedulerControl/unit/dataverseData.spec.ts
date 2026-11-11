@@ -277,6 +277,43 @@ console.log("undated row tests passed");
 }
 console.log("code binding tests passed");
 
+// AGENTS.md 0.1: a record with no name keeps an empty title; its record id is never its label.
+{
+  const RECORD_ID = "e5d4560b-93dc-f111-84e8-000d3ae0d839";
+  const nameless = {
+    ...(datasetWith([
+      { alias: "start", name: "chr_start" },
+      { alias: "end", name: "chr_end" },
+      { alias: "title", name: "chr_name" },
+    ]) as object),
+    loading: false,
+    records: { [RECORD_ID]: recordWith({ end: rowEnd, start: rowStart }) },
+    sortedRecordIds: [RECORD_ID],
+  } as unknown as DataSet;
+  const mapped = mapWorkItems(nameless);
+  assert.equal(mapped.events.length, 1);
+  assert.equal(mapped.events[0]?.id, RECORD_ID);
+  assert.equal(mapped.events[0]?.title, "", "a nameless record is not labelled with its id");
+}
+console.log("nameless record tests passed");
+// AGENTS.md 0.1: a resource whose lookup carries no name has an empty name, never its id.
+{
+  const nameless = {
+    ...(datasetWith([
+      { alias: "start", name: "chr_start" },
+      { alias: "end", name: "chr_end" },
+      { alias: "resource", name: "chr_resource", dataType: "Lookup.Simple" },
+    ]) as object),
+    loading: false,
+    records: { "r-1": recordWith({ end: rowEnd, resource: { etn: "chr_employee", id: { guid: "p-9" } }, start: rowStart, title: "Early" }) },
+    sortedRecordIds: ["r-1"],
+  } as unknown as DataSet;
+  const mapped = mapWorkItems(nameless);
+  assert.equal(mapped.resources[0]?.id, "p-9");
+  assert.equal(mapped.resources[0]?.name, "", "a nameless resource is not labelled with its id");
+}
+console.log("nameless resource tests passed");
+
 // Paging: keep asking for pages while rows remain and the cap is not reached; past the cap, say so.
 {
   assert.deepEqual(pagingStep({ hasNextPage: true, loadedRows: 25, loading: false }), { capReached: false, loadNextPage: true });

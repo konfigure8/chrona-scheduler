@@ -8,7 +8,8 @@ import { useFullScreen } from "./fullScreen";
 import { VerticalSplitter } from "./Splitter";
 import { FlagGlyph } from "./FlagGlyph";
 import { NightGlyph } from "./NightGlyph";
-import { flagReasonText } from "./stringResources";
+import { formatHoursMinutes } from "./EventHoverCard";
+import { flagReasonText, type SchedulerStrings } from "./stringResources";
 import { UNGROUPED } from "./groupSets";
 import { useSchedulerStrings } from "./strings";
 import { tagPillStyle, type TagColorMap } from "./tagColors";
@@ -55,11 +56,9 @@ const UNDATED_GROUP = "chrona:undated";
 const panelMinWidth = 160;
 const panelMaxWidth = 480;
 
-function formatDuration(event: SchedulerUiEvent): string {
-  const minutes = Math.round(clockMinutesBetween(event.start, event.end));
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  return rest === 0 ? `${hours}h` : `${hours}h${rest}m`;
+/** The shift's length in the board's words (W2-P12), as the hover card writes it. */
+function formatDuration(event: SchedulerUiEvent, words: Pick<SchedulerStrings, "hoverHours" | "hoverHoursMinutes">): string {
+  return formatHoursMinutes(clockMinutesBetween(event.start, event.end), words);
 }
 
 /**
@@ -242,7 +241,7 @@ export function UnscheduledPanel(props: UnscheduledPanelProps): JSX.Element {
         {group.items.map((event) => (
           <li key={event.id}>
             <button
-              aria-label={`${event.title}, ${event.undated ? strings.noDate : formatTimeRange(event)}, ${formatDuration(event)}${event.night ? `, ${strings.nightShift}` : ""}${isOpenOnCall(event) ? `, ${strings.legendOnCall}` : openKindOf(event, kindOf) ? `, ${openKindOf(event, kindOf)?.label ?? ""}` : ""}`}
+              aria-label={`${event.title}, ${event.undated ? strings.noDate : formatTimeRange(event)}, ${formatDuration(event, strings)}${event.night ? `, ${strings.nightShift}` : ""}${isOpenOnCall(event) ? `, ${strings.legendOnCall}` : openKindOf(event, kindOf) ? `, ${openKindOf(event, kindOf)?.label ?? ""}` : ""}`}
               className={[
                 "chrona-sched__unscheduled-item",
                 drag.session?.sourceEvent?.id === event.id ? "chrona-sched__unscheduled-item--dragging" : "",
@@ -284,7 +283,7 @@ export function UnscheduledPanel(props: UnscheduledPanelProps): JSX.Element {
                   {event.night ? <NightGlyph title={strings.nightShift} /> : null}
                 </span>
                 <span className="chrona-sched__unscheduled-duration">
-                  {formatDuration(event)}
+                  {formatDuration(event, strings)}
                 </span>
               </span>
               {event.undated ? (

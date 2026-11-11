@@ -198,6 +198,15 @@
   <data name="duration" xml:space="preserve">
     <value>Duration</value>
   </data>
+  <data name="hoverHours" xml:space="preserve">
+    <value>{hours} h</value>
+  </data>
+  <data name="hoverHoursMinutes" xml:space="preserve">
+    <value>{hours} h {minutes} min</value>
+  </data>
+  <data name="hoverWorkedSpan" xml:space="preserve">
+    <value>{worked} ({span} span)</value>
+  </data>
   <data name="emptyResources" xml:space="preserve">
     <value>No resources to display. Check the view's resource configuration.</value>
   </data>
@@ -487,10 +496,10 @@
     <value>Previous</value>
   </data>
   <data name="proposalAppliedMany" xml:space="preserve">
-    <value>Applied {count} suggestions</value>
+    <value>Applied {count} changes</value>
   </data>
   <data name="proposalAppliedOne" xml:space="preserve">
-    <value>Applied 1 suggestion</value>
+    <value>Applied 1 change</value>
   </data>
   <data name="proposalApply" xml:space="preserve">
     <value>Apply</value>
@@ -712,7 +721,7 @@
     <value>Outside {group}</value>
   </data>
   <data name="reasonOutsideHours" xml:space="preserve">
-    <value>Outside working hours ({start}-{end})</value>
+    <value>Outside working hours ({start}‑{end})</value>
   </data>
   <data name="reasonOverlap" xml:space="preserve">
     <value>Overlaps an existing item</value>
@@ -786,8 +795,38 @@
   <data name="solveStopping" xml:space="preserve">
     <value>Stopping…</value>
   </data>
+  <data name="solveRunTitle" xml:space="preserve">
+    <value>Auto scheduling {shifts} shifts for {workers} workers</value>
+  </data>
+  <data name="solveStageReading" xml:space="preserve">
+    <value>Reading rules and workers</value>
+  </data>
+  <data name="solveStageFirst" xml:space="preserve">
+    <value>First roster</value>
+  </data>
+  <data name="solveStageImproving" xml:space="preserve">
+    <value>Improving</value>
+  </data>
+  <data name="solveStagePolish" xml:space="preserve">
+    <value>Final polish</value>
+  </data>
+  <data name="solveChartLabel" xml:space="preserve">
+    <value>Roster quality over the run</value>
+  </data>
+  <data name="solveChartBetter" xml:space="preserve">
+    <value>Better</value>
+  </data>
+  <data name="solveChartWorse" xml:space="preserve">
+    <value>Worse</value>
+  </data>
+  <data name="solveCancelled" xml:space="preserve">
+    <value>Cancelled. Nothing changed.</value>
+  </data>
+  <data name="solveConnectionLost" xml:space="preserve">
+    <value>Auto Schedule lost the connection. Nothing changed.</value>
+  </data>
   <data name="solveStoppedNothing" xml:space="preserve">
-    <value>Stopped before a roster was found. Nothing changed. Run it again and let it finish.</value>
+    <value>Stopped before a first roster. Nothing changed.</value>
   </data>
   <data name="solveStopFailed" xml:space="preserve">
     <value>Couldn't stop the run. It carries on, and its roster opens when it ends.</value>
@@ -1146,6 +1185,9 @@
   <data name="menuWhyNot" xml:space="preserve">
     <value>Why not…?</value>
   </data>
+  <data name="whyNotHeading" xml:space="preserve">
+    <value>Why not?</value>
+  </data>
   <data name="whyNotPerson" xml:space="preserve">
     <value>Person</value>
   </data>
@@ -1162,10 +1204,10 @@
     <value>Checking {name}…</value>
   </data>
   <data name="whyNotVerdictMustOne" xml:space="preserve">
-    <value>{name} would break 1 Must rule</value>
+    <value>{name} would break 1 Must rule</value>
   </data>
   <data name="whyNotVerdictMust" xml:space="preserve">
-    <value>{name} would break {count} Must rules</value>
+    <value>{name} would break {count} Must rules</value>
   </data>
   <data name="whyNotVerdictShould" xml:space="preserve">
     <value>{name} keeps every Must rule but fits less well</value>

@@ -7,7 +7,7 @@ import { FlagGlyph } from "./FlagGlyph";
 import { useBoardExtension } from "./extension";
 import { ShiftMarkNote, useShiftMarks } from "./ShiftMark";
 import { openKindOf } from "./solve";
-import { flagReasonText } from "./stringResources";
+import { flagReasonText, formatString, type SchedulerStrings } from "./stringResources";
 import { useSchedulerStrings } from "./strings";
 
 import type {
@@ -34,11 +34,18 @@ export interface EventHoverCardProps {
 const beakSize = 8;
 const edgePadding = 8;
 
-function formatHoursMinutes(totalMinutes: number): string {
+type DurationWords = Pick<SchedulerStrings, "hoverHours" | "hoverHoursMinutes" | "hoverWorkedSpan">;
+
+/**
+ * Hours and minutes in the board's language (W2-P12: never the component's own "h" and "m"). One amount never splits
+ * over two lines ("8 Std. 30 Min."): its spaces are no-break spaces. The Unscheduled panel uses it too.
+ */
+export function formatHoursMinutes(totalMinutes: number, words: Pick<SchedulerStrings, "hoverHours" | "hoverHoursMinutes">): string {
   const minutes = Math.round(totalMinutes);
-  const hours = Math.floor(minutes / 60);
+  const hours = String(Math.floor(minutes / 60));
   const rest = minutes % 60;
-  return rest === 0 ? `${hours}h` : `${hours}h ${rest}m`;
+  const amount = rest === 0 ? formatString(words.hoverHours, { hours }) : formatString(words.hoverHoursMinutes, { hours, minutes: String(rest) });
+  return amount.replace(/ /g, "\u00a0");
 }
 
 /**
@@ -48,13 +55,13 @@ function formatHoursMinutes(totalMinutes: number): string {
  * is still shown, in brackets, because it is the number span-of-hours
  * rules care about (Docs/domain_model.md section 4).
  */
-function formatDuration(event: SchedulerUiEvent): string {
-  const worked = formatHoursMinutes(workedMinutes(event));
+function formatDuration(event: SchedulerUiEvent, words: DurationWords): string {
+  const worked = formatHoursMinutes(workedMinutes(event), words);
   const span = spanMinutes(event);
   if (Math.round(workedMinutes(event)) === Math.round(span)) {
     return worked;
   }
-  return `${worked} (${formatHoursMinutes(span)} span)`;
+  return formatString(words.hoverWorkedSpan, { span: formatHoursMinutes(span, words), worked });
 }
 
 /**
@@ -104,7 +111,7 @@ export function EventHoverCard(props: EventHoverCardProps): JSX.Element {
   const entries: readonly { readonly label: string; readonly value: string; readonly wide?: boolean }[] =
     [
       { label: strings.start, value: formatDayTimeLabel(event.start, dateNames, hourFormat) },
-      { label: strings.duration, value: formatDuration(event) },
+      { label: strings.duration, value: formatDuration(event, strings) },
       {
         label: strings.assignedTo,
         value:

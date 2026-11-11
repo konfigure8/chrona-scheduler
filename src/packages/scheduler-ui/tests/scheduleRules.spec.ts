@@ -74,7 +74,7 @@ function extraRulesTakeTheirPlaceInTheOrder(): void {
     proposed: { end: day(23), resourceId: "r-1", start: day(21) },
     resources,
   });
-  assertEqual(results.map((result) => result.reason).join(" | "), "First | Outside working hours (06:00-22:00)");
+  assertEqual(results.map((result) => result.reason).join(" | "), "First | Outside working hours (06:00‑22:00)");
 }
 
 function breakUnderMinimumWarnsWithTheGap(): void {
@@ -314,21 +314,21 @@ function overnightWorkingHoursHoldShiftsAcrossMidnight(): void {
   assertEqual(reasons(day(22), day(27)), "");
   assertEqual(reasons(day(1), day(4)), "");
   // 06:00 to 08:00 falls in the gap; the reason reads the clock.
-  assertEqual(reasons(day(6), day(8)), "Outside working hours (09:00-05:00)");
+  assertEqual(reasons(day(6), day(8)), "Outside working hours (09:00‑05:00)");
   // A same-day window keeps today's behaviour.
   assertEqual(
     evaluateScheduleRules({ config, event: undefined, events: [], proposed: { end: day(23), resourceId: "r-1", start: day(21) }, resources })
       .map((result) => result.reason)
       .join(" | "),
-    "Outside working hours (06:00-22:00)",
+    "Outside working hours (06:00‑22:00)",
   );
   // On a 12-hour clock the reason reads the user's clock; a 24:00 end is midnight.
   const twelve = (window: SchedulerRulesConfig): string =>
     evaluateScheduleRules({ config: window, event: undefined, events: [], hourFormat: "12", proposed: { end: day(8), resourceId: "r-1", start: day(6) }, resources })
       .map((result) => result.reason)
       .join(" | ");
-  assertEqual(twelve(overnight), "Outside working hours (9am-5am)");
-  assertEqual(twelve({ ...config, workingEndHour: 24, workingStartHour: 9.5 }), "Outside working hours (9:30am-12am)");
+  assertEqual(twelve(overnight), "Outside working hours (9am‑5am)");
+  assertEqual(twelve({ ...config, workingEndHour: 24, workingStartHour: 9.5 }), "Outside working hours (9:30am‑12am)");
 }
 
 breakUnderMinimumWarnsWithTheGap();

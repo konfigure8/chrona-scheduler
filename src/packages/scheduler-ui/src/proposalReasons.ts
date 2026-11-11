@@ -299,7 +299,9 @@ export function drillDownEntries(
     } else if (first && last && first !== last && match.rule === "maximumHours") {
       when = `${formatDayLabel(first.start, names)} – ${formatDayLabel(last.start, names)}`;
     } else if (first) {
-      when = `${first.title} · ${formatDayLabel(first.start, names)} ${shifts.map(range).join(", ")}`;
+      const times = `${formatDayLabel(first.start, names)} ${shifts.map(range).join(", ")}`;
+      // A shift with no name is named by its time alone (AGENTS.md 0.1).
+      when = first.title ? `${first.title} · ${times}` : times;
     }
     const words = context.describe?.(match);
     const pinned = shifts.length > 0 && shifts.every((shift) => shift.pinned === true);

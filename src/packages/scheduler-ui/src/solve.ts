@@ -37,6 +37,78 @@ export interface SolveState {
   readonly reason?: "quota" | "read";
   /** "stopping": Stop was pressed; the run ends and hands back its best roster. */
   readonly status: "failed" | "idle" | "queued" | "running" | "stopping";
+  /** F41 Live solve: where the running run is, and its best roster so far. */
+  readonly live?: SolveLive;
+}
+
+/**
+ * F41 Live solve: the run's stage, as the server says it in the contract's terms
+ * (ScheduleProgress): reading the rules and workers, the first roster, improving it,
+ * and the final polish.
+ */
+export type SolveStage = "finalPolish" | "firstRoster" | "improving" | "reading";
+
+/** The stages in order, as the progress panel shows them. */
+export const SOLVE_STAGES: readonly SolveStage[] = ["reading", "firstRoster", "improving", "finalPolish"];
+
+/** F41 Live solve: a running run as the board follows it. */
+export interface SolveLive {
+  /** Rises with every better roster; 0 before the first. */
+  readonly bestVersion: number;
+  /** The best roster so far, mapped as an answer is; absent before the first. */
+  readonly proposal?: ScheduleProposal;
+  readonly stage: SolveStage;
+}
+
+/** The ruling's pace (F41): redraw after this much quiet... */
+export const LIVE_QUIET_MS = 500;
+/** ...and at least this often while the roster keeps changing. */
+export const LIVE_MAX_WAIT_MS = 2000;
+
+/**
+ * When the board redraws a roster that changed at `changedAt` and has waited since
+ * `pendingSince` (both ms): after half a second of quiet, but never more than two
+ * seconds after the first change it has not drawn. The delay from `now`, at least 0.
+ */
+export function liveRedrawDelayMs(pendingSince: number, changedAt: number, now: number): number {
+  return Math.max(0, Math.min(changedAt + LIVE_QUIET_MS, pendingSince + LIVE_MAX_WAIT_MS) - now);
+}
+
+/**
+ * A live tile's figure during the replay (F41): it counts evenly from `from` at `startedAt` to `to`
+ * at `endsAt`, so every tile, however late it shows or its figure changes, lands with the last chip.
+ */
+export function replayCount(from: number, to: number, startedAt: number, endsAt: number, now: number): number {
+  if (now >= endsAt || endsAt <= startedAt) {
+    return to;
+  }
+  const k = Math.max(0, (now - startedAt) / (endsAt - startedAt));
+  return from + (to - from) * k;
+}
+
+/** One roster's facts, as the progress panel's chart reads them. */
+export interface LiveFacts {
+  /** Must rules broken: a count, or 1 when the run only says that some are. */
+  readonly mustBroken: number;
+  /** Required shifts left open. */
+  readonly open: number;
+}
+
+/**
+ * Where a roster sits on the chart, 0 worse to 1 better, with no numbers shown
+ * (F41: the axis reads only Worse and Better). A roster that breaks a Must rule
+ * sits in the lowest band, one with open shifts in the middle, a clean one at
+ * the top, rising with each further improvement; within a band, against the
+ * run's first roster. As the approved prototype's chart draws it.
+ */
+export function liveQuality(facts: LiveFacts, first: LiveFacts, cleanImprovements: number): number {
+  if (facts.mustBroken > 0) {
+    return 0.06 + 0.24 * (1 - Math.min(1, facts.mustBroken / Math.max(first.mustBroken, 1)));
+  }
+  if (facts.open > 0) {
+    return 0.32 + 0.3 * (1 - Math.min(1, facts.open / Math.max(first.open, 1)));
+  }
+  return 0.64 + 0.32 * (1 - 0.8 ** Math.max(0, cleanImprovements));
 }
 
 /** Server-reported free-tier solve allowance (F19: the client only
@@ -577,8 +649,23 @@ export function proposalMustReport(
   proposal: ScheduleProposal,
   options: ProposalPreviewOptions = {},
   recount?: () => { readonly matches: readonly ScheduleRuleMatch[]; readonly mustBreaches: MustBreachCounts },
+  recountNow?: () => { readonly matches: readonly ScheduleRuleMatch[]; readonly mustBreaches: MustBreachCounts },
 ): MustReport {
   const { analysis } = proposal;
+  // A stopped run's roster comes without the solver's checks (F41 Stop and review): the board counts
+  // both rosters itself, so the tile reads as after any run.
+  if (!analysis && recount && recountNow) {
+    const board = recount();
+    const today = recountNow();
+    return {
+      countsOnly: false,
+      now: today.mustBreaches,
+      nowMatches: today.matches,
+      proposed: board.mustBreaches,
+      proposedMatches: board.matches,
+      source: "board",
+    };
+  }
   const countsOnly = analysis?.countsOnly === true;
   const now = analysis?.current.mustBreaches;
   const nowMatches = countsOnly ? undefined : analysis?.current.matches;

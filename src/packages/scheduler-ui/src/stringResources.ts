@@ -30,6 +30,10 @@ export interface SchedulerStrings {
   readonly dialogOtherOptions: string;
   readonly draftItem: string;
   readonly duration: string;
+  /** The hover card's duration: whole hours, hours and minutes, and time worked with its span (W2-P12). */
+  readonly hoverHours: string;
+  readonly hoverHoursMinutes: string;
+  readonly hoverWorkedSpan: string;
   readonly emptyResources: string;
   /** F27: entitlement states beside the solve entry (display only). */
   readonly entitlementGrace: string;
@@ -278,6 +282,8 @@ export interface SchedulerStrings {
   readonly tryAgain: string;
   /** "Why not…?" (E2, A2; design DR2 calls 1 to 4, 11, 12): the shift menu's item, the change list's button and the group's heading. */
   readonly menuWhyNot: string;
+  /** The Why not panel's heading: the menu command without its ellipsis. */
+  readonly whyNotHeading: string;
   /** The picker's visible label. */
   readonly whyNotPerson: string;
   readonly whyNotPlaceholder: string;
@@ -360,6 +366,19 @@ export interface SchedulerStrings {
   readonly solveQuotaUpgrade: string;
   readonly solveSolving: string;
   readonly solveStop: string;
+  /** F41 Live solve: the progress panel's name for the run. */
+  readonly solveRunTitle: string;
+  readonly solveStageReading: string;
+  readonly solveStageFirst: string;
+  readonly solveStageImproving: string;
+  readonly solveStagePolish: string;
+  readonly solveChartLabel: string;
+  readonly solveChartBetter: string;
+  readonly solveChartWorse: string;
+  /** F41 Cancel: the notice once the run ended and kept nothing. */
+  readonly solveCancelled: string;
+  /** F41: the run lost the Chrona API; nothing changed, Try again asks again. */
+  readonly solveConnectionLost: string;
   readonly solveStopping: string;
   readonly solveStoppedNothing: string;
   readonly solveStopFailed: string;
@@ -416,6 +435,9 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   dialogOtherOptions: "Other",
   draftItem: "New item",
   duration: "Duration",
+  hoverHours: "{hours} h",
+  hoverHoursMinutes: "{hours} h {minutes} min",
+  hoverWorkedSpan: "{worked} ({span} span)",
   emptyResources:
     "No resources to display. Check the view's resource configuration.",
   entitlementGrace: "Payment past due, grace until {date}",
@@ -539,8 +561,8 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   periodBoundaryLabel: "Period from {date}",
   weekNumberLabel: "W{week}",
   proposalApply: "Apply",
-  proposalAppliedMany: "Applied {count} suggestions",
-  proposalAppliedOne: "Applied 1 suggestion",
+  proposalAppliedMany: "Applied {count} changes",
+  proposalAppliedOne: "Applied 1 change",
   proposalDiscard: "Discard",
   proposalEmpty: "No changes proposed",
   proposalDropped: "{count} dropped",
@@ -639,13 +661,14 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   countsOnlyNote: "Large roster: counts only. Reasons are not shown.",
   tryAgain: "Try again",
   menuWhyNot: "Why not…?",
+  whyNotHeading: "Why not?",
   whyNotPerson: "Person",
   whyNotPlaceholder: "Type a name",
   whyNotNoMatch: "No match",
   whyNotNow: "now {name}",
   whyNotChecking: "Checking {name}…",
-  whyNotVerdictMustOne: "{name} would break 1 Must rule",
-  whyNotVerdictMust: "{name} would break {count} Must rules",
+  whyNotVerdictMustOne: "{name} would break 1 Must rule",
+  whyNotVerdictMust: "{name} would break {count} Must rules",
   whyNotVerdictShould: "{name} keeps every Must rule but fits less well",
   whyNotVerdictEqual: "{name} fits as well.",
   whyNotVerdictEqualReview: "{name} fits as well. Auto Schedule had to pick one.",
@@ -710,8 +733,18 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   openChronaAccount: "Open Chrona account",
   solveSolving: "Auto scheduling…",
   solveStop: "Stop and review",
+  solveRunTitle: "Auto scheduling {shifts} shifts for {workers} workers",
+  solveStageReading: "Reading rules and workers",
+  solveStageFirst: "First roster",
+  solveStageImproving: "Improving",
+  solveStagePolish: "Final polish",
+  solveChartLabel: "Roster quality over the run",
+  solveChartBetter: "Better",
+  solveChartWorse: "Worse",
+  solveCancelled: "Cancelled. Nothing changed.",
+  solveConnectionLost: "Auto Schedule lost the connection. Nothing changed.",
   solveStopping: "Stopping…",
-  solveStoppedNothing: "Stopped before a roster was found. Nothing changed. Run it again and let it finish.",
+  solveStoppedNothing: "Stopped before a first roster. Nothing changed.",
   solveStopFailed: "Couldn't stop the run. It carries on, and its roster opens when it ends.",
   timeScale: "Time scale",
   timeScaleLeast: "{count} minutes - least space for details",

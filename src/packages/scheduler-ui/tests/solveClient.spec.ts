@@ -9,6 +9,8 @@ import {
   hashProblem,
   markRunReviewed,
   followRun,
+  liveFromRun,
+  createStopLatch,
   runSolve,
   SolveCancelledError,
   SolveInFlightError,
@@ -240,6 +242,69 @@ const run = async (): Promise<void> => {
     );
   }
 
+  // F41 Live solve: a working run's read maps its best roster as an answer is; a read without a
+  // newer roster keeps the one the board has; the stage follows the server.
+  {
+    const redaction = { problem, toRealResourceId: new Map(), toRealShiftId: new Map() } as never;
+    const options = { currentEvents, redaction, runId: "run-l", unassignedResourceId: "none" };
+    const reading = liveFromRun(
+      { metadata: { id: "run-l", solverStatus: "SOLVING_ACTIVE" }, modelOutput: null, progress: { bestVersion: 0, elapsedSeconds: 1, stage: "reading" } },
+      undefined,
+      options,
+    );
+    assert.deepEqual(reading, { bestVersion: 0, stage: "reading" });
+    const first = liveFromRun(
+      {
+        metadata: { id: "run-l", solverStatus: "SOLVING_ACTIVE" },
+        modelOutput: { assignments: [{ resourceId: "res-ann", shiftId: "shift-real-1" }], contractVersion: "2", feasible: true, openShifts: 0 },
+        progress: { bestVersion: 1, elapsedSeconds: 3, stage: "firstRoster" },
+      },
+      reading,
+      options,
+    );
+    assert.equal(first.stage, "firstRoster");
+    assert.equal(first.bestVersion, 1);
+    assert.equal(first.proposal?.events[0]?.resourceId, "res-ann");
+    assert.equal(first.proposal?.events[0]?.status, "assigned");
+    assert.equal(first.proposal?.feasible, true);
+    const same = liveFromRun(
+      { metadata: { id: "run-l", solverStatus: "SOLVING_ACTIVE" }, modelOutput: null, progress: { bestVersion: 1, elapsedSeconds: 4, stage: "firstRoster" } },
+      first,
+      options,
+    );
+    assert.equal(same, first, "nothing new: the same object, so the board does not redraw");
+    const polish = liveFromRun(
+      { metadata: { id: "run-l", solverStatus: "SOLVING_ACTIVE" }, modelOutput: null, progress: { bestVersion: 1, elapsedSeconds: 22, stage: "finalPolish" } },
+      first,
+      options,
+    );
+    assert.equal(polish.stage, "finalPolish");
+    assert.equal(polish.proposal, first.proposal, "the stage moves on; the roster stays");
+  }
+
+  // F41 Stop and Cancel before the run has its id: the stop waits for the id, then stops that run.
+  {
+    const latch = createStopLatch();
+    const stops: [string, boolean][] = [];
+    const stop = (runId: string, discard: boolean): void => {
+      stops.push([runId, discard]);
+    };
+    assert.equal(latch.settle("run-a", stop), false, "nothing asked: the run goes on");
+    latch.request(false);
+    assert.equal(latch.pending, true);
+    assert.equal(latch.settle("run-b", stop), true);
+    assert.deepEqual(stops, [["run-b", false]], "Stop keeps the best roster");
+    assert.equal(latch.pending, false, "a stop is sent once");
+    latch.request(false);
+    latch.request(true);
+    latch.request(false);
+    latch.settle("run-c", stop);
+    assert.deepEqual(stops[1], ["run-c", true], "Cancel wins over Stop");
+    latch.request(true);
+    latch.clear();
+    assert.equal(latch.settle("run-d", stop), false, "a new run forgets an old request");
+  }
+
   // A cancelled solve sends nothing.
   {
     const controller = new AbortController();
@@ -398,18 +463,29 @@ const run = async (): Promise<void> => {
     );
   }
 
-  // askCandidate, for the board: every failure is "Could not check this now"; a rate limit says when.
+  // askCandidate, for the board: every failure is "Could not check this now"; a rate limit says when. W2-P16: a
+  // refusal that asking again meets the same way is marked lasting, and every cause goes to the log.
   {
-    for (const [status, retryAfter, expected] of [
-      [429, "12", { retryAfterSeconds: 12, status: "unavailable" }],
-      [503, "2", { status: "unavailable" }],
-      [504, undefined, { status: "unavailable" }],
-      [400, undefined, { status: "unavailable" }],
-    ] as const) {
-      const { fetchImpl } = failingFetch(status, undefined, retryAfter === undefined ? {} : { "retry-after": retryAfter });
-      assert.deepEqual(await askCandidate(candidateOptions(fetchImpl)), expected, `status ${status}`);
+    const warned: string[] = [];
+    const warn = console.warn;
+    console.warn = (...args: unknown[]) => warned.push(args.join(" "));
+    try {
+      for (const [status, retryAfter, expected] of [
+        [429, "12", { retryAfterSeconds: 12, status: "unavailable" }],
+        [503, "2", { status: "unavailable" }],
+        [504, undefined, { status: "unavailable" }],
+        [400, undefined, { lasting: true, status: "unavailable" }],
+      ] as const) {
+        const { fetchImpl } = failingFetch(status, undefined, retryAfter === undefined ? {} : { "retry-after": retryAfter });
+        assert.deepEqual(await askCandidate(candidateOptions(fetchImpl)), expected, `status ${status}`);
+      }
+      assert.deepEqual(await askCandidate(candidateOptions(offline)), { status: "unavailable" });
+    } finally {
+      console.warn = warn;
     }
-    assert.deepEqual(await askCandidate(candidateOptions(offline)), { status: "unavailable" });
+    assert.equal(warned.length, 5, "each failed check logs its cause");
+    assert.match(warned[3]!, /lasting refusal.*HTTP 400/);
+    assert.match(warned[4]!, /temporary.*Candidate check unavailable$/);
     // The host mints a new session and asks again; a cancelled check is dropped by its caller.
     const expired = failingFetch(401, {});
     await assert.rejects(askCandidate(candidateOptions(expired.fetchImpl)), (error: unknown) => error instanceof SolveSessionExpiredError);

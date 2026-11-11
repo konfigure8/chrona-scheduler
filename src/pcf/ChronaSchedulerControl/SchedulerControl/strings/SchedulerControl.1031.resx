@@ -198,6 +198,15 @@
   <data name="duration" xml:space="preserve">
     <value>Dauer</value>
   </data>
+  <data name="hoverHours" xml:space="preserve">
+    <value>{hours} Std.</value>
+  </data>
+  <data name="hoverHoursMinutes" xml:space="preserve">
+    <value>{hours} Std. {minutes} Min.</value>
+  </data>
+  <data name="hoverWorkedSpan" xml:space="preserve">
+    <value>{worked} (Spanne {span})</value>
+  </data>
   <data name="emptyResources" xml:space="preserve">
     <value>Keine Ressourcen vorhanden. Konfiguration der Ansicht prüfen.</value>
   </data>
@@ -487,10 +496,10 @@
     <value>Zurück</value>
   </data>
   <data name="proposalAppliedMany" xml:space="preserve">
-    <value>{count} Vorschläge übernommen</value>
+    <value>{count} Änderungen übernommen</value>
   </data>
   <data name="proposalAppliedOne" xml:space="preserve">
-    <value>1 Vorschlag übernommen</value>
+    <value>1 Änderung übernommen</value>
   </data>
   <data name="proposalApply" xml:space="preserve">
     <value>Übernehmen</value>
@@ -712,7 +721,7 @@
     <value>Außerhalb von {group}</value>
   </data>
   <data name="reasonOutsideHours" xml:space="preserve">
-    <value>Außerhalb der Arbeitszeit ({start}-{end})</value>
+    <value>Außerhalb der Arbeitszeit ({start}‑{end})</value>
   </data>
   <data name="reasonOverlap" xml:space="preserve">
     <value>Überschneidet sich mit einem vorhandenen Element</value>
@@ -786,8 +795,38 @@
   <data name="solveStopping" xml:space="preserve">
     <value>Wird gestoppt…</value>
   </data>
+  <data name="solveRunTitle" xml:space="preserve">
+    <value>Automatische Planung: {shifts} Schichten, {workers} Mitarbeiter</value>
+  </data>
+  <data name="solveStageReading" xml:space="preserve">
+    <value>Regeln und Mitarbeiter einlesen</value>
+  </data>
+  <data name="solveStageFirst" xml:space="preserve">
+    <value>Erster Dienstplan</value>
+  </data>
+  <data name="solveStageImproving" xml:space="preserve">
+    <value>Verbessern</value>
+  </data>
+  <data name="solveStagePolish" xml:space="preserve">
+    <value>Feinschliff</value>
+  </data>
+  <data name="solveChartLabel" xml:space="preserve">
+    <value>Dienstplanqualität im Verlauf</value>
+  </data>
+  <data name="solveChartBetter" xml:space="preserve">
+    <value>Besser</value>
+  </data>
+  <data name="solveChartWorse" xml:space="preserve">
+    <value>Schlechter</value>
+  </data>
+  <data name="solveCancelled" xml:space="preserve">
+    <value>Abgebrochen. Nichts geändert.</value>
+  </data>
+  <data name="solveConnectionLost" xml:space="preserve">
+    <value>Verbindung bei der automatischen Planung verloren. Nichts geändert.</value>
+  </data>
   <data name="solveStoppedNothing" xml:space="preserve">
-    <value>Gestoppt, bevor ein Dienstplan gefunden wurde. Nichts geändert. Erneut starten und zu Ende laufen lassen.</value>
+    <value>Vor dem ersten Dienstplan gestoppt. Nichts geändert.</value>
   </data>
   <data name="solveStopFailed" xml:space="preserve">
     <value>Der Lauf ließ sich nicht stoppen. Er läuft weiter, und sein Dienstplan öffnet sich, wenn er fertig ist.</value>
@@ -1146,6 +1185,9 @@
   <data name="menuWhyNot" xml:space="preserve">
     <value>Warum nicht…?</value>
   </data>
+  <data name="whyNotHeading" xml:space="preserve">
+    <value>Warum nicht?</value>
+  </data>
   <data name="whyNotPerson" xml:space="preserve">
     <value>Person</value>
   </data>
@@ -1162,10 +1204,10 @@
     <value>{name} wird geprüft…</value>
   </data>
   <data name="whyNotVerdictMustOne" xml:space="preserve">
-    <value>{name} würde 1 Muss-Regel verletzen</value>
+    <value>{name} würde 1 Muss-Regel verletzen</value>
   </data>
   <data name="whyNotVerdictMust" xml:space="preserve">
-    <value>{name} würde {count} Muss-Regeln verletzen</value>
+    <value>{name} würde {count} Muss-Regeln verletzen</value>
   </data>
   <data name="whyNotVerdictShould" xml:space="preserve">
     <value>{name} hält alle Muss-Regeln ein, passt aber schlechter</value>

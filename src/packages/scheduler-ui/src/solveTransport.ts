@@ -105,7 +105,17 @@ export interface ProductRunMetadata {
  */
 export interface ProductRunResponse {
   readonly metadata: ProductRunMetadata;
+  /** While the run works (F41 Live solve): its best roster so far, when newer than the one asked about. */
   readonly modelOutput?: SolveResultV2 | null;
+  /** F41 Live solve: where a working run is. */
+  readonly progress?: ProductRunProgress;
+}
+
+/** F41 Live solve: where a working run is (ScheduleProgress). */
+export interface ProductRunProgress {
+  readonly bestVersion: number;
+  readonly elapsedSeconds: number;
+  readonly stage: "finalPolish" | "firstRoster" | "improving" | "reading";
 }
 
 export interface ChronaSolveRequest {

@@ -198,6 +198,15 @@
   <data name="duration" xml:space="preserve">
     <value>Durée</value>
   </data>
+  <data name="hoverHours" xml:space="preserve">
+    <value>{hours} h</value>
+  </data>
+  <data name="hoverHoursMinutes" xml:space="preserve">
+    <value>{hours} h {minutes} min</value>
+  </data>
+  <data name="hoverWorkedSpan" xml:space="preserve">
+    <value>{worked} (amplitude {span})</value>
+  </data>
   <data name="emptyResources" xml:space="preserve">
     <value>Aucune ressource. Vérifiez la configuration de la vue.</value>
   </data>
@@ -487,10 +496,10 @@
     <value>Précédent</value>
   </data>
   <data name="proposalAppliedMany" xml:space="preserve">
-    <value>{count} suggestions appliquées</value>
+    <value>{count} modifications appliquées</value>
   </data>
   <data name="proposalAppliedOne" xml:space="preserve">
-    <value>1 suggestion appliquée</value>
+    <value>1 modification appliquée</value>
   </data>
   <data name="proposalApply" xml:space="preserve">
     <value>Appliquer</value>
@@ -712,7 +721,7 @@
     <value>Hors de {group}</value>
   </data>
   <data name="reasonOutsideHours" xml:space="preserve">
-    <value>Hors horaires ({start}-{end})</value>
+    <value>Hors horaires ({start}‑{end})</value>
   </data>
   <data name="reasonOverlap" xml:space="preserve">
     <value>Chevauche un élément existant</value>
@@ -786,8 +795,38 @@
   <data name="solveStopping" xml:space="preserve">
     <value>Arrêt…</value>
   </data>
+  <data name="solveRunTitle" xml:space="preserve">
+    <value>Planification automatique de {shifts} postes pour {workers} employés</value>
+  </data>
+  <data name="solveStageReading" xml:space="preserve">
+    <value>Lecture des règles et des employés</value>
+  </data>
+  <data name="solveStageFirst" xml:space="preserve">
+    <value>Premier planning</value>
+  </data>
+  <data name="solveStageImproving" xml:space="preserve">
+    <value>Amélioration</value>
+  </data>
+  <data name="solveStagePolish" xml:space="preserve">
+    <value>Finitions</value>
+  </data>
+  <data name="solveChartLabel" xml:space="preserve">
+    <value>Qualité du planning au fil du calcul</value>
+  </data>
+  <data name="solveChartBetter" xml:space="preserve">
+    <value>Mieux</value>
+  </data>
+  <data name="solveChartWorse" xml:space="preserve">
+    <value>Moins bien</value>
+  </data>
+  <data name="solveCancelled" xml:space="preserve">
+    <value>Annulé. Rien n'a changé.</value>
+  </data>
+  <data name="solveConnectionLost" xml:space="preserve">
+    <value>Connexion perdue pendant la planification automatique. Rien n'a changé.</value>
+  </data>
   <data name="solveStoppedNothing" xml:space="preserve">
-    <value>Arrêté avant qu’un planning soit trouvé. Rien n’a changé. Relancez et laissez-le aller au bout.</value>
+    <value>Arrêté avant un premier planning. Rien n'a changé.</value>
   </data>
   <data name="solveStopFailed" xml:space="preserve">
     <value>Impossible d’arrêter l’exécution. Elle continue, et son planning s’ouvrira à la fin.</value>
@@ -1146,6 +1185,9 @@
   <data name="menuWhyNot" xml:space="preserve">
     <value>Pourquoi pas… ?</value>
   </data>
+  <data name="whyNotHeading" xml:space="preserve">
+    <value>Pourquoi pas ?</value>
+  </data>
   <data name="whyNotPerson" xml:space="preserve">
     <value>Personne</value>
   </data>
@@ -1162,10 +1204,10 @@
     <value>Vérification de {name}…</value>
   </data>
   <data name="whyNotVerdictMustOne" xml:space="preserve">
-    <value>{name} enfreindrait 1 règle impérative</value>
+    <value>{name} enfreindrait 1 règle impérative</value>
   </data>
   <data name="whyNotVerdictMust" xml:space="preserve">
-    <value>{name} enfreindrait {count} règles impératives</value>
+    <value>{name} enfreindrait {count} règles impératives</value>
   </data>
   <data name="whyNotVerdictShould" xml:space="preserve">
     <value>{name} respecte toutes les règles impératives mais convient moins bien</value>

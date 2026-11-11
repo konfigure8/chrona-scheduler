@@ -222,7 +222,11 @@ export function rosterVersionOf(events: readonly SchedulerUiEvent[]): string {
 
 /** "Night · Tue 3 Nov 22:00-06:00": a shift as the answer names it, in the user's hour format. */
 export function whyNotShiftLabel(event: SchedulerUiEvent, names: DateNames, hourFormat?: HourFormat): string {
-  return `${event.title} · ${formatDayLabel(event.start, names)} ${formatClockRange(event.start, event.end, hourFormat)}`;
+  // A non-breaking hyphen keeps the range on one line when the caption wraps (W2-P18).
+  const when = `${formatDayLabel(event.start, names)} ${formatClockRange(event.start, event.end, hourFormat, "‑")}`;
+  // A shift with no name is named by its time alone (AGENTS.md 0.1).
+  // A no-break space after each separator: a wrapped caption never ends a line on it.
+  return event.title ? `${event.title} · ${when}` : when;
 }
 
 /**

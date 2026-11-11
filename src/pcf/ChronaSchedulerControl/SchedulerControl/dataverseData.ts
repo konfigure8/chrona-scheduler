@@ -467,7 +467,8 @@ export function mapWorkItems(
     }
     const readStart = readDate(record, key("start"));
     const readEnd = readDate(record, key("end"));
-    const title = readString(record, key("title")) || recordId;
+    // An empty name stays empty (AGENTS.md 0.1): the record id is never a label.
+    const title = readString(record, key("title"));
     // A row with no dates at all waits in the unscheduled list until a drop dates it.
     const undated = !readStart && !readEnd;
     if (!undated && (!readStart || !readEnd || readEnd <= readStart)) {
@@ -483,7 +484,8 @@ export function mapWorkItems(
     if (resourceId && !resourcesById.has(resourceId)) {
       resourcesById.set(resourceId, {
         id: resourceId,
-        name: lookup.name ?? resourceId,
+        // A nameless resource has an empty name (AGENTS.md 0.1): the record id is never a label.
+        name: lookup.name ?? "",
       });
     }
     if (!resourceEntityType && lookup.entityType) {

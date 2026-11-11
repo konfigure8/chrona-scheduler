@@ -57,7 +57,7 @@ export interface RuleReasonStrings {
 export const defaultRuleReasonStrings: RuleReasonStrings = {
   minimumBreak: "Break under {minimum} min ({gap} min gap)",
   outsideGroup: "Outside {group}",
-  outsideHours: "Outside working hours ({start}-{end})",
+  outsideHours: "Outside working hours ({start}‑{end})",
   overlap: "Overlaps an existing shift",
 };
 

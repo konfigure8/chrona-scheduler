@@ -96,6 +96,8 @@ import {
   type ResumeRunDisplay,
   type ScheduleProposal,
   type SolveSession,
+  type SolveLive,
+  createStopLatch,
   type SolveState,
   type PeriodUnit,
   type RowDecoration,
@@ -1387,7 +1389,13 @@ export function useDataverseScheduleHost(
   /* The running solve's abort handle and run id, for Cancel. */
   const solveAbortRef = React.useRef<AbortController | undefined>(undefined);
   const solveRunIdRef = React.useRef<string | undefined>(undefined);
-  const [resumeDismissed, setResumeDismissed] = React.useState<string | undefined>();
+  // F41: a Stop or Cancel pressed before the run has its id.
+  const stopLatch = React.useRef(createStopLatch()).current;
+  // Every run the planner dealt with on this page (F41: Cancel, Discard, Apply), so none comes back as one to review.
+  const [resumeDismissed, setResumeDismissedIds] = React.useState<ReadonlySet<string>>(() => new Set<string>());
+  const setResumeDismissed = React.useCallback((runId: string | undefined): void => {
+    setResumeDismissedIds((previous) => (runId === undefined ? new Set<string>() : new Set(previous).add(runId)));
+  }, []);
   /* F31 rework: the proposal's out-of-date changes and why, and what
    * the freshness check compares against. */
   const [proposalOutOfDate, setProposalOutOfDate] = React.useState<
@@ -1833,11 +1841,18 @@ export function useDataverseScheduleHost(
    */
   const stopSolve = React.useCallback((): void => {
     const runId = solveRunIdRef.current;
+    if (!runId && session) {
+      // F41: the run is still being sent; it stops the moment it has its id, and the board follows it to the end.
+      stopLatch.request(false);
+      setSolveState((previous) => ({ status: "stopping", ...(previous.live ? { live: previous.live } : {}) }));
+      return;
+    }
     if (!runId || !session) {
       cancelWait();
       return;
     }
-    setSolveState({ status: "stopping" });
+    // The board keeps following the run's best roster while it stops (F41 Live solve).
+    setSolveState((previous) => ({ status: "stopping", ...(previous.live ? { live: previous.live } : {}) }));
     stopRun({ runId, session, solutionType: hostConfig.product }).catch(() => {
       // Refused or lost: the run goes on, and its roster opens when it ends.
       setSolveState((previous) => (previous.status === "stopping" ? { status: "running" } : previous));
@@ -1849,12 +1864,28 @@ export function useDataverseScheduleHost(
     const runId = solveRunIdRef.current;
     if (runId && session) {
       stopRun({ discard: true, runId, session, solutionType: hostConfig.product }).catch(() => undefined);
+      // F41 Cancel keeps nothing: the run never comes back as one to review.
+      setResumeDismissed(runId);
+    } else if (session) {
+      // The run is still being sent: it is cancelled the moment it has its id.
+      stopLatch.request(true);
     }
     cancelWait();
-  }, [cancelWait, hostConfig.product, session]);
+    // F41 Cancel: the board says the run ended and kept nothing.
+    notify("info", surfaceStrings.solveCancelled);
+  }, [cancelWait, hostConfig.product, notify, session, surfaceStrings]);
   // The follower's reports leave "stopping" alone until the run's answer arrives.
   const followStatus = React.useCallback((status: "queued" | "running"): void => {
-    setSolveState((previous) => (previous.status === "stopping" ? previous : { status }));
+    setSolveState((previous) =>
+      previous.status === "stopping" ? previous : { status, ...(previous.live ? { live: previous.live } : {}) },
+    );
+  }, []);
+
+  /** F41 Live solve: the running run's stage and best roster so far, for the board to follow. */
+  const followLive = React.useCallback((live: SolveLive): void => {
+    setSolveState((previous) =>
+      previous.status === "stopping" ? { ...previous, live } : previous.status === "idle" || previous.status === "failed" ? previous : { live, status: "running" },
+    );
   }, []);
 
   const failSolve = React.useCallback((error: unknown): void => {
@@ -1864,6 +1895,8 @@ export function useDataverseScheduleHost(
     }
     // Stopped before it found a roster: nothing to review, and the board says so.
     if (error instanceof SolveStoppedError) {
+      // F41: the stopped run is done with: it never comes back as one to review.
+      if (solveRunIdRef.current) setResumeDismissed(solveRunIdRef.current);
       setSolveState(idleSolveState);
       notify("info", surfaceStrings.solveStoppedNothing);
       return;
@@ -1873,6 +1906,12 @@ export function useDataverseScheduleHost(
       setSolveState(idleSolveState);
       setResumeDismissed(undefined);
       void mintSession();
+      return;
+    }
+    if (error instanceof Error && /^(fetch failed|failed to fetch|networkerror|load failed)/i.test(error.message)) {
+      // The browser lost the Chrona API, or the run lost the solver ("fetch failed" is the run's own
+      // failure then): say so plainly, with Try again (F41).
+      setSolveState({ message: surfaceStrings.solveConnectionLost, reason: "read", status: "failed" });
       return;
     }
     setSolveState({
@@ -1913,13 +1952,20 @@ export function useDataverseScheduleHost(
       const controller = new AbortController();
       solveAbortRef.current = controller;
       solveRunIdRef.current = undefined;
+      stopLatch.clear();
       const solved = await runSolve({
         capabilities: solveCapabilities.length > 0 ? solveCapabilities : undefined,
         currentEvents: events,
         unassignedResourceId: UNASSIGNED_RESOURCE_ID,
+        onLive: followLive,
         onStatus: followStatus,
         onSubmitted: (runId) => {
           solveRunIdRef.current = runId;
+          // F41: a Stop or Cancel pressed while the run was being sent stops it now.
+          stopLatch.settle(runId, (id, discard) => {
+            stopRun({ discard, runId: id, session: active, solutionType: hostConfig.product }).catch(() => undefined);
+            if (discard) setResumeDismissed(id);
+          });
         },
         signal: controller.signal,
         problem: buildSolveProblem({ events, now, resources, window: solveWindow }, { solverZone, toStored }),
@@ -2281,7 +2327,9 @@ export function useDataverseScheduleHost(
   const latestRun = session?.latestRun;
   const resumeRun: ResumeRunDisplay | undefined =
     latestRun &&
-    latestRun.runId !== resumeDismissed &&
+    !resumeDismissed.has(latestRun.runId) &&
+    // Not while a run of this page goes: its own progress says where it is.
+    (solveState.status === "idle" || solveState.status === "failed") &&
     latestRun.runId !== proposal?.runId &&
     !latestRun.reviewedAt &&
     latestRun.status !== "failed"
@@ -2329,7 +2377,8 @@ export function useDataverseScheduleHost(
                 return followRun({
                   currentEvents: events,
                   unassignedResourceId: UNASSIGNED_RESOURCE_ID,
-                  onStatus: followStatus,
+                  onLive: followLive,
+        onStatus: followStatus,
                   redaction,
                   runId: latestRun.runId,
                   runToken: Date.now().toString(36),
@@ -2376,6 +2425,8 @@ export function useDataverseScheduleHost(
     proposal,
     proposalOutOfDate,
     proposalOverlapPolicy: hostConfig.policies.overlap,
+    // F41 Live solve: a live chip takes the colour Apply leaves it.
+    eventColor: (event: SchedulerUiEvent) => eventColorFor(event, viewConfig.colorBy, undefined),
     resumeRun,
     // A paid tier reports no finite allowance; the entitlement line
     // carries the resource metric instead.

@@ -21,7 +21,7 @@
  * always belongs to the roster on screen.
  */
 import type { ScheduleCandidate, ScheduleCandidateCheck, ScheduleProblemV2 } from "./schedulingContract";
-import type { ScheduleProposal } from "./solve";
+import type { ScheduleProposal, SolveLive } from "./solve";
 import {
   buildCandidateRequest,
   buildProductRunRequest,
@@ -130,6 +130,8 @@ export interface SolveRunOptions {
   readonly currentEvents: readonly SchedulerUiEvent[];
   readonly fetchImpl?: typeof fetch;
   readonly onStatus?: (status: "queued" | "running") => void;
+  /** F41 Live solve: the running run's stage and best roster so far, on each read that brings news. */
+  readonly onLive?: (live: SolveLive) => void;
   /** Called with the run id as soon as submit succeeds, so the host
    * can follow the run if the page is left before it completes. */
   readonly onSubmitted?: (runId: string) => void;
@@ -275,6 +277,7 @@ export async function runSolve(options: SolveRunOptions): Promise<SchedulePropos
     currentEvents: options.currentEvents,
     extraHeaders: options.extraHeaders,
     fetchImpl,
+    onLive: options.onLive,
     onStatus: options.onStatus,
     redaction,
     runId: submitted.id,
@@ -297,6 +300,8 @@ export interface FollowRunOptions {
   readonly extraHeaders?: Record<string, string>;
   readonly fetchImpl?: typeof fetch;
   readonly onStatus?: (status: "queued" | "running") => void;
+  /** F41 Live solve: the running run's stage and best roster so far, on each read that brings news. */
+  readonly onLive?: (live: SolveLive) => void;
   /** The request's redaction map, or one rebuilt from an identical problem. */
   readonly redaction: RedactedProblem;
   readonly runId: string;
@@ -319,10 +324,13 @@ export interface FollowRunOptions {
  */
 export async function followRun(options: FollowRunOptions): Promise<ScheduleProposal> {
   const fetchImpl = options.fetchImpl ?? fetch;
+  // F41 Live solve: the best roster the board has, so a read brings a roster only when it is newer.
+  let live: SolveLive | undefined;
   for (let attempt = 0; attempt < 600; attempt += 1) {
+    const since = live && live.bestVersion > 0 ? `?bestVersion=${live.bestVersion}` : "";
     const pollResponse = await fetchOrCancelled(
       fetchImpl,
-      `${runsUrl(options.session, options.solutionType)}/${encodeURIComponent(options.runId)}`,
+      `${runsUrl(options.session, options.solutionType)}/${encodeURIComponent(options.runId)}${since}`,
       { headers: authHeaders(options.session, options.runToken, "poll", options.extraHeaders) },
       options.signal,
     );
@@ -350,9 +358,88 @@ export async function followRun(options: FollowRunOptions): Promise<ScheduleProp
       throw new Error(run.metadata.failureMessage ?? "Solve failed");
     }
     options.onStatus?.(status === "SOLVING_SCHEDULED" ? "queued" : "running");
+    if (status === "SOLVING_ACTIVE" && run.progress && options.onLive) {
+      const next = liveFromRun(run, live, options);
+      if (next !== live) {
+        live = next;
+        options.onLive(next);
+      }
+    }
     await wait(1000, options.signal);
   }
   throw new Error("Solve timed out");
+}
+
+/**
+ * F41 Live solve: a working run's read as the board follows it. A new roster maps
+ * through the answer's own mapping; a read without one keeps the roster it has.
+ * The same object back when nothing changed.
+ */
+export function liveFromRun(
+  run: ProductRunResponse,
+  previous: SolveLive | undefined,
+  options: Pick<FollowRunOptions, "currentEvents" | "redaction" | "runId" | "unassignedResourceId" | "window">,
+): SolveLive {
+  const progress = run.progress;
+  if (!progress) {
+    return previous ?? { bestVersion: 0, stage: "reading" };
+  }
+  const fresh = run.modelOutput && progress.bestVersion > (previous?.bestVersion ?? 0);
+  const proposal = fresh
+    ? proposalFromSolution(
+        unredactSolution(solutionFromPoll(options.runId, "running", run.modelOutput ?? undefined), options.redaction),
+        options.currentEvents,
+        { unassignedResourceId: options.unassignedResourceId, window: options.window },
+      )
+    : previous?.proposal;
+  if (previous && !fresh && previous.stage === progress.stage) {
+    return previous;
+  }
+  return {
+    bestVersion: fresh ? progress.bestVersion : (previous?.bestVersion ?? 0),
+    ...(proposal ? { proposal } : {}),
+    stage: progress.stage,
+  };
+}
+
+/**
+ * F41 Stop and Cancel pressed before the run has its id (the host is still sending it): the request
+ * waits for the id, then stops that run, so a run the planner stopped never goes on unseen and comes
+ * back later as "finished while you were away". Cancel wins over Stop when both were pressed.
+ */
+export interface StopLatch {
+  /** Forget a request: a new run starts. */
+  clear(): void;
+  /** A stop is waiting for the run's id. */
+  readonly pending: boolean;
+  /** Stop (keep the best roster found so far) or Cancel (`discard`), asked before the id came. */
+  request(discard: boolean): void;
+  /** The run's id came: stops it when a stop was asked, and says whether one was. */
+  settle(runId: string, stop: (runId: string, discard: boolean) => void): boolean;
+}
+
+export function createStopLatch(): StopLatch {
+  let asked: "discard" | "keep" | undefined;
+  return {
+    clear: () => {
+      asked = undefined;
+    },
+    get pending(): boolean {
+      return asked !== undefined;
+    },
+    request: (discard) => {
+      asked = discard || asked === "discard" ? "discard" : "keep";
+    },
+    settle: (runId, stop) => {
+      const wanted = asked;
+      asked = undefined;
+      if (!wanted) {
+        return false;
+      }
+      stop(runId, wanted === "discard");
+      return true;
+    },
+  };
 }
 
 export interface StopRunOptions {
@@ -540,13 +627,19 @@ export async function checkCandidate(options: CandidateCheckOptions): Promise<Ca
 export type CandidateAnswer =
   | { readonly check: ScheduleCandidateCheck; readonly status: "answered" }
   | { readonly message: string; readonly status: "readFailed" }
-  | { readonly retryAfterSeconds?: number; readonly status: "unavailable" }
+  | {
+      /** A refusal that asking again meets the same way (not a 429, 502, 503 or 504, nor no answer): W2-P16. */
+      readonly lasting?: true;
+      readonly retryAfterSeconds?: number;
+      readonly status: "unavailable";
+    }
   | { readonly status: "rosterChanged" };
 
 /**
  * checkCandidate for the board: every failure becomes "unavailable", the
  * board's own "Could not check this now" (lane E: 429, 503 and 504; a
- * refused or unreadable answer too). An expired session and a
+ * refused or unreadable answer too, marked lasting), and its cause goes to
+ * the log. An expired session and a
  * cancellation still throw, so the host can mint a session and ask
  * again, or drop the answer.
  */
@@ -557,10 +650,15 @@ export async function askCandidate(options: CandidateCheckOptions): Promise<Cand
     if (error instanceof SolveSessionExpiredError || error instanceof SolveCancelledError) {
       throw error;
     }
+    // AGENTS.md 0.1: the cause is logged. A 429, 502, 503 or 504 (or no answer at all) is a temporary failure that
+    // asking again can clear; anything else (a refused request, an unreadable answer) is a lasting refusal that asking
+    // again will meet the same way, so the log says which (W2-P16).
+    const temporary = error instanceof CandidateCheckUnavailableError || error instanceof TypeError;
+    console.warn(`[Chrona] Why not check failed (${temporary ? "temporary" : "lasting refusal"}): ${error instanceof Error ? error.message : String(error)}`);
     if (error instanceof CandidateCheckUnavailableError && error.status === 429 && error.retryAfterSeconds !== undefined) {
       return { retryAfterSeconds: error.retryAfterSeconds, status: "unavailable" };
     }
-    return { status: "unavailable" };
+    return temporary ? { status: "unavailable" } : { status: "unavailable", lasting: true };
   }
 }
 

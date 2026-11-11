@@ -198,6 +198,15 @@
   <data name="duration" xml:space="preserve">
     <value>Duur</value>
   </data>
+  <data name="hoverHours" xml:space="preserve">
+    <value>{hours} u</value>
+  </data>
+  <data name="hoverHoursMinutes" xml:space="preserve">
+    <value>{hours} u {minutes} min</value>
+  </data>
+  <data name="hoverWorkedSpan" xml:space="preserve">
+    <value>{worked} (tijdspanne {span})</value>
+  </data>
   <data name="emptyResources" xml:space="preserve">
     <value>Geen resources. Controleer de instellingen van de weergave.</value>
   </data>
@@ -487,10 +496,10 @@
     <value>Vorige</value>
   </data>
   <data name="proposalAppliedMany" xml:space="preserve">
-    <value>{count} voorstellen toegepast</value>
+    <value>{count} wijzigingen toegepast</value>
   </data>
   <data name="proposalAppliedOne" xml:space="preserve">
-    <value>1 voorstel toegepast</value>
+    <value>1 wijziging toegepast</value>
   </data>
   <data name="proposalApply" xml:space="preserve">
     <value>Toepassen</value>
@@ -712,7 +721,7 @@
     <value>Buiten {group}</value>
   </data>
   <data name="reasonOutsideHours" xml:space="preserve">
-    <value>Buiten werktijd ({start}-{end})</value>
+    <value>Buiten werktijd ({start}‑{end})</value>
   </data>
   <data name="reasonOverlap" xml:space="preserve">
     <value>Overlapt een bestaand item</value>
@@ -786,8 +795,38 @@
   <data name="solveStopping" xml:space="preserve">
     <value>Stoppen…</value>
   </data>
+  <data name="solveRunTitle" xml:space="preserve">
+    <value>{shifts} diensten automatisch plannen voor {workers} medewerkers</value>
+  </data>
+  <data name="solveStageReading" xml:space="preserve">
+    <value>Regels en medewerkers lezen</value>
+  </data>
+  <data name="solveStageFirst" xml:space="preserve">
+    <value>Eerste rooster</value>
+  </data>
+  <data name="solveStageImproving" xml:space="preserve">
+    <value>Verbeteren</value>
+  </data>
+  <data name="solveStagePolish" xml:space="preserve">
+    <value>Laatste verfijning</value>
+  </data>
+  <data name="solveChartLabel" xml:space="preserve">
+    <value>Roosterkwaliteit tijdens het plannen</value>
+  </data>
+  <data name="solveChartBetter" xml:space="preserve">
+    <value>Beter</value>
+  </data>
+  <data name="solveChartWorse" xml:space="preserve">
+    <value>Slechter</value>
+  </data>
+  <data name="solveCancelled" xml:space="preserve">
+    <value>Geannuleerd. Er is niets gewijzigd.</value>
+  </data>
+  <data name="solveConnectionLost" xml:space="preserve">
+    <value>Verbinding verbroken tijdens automatisch plannen. Er is niets gewijzigd.</value>
+  </data>
   <data name="solveStoppedNothing" xml:space="preserve">
-    <value>Gestopt voordat er een rooster was gevonden. Er is niets veranderd. Start opnieuw en laat het afmaken.</value>
+    <value>Gestopt vóór een eerste rooster. Er is niets gewijzigd.</value>
   </data>
   <data name="solveStopFailed" xml:space="preserve">
     <value>De uitvoering kon niet worden gestopt. Die loopt door en het rooster opent zodra die klaar is.</value>
@@ -1146,6 +1185,9 @@
   <data name="menuWhyNot" xml:space="preserve">
     <value>Waarom niet…?</value>
   </data>
+  <data name="whyNotHeading" xml:space="preserve">
+    <value>Waarom niet?</value>
+  </data>
   <data name="whyNotPerson" xml:space="preserve">
     <value>Persoon</value>
   </data>
@@ -1162,10 +1204,10 @@
     <value>{name} controleren…</value>
   </data>
   <data name="whyNotVerdictMustOne" xml:space="preserve">
-    <value>{name} zou 1 verplichte regel overtreden</value>
+    <value>{name} zou 1 verplichte regel overtreden</value>
   </data>
   <data name="whyNotVerdictMust" xml:space="preserve">
-    <value>{name} zou {count} verplichte regels overtreden</value>
+    <value>{name} zou {count} verplichte regels overtreden</value>
   </data>
   <data name="whyNotVerdictShould" xml:space="preserve">
     <value>{name} houdt zich aan alle verplichte regels, maar past minder goed</value>

@@ -308,7 +308,7 @@ function aggregateVerdictOrdersBlocksFirstAndKeepsAllResults(): void {
   const verdict = aggregateVerdict([
     {
       kind: "warn",
-      reason: "Outside working hours (06:00-22:00)",
+      reason: "Outside working hours (06:00‑22:00)",
       scope: "item",
     },
     { kind: "block", reason: "Missing skill: Kitchen", scope: "person" },

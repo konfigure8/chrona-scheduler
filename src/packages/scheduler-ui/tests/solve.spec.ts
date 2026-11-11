@@ -17,6 +17,9 @@ import {
   proposalScore,
   type ProposalChange,
   type ScheduleProposal,
+  liveQuality,
+  liveRedrawDelayMs,
+  replayCount,
 } from "../src/solve";
 import { outOfDateChanges } from "../src/freshness";
 import { redactProblem } from "../src/redaction";
@@ -1022,4 +1025,32 @@ changeListPerPerson();
   assertEqual("breaks" in (byId.get(assigned.id) ?? {}), false);
   assertEqual("split" in (byId.get(assigned.id) ?? {}), false);
   console.log("split and break tests passed");
+}
+
+// F41 Live solve: the ruling's pace and the chart's bands.
+{
+  // Half a second after the last change...
+  assertEqual(liveRedrawDelayMs(1000, 1000, 1000), 500);
+  assertEqual(liveRedrawDelayMs(1000, 1300, 1300), 500);
+  // ...but never more than two seconds after the first change not drawn.
+  assertEqual(liveRedrawDelayMs(1000, 2800, 2800), 200);
+  assertEqual(liveRedrawDelayMs(1000, 3500, 3500), 0);
+  const first = { mustBroken: 4, open: 10 };
+  const broken = liveQuality({ mustBroken: 2, open: 10 }, first, 0);
+  const open = liveQuality({ mustBroken: 0, open: 5 }, first, 0);
+  const clean = liveQuality({ mustBroken: 0, open: 0 }, first, 0);
+  const cleaner = liveQuality({ mustBroken: 0, open: 0 }, first, 3);
+  assertEqual(broken < open && open < clean && clean < cleaner && cleaner < 1, true);
+  assertEqual(liveQuality(first, first, 0) < broken, true);
+  // The replay's count: evenly to the target, and there exactly when the replay ends.
+  assertEqual(replayCount(0, 51, 1000, 3800, 1000), 0);
+  assertEqual(Math.round(replayCount(0, 51, 1000, 3800, 2400)), 26);
+  assertEqual(replayCount(0, 51, 1000, 3800, 3800), 51);
+  // A tile that shows late, or whose figure changes at 1 s, still lands at the replay's end and not before.
+  const late = 1000 + 16;
+  assertEqual(replayCount(0, 8093, late, 3800, 3799) < 8093, true);
+  assertEqual(replayCount(0, 8093, late, 3800, 3800), 8093);
+  assertEqual(replayCount(20, 58, 2000, 3800, 3800), 58);
+  assertEqual(replayCount(20, 58, 2000, 3800, 4500), 58);
+  console.log("live solve pace and chart tests passed");
 }

@@ -240,6 +240,13 @@ export interface ScorecardTile {
   readonly title?: string;
   /** The figure as Apply would leave the roster. */
   readonly value: string;
+  /**
+   * The figure as a number and its words, so the live scorecard can count it up (F41 replay).
+   * Absent = the tile shows `value` as it is.
+   */
+  readonly count?: { readonly value: number; readonly format: (value: number) => string };
+  /** The tile's border tone, as the board's Must tile has it. Absent = none. */
+  readonly tone?: "bad" | "good" | "warn";
 }
 
 /** A roster and its people, as the review hands it to an extension. */
@@ -467,6 +474,16 @@ export interface BoardExtension {
    * Absent = none.
    */
   readonly scoreTiles?: (rosters: { readonly now: ReviewRoster; readonly proposed: ReviewRoster }) => readonly ScorecardTile[];
+  /**
+   * F41 Live solve: how the progress panel's scorecard counts the work. "filled":
+   * shifts filled against needed, as the review's tile; absent: the open shifts.
+   */
+  readonly solveScore?: "filled";
+  /**
+   * A tile the board places beside Must rules broken, on the review's scorecard and on the
+   * progress panel while a run goes (F41), from the roster now and as Apply would leave it.
+   */
+  readonly mustNeighbourTile?: (rosters: { readonly now: ReviewRoster; readonly proposed: ReviewRoster }) => ScorecardTile | undefined;
   /** "Why not…?" on a shift and on a change. Absent = no question. */
   readonly whyNot?: WhyNotExtension;
   /** The extension's own items in a shift's menu, after the board's. Absent = none. */

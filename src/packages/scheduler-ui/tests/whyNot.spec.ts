@@ -51,10 +51,10 @@ function verdictLeadsWithAMustRule(): void {
   const rest: ScheduleRuleMatch = { resourceId: "ava", rule: "restBetweenShifts", shiftIds: ["d1", "n2"] };
   const skill: ScheduleRuleMatch = { resourceId: "ava", rule: "skills", shiftIds: ["n2"] };
   assert.deepEqual(whyNotVerdict(check({ added: [rest] }), "Ava", strings, false), {
-    text: "Ava would break 1 Must rule",
+    text: "Ava would break 1 Must rule",
     tone: "add",
   });
-  assert.equal(whyNotVerdict(check({ added: [rest, skill] }), "Ava", strings, false).text, "Ava would break 2 Must rules");
+  assert.equal(whyNotVerdict(check({ added: [rest, skill] }), "Ava", strings, false).text, "Ava would break 2 Must rules");
   // A Must rule outranks the fit: it is named even when the fit is better.
   assert.equal(whyNotVerdict(check({ added: [skill], fit: "better" }), "Ava", strings, false).tone, "add");
   // Should rules only.
@@ -247,4 +247,11 @@ linesSplitByPersonAndWordEachRule();
 assignsWhenThePersonIsFree();
 swapsWhenBothMovesPass();
 namesTheShiftLeftOpenOtherwise();
+// A shift with no name is named by its time alone: no stray separator, never its id (AGENTS.md 0.1).
+{
+  const nameless = shift("x1", "ava", day(3, 7), 8, { title: "" });
+  const named = whyNotShiftLabel(shift("x1", "ava", day(3, 7), 8), englishDateNames);
+  assert.equal(whyNotShiftLabel(nameless, englishDateNames), named.slice(named.indexOf(" · ") + 3));
+  assert.equal(whyNotShiftLabel(nameless, englishDateNames).includes("·"), false);
+}
 console.log("whyNot tests passed");

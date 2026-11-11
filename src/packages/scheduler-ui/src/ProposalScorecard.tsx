@@ -13,7 +13,8 @@ import {
 } from "@fluentui/react-icons";
 import * as React from "react";
 
-import { useBoardHourFormat } from "./boardLocale";
+import { useBoardHourFormat, useBoardLocale } from "./boardLocale";
+import { usePrefersReducedMotion, useTweenedNumber } from "./tween";
 import { formatClockRange } from "./clock";
 import { dateNamesFrom, formatDayLabel, type DateNames } from "./dateNames";
 import type { HourFormat } from "./timeAxis";
@@ -30,6 +31,7 @@ import {
   type MustRow,
   type ProposalScore,
 } from "./solve";
+import { useBoardPopups } from "./dialogLayer";
 import { useFullScreen } from "./fullScreen";
 import { formatString, useSchedulerStrings, type SchedulerStrings } from "./strings";
 import type { SchedulerUiEvent } from "./types";
@@ -71,6 +73,10 @@ export interface ProposalScorecardProps {
   readonly search?: SolveSearch;
   /** People whose rest and day limits are not checked. Absent = not known. */
   readonly unchecked?: UncheckedPeople;
+  /** F41: the last live figures by tile id; a tile with a count eases on from its live figure. */
+  readonly countFrom?: ReadonlyMap<string, number>;
+  /** An extension's tile beside the Must tile (BoardExtension.mustNeighbourTile). */
+  readonly mustNeighbour?: ScorecardTile;
   /** An extension's tiles, after the board's own. */
   readonly extraTiles?: readonly ScorecardTile[];
 }
@@ -82,7 +88,10 @@ interface ScoreDisclosure {
   readonly onToggle: () => void;
 }
 
-interface ScoreProps {
+/** One scorecard tile's props (F31); the live scorecard (F41) draws the same tiles. */
+export interface ScoreTileProps {
+  /** A class on the tile itself (F41: the live tile's bump). */
+  readonly className?: string;
   /** The tile opens a list below the scorecard row. */
   readonly disclosure?: ScoreDisclosure;
   /** The tile's 16px icon before its label, as the prototype's scorecard draws it. */
@@ -95,7 +104,7 @@ interface ScoreProps {
   /** A second note line, in the warning tone: who is not checked. */
   readonly attention?: string;
   readonly testId: string;
-  readonly tone?: "bad" | "good";
+  readonly tone?: "bad" | "good" | "warn";
   /** A word after the value, in small type: "1.2M versions". */
   readonly unit?: string;
   readonly value: string;
@@ -103,7 +112,20 @@ interface ScoreProps {
 
 let scoreIds = 0;
 
-function Score(props: ScoreProps): JSX.Element {
+/** An extension's tile whose figure eases on from where the live panel left it (F41 handover). */
+function EasedTile(props: { readonly from: number; readonly tile: ScorecardTile; readonly tileProps: Omit<ScoreTileProps, "value"> }): JSX.Element {
+  const reduced = usePrefersReducedMotion();
+  const count = props.tile.count;
+  const shown = useTweenedNumber(count?.value ?? 0, reduced, undefined, props.from);
+  return <Score {...props.tileProps} value={count ? count.format(shown) : props.tile.value} />;
+}
+
+/** One scorecard tile, as the review draws it; F41's live scorecard reuses it. */
+export function ScoreTile(props: ScoreTileProps): JSX.Element {
+  return <Score {...props} />;
+}
+
+function Score(props: ScoreTileProps): JSX.Element {
   const ids = React.useRef<string | undefined>(undefined);
   if (!ids.current) {
     scoreIds += 1;
@@ -111,18 +133,24 @@ function Score(props: ScoreProps): JSX.Element {
   }
   const base = ids.current;
   const { disclosure } = props;
-  const mountNode = useFullScreen()?.mountNode;
+  // The tip mounts on the shell, not inline: inline it stays in the scorecard's own layer, under
+  // the Roster grid's sticky header. Not on the window either, as the host draws its own bars there.
+  const popups = useBoardPopups();
+  const mountNode = useFullScreen()?.mountNode ?? popups;
   const strings = useSchedulerStrings();
   const className = [
     "chrona-sched__score",
+    props.className ?? "",
     props.tone ? `chrona-sched__score--${props.tone}` : "",
     disclosure ? "chrona-sched__score--disclosure" : "",
     disclosure?.expanded ? "chrona-sched__score--expanded" : "",
   ]
     .filter(Boolean)
     .join(" ");
+  // The tile: its tip opens below it, so the tip never covers the figures it explains.
+  const [tile, setTile] = React.useState<HTMLDivElement | null>(null);
   return (
-    <div className={className} data-testid={props.testId}>
+    <div className={className} data-testid={props.testId} ref={setTile}>
       <dt className="chrona-sched__score-label">
         {disclosure ? (
           <button
@@ -146,16 +174,16 @@ function Score(props: ScoreProps): JSX.Element {
           </button>
         ) : props.title ? (
           // A tile with a tip: Fluent's info button after the label, for mouse, touch and keyboard
-          // alike. The tip opens below, from the button's start: it stays on the board and never
-          // covers the review bar's Apply and Discard above the tiles.
+          // alike. The tip opens below the tile, from its start: it stays on the board, never covers
+          // the review bar's Apply and Discard above the tiles, nor the tile's own figures.
           <span className="chrona-sched__score-caption chrona-sched__score-caption--info">
             {props.icon}
             <InfoLabel
               className="chrona-sched__score-infolabel"
-              info={props.title}
+              info={{ children: props.title, className: "chrona-sched__score-tip" }}
               infoButton={{
                 "aria-label": strings.infoButton,
-                popover: { mountNode, positioning: { align: "start", position: "below" } },
+                popover: { inline: false, mountNode, positioning: { align: "start", position: "below", target: tile } },
               }}
               size="small"
             >
@@ -184,16 +212,16 @@ function Score(props: ScoreProps): JSX.Element {
         id={`${base}-note`}
       >
         {props.note}
+        {props.attention ? (
+          <span
+            className="chrona-sched__score-note chrona-sched__score-note--attention"
+            data-testid={`${props.testId}-unchecked`}
+            id={`${base}-attention`}
+          >
+            {props.attention}
+          </span>
+        ) : null}
       </dd>
-      {props.attention ? (
-        <dd
-          className="chrona-sched__score-note chrona-sched__score-note--attention"
-          data-testid={`${props.testId}-unchecked`}
-          id={`${base}-attention`}
-        >
-          {props.attention}
-        </dd>
-      ) : null}
     </div>
   );
 }
@@ -217,18 +245,17 @@ export function leftOpenNotes(
   ];
 }
 
-/** A large count in the browser's own short form: 1.2M, 1,2 Mio. */
-const compactCount = new Intl.NumberFormat(undefined, {
-  maximumFractionDigits: 1,
-  notation: "compact",
-});
+/** A large count in the board's language, short: 1.2M, 1,2 Mio. */
+function compactCount(locale: string | undefined): Intl.NumberFormat {
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: 1, notation: "compact" });
+}
 
 /** "+3 vs now", "−2 vs now" or "No change", with its tone; lower is better when `lowerIsBetter`. */
 function deltaNote(
   strings: SchedulerStrings,
   delta: number,
   lowerIsBetter: boolean,
-): Pick<ScoreProps, "note" | "noteTone"> {
+): Pick<ScoreTileProps, "note" | "noteTone"> {
   if (delta === 0) {
     return { note: strings.scoreNoChange };
   }
@@ -240,7 +267,7 @@ function deltaNote(
 }
 
 /** An extension tile's note: its change from now in the board's words, else its own note. */
-function extraTileNote(strings: SchedulerStrings, tile: ScorecardTile): Pick<ScoreProps, "note" | "noteTone"> {
+function extraTileNote(strings: SchedulerStrings, tile: ScorecardTile): Pick<ScoreTileProps, "note" | "noteTone"> {
   const change = tile.change;
   if (!change) {
     return { note: tile.note ?? "" };
@@ -342,6 +369,7 @@ function formatBand(band: { readonly end: Date; readonly start: Date }, names: D
 export function ProposalScorecard(props: ProposalScorecardProps): JSX.Element {
   const strings = useSchedulerStrings();
   const hourFormat = useBoardHourFormat();
+  const boardLocale = useBoardLocale();
   const names = React.useMemo(() => dateNamesFrom(strings), [strings]);
   const { mustReport, openShifts, preferences, score, unchecked } = props;
   const [open, setOpen] = React.useState<"must" | "open" | "preferences" | undefined>();
@@ -626,6 +654,20 @@ export function ProposalScorecard(props: ProposalScorecardProps): JSX.Element {
     >
       <dl>
         {mustTile()}
+        {props.mustNeighbour ? (
+          <EasedTile
+            from={props.countFrom?.get(props.mustNeighbour.id) ?? props.mustNeighbour.count?.value ?? 0}
+            tile={props.mustNeighbour}
+            tileProps={{
+              icon: props.mustNeighbour.icon,
+              label: props.mustNeighbour.label,
+              ...extraTileNote(strings, props.mustNeighbour),
+              testId: `score-${props.mustNeighbour.id}`,
+              title: props.mustNeighbour.title,
+              ...(props.mustNeighbour.tone ? { tone: props.mustNeighbour.tone } : {}),
+            }}
+          />
+        ) : null}
         <Score
           disclosure={
             openable
@@ -654,7 +696,22 @@ export function ProposalScorecard(props: ProposalScorecardProps): JSX.Element {
           value={`${score.filledProposed} / ${score.total}`}
         />
         {preferencesTile()}
-        {(props.extraTiles ?? []).map((tile) => (
+        {(props.extraTiles ?? []).map((tile) =>
+          tile.count && props.countFrom?.has(tile.id) ? (
+            <EasedTile
+              from={props.countFrom.get(tile.id) ?? tile.count.value}
+              key={tile.id}
+              tile={tile}
+              tileProps={{
+                ...(tile.attention ? { attention: tile.attention } : {}),
+                icon: tile.icon,
+                label: tile.label,
+                ...extraTileNote(strings, tile),
+                testId: `score-${tile.id}`,
+                title: tile.title,
+              }}
+            />
+          ) : (
           <Score
             {...(tile.attention ? { attention: tile.attention } : {})}
             icon={tile.icon}
@@ -665,7 +722,8 @@ export function ProposalScorecard(props: ProposalScorecardProps): JSX.Element {
             title={tile.title}
             value={tile.value}
           />
-        ))}
+          ),
+        )}
         <Score
           icon={<ArrowSwap16Regular aria-hidden="true" className="chrona-sched__score-icon" />}
           label={strings.scoreChanges}
@@ -696,7 +754,7 @@ export function ProposalScorecard(props: ProposalScorecardProps): JSX.Element {
             }
             testId="score-search"
             unit={strings.scoreSearchUnit}
-            value={compactCount.format(props.search.rostersChecked)}
+            value={compactCount(boardLocale).format(props.search.rostersChecked)}
           />
         ) : null}
       </dl>

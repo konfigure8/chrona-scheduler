@@ -98,7 +98,7 @@ export const defaultControlMessages: ControlMessages = {
   msgWarningSuffix: " (warning: {reason})",
   reasonMinimumBreak: "Break under {minimum} min ({gap} min gap)",
   reasonOutsideGroup: "Outside {group}",
-  reasonOutsideHours: "Outside working hours ({start}-{end})",
+  reasonOutsideHours: "Outside working hours ({start}‑{end})",
   reasonOverlap: "Overlaps an existing item",
   msgSettingsFailed: "Could not open the scheduler settings",
 };

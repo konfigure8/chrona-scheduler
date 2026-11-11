@@ -326,7 +326,7 @@ export function WhyNotGroup(props: WhyNotGroupProps): JSX.Element {
     >
       <div className="chrona-sched__drill-head">
         <div className="chrona-sched__unscheduled-group chrona-sched__drill-heading" id={`${ids}-heading`}>
-          {strings.menuWhyNot}
+          {strings.whyNotHeading}
         </div>
         <Button
           appearance="subtle"
@@ -337,10 +337,12 @@ export function WhyNotGroup(props: WhyNotGroupProps): JSX.Element {
           size="small"
         />
       </div>
-      <div className="chrona-sched__proposal-caption" data-testid="why-not-shift">
-        {whyNotShiftLabel(shift, names, hourFormat)}
-        {" · "}
-        {holder !== undefined ? formatString(strings.whyNotNow, { name: props.nameOf(holder) }) : strings.unassigned}
+      {/* The shift, then who holds it: one caption of two lines. */}
+      <div className="chrona-sched__proposal-caption">
+        <div data-testid="why-not-shift">{whyNotShiftLabel(shift, names, hourFormat)}</div>
+        <div data-testid="why-not-holder">
+          {holder !== undefined ? formatString(strings.whyNotNow, { name: props.nameOf(holder) }) : strings.unassigned}
+        </div>
       </div>
       <Field className="chrona-sched__whynot-field" label={strings.whyNotPerson}>
         <Combobox

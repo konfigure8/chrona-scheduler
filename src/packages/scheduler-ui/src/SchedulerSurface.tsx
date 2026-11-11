@@ -4,7 +4,10 @@ import {
   ChevronDown20Regular,
   ChevronUp20Regular,
   Eye20Regular,
+  Heart16Regular,
   PanelRightExpand20Regular,
+  ShieldCheckmark16Regular,
+  Shifts16Regular,
   Warning16Regular,
 } from "@fluentui/react-icons";
 
@@ -56,6 +59,7 @@ import {
   applyProposalChanges,
   diffProposal,
   isGhostEvent,
+  isOpenRequired,
   mustRowMatches,
   openOnCallAfter,
   openShiftsAfter,
@@ -76,12 +80,22 @@ import {
   type SolveState,
 } from "./solve";
 import { ProposalPanel, type ProposalDrillDown } from "./ProposalPanel";
-import { leftOpenNotes, mustRowLabel, ProposalScorecard } from "./ProposalScorecard";
+import { leftOpenNotes, mustRowLabel, ProposalScorecard, ScoreTile } from "./ProposalScorecard";
 import { drillDownEntries, personFixCounts, proposalReasons } from "./proposalReasons";
-import { mustBreachTotal, type ScheduleRuleMatch } from "./schedulingContract";
+import { isMustRule, mustBreachTotal, type ScheduleRuleMatch } from "./schedulingContract";
 import { WhyNotGroup } from "./WhyNotGroup";
 import { rosterVersionOf, whyNotAction, type WhyNotAction } from "./whyNot";
-import { SolveProgressIndicator, useElapsedSeconds } from "./SolveProgress";
+import { useElapsedSeconds } from "./SolveProgress";
+import {
+  ChipMotion,
+  LiveNumberTile,
+  REPLAY_FIRST_LANDING_MS,
+  REPLAY_MS,
+  SolveProgressPanel,
+  useLiveChartPoints,
+  useLiveRedraw,
+  usePrefersReducedMotion,
+} from "./liveSolve";
 import { SchedulerLegend } from "./SchedulerLegend";
 import { SchedulerToolbar } from "./SchedulerToolbar";
 import { colorSchemeOf, themeToCssVariables, type SchedulerTheme } from "./theme";
@@ -180,6 +194,11 @@ export interface SchedulerSurfaceProps {
    * changes to the host. Editing is off while it is open.
    */
   readonly proposal?: ScheduleProposal;
+  /**
+   * F41 Live solve: the host's colour for a shift as the run moves it, by the maker's
+   * "Color by", so a live chip already has the colour Apply leaves it. Absent = none.
+   */
+  readonly eventColor?: (event: SchedulerUiEvent) => string | undefined;
   /**
    * Changes whose data changed after the solver ran (F31 rework): the
    * host checks when the answer lands and before Apply writes, and
@@ -705,6 +724,17 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
         : undefined,
     [appliedAll, currentAll, proposalChanges, props.resources, reviewPeriod, scoreTiles],
   );
+  const mustNeighbourOf = boardExtension?.mustNeighbourTile;
+  const mustNeighbour = React.useMemo(
+    () =>
+      mustNeighbourOf && proposalChanges
+        ? mustNeighbourOf({
+            now: { events: currentAll, resources: props.resources, window: reviewPeriod },
+            proposed: { events: appliedAll, resources: props.resources, window: reviewPeriod },
+          })
+        : undefined,
+    [appliedAll, currentAll, mustNeighbourOf, proposalChanges, props.resources, reviewPeriod],
+  );
   const mustReport = React.useMemo(() => {
     if (!review || !props.proposal || !proposalChanges) {
       return undefined;
@@ -718,9 +748,11 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           resources: props.resources,
           window: reviewPeriod,
         }),
+      () => review.checkMust({ events: currentAll, resources: props.resources, window: reviewPeriod }),
     );
   }, [
     appliedAll,
+    currentAll,
     proposalChanges,
     props.proposal,
     props.resources,
@@ -981,14 +1013,51 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     () => (notAdded ? props.unscheduledEvents?.filter((event) => !notAdded.has(event.id)) : props.unscheduledEvents),
     [notAdded, props.unscheduledEvents],
   );
-  const boardEvents = preview ? preview.scheduled : currentEvents;
+  /*
+   * F41 Live solve: while a run works, the board follows its best roster so far,
+   * redrawn at the ruling's pace (half a second of quiet, at least every two
+   * seconds). It draws the roster as Apply would leave it, with no review marks;
+   * editing waits, as in the review. The answer opens F31's review.
+   */
+  const solveLive = !props.proposal && solveIsRunning(props.solveState) ? props.solveState?.live : undefined;
+  const shownLive = useLiveRedraw(solveLive?.proposal);
+  const liveView = React.useMemo(() => {
+    if (!shownLive) {
+      return undefined;
+    }
+    const all = [...props.events, ...(props.unscheduledEvents ?? [])];
+    const changes = diffProposal(all, shownLive);
+    const drawn = previewProposal(all, changes, reviewOptions);
+    const colorOf = props.eventColor;
+    const plain = (events: readonly SchedulerUiEvent[]): SchedulerUiEvent[] =>
+      events
+        .filter((event) => event.review !== "ghost")
+        .map((event) => {
+          if (!event.review) {
+            return event;
+          }
+          // A moved shift takes the host's colour for where it is now, as Apply leaves it.
+          const { color: _old, ...rest } = event;
+          const color = colorOf?.(rest);
+          return { ...rest, review: undefined, ...(color ? { color } : {}) };
+        });
+    return {
+      applied: applyProposalChanges(all, changes),
+      changes,
+      scheduled: plain(drawn.scheduled),
+      unscheduled: plain(drawn.unscheduled),
+    };
+  }, [props.eventColor, props.events, props.unscheduledEvents, reviewOptions, shownLive]);
+  const boardEvents = preview ? preview.scheduled : liveView ? liveView.scheduled : currentEvents;
 
   const boardUnscheduled = preview
     ? props.unscheduledEvents === undefined
       ? undefined
       : preview.unscheduled
-    : currentUnscheduled;
-  const canEdit = props.editable !== false && !reviewing;
+    : liveView && props.unscheduledEvents !== undefined
+      ? liveView.unscheduled
+      : currentUnscheduled;
+  const canEdit = props.editable !== false && !reviewing && !liveView && !solveIsRunning(props.solveState);
   const canCreate = canEdit && Boolean(props.onCreateEvent);
   /* A running solve shows as progress with Cancel; the board stays live. */
   const solving =
@@ -1040,6 +1109,229 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
         stopping,
       }
     : undefined;
+  const reducedMotion = usePrefersReducedMotion();
+  // The live scorecard (F41) counts the roster drawn: the best so far, or today's before the first.
+  const liveFigures = React.useMemo(() => {
+    if (!solving) {
+      return undefined;
+    }
+    const all = [...props.events, ...(props.unscheduledEvents ?? [])];
+    const roster = liveView?.applied ?? all;
+    const period = props.window;
+    const proposal = shownLive ?? { events: all, runId: "" };
+    const score = proposalScore(proposal, liveView?.changes ?? [], reviewOptions, period);
+    const rosterNow = { events: all, resources: props.resources, window: period };
+    const rosterLive = { events: roster, resources: props.resources, window: period };
+    const check = boardExtension?.review?.checkMust(rosterLive);
+    const mustShifts = check
+      ? new Set(check.matches.filter((match) => isMustRule(match.rule)).flatMap((match) => match.shiftIds))
+      : undefined;
+    return {
+      extraTiles: boardExtension?.scoreTiles?.({ now: rosterNow, proposed: rosterLive }) ?? [],
+      mustNeighbour: boardExtension?.mustNeighbourTile?.({ now: rosterNow, proposed: rosterLive }),
+      // Without the extension's counter the board knows only whether the run kept the Must rules.
+      must: check ? mustBreachTotal(check.mustBreaches) : shownLive?.feasible === false ? undefined : shownLive?.feasible ? 0 : undefined,
+      mustBroken: shownLive?.feasible === false && !check,
+      mustShifts,
+      open: new Set(roster.filter((event) => isOpenRequired(event, openShiftKind)).map((event) => event.id)),
+      preferences: boardExtension?.preferencesMet?.(rosterLive),
+      score,
+    };
+  }, [boardExtension, liveView, openShiftKind, props.events, props.resources, props.unscheduledEvents, props.window, reviewOptions, shownLive, solving]);
+  const liveOpenCount = liveFigures ? liveFigures.score.total - liveFigures.score.filledProposed : 0;
+  const livePoints = useLiveChartPoints(
+    props.solveState?.status === "queued" && !solveLive ? "queued" : solving ? "run" : "idle",
+    shownLive,
+    shownLive && liveFigures
+      ? { mustBroken: liveFigures.must ?? (liveFigures.mustBroken ? 1 : 0), open: liveOpenCount }
+      : undefined,
+    solveSeconds,
+  );
+  /*
+   * The replay (F41 ruling: "The answer replays shift by shift"): the run's first roster, or an
+   * answer that came with no best roster before it, lands shift by shift. Read against the render
+   * before this one, as the motion layer measures it.
+   */
+  const lastRender = React.useRef<{ followed: boolean; proposal?: ScheduleProposal; shown?: ScheduleProposal; solving: boolean }>({
+    followed: false,
+    solving: false,
+  });
+  const firstLive = Boolean(shownLive) && !lastRender.current.shown;
+  const answerNoBest =
+    Boolean(props.proposal) && props.proposal !== lastRender.current.proposal && lastRender.current.solving && !lastRender.current.followed;
+  // The last live figures by tile id, so the review's tiles ease on from them (F41 handover).
+  const lastLiveCounts = React.useRef(new Map<string, number>());
+  if (firstLive) {
+    lastLiveCounts.current = new Map();
+  }
+  if (shownLive && liveFigures) {
+    for (const tile of [...liveFigures.extraTiles, ...(liveFigures.mustNeighbour ? [liveFigures.mustNeighbour] : [])]) {
+      if (tile.count) lastLiveCounts.current.set(tile.id, tile.count.value);
+    }
+  }
+  // The replay's one end time, so every live tile lands with the last chip (F41).
+  const replayEndsAt = React.useRef<number | undefined>(undefined);
+  if ((firstLive || answerNoBest) && !reducedMotion) {
+    replayEndsAt.current = Date.now() + REPLAY_FIRST_LANDING_MS + REPLAY_MS;
+  } else if (!solving && !props.proposal) {
+    replayEndsAt.current = undefined;
+  }
+  // The motion runs while the board follows a run, and once more as the review takes over from it.
+  const followedRun = React.useRef(false);
+  if (shownLive) {
+    followedRun.current = true;
+  } else if (!props.proposal && !solving) {
+    followedRun.current = false;
+  }
+  const motionActive = Boolean(shownLive) || (Boolean(props.proposal) && followedRun.current) || answerNoBest;
+  React.useEffect(() => {
+    lastRender.current = { followed: followedRun.current, proposal: props.proposal, shown: shownLive, solving };
+  });
+  const [appliedSweep, setAppliedSweep] = React.useState(0);
+  React.useEffect(() => {
+    if (appliedSweep === 0) {
+      return undefined;
+    }
+    const timer = setTimeout(() => setAppliedSweep(0), 1300);
+    return () => clearTimeout(timer);
+  }, [appliedSweep]);
+  // While the replay plays, the roster's totals wait for the chips (F41): the shell says so for the styles.
+  const [replaying, setReplaying] = React.useState(false);
+  const replayEnd = replayEndsAt.current;
+  React.useEffect(() => {
+    if (replayEnd === undefined || replayEnd <= Date.now()) {
+      setReplaying(false);
+      return undefined;
+    }
+    setReplaying(true);
+    const timer = setTimeout(() => setReplaying(false), replayEnd - Date.now());
+    return () => clearTimeout(timer);
+  }, [replayEnd]);
+  const liveSweep: "applied" | "reading" | undefined =
+    appliedSweep > 0 ? "applied" : solving && !shownLive && !stopping ? "reading" : undefined;
+  const liveTitle = formatString(strings.solveRunTitle, {
+    shifts: String(liveFigures?.score.total ?? 0),
+    workers: String(props.resources.length),
+  });
+  const liveTiles = liveFigures ? (
+    <>
+      {liveFigures.must !== undefined && shownLive ? (
+        <LiveNumberTile
+          icon={<ShieldCheckmark16Regular aria-hidden="true" className="chrona-sched__score-icon" />}
+          label={strings.scoreMustBroken}
+          note=""
+          replayEndsAt={replayEndsAt.current}
+          reduced={reducedMotion}
+          testId="live-score-must"
+          tone={!shownLive ? undefined : liveFigures.must > 0 ? "bad" : "good"}
+          value={liveFigures.must}
+        />
+      ) : (
+        <ScoreTile
+          icon={<ShieldCheckmark16Regular aria-hidden="true" className="chrona-sched__score-icon" />}
+          label={strings.scoreMustBroken}
+          note=""
+          testId="live-score-must"
+          tone={shownLive && liveFigures.mustBroken ? "bad" : undefined}
+          value={shownLive && liveFigures.mustBroken ? strings.scoreSome : "—"}
+        />
+      )}
+      {liveFigures.mustNeighbour?.count && shownLive ? (
+        <LiveNumberTile
+          replayEndsAt={replayEndsAt.current}
+          format={liveFigures.mustNeighbour.count.format}
+          icon={liveFigures.mustNeighbour.icon}
+          label={liveFigures.mustNeighbour.label}
+          note=""
+          reduced={reducedMotion}
+          testId={`live-score-${liveFigures.mustNeighbour.id}`}
+          {...(liveFigures.mustNeighbour.tone ? { tone: liveFigures.mustNeighbour.tone } : {})}
+          value={liveFigures.mustNeighbour.count.value}
+        />
+      ) : liveFigures.mustNeighbour ? (
+        <ScoreTile
+          icon={liveFigures.mustNeighbour.icon}
+          label={liveFigures.mustNeighbour.label}
+          // While the run goes the tile shows the figure alone; the review compares it with now.
+          note=""
+          testId={`live-score-${liveFigures.mustNeighbour.id}`}
+          {...(shownLive && liveFigures.mustNeighbour.tone ? { tone: liveFigures.mustNeighbour.tone } : {})}
+          value={shownLive ? liveFigures.mustNeighbour.value : "—"}
+        />
+      ) : null}
+      {boardExtension?.solveScore === "filled" ? (
+        <LiveNumberTile
+          format={(value) => `${value} / ${liveFigures.score.total}`}
+          icon={<Shifts16Regular aria-hidden="true" className="chrona-sched__score-icon" />}
+          label={strings.scoreFilled}
+          note=""
+          replayEndsAt={replayEndsAt.current}
+          reduced={reducedMotion}
+          testId="live-score-filled"
+          goodAt={liveFigures.score.total}
+          tone={shownLive && liveOpenCount === 0 ? "good" : undefined}
+          value={liveFigures.score.filledProposed}
+        />
+      ) : (
+        <LiveNumberTile
+          icon={<Shifts16Regular aria-hidden="true" className="chrona-sched__score-icon" />}
+          label={strings.rosterOpenShifts}
+          note=""
+          replayEndsAt={replayEndsAt.current}
+          reduced={reducedMotion}
+          testId="live-score-open"
+          tone={!shownLive ? undefined : liveOpenCount > 0 ? "bad" : "good"}
+          value={liveOpenCount}
+        />
+      )}
+      {liveFigures.preferences && liveFigures.preferences.total > 0 && !shownLive ? (
+        <ScoreTile
+          icon={<Heart16Regular aria-hidden="true" className="chrona-sched__score-icon" />}
+          label={strings.scorePreferences}
+          note=""
+          testId="live-score-preferences"
+          value="—"
+        />
+      ) : null}
+      {liveFigures.preferences && liveFigures.preferences.total > 0 && shownLive ? (
+        <LiveNumberTile
+          format={(value) => formatString(strings.scorePreferencesValue, { met: String(value), total: String(liveFigures.preferences?.total ?? 0) })}
+          icon={<Heart16Regular aria-hidden="true" className="chrona-sched__score-icon" />}
+          label={strings.scorePreferences}
+          note=""
+          replayEndsAt={replayEndsAt.current}
+          reduced={reducedMotion}
+          testId="live-score-preferences"
+          value={liveFigures.preferences.met}
+        />
+      ) : null}
+      {liveFigures.extraTiles.map((tile) =>
+        tile.count && shownLive ? (
+          <LiveNumberTile
+            replayEndsAt={replayEndsAt.current}
+            format={tile.count.format}
+            icon={tile.icon}
+            key={tile.id}
+            label={tile.label}
+            note=""
+            reduced={reducedMotion}
+            testId={`live-score-${tile.id}`}
+            value={tile.count.value}
+          />
+        ) : (
+        <ScoreTile
+          icon={tile.icon}
+          key={tile.id}
+          label={tile.label}
+          // While the run goes the tile shows the figure alone; the review compares it with now.
+          note=""
+          testId={`live-score-${tile.id}`}
+          value={shownLive ? tile.value : "—"}
+        />
+        ),
+      )}
+    </>
+  ) : null;
   /*
    * Optimize gives way to the progress while a solve runs, so the button
    * that had focus leaves the page. When the run ends - an answer, or a
@@ -2193,7 +2485,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
 
   const shell = (
     <div
-      className="chrona-sched__shell"
+      className={replaying ? "chrona-sched__shell chrona-sched__shell--replaying" : "chrona-sched__shell"}
       onClick={handleLaneClick}
       onContextMenu={handleContextMenu}
       onDoubleClick={handleDoubleClick}
@@ -2201,6 +2493,18 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       onMouseOver={handleMouseOver}
       ref={wrapperRef}
     >
+      <ChipMotion
+        active={motionActive}
+        handover={Boolean(props.proposal) && !answerNoBest}
+        replay={firstLive || answerNoBest}
+        mustBroken={liveFigures?.mustShifts}
+        open={liveFigures?.open}
+        reduced={reducedMotion}
+        scope={wrapperRef}
+        sweep={liveSweep}
+        sweepKey={appliedSweep}
+        version={shownLive ?? props.proposal ?? props.events}
+      />
       {toolbarAnchor &&
       toolbarAnchorChange &&
       toolbarInterval &&
@@ -2386,12 +2690,11 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       {props.onRequestSolve || props.solveState || props.entitlement ? (
         <div className="chrona-sched__solve-bar">
           {props.onRequestSolve && !hasHeader ? (
-            solveProgress ? (
-              <SolveProgressIndicator progress={solveProgress} />
-            ) : (
+            // F41: while a run works, the progress panel above the board shows it; the button waits.
+            (
               <button
                 className="chrona-sched__toolbar-primary chrona-sched__solve-button"
-                disabled={props.solveUnavailableReason !== undefined}
+                disabled={props.solveUnavailableReason !== undefined || solveProgress !== undefined}
                 onClick={(clickEvent) => {
                   solveHadFocus.current = document.activeElement === clickEvent.currentTarget;
                   props.onRequestSolve?.();
@@ -2520,6 +2823,15 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
             </a>
           ) : null}
         </div>
+      ) : null}
+      {solveProgress ? (
+        <SolveProgressPanel
+          points={livePoints}
+          progress={solveProgress}
+          stage={solveLive?.stage ?? "reading"}
+          tiles={liveTiles}
+          title={liveTitle}
+        />
       ) : null}
       {proposalChanges ? (
         <div
@@ -2716,7 +3028,10 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
               className="chrona-sched__toolbar-primary chrona-sched__proposal-apply"
               data-testid="proposal-apply"
               disabled={applicableChanges.length === 0}
-              onClick={() => props.onPublishProposal?.(applicableChanges, appliedOutcome)}
+              onClick={() => {
+                setAppliedSweep(Date.now());
+                props.onPublishProposal?.(applicableChanges, appliedOutcome);
+              }}
               type="button"
             >
               {/* What the planner reviews is what Apply writes: it names the count. */}
@@ -2774,6 +3089,8 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           peopleTotal={props.resources.length}
           preferences={preferenceFigures}
           extraTiles={extraTiles}
+          mustNeighbour={mustNeighbour}
+          countFrom={lastLiveCounts.current}
           score={proposalFigures}
           search={props.proposal?.search}
           unchecked={unchecked}
@@ -3150,15 +3467,22 @@ export function SchedulerSurface(props: SchedulerSurfaceProps): JSX.Element {
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const portalsRef = React.useRef<HTMLDivElement | null>(null);
   const fullScreen = useFullScreenRoot(rootRef, portalsRef);
+  // The portals node as state, so a pop-up rendered before it mounted still finds it.
+  const [popups, setPopups] = React.useState<HTMLDivElement | null>(null);
+  const portals = React.useCallback((node: HTMLDivElement | null): void => {
+    portalsRef.current = node;
+    setPopups(node);
+  }, []);
   const { locale, theme } = props;
   // The board's look, which its dialogs carry over the window (dialogLayer.tsx).
   const look = React.useMemo<BoardLook>(
     () => ({
       lang: locale,
+      popups: popups ?? undefined,
       root: rootRef,
       style: theme ? { ...themeToCssVariables(theme), colorScheme: colorSchemeOf(theme.background) } : undefined,
     }),
-    [locale, theme],
+    [locale, popups, theme],
   );
   return (
     <div
@@ -3186,7 +3510,12 @@ export function SchedulerSurface(props: SchedulerSurfaceProps): JSX.Element {
       <div aria-live="polite" className="chrona-sched__live" role="status">
         {props.announcement}
       </div>
-      <div className="chrona-sched__portals" ref={portalsRef} />
+      <div className="chrona-sched__portals" ref={portals} />
     </div>
   );
+}
+
+/** A solve that is under way: queued, running or stopping. */
+function solveIsRunning(state: SolveState | undefined): boolean {
+  return state?.status === "queued" || state?.status === "running" || state?.status === "stopping";
 }

@@ -27,6 +27,8 @@ export interface BoardLook {
   readonly style?: React.CSSProperties;
   /** The board's root: a dialog finds this board's own controls through it (a form can hold two boards). */
   readonly root?: React.RefObject<HTMLElement | null>;
+  /** The shell's layer for Fluent's pop-ups, in every mode: one mounted there paints above the board's own layers. */
+  readonly popups?: HTMLElement;
 }
 
 const BoardLookContext = React.createContext<BoardLook>({});
@@ -36,6 +38,11 @@ export const BoardLookProvider = BoardLookContext.Provider;
 /** The board a dialog belongs to: its root element, once drawn. */
 export function useBoardRoot(): HTMLElement | null {
   return React.useContext(BoardLookContext).root?.current ?? null;
+}
+
+/** The board shell's layer for Fluent's pop-ups, once drawn. */
+export function useBoardPopups(): HTMLElement | undefined {
+  return React.useContext(BoardLookContext).popups;
 }
 
 const FOCUSABLE =

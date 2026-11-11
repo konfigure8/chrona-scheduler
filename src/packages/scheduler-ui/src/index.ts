@@ -60,6 +60,17 @@ export {
 } from "./SchedulerSurface";
 export { SolveProgressIndicator, useElapsedSeconds } from "./SolveProgress";
 export {
+  ChipMotion,
+  LiveChart,
+  LiveNumberTile,
+  LiveStages,
+  LIVE_STAGGER_MS,
+  REPLAY_MS,
+  SolveProgressPanel,
+  useLiveRedraw,
+  usePrefersReducedMotion,
+} from "./liveSolve";
+export {
   BoardExtensionProvider,
   useBoardExtension,
   type BoardExtension,
@@ -307,6 +318,11 @@ export {
   type SolveQuotaDisplay,
   type SolveRunStatus,
   type SolveState,
+  type SolveLive,
+  type SolveStage,
+  liveQuality,
+  liveRedrawDelayMs,
+  SOLVE_STAGES,
 } from "./solve";
 export {
   changeMatches,
@@ -349,6 +365,9 @@ export {
   checkCandidate,
   clampSolverSeconds,
   followRun,
+  liveFromRun,
+  createStopLatch,
+  type StopLatch,
   hashProblem,
   markRunReviewed,
   runSolve,
