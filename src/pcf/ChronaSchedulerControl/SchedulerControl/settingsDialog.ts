@@ -99,6 +99,66 @@ export async function openRecordInDialog(
   );
 }
 
+/** The view row's answer: its row, no row for the view (the zero-config board), or a read that failed. */
+export type ViewRowRead =
+  | { readonly kind: "row"; readonly row: ComponentFramework.WebApi.Entity }
+  | { readonly kind: "none" }
+  | { readonly kind: "failed"; readonly error: unknown };
+
+/**
+ * Read a board's view row by its native view id. Only an answer with no row is "none"; a refused or failed read,
+ * thrown or rejected, is "failed", never a board with no settings (AGENTS.md 0.1).
+ */
+export async function readViewRow(
+  webApi: Pick<ComponentFramework.WebApi, "retrieveMultipleRecords">,
+  viewId: string,
+  select: readonly string[],
+): Promise<ViewRowRead> {
+  try {
+    const result = await webApi.retrieveMultipleRecords(
+      VIEW_SETTINGS_TABLE,
+      `?$select=${select.join(",")}&$filter=chr_viewid eq '${viewId}'&$top=1`,
+    );
+    const row = result.entities[0];
+    return row ? { kind: "row", row } : { kind: "none" };
+  } catch (error) {
+    return { error, kind: "failed" };
+  }
+}
+
+/**
+ * What decides whether Connect may write: the calendar the control binds itself, whether the view row's read failed,
+ * and whether the scheduler's own row could not be read.
+ */
+export interface ConnectGate {
+  /** The bound calendar that names a row; empty when none is bound or the bound one names none. */
+  readonly boundCalendarId: string;
+  /** The scheduler's row could not be read (HostConfig.readFailed "calendar"): it may exist. */
+  readonly calendarUnread?: boolean;
+  readonly viewRowFailed: boolean;
+}
+
+/**
+ * Whether the board offers Connect. A board without a bound calendar finds its scheduler through the view row; while
+ * that read has failed the board may already have one, so it offers no Connect (AGENTS.md 0.1). Nor while the
+ * scheduler's own row could not be read: the board may already have it.
+ */
+export function connectOffered(gate: ConnectGate): boolean {
+  return !gate.calendarUnread && (gate.boundCalendarId !== "" || !gate.viewRowFailed);
+}
+
+/**
+ * Connect's writes (a new scheduler, and this view's row linked to it) run only while Connect is offered: after a
+ * failed read of the view row or of the scheduler's row they are refused with `refusal` before anything is written, so Connect never makes a
+ * second scheduler or re-links the view row away from the one it has.
+ */
+export async function connectWrites<T>(gate: ConnectGate, refusal: string, write: () => Promise<T>): Promise<T> {
+  if (!connectOffered(gate)) {
+    throw new Error(refusal);
+  }
+  return write();
+}
+
 /**
  * Read a version token for some rows: their modifiedon stamps, joined. A
  * Save moves the token, so a watcher can tell a saved change from a quiet

@@ -1,6 +1,6 @@
 # Chrona Scheduler source
 
-The source of the Chrona Scheduler control in release 0.1.39. To use the scheduler, install the managed solution from the [releases](https://github.com/konfigure8/chrona-scheduler/releases); you do not need to build it.
+The source of the Chrona Scheduler control in release 0.1.40. To use the scheduler, install the managed solution from the [releases](https://github.com/konfigure8/chrona-scheduler/releases); you do not need to build it.
 
 | Folder | What it holds |
 | --- | --- |

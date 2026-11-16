@@ -1,5 +1,8 @@
+import * as assert from "node:assert/strict";
+
 import {
   aggregateVerdict,
+  boardEditing,
   beginAssignSession,
   beginLaneAssignSession,
   buildOffsetChanges,
@@ -11,6 +14,8 @@ import {
   computeCellDropResult,
   computeDragResult,
   dragResultChangesEvent,
+  hoverCardKeeps,
+  refusesChange,
 } from "../src/interactions";
 import type { SchedulerUiEvent, TimeWindow } from "../src/types";
 
@@ -284,6 +289,61 @@ function offsetChangesShiftByUnitAndSkipPinned(): void {
   assertEqual(blocked.blocked?.kind, "block");
 }
 
+/*
+ * BoardExtension takesBlockedChanges (Matt 2026-11-13, "Yes, add the switch"): without it the board refuses a blocked
+ * change, as it always has; with it the change goes to the host with its block verdict. Allow and warn are never refused.
+ */
+/*
+ * ShiftMark.action (Matt 2026-11-13, option A): a mark with an action keeps its hover card open for the pointer; with no
+ * action, or no mark, the card is read-only and closes as the pointer leaves, as it always has.
+ */
+function aHoverCardKeepsOnlyForAMarkWithAnAction(): void {
+  assertEqual(hoverCardKeeps(undefined), false);
+  assertEqual(hoverCardKeeps({}), false);
+  assertEqual(hoverCardKeeps({ action: { label: "See history", run: () => undefined } }), true);
+}
+
+/*
+ * A board its host locked (a read that failed, Matt 2026-11-16 "Yes, both boards") takes no edit and carries the lock's
+ * own sentence, so an extension's actions wait with it and never pose as a proposal under review. A proposal, a running
+ * solve or its live view stop edits too, with no lock reason: their own state says why.
+ */
+function aLockedBoardSaysWhyAndIsNoReview(): void {
+  const idle = { live: false, reviewing: false, solving: false };
+  const locked = boardEditing({ ...idle, editable: false, lockReason: "Couldn't load the workers." });
+  assert.equal(locked.canEdit, false, "a locked board takes no edit");
+  assert.equal(locked.lockReason, "Couldn't load the workers.", "a locked board names its lock");
+  const open = boardEditing({ ...idle, editable: true });
+  assert.equal(open.canEdit, true, "an open board takes edits");
+  assert.equal(open.lockReason, undefined, "an open board names no lock");
+  // A lock reason without the lock is not a lock: the board stays editable and names none.
+  assert.equal(boardEditing({ ...idle, lockReason: "Stale." }).lockReason, undefined, "no lock, no reason");
+  for (const [label, state] of [
+    ["a proposal", { ...idle, reviewing: true }],
+    ["a running solve", { ...idle, solving: true }],
+    ["a live view", { ...idle, live: true }],
+  ] as const) {
+    const stopped = boardEditing({ ...state, editable: true });
+    assert.equal(stopped.canEdit, false, `${label} takes no edit`);
+    assert.equal(stopped.lockReason, undefined, `${label} is no lock`);
+  }
+}
+
+function blockedChangesRefusedUnlessTheHostTakesThem(): void {
+  const block = { kind: "block" as const, reason: "On leave" };
+  assertEqual(refusesChange(block, undefined), true);
+  assertEqual(refusesChange(block, false), true);
+  assertEqual(refusesChange(block, true), false);
+  assertEqual(refusesChange({ kind: "warn", reason: "Short rest" }, undefined), false);
+  assertEqual(refusesChange({ kind: "allow" }, undefined), false);
+  assertEqual(refusesChange(undefined, undefined), false);
+  // Reassign N: the blocked set is refused without the switch and handed on whole with it.
+  const outcome = buildReassignChanges([event], "r-9", () => block);
+  assertEqual(refusesChange(outcome.blocked, undefined), true);
+  assertEqual(refusesChange(outcome.blocked, true), false);
+  assertEqual(outcome.changes.map((change) => change.verdict.kind).join(","), "block");
+}
+
 function reassignChangesMoveRowsAndDropNoOps(): void {
   const alreadyThere: SchedulerUiEvent = { ...event, id: "same", resourceId: "r-9" };
   const pinnedEvent: SchedulerUiEvent = { ...event, id: "anchored", pinned: true };
@@ -419,5 +479,8 @@ groupChangesIgnoreSourceDuplicatedInPartners();
 groupChangesSkipPinnedPartners();
 offsetChangesShiftByUnitAndSkipPinned();
 reassignChangesMoveRowsAndDropNoOps();
+aHoverCardKeepsOnlyForAMarkWithAnAction();
+blockedChangesRefusedUnlessTheHostTakesThem();
+aLockedBoardSaysWhyAndIsNoReview();
 
 console.log("interactions tests passed");

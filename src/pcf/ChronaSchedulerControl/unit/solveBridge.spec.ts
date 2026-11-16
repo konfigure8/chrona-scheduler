@@ -112,6 +112,10 @@ const run = async (): Promise<void> => {
     assert.equal(solveClickAction({ calendarId: "cal-1", hasSession: false, settingsReady: true }), "run");
     assert.equal(solveClickAction({ calendarId: undefined, hasSession: true, settingsReady: false }), "run");
     assert.equal(solveClickAction({ calendarId: undefined, hasSession: false, settingsReady: true }), "noCalendar");
+    // The scheduler's row or its people could not be read: no run, session or not; the click names the failed read.
+    assert.equal(solveClickAction({ calendarId: undefined, hasSession: false, settingsReady: true, settingsUnread: true }), "settingsUnread");
+    assert.equal(solveClickAction({ calendarId: "cal-1", hasSession: true, settingsReady: true, settingsUnread: true }), "settingsUnread");
+    assert.equal(solveClickAction({ calendarId: "cal-1", hasSession: false, settingsReady: true, settingsUnread: false }), "run");
   }
   console.log("solveBridge tests passed");
 };

@@ -1,6 +1,8 @@
 import { UNGROUPED } from "../src/groupSets";
 import {
+  bandGroupsOf,
   buildResourceGroups,
+  drawnRangeTarget,
   groupCollapseKey,
   showsGroupHeader,
 } from "../src/resourceGrouping";
@@ -185,5 +187,39 @@ noExtraNamesKeepsPeopleGroupsOnly();
 collapseKeysCannotCollide();
 peopleWithNoSubgroupComeFirstUnderTheirGroup();
 anEmptyUngroupedHasNoHeader();
+aDrawnRangeCarriesItsBandOnlyToAnExtensionsForm();
+
+/*
+ * Matt 2026-11-14 ("Yes, small free-board change"): a range drawn in a band of grouped rows hands the band's groups to an
+ * extension's own form (createEvent). Without that hook the board's own dialog gets the range exactly as drawn, so the
+ * free board behaves as before.
+ */
+function aDrawnRangeCarriesItsBandOnlyToAnExtensionsForm(): void {
+  const ann = resource("ann", "North", "Kitchen");
+  const bob = resource("bob");
+  const range = { end: new Date(2026, 10, 4, 17), resourceId: "ann", start: new Date(2026, 10, 4, 9) };
+  const resources = [ann, bob];
+  // No hook: the range itself, the same object, nothing added.
+  const board = drawnRangeTarget(range, false, resources, ["Sites", "Teams"]);
+  if (!("range" in board) || board.range !== range) {
+    throw new Error("Without createEvent the board's own dialog gets the range as drawn");
+  }
+  assertEqual(JSON.stringify(Object.keys(board)), JSON.stringify(["range"]));
+  // The hook: the row and its band's groups, in the sets the board shows.
+  const target = drawnRangeTarget(range, true, resources, ["Sites", "Teams"]);
+  if (!("request" in target)) {
+    throw new Error("With createEvent the extension's form gets a request");
+  }
+  assertEqual(target.request.resource, ann);
+  assertEqual(JSON.stringify(target.request.groups), JSON.stringify({ Sites: "North", Teams: "Kitchen" }));
+  assertEqual(target.request.start, range.start);
+  assertEqual(target.request.end, range.end);
+  // One set shown: that set only. Flat rows, or a row in no band (Ungrouped): no groups.
+  assertEqual(JSON.stringify(bandGroupsOf(ann, ["Sites"])), JSON.stringify({ Sites: "North" }));
+  assertEqual(bandGroupsOf(ann, []), undefined);
+  assertEqual(bandGroupsOf(bob, ["Sites", "Teams"]), undefined);
+  const flat = drawnRangeTarget({ ...range, resourceId: "bob" }, true, resources, ["Sites"]);
+  assertEqual("request" in flat && flat.request.groups === undefined && flat.request.resource === bob, true);
+}
 
 console.log("resourceGrouping tests passed");

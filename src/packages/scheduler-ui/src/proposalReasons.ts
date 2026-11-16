@@ -89,8 +89,6 @@ export function mustRuleLabel(rule: ScheduleRuleMatch["rule"], strings: Schedule
       return strings.mustRowNights;
     case "overlap":
       return strings.mustKindOverlap;
-    case "splitParts":
-      return strings.mustKindSplitParts;
     default:
       // A package's own row names itself (ruleRegistry.ts).
       return extensionMustRow(rule)?.label(strings) ?? strings.mustKindUnlisted;
@@ -252,8 +250,6 @@ function otherKind(match: ScheduleRuleMatch, strings: SchedulerStrings): string 
   switch (match.rule) {
     case "overlap":
       return strings.mustKindOverlap;
-    case "splitParts":
-      return strings.mustKindSplitParts;
     default:
       return strings.mustKindUnlisted;
   }
@@ -320,5 +316,5 @@ export function drillDownEntries(
 }
 
 function mustRowOfRule(match: ScheduleRuleMatch): "named" | "other" {
-  return match.rule === "overlap" || match.rule === "splitParts" || match.rule === "unlisted" ? "other" : "named";
+  return match.rule === "overlap" || match.rule === "unlisted" ? "other" : "named";
 }

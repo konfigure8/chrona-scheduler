@@ -587,14 +587,14 @@ export function isOptionalMustRow(row: MustRow): boolean {
 
 /** The row a Must rule's matches count in: the named rows, else "Other Must rules". */
 export function mustRowOf(rule: MustRuleName): MustRow {
-  return rule === "overlap" || rule === "splitParts" || rule === "unlisted" ? "other" : rule;
+  return rule === "overlap" || rule === "unlisted" ? "other" : rule;
 }
 
 /** A row's count in one roster's counts. */
 export function mustRowCount(counts: MustBreachCounts, row: MustRow): number {
   if (row === "other") {
     const { other } = counts;
-    return other.overlap + other.splitParts + other.unlisted;
+    return other.overlap + other.unlisted;
   }
   if (row === "nights") {
     return counts.nights ?? 0;
@@ -645,9 +645,58 @@ export interface AppliedOutcome {
   readonly window: { readonly end: Date; readonly start: Date };
 }
 
+/**
+ * A count with its approved matches left out (ReviewExtension.approved): each approved Must match takes one off its row.
+ * Counts with no matches to read (a run too large to explain) stay as they are.
+ */
+export function withoutApproved(
+  counts: MustBreachCounts,
+  matches: readonly ScheduleRuleMatch[],
+  approved: (match: ScheduleRuleMatch) => boolean,
+): { readonly matches: readonly ScheduleRuleMatch[]; readonly mustBreaches: MustBreachCounts } {
+  let left = counts;
+  const kept: ScheduleRuleMatch[] = [];
+  for (const match of matches) {
+    if (!isMustRule(match.rule) || !approved(match)) {
+      kept.push(match);
+      continue;
+    }
+    if (match.rule === "overlap") {
+      left = { ...left, other: { ...left.other, [match.rule]: Math.max(0, left.other[match.rule] - 1) } };
+      continue;
+    }
+    const value = (left as unknown as Readonly<Record<string, number | undefined>>)[match.rule];
+    if (typeof value === "number") {
+      left = { ...left, [match.rule]: Math.max(0, value - 1) };
+    }
+  }
+  return { matches: kept, mustBreaches: left };
+}
+
+/** The report with the approved matches left out of both rosters' counts and matches; unchanged without approved. */
 export function proposalMustReport(
   proposal: ScheduleProposal,
   options: ProposalPreviewOptions = {},
+  recount?: () => { readonly matches: readonly ScheduleRuleMatch[]; readonly mustBreaches: MustBreachCounts },
+  recountNow?: () => { readonly matches: readonly ScheduleRuleMatch[]; readonly mustBreaches: MustBreachCounts },
+  approved?: (match: ScheduleRuleMatch) => boolean,
+): MustReport {
+  const report = countedMustReport(proposal, options, recount, recountNow);
+  if (!approved) {
+    return report;
+  }
+  const now = report.now && report.nowMatches ? withoutApproved(report.now, report.nowMatches, approved) : undefined;
+  const proposed = report.proposed && report.proposedMatches ? withoutApproved(report.proposed, report.proposedMatches, approved) : undefined;
+  return {
+    ...report,
+    ...(now ? { now: now.mustBreaches, nowMatches: now.matches } : {}),
+    ...(proposed ? { proposed: proposed.mustBreaches, proposedMatches: proposed.matches } : {}),
+  };
+}
+
+function countedMustReport(
+  proposal: ScheduleProposal,
+  options: ProposalPreviewOptions,
   recount?: () => { readonly matches: readonly ScheduleRuleMatch[]; readonly mustBreaches: MustBreachCounts },
   recountNow?: () => { readonly matches: readonly ScheduleRuleMatch[]; readonly mustBreaches: MustBreachCounts },
 ): MustReport {

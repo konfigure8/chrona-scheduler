@@ -1,7 +1,7 @@
 import { isPinned } from "./locks";
 import { clampResizeEnd, clampResizeStart } from "./spans";
 import { offsetToDate, snapDate } from "./timeAxis";
-import type { SchedulerUiEvent, TimeWindow } from "./types";
+import type { SchedulerResource, SchedulerUiEvent, TimeWindow } from "./types";
 
 export type DragKind = "assign" | "create" | "move" | "resizeEnd" | "resizeStart";
 
@@ -28,6 +28,29 @@ export interface DragResult {
   readonly end: Date;
   readonly resourceId: string;
   readonly start: Date;
+}
+
+/** A new item the board hands its host: from New event, or a range drawn on the grid. */
+export interface CreateRequest {
+  readonly end: Date;
+  /** The row it was drawn on; absent on the unassigned row. */
+  readonly resource?: SchedulerResource;
+  readonly start: Date;
+  /**
+   * The band of grouped rows it was drawn in: the row's value in each grouping set the board shows, by set name (as an
+   * item's groups are). Absent when the rows are not grouped or the row sits in no band (Ungrouped).
+   */
+  readonly groups?: Readonly<Record<string, string>>;
+  /**
+   * The required tags of the band it was made in (a Roster band grouped by a tag, such as a role): the new item starts
+   * with them, so it lands in that band. Absent = none.
+   */
+  readonly requiredTags?: readonly string[];
+  /**
+   * A day picked, not a time range (a Roster day cell): start and end are the day's bounds on the board's clock, and the
+   * host's form starts on that day with no times. Absent = the range is the item's times.
+   */
+  readonly dayOnly?: true;
 }
 
 export type ChangeVerdictKind = "allow" | "block" | "warn";
@@ -57,6 +80,47 @@ export interface ChangeVerdict {
 }
 
 export const allowVerdict: ChangeVerdict = { kind: "allow" };
+
+/**
+ * True when a shift's hover card takes the pointer and stays a moment after the pointer leaves the shift: its mark
+ * offers an action (BoardExtension.shiftMark's action, such as "See history"). Without one, the card is read-only and
+ * closes as the pointer leaves, as it always has.
+ */
+export function hoverCardKeeps(mark: { readonly action?: unknown } | undefined): boolean {
+  return mark?.action !== undefined;
+}
+
+/**
+ * Whether the board takes edits (BoardState.canEdit), and the host's reason when the host locked it (BoardState
+ * lockReason). A proposal under review, a running solve or its live view stop edits too, but are no lock: their own
+ * state says why, so they carry no lock reason. A lock reason without the lock (editable not false) is none.
+ */
+export function boardEditing(input: {
+  readonly editable?: boolean;
+  readonly live: boolean;
+  readonly lockReason?: string;
+  readonly reviewing: boolean;
+  readonly solving: boolean;
+}): { readonly canEdit: boolean; readonly lockReason?: string } {
+  const locked = input.editable === false;
+  return {
+    canEdit: !locked && !input.reviewing && !input.live && !input.solving,
+    ...(locked && input.lockReason !== undefined ? { lockReason: input.lockReason } : {}),
+  };
+}
+
+/**
+ * True when the board refuses a change itself: its rules block it and
+ * the host has not asked for blocked changes (BoardExtension
+ * takesBlockedChanges). With the switch on, the change goes to the host
+ * with its block verdict and the host decides.
+ */
+export function refusesChange(
+  verdict: ChangeVerdict | undefined,
+  takesBlockedChanges: boolean | undefined,
+): boolean {
+  return verdict?.kind === "block" && takesBlockedChanges !== true;
+}
 
 /**
  * Fold rule results into the aggregate verdict: any block blocks,

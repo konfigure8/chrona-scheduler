@@ -121,9 +121,13 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
                 ? "chrona-sched__menu-item chrona-sched__menu-item--danger"
                 : "chrona-sched__menu-item"
             }
+            // A disabled item stays focusable and is announced as disabled, as Fluent's MenuItem is; it runs nothing.
+            aria-disabled={item.disabled ? true : undefined}
             data-item-id={item.id}
-            disabled={item.disabled}
             onClick={() => {
+              if (item.disabled) {
+                return;
+              }
               // Focus goes back to what opened the menu before the item acts, so a dialog it opens
               // hands focus back there when it closes.
               restore();

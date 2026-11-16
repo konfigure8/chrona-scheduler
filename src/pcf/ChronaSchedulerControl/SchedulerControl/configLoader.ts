@@ -1,10 +1,10 @@
 /**
  * F3 config loader: everything behind calendarConfigId, per
  * Docs/pcf_config_schema.md. Pure mappers turn raw WebAPI entities into
- * the package's host types; the orchestrator runs the reads in
- * parallel with every read independently try/caught, so a missing
- * table, row, or privilege leaves that capability at its zero-config
- * default and never blocks the others. The adapter owns paging
+ * the package's host types. A row that is not there leaves that
+ * capability at its zero-config default; a read that fails is logged
+ * and named in the config (readFailed), never read as no row
+ * (AGENTS.md 0.1). The adapter owns paging
  * (every read follows nextLink to completion) - the accepted cost of
  * the WebAPI-not-a-second-dataset decision.
  *
@@ -94,6 +94,12 @@ export interface HostConfig {
   /** resourceId -> IANA zone (per-resource timezone, section 7). */
   readonly resourceTimeZones: ReadonlyMap<string, string>;
   readonly policies: RulePolicies;
+  /**
+   * A read that failed (AGENTS.md 0.1), its cause logged: "calendar", the scheduler's own row, so nothing behind it
+   * was read and the board knows no scheduler, zone or settings; "resources", its people, so it knows nobody. Absent
+   * when every read answered, a row that is not there included.
+   */
+  readonly readFailed?: "calendar" | "resources";
 }
 
 /** F38: the products a calendar can name, by its chr_product choice value. */
@@ -125,6 +131,29 @@ export function nextCalendarName(base: string, existing: readonly string[]): str
 /** F39: the query for calendars whose name starts with a base name. */
 export function calendarsNamedLikeQuery(base: string): string {
   return `?$select=chr_name&$filter=startswith(chr_name,'${escapeODataLiteral(base)}')`;
+}
+
+/**
+ * The board's sentence for a read that failed (HostConfig.readFailed): its error notice, its data notice and a run
+ * click's answer. Undefined when every read answered.
+ */
+export function hostReadFailure(
+  config: Pick<HostConfig, "readFailed">,
+  messages: { readonly msgCalendarUnread: string; readonly msgResourcesUnread: string },
+): string | undefined {
+  return config.readFailed === "calendar"
+    ? messages.msgCalendarUnread
+    : config.readFailed === "resources"
+      ? messages.msgResourcesUnread
+      : undefined;
+}
+
+/**
+ * Whether the board is read-only: while the scheduler's row or its resources could not be read (Matt 2026-11-16,
+ * "Yes, both boards"), no new item, no item edit and no drag; the data notice says why.
+ */
+export function hostEditsLocked(config: Pick<HostConfig, "readFailed">): boolean {
+  return config.readFailed !== undefined;
 }
 
 export const emptyHostConfig: HostConfig = {
@@ -265,35 +294,43 @@ function escapeODataLiteral(value: string): string {
   return value.replace(/'/g, "''");
 }
 
-async function resolveCalendarRow(
-  webApi: WebApi,
-  calendarConfigId: string,
-): Promise<Entity | undefined> {
-  if (GUID_PATTERN.test(calendarConfigId)) {
-    return webApi.retrieveRecord(
-      "chr_chronaschedulercalendar",
-      calendarConfigId,
-    );
-  }
-  const byName = await webApi.retrieveMultipleRecords(
-    "chr_chronaschedulercalendar",
-    `?$filter=chr_name eq '${escapeODataLiteral(calendarConfigId)}'&$top=1`,
-  );
-  return byName.entities[0];
-}
+/** A read's answer: what it read, or the read failed. Never a failure read as no rows (AGENTS.md 0.1). */
+export type ReadOutcome<T> = { readonly kind: "read"; readonly value: T } | { readonly error: unknown; readonly kind: "failed" };
 
-export async function safely<T>(fallback: T, run: () => Promise<T>): Promise<T> {
+async function outcomeOf<T>(run: () => Promise<T>): Promise<ReadOutcome<T>> {
   try {
-    return await run();
-  } catch {
-    return fallback;
+    return { kind: "read", value: await run() };
+  } catch (error) {
+    return { error, kind: "failed" };
   }
 }
 
 /**
+ * The calendar row by its id or its name. Both are a query, so a row that is not there is an empty answer
+ * (undefined) and only a refused or failed read is "failed".
+ */
+function resolveCalendarRow(
+  webApi: WebApi,
+  calendarConfigId: string,
+): Promise<ReadOutcome<Entity | undefined>> {
+  const filter = GUID_PATTERN.test(calendarConfigId)
+    ? `chr_chronaschedulercalendarid eq ${calendarConfigId}`
+    : `chr_name eq '${escapeODataLiteral(calendarConfigId)}'`;
+  return outcomeOf(async () => {
+    const found = await webApi.retrieveMultipleRecords(
+      "chr_chronaschedulercalendar",
+      `?$filter=${filter}&$top=1`,
+    );
+    return found.entities[0];
+  });
+}
+
+/**
  * Loads the full config surface: the calendar row and its people. Never
- * throws: each capability degrades independently to its zero-config
- * default.
+ * throws: a row that is not there leaves its capability at its
+ * zero-config default, and a read that fails is logged and named
+ * (readFailed). A calendar row that could not be read loads nothing
+ * behind it.
  */
 export async function loadHostConfig(
   webApi: WebApi | undefined,
@@ -307,9 +344,13 @@ export async function loadHostConfig(
     return emptyHostConfig;
   }
 
-  const calendarEntity = await safely<Entity | undefined>(undefined, () =>
-    resolveCalendarRow(webApi, trimmed),
-  );
+  const calendarRead = await resolveCalendarRow(webApi, trimmed);
+  if (calendarRead.kind === "failed") {
+    console.error("[chrona] the scheduler's settings could not be read", calendarRead.error);
+    // Nobody is known either: never the people the shifts name.
+    return { ...emptyHostConfig, readFailed: "calendar", resources: [] };
+  }
+  const calendarEntity = calendarRead.value;
   const mapping = calendarEntity ? mapCalendarRow(calendarEntity) : undefined;
   const policies = mapCalendarPolicies(calendarEntity);
   const calendarId = calendarEntity
@@ -317,9 +358,9 @@ export async function loadHostConfig(
     : undefined;
 
   const idColumn = mapping ? `${mapping.table}id` : undefined;
-  const resourceRows: readonly Entity[] =
+  const resourcesRead: ReadOutcome<readonly Entity[]> =
     mapping && idColumn
-      ? await safely<readonly Entity[]>([], () => {
+      ? await outcomeOf<readonly Entity[]>(() => {
           const columns = [
             idColumn,
             mapping.nameColumn,
@@ -332,7 +373,11 @@ export async function loadHostConfig(
           const filter = mapping.filter ? `&$filter=${mapping.filter}` : "";
           return retrieveAll(webApi, mapping.table, `?$select=${columns.join(",")}${filter}`);
         })
-      : [];
+      : { kind: "read", value: [] };
+  if (resourcesRead.kind === "failed") {
+    console.error("[chrona] the scheduler's people could not be read", resourcesRead.error);
+  }
+  const resourceRows = resourcesRead.kind === "read" ? resourcesRead.value : [];
 
   let resources: readonly SchedulerResource[] | undefined;
   let timeZones: ReadonlyMap<string, string> = new Map();
@@ -355,8 +400,10 @@ export async function loadHostConfig(
       : undefined,
     policies,
     product: productFromChoice(calendarEntity ? num(calendarEntity, "chr_product") : undefined),
+    ...(resourcesRead.kind === "failed" ? { readFailed: "resources" as const } : {}),
     resourceMapping: mapping,
-    resources,
+    // People that could not be read are nobody the board knows, never the people its shifts name.
+    resources: resourcesRead.kind === "failed" ? [] : resources,
     resourceTimeZones: timeZones,
     timeZone: calendarEntity ? text(calendarEntity, "chr_timezone") : undefined,
   };

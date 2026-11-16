@@ -195,17 +195,44 @@
   <data name="draftItem" xml:space="preserve">
     <value>Neues Element</value>
   </data>
-  <data name="duration" xml:space="preserve">
-    <value>Dauer</value>
-  </data>
   <data name="hoverHours" xml:space="preserve">
     <value>{hours} Std.</value>
   </data>
   <data name="hoverHoursMinutes" xml:space="preserve">
     <value>{hours} Std. {minutes} Min.</value>
   </data>
-  <data name="hoverWorkedSpan" xml:space="preserve">
-    <value>{worked} (Spanne {span})</value>
+  <data name="hoverTimes" xml:space="preserve">
+    <value>Zeiten</value>
+  </data>
+  <data name="hoverDayTime" xml:space="preserve">
+    <value>{day} {time}</value>
+  </data>
+  <data name="hoverTimeRange" xml:space="preserve">
+    <value>{start} – {end}</value>
+  </data>
+  <data name="hoverTimesLength" xml:space="preserve">
+    <value>{times} ({length})</value>
+  </data>
+  <data name="hoverWorkedAndSpan" xml:space="preserve">
+    <value>{worked} gearbeitet, Spanne {span}</value>
+  </data>
+  <data name="hoverBreaks" xml:space="preserve">
+    <value>Pausen</value>
+  </data>
+  <data name="hoverBreak" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="hoverBreakPaid" xml:space="preserve">
+    <value>{break} (bezahlt)</value>
+  </data>
+  <data name="hoverBreakUnpaid" xml:space="preserve">
+    <value>{break} (unbezahlt)</value>
+  </data>
+  <data name="hoverPinned" xml:space="preserve">
+    <value>Angeheftet</value>
+  </data>
+  <data name="hoverSplitShift" xml:space="preserve">
+    <value>Teildienst</value>
   </data>
   <data name="emptyResources" xml:space="preserve">
     <value>Keine Ressourcen vorhanden. Konfiguration der Ansicht prüfen.</value>
@@ -351,6 +378,9 @@
   <data name="moveUnit" xml:space="preserve">
     <value>Einheit</value>
   </data>
+  <data name="msgCalendarUnread" xml:space="preserve">
+    <value>Die Einstellungen dieses Planers konnten nicht gelesen werden. Laden Sie die Seite neu, um es erneut zu versuchen.</value>
+  </data>
   <data name="msgCannotCreateHere" xml:space="preserve">
     <value>Hier kann nichts angelegt werden</value>
   </data>
@@ -411,6 +441,12 @@
   <data name="msgRestoreSkipped" xml:space="preserve">
     <value> ({count} Element(e) konnten nicht wiederhergestellt werden)</value>
   </data>
+  <data name="msgResourcesUnread" xml:space="preserve">
+    <value>Die Ressourcen konnten nicht geladen werden, daher sind auch ihre Elemente ausgeblendet. Laden Sie die Seite neu, um es erneut zu versuchen.</value>
+  </data>
+  <data name="msgResourcesUnreadGrid" xml:space="preserve">
+    <value>Die Ressourcen konnten nicht geladen werden.</value>
+  </data>
   <data name="msgRestored" xml:space="preserve">
     <value>Wiederhergestellt</value>
   </data>
@@ -450,6 +486,9 @@
   <data name="msgUpdated" xml:space="preserve">
     <value>{title} aktualisiert</value>
   </data>
+  <data name="msgViewSettingsUnread" xml:space="preserve">
+    <value>Die Einstellungen dieser Ansicht konnten nicht gelesen werden. Laden Sie die Seite neu, um es erneut zu versuchen.</value>
+  </data>
   <data name="msgWarningSuffix" xml:space="preserve">
     <value> (Hinweis: {reason})</value>
   </data>
@@ -460,7 +499,7 @@
     <value>Besetzung offen</value>
   </data>
   <data name="newEvent" xml:space="preserve">
-    <value>Neuer Termin</value>
+    <value>Neu</value>
   </data>
   <data name="next" xml:space="preserve">
     <value>Weiter</value>
@@ -762,6 +801,9 @@
   <data name="resumeRunning" xml:space="preserve">
     <value>Für diesen Plan läuft gerade eine automatische Planung.</value>
   </data>
+  <data name="rosterCreateHint" xml:space="preserve">
+    <value>Drücken Sie auf einem Tag die Eingabetaste, um ein Element hinzuzufügen.</value>
+  </data>
   <data name="rosterOpenShifts" xml:space="preserve">
     <value>Offene Schichten</value>
   </data>
@@ -1044,6 +1086,9 @@
   <data name="msgSettingsFailed" xml:space="preserve">
     <value>Die Planer-Einstellungen konnten nicht geöffnet werden</value>
   </data>
+  <data name="msgSettingsUnreadGrid" xml:space="preserve">
+    <value>Die Einstellungen konnten nicht geladen werden.</value>
+  </data>
   <data name="noDate" xml:space="preserve">
     <value>Kein Datum</value>
   </data>
@@ -1097,9 +1142,6 @@
   </data>
   <data name="mustKindOverlap" xml:space="preserve">
     <value>Doppelbuchung</value>
-  </data>
-  <data name="mustKindSplitParts" xml:space="preserve">
-    <value>Teildienst</value>
   </data>
   <data name="mustKindUnlisted" xml:space="preserve">
     <value>Sonstige</value>
@@ -1286,5 +1328,8 @@
   </data>
   <data name="preferencesUnmetTitle" xml:space="preserve">
     <value>Nicht erfüllte Präferenzen</value>
+  </data>
+  <data name="msgCommandsFailed" xml:space="preserve">
+    <value>App-Befehle konnten nicht geladen werden. Öffnen Sie das Menü erneut.</value>
   </data>
 </root>

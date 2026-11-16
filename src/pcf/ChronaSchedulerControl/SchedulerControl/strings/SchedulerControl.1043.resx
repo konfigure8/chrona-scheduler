@@ -195,17 +195,44 @@
   <data name="draftItem" xml:space="preserve">
     <value>Nieuw item</value>
   </data>
-  <data name="duration" xml:space="preserve">
-    <value>Duur</value>
-  </data>
   <data name="hoverHours" xml:space="preserve">
     <value>{hours} u</value>
   </data>
   <data name="hoverHoursMinutes" xml:space="preserve">
     <value>{hours} u {minutes} min</value>
   </data>
-  <data name="hoverWorkedSpan" xml:space="preserve">
-    <value>{worked} (tijdspanne {span})</value>
+  <data name="hoverTimes" xml:space="preserve">
+    <value>Tijden</value>
+  </data>
+  <data name="hoverDayTime" xml:space="preserve">
+    <value>{day} {time}</value>
+  </data>
+  <data name="hoverTimeRange" xml:space="preserve">
+    <value>{start} – {end}</value>
+  </data>
+  <data name="hoverTimesLength" xml:space="preserve">
+    <value>{times} ({length})</value>
+  </data>
+  <data name="hoverWorkedAndSpan" xml:space="preserve">
+    <value>{worked} gewerkt, tijdspanne {span}</value>
+  </data>
+  <data name="hoverBreaks" xml:space="preserve">
+    <value>Pauzes</value>
+  </data>
+  <data name="hoverBreak" xml:space="preserve">
+    <value>Pauze</value>
+  </data>
+  <data name="hoverBreakPaid" xml:space="preserve">
+    <value>{break} (betaald)</value>
+  </data>
+  <data name="hoverBreakUnpaid" xml:space="preserve">
+    <value>{break} (onbetaald)</value>
+  </data>
+  <data name="hoverPinned" xml:space="preserve">
+    <value>Vastgezet</value>
+  </data>
+  <data name="hoverSplitShift" xml:space="preserve">
+    <value>Gebroken dienst</value>
   </data>
   <data name="emptyResources" xml:space="preserve">
     <value>Geen resources. Controleer de instellingen van de weergave.</value>
@@ -351,6 +378,9 @@
   <data name="moveUnit" xml:space="preserve">
     <value>Eenheid</value>
   </data>
+  <data name="msgCalendarUnread" xml:space="preserve">
+    <value>Kon de instellingen van deze planner niet lezen. Laad de pagina opnieuw om het nog eens te proberen.</value>
+  </data>
   <data name="msgCannotCreateHere" xml:space="preserve">
     <value>Hier aanmaken niet mogelijk</value>
   </data>
@@ -411,6 +441,12 @@
   <data name="msgRestoreSkipped" xml:space="preserve">
     <value> ({count} items niet hersteld)</value>
   </data>
+  <data name="msgResourcesUnread" xml:space="preserve">
+    <value>Kan de resources niet laden, dus hun items zijn ook verborgen. Laad de pagina opnieuw om het nog eens te proberen.</value>
+  </data>
+  <data name="msgResourcesUnreadGrid" xml:space="preserve">
+    <value>Kan de resources niet laden.</value>
+  </data>
   <data name="msgRestored" xml:space="preserve">
     <value>Hersteld</value>
   </data>
@@ -450,6 +486,9 @@
   <data name="msgUpdated" xml:space="preserve">
     <value>{title} bijgewerkt</value>
   </data>
+  <data name="msgViewSettingsUnread" xml:space="preserve">
+    <value>Kon de instellingen van deze weergave niet lezen. Laad de pagina opnieuw om het nog eens te proberen.</value>
+  </data>
   <data name="msgWarningSuffix" xml:space="preserve">
     <value> (let op: {reason})</value>
   </data>
@@ -460,7 +499,7 @@
     <value>Bezetting nodig</value>
   </data>
   <data name="newEvent" xml:space="preserve">
-    <value>Nieuwe afspraak</value>
+    <value>Nieuw</value>
   </data>
   <data name="next" xml:space="preserve">
     <value>Volgende</value>
@@ -762,6 +801,9 @@
   <data name="resumeRunning" xml:space="preserve">
     <value>Er loopt een automatische planning voor dit rooster.</value>
   </data>
+  <data name="rosterCreateHint" xml:space="preserve">
+    <value>Druk op Enter bij een dag om een item toe te voegen.</value>
+  </data>
   <data name="rosterOpenShifts" xml:space="preserve">
     <value>Open diensten</value>
   </data>
@@ -1044,6 +1086,9 @@
   <data name="msgSettingsFailed" xml:space="preserve">
     <value>Kan de plannerinstellingen niet openen</value>
   </data>
+  <data name="msgSettingsUnreadGrid" xml:space="preserve">
+    <value>Kan de instellingen niet laden.</value>
+  </data>
   <data name="noDate" xml:space="preserve">
     <value>Geen datum</value>
   </data>
@@ -1097,9 +1142,6 @@
   </data>
   <data name="mustKindOverlap" xml:space="preserve">
     <value>Dubbele boeking</value>
-  </data>
-  <data name="mustKindSplitParts" xml:space="preserve">
-    <value>Gebroken dienst</value>
   </data>
   <data name="mustKindUnlisted" xml:space="preserve">
     <value>Overige</value>
@@ -1286,5 +1328,8 @@
   </data>
   <data name="preferencesUnmetTitle" xml:space="preserve">
     <value>Niet vervulde voorkeuren</value>
+  </data>
+  <data name="msgCommandsFailed" xml:space="preserve">
+    <value>Kan de opdrachten van de app niet laden. Open het menu opnieuw.</value>
   </data>
 </root>

@@ -167,17 +167,6 @@ function redactWith(
       resourceId: pseudoResource(band.resourceId),
       start: band.start,
     }));
-  // F48 Split shifts: the parts of a split share a pseudonym in place of their id.
-  const splitPseudonyms = new Map<string, string>();
-  const pseudoSplit = (realId: string): string => {
-    const known = splitPseudonyms.get(realId);
-    if (known) {
-      return known;
-    }
-    const pseudonym = `s-${splitPseudonyms.size + 1}`;
-    splitPseudonyms.set(realId, pseudonym);
-    return pseudonym;
-  };
   return {
     problem: {
       ...extraFacts,
@@ -216,7 +205,7 @@ function redactWith(
                 },
               }
             : {}),
-          // Breaks are times only: unpaid ones come off paid hours (F48 Split shifts).
+          // Breaks are times only: unpaid ones come off paid hours.
           ...(shift.breaks && shift.breaks.length > 0 ? { breaks: shift.breaks } : {}),
           end: shift.end,
           ...(shift.history === true ? { history: true } : {}),
@@ -225,9 +214,6 @@ function redactWith(
           ...(shift.onCall === true ? { onCall: true as const } : {}),
           requiredSkills: shift.requiredSkills,
           ...(shift.site ? { site: shift.site } : {}),
-          ...(shift.split
-            ? { split: { id: pseudoSplit(shift.split.id), samePerson: shift.split.samePerson } }
-            : {}),
           start: shift.start,
           // Nights: a tag is a fact about the shift (Night), never a name.
           ...(shift.tags && shift.tags.length > 0 ? { tags: shift.tags } : {}),

@@ -11,8 +11,7 @@
  * implemented contract/cost facts, the agreements people work under
  * (minimum rest and days in a row, dated), unavailability and
  * preferred or unpreferred time, shifts with times/required
- * skills/assignment/pinned/history, their breaks and split parts (F48
- * Split shifts), on-call shifts and the repair intent (F24 Repair
+ * skills/assignment/pinned/history, their breaks, on-call shifts and the repair intent (F24 Repair
  * mode), the run result we already expose, and the rule checks behind
  * it: breach counts and the rule matches that explain a roster, before
  * and after, and the check of one person on one shift. Generation,
@@ -253,12 +252,6 @@ export interface ScheduleContractShift {
   readonly requiredSkills: readonly string[];
   /** The shift's site (F63 Person sites): only someone who works there takes it. Absent = no site. */
   readonly site?: string;
-  /**
-   * One part of a split shift (F48 Split shifts): parts share the id.
-   * The gap between parts is not rest; "required" makes one person for
-   * both parts a must, "preferred" a preference.
-   */
-  readonly split?: { readonly id: string; readonly samePerson: "preferred" | "required" };
   readonly start: string;
   /** The shift's tags (Timefold shift tags): Night marks a night shift. Absent = none. */
   readonly tags?: readonly string[];
@@ -347,7 +340,6 @@ export type MustRuleName =
   | "restBetweenShifts"
   | "site"
   | "skills"
-  | "splitParts"
   | "unlisted"
   | "weeklyRest"
   | keyof ExtensionMustRows;
@@ -356,7 +348,6 @@ export type MustRuleName =
 export type ShouldRuleName =
   | "minimumHours"
   | "preferredTime"
-  | "splitPartsOnePerson"
   | "spreadOfShifts"
   | "unpreferredTime"
   | keyof ExtensionShouldRules;
@@ -374,7 +365,6 @@ const MUST_RULES: ReadonlySet<string> = new Set<string>([
   "restBetweenShifts",
   "site",
   "skills",
-  "splitParts",
   "unlisted",
   "weeklyRest",
 ]);
@@ -382,7 +372,6 @@ const MUST_RULES: ReadonlySet<string> = new Set<string>([
 const SHOULD_RULES: ReadonlySet<string> = new Set<string>([
   "minimumHours",
   "preferredTime",
-  "splitPartsOnePerson",
   "spreadOfShifts",
   "unpreferredTime",
 ]);
@@ -400,8 +389,6 @@ export function isShouldRule(rule: string): rule is ShouldRuleName {
 /** Must breaches outside the named counts, one per match. */
 export interface OtherMustBreachCounts {
   readonly overlap: number;
-  /** Parts of a split that must share one person, held by two. */
-  readonly splitParts: number;
   /** Every other Must rule. */
   readonly unlisted: number;
 }
@@ -434,8 +421,7 @@ export interface MustBreachCounts {
   readonly other: OtherMustBreachCounts;
   /**
    * One per pair of a person's consecutive shifts whose gap is shorter
-   * than the minimum in force at the later shift's start. The parts of
-   * one split shift are not a pair.
+   * than the minimum in force at the later shift's start.
    */
   readonly restBetweenShifts: number;
   /** One per assigned shift at a site its person does not work at (F63 Person sites). */
@@ -462,7 +448,6 @@ export function mustBreachTotal(counts: MustBreachCounts): number {
     counts.site +
     counts.onLeaveOrUnavailable +
     other.overlap +
-    other.splitParts +
     other.unlisted
   );
 }
@@ -746,7 +731,6 @@ export function problemFromSchedule(
       id: event.id,
       ...(event.onCall ? { onCall: true as const } : {}),
       requiredSkills: event.requiredTags ?? [],
-      ...(event.split ? { split: { id: event.split.id, samePerson: event.split.samePerson } } : {}),
       start: wire(event.start),
       // Nights: a night shift carries the tag the Nights rules count.
       ...(event.night ? { tags: ["Night"] } : {}),

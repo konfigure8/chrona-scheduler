@@ -267,7 +267,7 @@
 /* Continuation chevrons: the event extends past the visible window. */
 
 /*
- * A rostered gap: the bar keeps its outline so a split still reads as ONE
+ * A rostered gap: the bar keeps its outline so a split shift reads as ONE
  * shift, and the gap section washes out so you can see the hole. Sits
  * above the bar fill but below the handles, and keeps pointer events so
  * the browser tooltip fires - clicks still bubble to the bar, so drag and
@@ -640,6 +640,34 @@
 
 .chrona-sched__hover-card-mark {
   margin: 0 0 8px;
+}
+
+/* A mark's action in the hover card (ShiftMark.action): the card takes the pointer, and the action is a Fluent link. */
+.chrona-sched__hover-card.chrona-sched__hover-card--action {
+  pointer-events: auto;
+}
+
+.chrona-sched__hover-card-action {
+  background: none;
+  border: 0;
+  border-radius: var(--csui-radius);
+  color: var(--csui-brand-fg);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  line-height: 16px;
+  margin: -4px 0 8px;
+  padding: 0;
+  text-decoration: none;
+}
+
+.chrona-sched__hover-card-action:hover {
+  text-decoration: underline;
+}
+
+.chrona-sched__hover-card-action:focus-visible {
+  outline: 2px solid var(--csui-brand);
+  outline-offset: 1px;
 }
 
 .chrona-sched__dialog-mark {
@@ -1654,6 +1682,28 @@
   color: var(--csui-danger);
 }
 
+/*
+ * A disabled item (aria-disabled: it stays focusable and announced) reads muted and does not light up under the
+ * pointer. The soft text keeps a status line such as a failed read legible.
+ */
+.chrona-sched__menu-item:disabled,
+.chrona-sched__menu-item[aria-disabled="true"] {
+  color: var(--csui-text-soft);
+  cursor: default;
+}
+
+/* A disabled item wraps to the width the live items set, so a long status line does not widen the menu. */
+.chrona-sched__menu-item[aria-disabled="true"] {
+  min-width: 100%;
+  white-space: normal;
+  width: 0;
+}
+
+.chrona-sched__menu-item:disabled:hover,
+.chrona-sched__menu-item[aria-disabled="true"]:hover {
+  background: none;
+}
+
 .chrona-sched__hover-card {
   background: var(--csui-bg);
   border: 1px solid var(--csui-stroke);
@@ -1686,17 +1736,116 @@
   top: -5px;
 }
 
-.chrona-sched__hover-card-title {
-  font-size: 14px;
-  font-weight: 600;
+/*
+ * The card's head (Matt 2026-11-13): the title, the status as a chip beside it, and the pin mark at the end. The
+ * kinds of shift (On call, night, split, busy elsewhere) sit under it as chips. Rules part the blocks below.
+ */
+.chrona-sched__hover-card-head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
   margin-bottom: 8px;
 }
 
+.chrona-sched__hover-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The status chip: the Shift dialog's tint pair, informative for assigned and the attention tone for needs cover. */
+.chrona-sched__hover-card-status,
+.chrona-sched__hover-card-chip {
+  align-items: center;
+  background: var(--csui-badge);
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  color: var(--csui-badge-text);
+  display: inline-flex;
+  font-size: 12px;
+  gap: 4px;
+  line-height: 16px;
+  padding: 1px 8px;
+  white-space: nowrap;
+}
+
+.chrona-sched__hover-card-status--assigned {
+  background: var(--csui-brand-bg);
+  border-color: var(--csui-brand-stroke);
+  color: var(--csui-brand-fg);
+}
+
+.chrona-sched__hover-card-status--needsCover {
+  background: var(--csui-warn-bg);
+  border-color: var(--csui-warn-stroke);
+  color: var(--csui-warn);
+}
+
+/* Pinned: the board's pin in a brand disc at the head's end, the one thing held by the planner. */
+.chrona-sched__hover-card-pin {
+  align-items: center;
+  background: var(--csui-brand-bg);
+  border: 1px solid var(--csui-brand-stroke);
+  border-radius: 9999px;
+  color: var(--csui-brand-fg);
+  display: inline-flex;
+  flex: none;
+  height: 24px;
+  justify-content: center;
+  margin-left: auto;
+  width: 24px;
+}
+
+.chrona-sched__hover-card-pin .chrona-sched__pin {
+  height: 12px;
+  opacity: 1;
+  width: 12px;
+}
+
+.chrona-sched__hover-card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: -4px 0 8px;
+}
+
+.chrona-sched__hover-card-chip .chrona-sched__night {
+  margin-left: 0;
+}
+
+/* Each block of rows under a rule, as the concept parts them. */
 .chrona-sched__hover-card-grid {
+  border-top: 1px solid var(--csui-stroke);
   display: grid;
   gap: 8px 16px;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   margin: 0;
+  padding-top: 8px;
+}
+
+.chrona-sched__hover-card-grid + .chrona-sched__hover-card-grid {
+  margin-top: 8px;
+}
+
+/* Skills, risk factors and breaks as the board's tags: a Must skill filled, the others outlined (decision 5). */
+.chrona-sched__hover-card-grid dd.chrona-sched__hover-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-top: 2px;
+}
+
+.chrona-sched__hover-card-tags .chrona-sched__tag {
+  margin-right: 0;
+  max-width: 100%;
+}
+
+.chrona-sched__tag--filled {
+  background: var(--csui-badge);
+  border-color: var(--csui-badge);
+  color: var(--csui-badge-text);
 }
 
 /* A row across both columns (HoverCardEntry.wide): an extension's long line. */
@@ -2039,7 +2188,9 @@
   font-weight: 600;
 }
 
+/* The board's own text colour: a host's h3 colour (dark text in a dark theme) never reaches it. */
 .chrona-sched__unscheduled-title {
+  color: var(--csui-text);
   font-size: 14px;
   margin: 0 0 8px;
 }
@@ -2609,6 +2760,14 @@
   );
 }
 
+/* A Roster grid with nobody on it: the message sits under the day header, at the table's width. */
+.chrona-sched__roster-empty {
+  width: calc(
+    var(--chrona-roster-people) + var(--chrona-roster-columns, 7) *
+      var(--chrona-roster-day) + var(--chrona-roster-stats-width, 0px)
+  );
+}
+
 .chrona-sched__roster-table th,
 .chrona-sched__roster-table td {
   border-bottom: 1px solid var(--csui-stroke);
@@ -2684,6 +2843,70 @@
 .chrona-sched__roster-cell--marked > .chrona-sched__chip {
   position: relative;
   z-index: 1;
+}
+
+/*
+ * The Roster grid's day cells are one tab stop (the ARIA grid pattern): the arrow keys move between the days and
+ * their shifts. A focused cell and a focused shift show Fluent's focus stroke (colorStrokeFocus2): 2px in the text
+ * colour, inside the cell's lines, clear on any theme and any shift colour.
+ */
+.chrona-sched__roster-table td[data-grid-row] {
+  position: relative;
+}
+
+.chrona-sched__roster-table td[data-grid-row]:focus {
+  outline: none;
+}
+
+.chrona-sched__roster-table td[data-grid-row]:focus-visible {
+  outline: 2px solid var(--csui-text);
+  outline-offset: -2px;
+}
+
+.chrona-sched__roster-table td[data-grid-row] .chrona-sched__chip:focus-visible {
+  outline: 2px solid var(--csui-text);
+  outline-offset: 1px;
+}
+
+/*
+ * A new item in a day cell: the cell takes the hover tint, and a "+" (Fluent's smallest icon button, 24px) shows in its
+ * corner while the pointer is over the cell or the cell has focus; not while a shift is dragged.
+ */
+.chrona-sched__roster-add {
+  align-items: center;
+  background: var(--csui-bg);
+  border: 1px solid var(--csui-stroke-strong);
+  border-radius: 4px;
+  box-sizing: border-box;
+  color: var(--csui-text-soft);
+  cursor: pointer;
+  display: none;
+  height: 24px;
+  justify-content: center;
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  width: 24px;
+  z-index: 1;
+}
+
+.chrona-sched__roster-add:hover {
+  background: var(--csui-surface-hover);
+  color: var(--csui-brand);
+}
+
+.chrona-sched__roster-add svg {
+  height: 16px;
+  width: 16px;
+}
+
+.chrona-sched__roster:not(.chrona-sched__roster--dragging) .chrona-sched__roster-table td.chrona-sched__roster-cell--creates:hover {
+  background: var(--csui-surface-hover);
+}
+
+.chrona-sched__roster:not(.chrona-sched__roster--dragging) .chrona-sched__roster-table td[data-grid-row]:hover > .chrona-sched__roster-add,
+.chrona-sched__roster:not(.chrona-sched__roster--dragging) .chrona-sched__roster-table td[data-grid-row]:focus-visible > .chrona-sched__roster-add {
+  display: flex;
 }
 
 /* Day headers: the weekday over the date, centred, one fixed 66px width. */
@@ -4367,6 +4590,11 @@
 }
 .chrona-sched__read-notice-icon {
   color: var(--csui-warn);
+  flex: none;
+}
+/* A read that failed (the host's error data notice): the danger notice's icon. */
+.chrona-sched__data-notice-icon {
+  color: var(--csui-danger);
   flex: none;
 }
 

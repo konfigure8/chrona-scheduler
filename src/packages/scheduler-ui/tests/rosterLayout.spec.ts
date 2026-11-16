@@ -2,6 +2,8 @@ import {
   buildRosterDays,
   layoutOpenRow,
   layoutRoster,
+  moveRosterFocus,
+  rosterCellTarget,
   rosterGroupRows,
   rosterMarkPlacement,
 } from "../src/rosterLayout";
@@ -150,7 +152,102 @@ function drawsACollapsedGroupAsItsHeadingAndSummary(): void {
   assertEqual(rosterGroupRows({}, false).open, false);
 }
 
+// A day cell made into a new item: the extension's form gets the day with no times, the row's person and band.
+function makesAnItemFromADayCell(): void {
+  const day = buildRosterDays(window, true)[1]!;
+  const alex = resources[0]!;
+  const band = { Team: "Ward A", Subteam: "Nights" };
+  const own = rosterCellTarget({ day, groups: band, resource: alex }, true, "open");
+  if (!own || !("request" in own)) throw new Error("With createEvent a day cell hands the extension a request");
+  assertEqual(own.request.dayOnly, true);
+  assertEqual(own.request.resource, alex);
+  assertEqual(own.request.start.getTime(), new Date(2026, 7, 18).getTime());
+  assertEqual(own.request.end.getTime(), new Date(2026, 7, 19).getTime());
+  assertEqual(JSON.stringify(own.request.groups), JSON.stringify(band));
+  // A band grouped by a tag (a role) passes its tags, so the new item lands in that band; none, or empty, passes none.
+  const roleBand = rosterCellTarget({ day, requiredTags: ["Nurse"], resource: alex }, true, "open");
+  assertEqual(roleBand && "request" in roleBand ? JSON.stringify(roleBand.request.requiredTags) : "", JSON.stringify(["Nurse"]));
+  const noTags = rosterCellTarget({ day, requiredTags: [], resource: alex }, true, "open");
+  assertEqual(noTags && "request" in noTags ? "requiredTags" in noTags.request : true, false);
+  // An open row is nobody: no person, its own band.
+  const open = rosterCellTarget({ day, groups: { Team: "Ward A" } }, true, "open");
+  if (!open || !("request" in open)) throw new Error("An open row's cell hands the extension a request");
+  assertEqual(open.request.resource, undefined);
+  assertEqual(JSON.stringify(open.request.groups), JSON.stringify({ Team: "Ward A" }));
+  // No band, or an empty one: no groups.
+  const flat = rosterCellTarget({ day, groups: {}, resource: alex }, true, "open");
+  assertEqual(flat && "request" in flat ? "groups" in flat.request : true, false);
+  // The free board (no extension's form): its own dialog gets the cell's range on the row's person, as a drawn range.
+  const board = rosterCellTarget({ day, groups: band, resource: alex }, false, "open");
+  if (!board || !("range" in board)) throw new Error("Without createEvent the board's own dialog gets the cell's range");
+  assertEqual(board.range.resourceId, "r-1");
+  assertEqual(board.range.start.getTime(), day.start.getTime());
+  assertEqual(board.range.end.getTime(), day.end.getTime());
+  // The open row on the free board: the host's nobody, or nothing at all when it has none.
+  const nobody = rosterCellTarget({ day }, false, "open");
+  assertEqual(nobody && "range" in nobody ? nobody.range.resourceId : undefined, "open");
+  assertEqual(rosterCellTarget({ day }, false, undefined), undefined);
+}
+
+// No request or range ever carries a time it cannot read (AGENTS.md 0.1): a day whose bounds are not real times makes nothing.
+function makesNothingFromADayItCannotRead(): void {
+  const day = buildRosterDays(window, true)[0]!;
+  const broken = { ...day, start: new Date(Number.NaN) };
+  assertEqual(rosterCellTarget({ day: broken, resource: resources[0]! }, true, "open"), undefined);
+  assertEqual(rosterCellTarget({ day: broken, resource: resources[0]! }, false, "open"), undefined);
+  assertEqual(rosterCellTarget({ day: { ...day, end: new Date(Number.NaN) } }, true, "open"), undefined);
+  assertEqual(rosterCellTarget({ day: { ...day, end: day.start } }, true, "open"), undefined);
+  for (const target of [rosterCellTarget({ day }, true, "open"), rosterCellTarget({ day }, false, "open")]) {
+    const times = target && "request" in target ? target.request : target?.range;
+    assertEqual(Number.isNaN(times?.start.getTime() ?? Number.NaN) || Number.isNaN(times?.end.getTime() ?? Number.NaN), false);
+  }
+}
+
+// The keyboard grid: the arrow keys walk the cells, Down and Up go through a cell's shifts, Home and End along the row.
+function movesTheKeyboardFocusThroughTheGrid(): void {
+  // Three rows of three days: the open row has two shifts on day 1, the second row one on day 1.
+  const chips = [
+    [0, 2, 0],
+    [0, 1, 0],
+    [0, 0, 0],
+  ];
+  const at = (row: number, col: number, chip?: number): string => JSON.stringify(chip === undefined ? { col, row } : { chip, col, row });
+  const move = (from: { row: number; col: number; chip?: number }, key: string, ctrlKey = false): string =>
+    JSON.stringify(moveRosterFocus(from, { ctrlKey, key }, chips));
+  assertEqual(move({ col: 0, row: 0 }, "ArrowRight"), at(0, 1));
+  assertEqual(move({ col: 1, row: 0 }, "ArrowLeft"), at(0, 0));
+  // The edges move nothing.
+  assertEqual(moveRosterFocus({ col: 0, row: 0 }, { key: "ArrowLeft" }, chips), undefined);
+  assertEqual(moveRosterFocus({ col: 2, row: 0 }, { key: "ArrowRight" }, chips), undefined);
+  assertEqual(moveRosterFocus({ col: 0, row: 0 }, { key: "ArrowUp" }, chips), undefined);
+  assertEqual(moveRosterFocus({ col: 0, row: 2 }, { key: "ArrowDown" }, chips), undefined);
+  // Down: the cell, its shifts top to bottom, then the cell below; from the last shift to the cell below.
+  assertEqual(move({ col: 1, row: 0 }, "ArrowDown"), at(0, 1, 0));
+  assertEqual(move({ chip: 0, col: 1, row: 0 }, "ArrowDown"), at(0, 1, 1));
+  assertEqual(move({ chip: 1, col: 1, row: 0 }, "ArrowDown"), at(1, 1));
+  // An empty cell goes straight to the cell below.
+  assertEqual(move({ col: 0, row: 0 }, "ArrowDown"), at(1, 0));
+  // Up: back the same way, from a cell to the last shift of the cell above.
+  assertEqual(move({ col: 1, row: 1 }, "ArrowUp"), at(0, 1, 1));
+  assertEqual(move({ chip: 1, col: 1, row: 0 }, "ArrowUp"), at(0, 1, 0));
+  assertEqual(move({ chip: 0, col: 1, row: 0 }, "ArrowUp"), at(0, 1));
+  assertEqual(move({ col: 0, row: 1 }, "ArrowUp"), at(0, 0));
+  // Left and Right from a shift go to the next day's cell, not its shifts.
+  assertEqual(move({ chip: 0, col: 1, row: 1 }, "ArrowRight"), at(1, 2));
+  // Home and End along the row; with Ctrl, the grid's first and last cell.
+  assertEqual(move({ chip: 0, col: 1, row: 1 }, "Home"), at(1, 0));
+  assertEqual(move({ col: 0, row: 1 }, "End"), at(1, 2));
+  assertEqual(move({ col: 1, row: 1 }, "Home", true), at(0, 0));
+  assertEqual(move({ col: 1, row: 0 }, "End", true), at(2, 2));
+  // Other keys move nothing; an empty grid has nowhere to go.
+  assertEqual(moveRosterFocus({ col: 0, row: 0 }, { key: "Enter" }, chips), undefined);
+  assertEqual(moveRosterFocus({ col: 0, row: 0 }, { key: "ArrowDown" }, []), undefined);
+}
+
 buildsOneColumnPerDay();
+makesAnItemFromADayCell();
+makesNothingFromADayItCannotRead();
+movesTheKeyboardFocusThroughTheGrid();
 drawsACollapsedGroupAsItsHeadingAndSummary();
 placesAHostsDayMarkAcrossTheCell();
 groupsEventsIntoResourceDayCells();

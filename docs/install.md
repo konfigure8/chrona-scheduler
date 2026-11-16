@@ -2,6 +2,8 @@
 
 Chrona Scheduler is a drag-and-drop scheduler for any Dataverse table that has a start and an end column. It runs inside your model-driven apps. You do not need a Chrona account to use it. Auto Schedule connects your environment to the Chrona service in one step; there is no sign-up form.
 
+**Set up with an AI agent:** connect the **Chrona MCP** server at `https://mcp.chrona365.com/mcp` (Streamable HTTP, authentication **None**) for the install guide, table-mapping recipes and ordered configuration requests. [Set up your agent](https://chrona365.com/install-with-an-agent), or follow the manual steps below. Chrona MCP supplies guidance; changes need your agent's separately authenticated Dataverse tools. See [Install with an agent](#install-with-an-agent) for the connector and permissions.
+
 [![Play the install video: import, access, binding and first drag in about six minutes](https://raw.githubusercontent.com/konfigure8/chrona-scheduler/main/docs/images/install-video.png)](https://youtu.be/PaablRQmC1o)
 
 The video walks the import, access, binding and first drag in about six minutes, with captions.
@@ -46,11 +48,11 @@ If you are creating the table now: **Tables**, **New table**, **Table (advanced 
 
 The scheduler shows wherever that view opens in a model-driven app. If your table is not in an app yet, open the table and select **Create an app**; the app is created and published with your table in it. Select **Play** and open the view you configured. If the app's form does not show your new columns yet, wait a few minutes and reload.
 
-Add your first rows with **+ New event** in the scheduler, or with **New** in the app.
+Add your first rows with **+ New** in the scheduler, or with **New** in the app.
 
 ## Install with an agent
 
-Your coding agent can do the four steps for you when it holds two servers: Microsoft's Dataverse MCP server for your environment, and the Chrona server at https://mcp.chrona365.com/mcp, which answers with this guide, a mapping recipe for your table, and the requests in order. No sign-in, nothing to install, and the Chrona server reads nothing from your environment: every change goes through your own Dataverse tools, so you see it and can undo it.
+Connect your agent to Chrona MCP for this guide, a mapping recipe for your table and the requests in order. Chrona MCP needs no sign-in and cannot access your environment. Your agent also needs separately authenticated Dataverse tools: Dataverse MCP handles reads and configuration rows; importing the solution, binding the control and publishing need the Dataverse CLI or another authenticated Web API client. Your agent may ask you to complete steps in the maker portal. [Set up your agent](https://chrona365.com/install-with-an-agent).
 
 Give the agent your environment's address and https://github.com/konfigure8/chrona-scheduler, then answer its questions about your table: which view, and which columns are the title, the start, the end and the person.
 
@@ -70,7 +72,7 @@ Working hours, weekends, the time scale, the time zone, grouping, capacity and t
 
 ## Auto Schedule
 
-Auto Schedule asks the Chrona service to fill and balance the schedule. Select **Auto Schedule**, read what it does, and select **Try a free sample run**. That connects your environment to Chrona, creates the scheduler configuration it needs, and runs a first sample run. A connected environment gets a free daily allowance of Auto Schedule runs; nothing about the scheduler itself changes. Connecting does not ask you to sign up; a Chrona account matters only for plans and usage. If your organisation already has a Chrona account, an owner or admin of that account approves each new environment in the Chrona Portal first. Then select **Try a free sample run** again within 24 hours. When the day's free allowance is used, the board says so beside **Auto Schedule**, which runs again the next day. An answer arrives as a proposal on the board: review it, drop what you disagree with, and select **Apply**. Nothing is written before that.
+Auto Schedule asks the Chrona service to fill and balance the schedule. Select **Auto Schedule**, read what it does, and select **Try a free sample run**. That connects your environment to Chrona, creates the scheduler configuration it needs, and runs a first sample run. A connected environment gets a free daily allowance of Auto Schedule runs; nothing about the scheduler itself changes. Connecting does not ask you to sign up; a Chrona account matters only for plans and usage. If your organisation's Chrona account has already connected an environment, an owner or admin of that account approves each further environment in the Chrona Portal first. Then select **Try a free sample run** again within 24 hours. When the day's free allowance is used, the board says so beside **Auto Schedule**, which runs again the next day. An answer arrives as a proposal on the board: review it, drop what you disagree with, and select **Apply**. Nothing is written before that.
 
 ## Help
 

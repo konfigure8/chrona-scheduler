@@ -205,11 +205,14 @@ export function DialogLayer(props: DialogLayerProps): JSX.Element {
       if (focusOn(opener, doc) || focusOn(before, doc)) {
         return;
       }
-      // The opener went (a deleted shift, a dialog's own button): the dialog still open below, else the board.
+      // The opener went (a deleted shift, a dialog's own button): the dialog still open below, else the board, at the Roster
+      // grid's own tab stop when it shows.
       const below = openLayers[openLayers.length - 1];
       const fallback = below
         ? focusables(below)[0]
-        : (board?.querySelector<HTMLElement>('[role="grid"] button') ?? (board ? focusables(board)[0] : undefined));
+        : (board?.querySelector<HTMLElement>('[data-grid-row][tabindex="0"], [data-grid-chip][tabindex="0"]') ??
+          board?.querySelector<HTMLElement>('[role="grid"] button') ??
+          (board ? focusables(board)[0] : undefined));
       fallback?.focus({ preventScroll: true });
     };
     // The layer's element, its opener and its board stay the same while it is open.

@@ -60,7 +60,7 @@ const zero: MustBreachCounts = {
   daysOff: 0,
   maximumHours: 0,
   onLeaveOrUnavailable: 0,
-  other: { overlap: 0, splitParts: 0, unlisted: 0 },
+  other: { overlap: 0, unlisted: 0 },
   restBetweenShifts: 0,
   site: 0,
   skills: 0,
@@ -115,19 +115,19 @@ function rowsAddUpToTheTotal(): void {
     maximumHours: 1,
     nights: 13,
     onLeaveOrUnavailable: 3,
-    other: { overlap: 4, splitParts: 5, unlisted: 6 },
+    other: { overlap: 4, unlisted: 6 },
     restBetweenShifts: 7,
     site: 9,
     skills: 8,
     weeklyRest: 11,
   });
-  // R2.18 Decision 6: the agreement rules have rows of their own; Other keeps double bookings and split parts.
+  // R2.18 Decision 6: the agreement rules have rows of their own; Other keeps double bookings.
   // Nights: the five Nights rules share a row after the agreement rows.
   assert.deepEqual(
     MUST_ROWS.map((row) => mustRowCount(all, row)),
-    [7, 2, 1, 10, 11, 12, 13, 8, 9, 3, 15],
+    [7, 2, 1, 10, 11, 12, 13, 8, 9, 3, 10],
   );
-  assert.equal(mustBreachTotal(all), 91);
+  assert.equal(mustBreachTotal(all), 86);
 }
 
 function aFreshProposalShowsTheSolversCounts(): void {
@@ -143,6 +143,32 @@ function aFreshProposalShowsTheSolversCounts(): void {
   // The proposal leaves the row clean, so it opens to what it fixes.
   assert.deepEqual(mustRowMatches(report, "restBetweenShifts"), { matches: [restMatch], roster: "now" });
   assert.equal(mustRowMatches(report, "skills"), undefined, "a zero row opens nothing");
+}
+
+/*
+ * ReviewExtension.approved (Matt 2026-11-13, option A): an approved match (a shift assigned anyway) leaves the Must rows
+ * and the tile, from the solver's counts and the board's alike; without approved the report is the same as before.
+ */
+function approvedMatchesLeaveTheMustCountsFromBothSources(): void {
+  const approved = (match: ScheduleRuleMatch): boolean => match.shiftIds.includes("n1");
+  assert.deepEqual(proposalMustReport(proposal, {}, undefined, undefined, undefined), proposalMustReport(proposal));
+  const solver = proposalMustReport(proposal, {}, undefined, undefined, approved);
+  assert.equal(solver.source, "solver");
+  assert.equal(solver.now?.restBetweenShifts, 0);
+  assert.deepEqual(solver.nowMatches, []);
+  const overlap: ScheduleRuleMatch = { resourceId: "sam", rule: "overlap", shiftIds: ["n1", "d3"] };
+  const kept: ScheduleRuleMatch = { resourceId: "ava", rule: "restBetweenShifts", shiftIds: ["d4", "d5"] };
+  const board = proposalMustReport(proposal, { dropped: new Set(["n1"]) }, () => ({
+    matches: [overlap, kept],
+    mustBreaches: counts({ other: { overlap: 1, unlisted: 0 }, restBetweenShifts: 1 }),
+  }), undefined, approved);
+  assert.equal(board.source, "board");
+  assert.equal(board.proposed?.other.overlap, 0);
+  assert.equal(board.proposed?.restBetweenShifts, 1);
+  assert.deepEqual(board.proposedMatches, [kept]);
+  // Counts with no matches to read stay as they are.
+  const large: ScheduleProposal = { ...proposal, analysis: { countsOnly: true, current: { mustBreaches: counts({ restBetweenShifts: 1 }), openShifts: 1 }, proposed: { mustBreaches: counts({ restBetweenShifts: 1 }), openShifts: 0 } } };
+  assert.equal(proposalMustReport(large, {}, undefined, undefined, approved).now?.restBetweenShifts, 1);
 }
 
 function aHoldBackRecountsOnTheBoard(): void {
@@ -289,5 +315,6 @@ aWrongSiteIsItsOwnRule();
 personLinesCountTheirFixes();
 theOpenShiftsFollowDropAndKeep();
 drillDownEntriesNameWhoAndWhen();
+approvedMatchesLeaveTheMustCountsFromBothSources();
 
 console.log("mustReport tests passed");

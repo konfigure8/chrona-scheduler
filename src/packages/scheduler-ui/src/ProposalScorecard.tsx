@@ -311,13 +311,12 @@ export function mustRowLabel(strings: SchedulerStrings, row: MustRow): string {
   }
 }
 
-/** "Double booking 1 · Split shift 1": the kinds behind "Other Must rules", with their counts. */
+/** "Double booking 1 · Other 1": the kinds behind "Other Must rules", with their counts. */
 export function otherMustKinds(strings: SchedulerStrings, counts: MustBreachCounts): string {
   const { other } = counts;
   return (
     [
       [strings.mustKindOverlap, other.overlap],
-      [strings.mustKindSplitParts, other.splitParts],
       [strings.mustKindUnlisted, other.unlisted],
     ] as const
   )

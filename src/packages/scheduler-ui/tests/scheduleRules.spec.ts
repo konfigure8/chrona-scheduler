@@ -183,8 +183,7 @@ const restShift = (
   resourceId: string,
   start: Date,
   end: Date,
-  split?: SchedulerUiEvent["split"],
-): SchedulerUiEvent => ({ end, id, resourceId, start, split, status: "assigned", title: id });
+): SchedulerUiEvent => ({ end, id, resourceId, start, status: "assigned", title: id });
 
 function perPersonRestWarnsOnlyThatPerson(): void {
   // Casey works under a 10-hour minimum; Dana under none.
@@ -243,11 +242,9 @@ function restLooksAtTheNeighboursOnly(): void {
   assertEqual(findRestShortfall([open], undefined, { end: restDay(6, 21), id: "p", start: restDay(6, 20) }, tenHours), undefined);
 }
 
-function splitPartsAreNotRestAndOverlapIsNotRest(): void {
+function restIsMeasuredAndOverlapIsNotRest(): void {
   const tenHours: MinimumRestAt = () => 600;
-  const split = { id: "s-1", samePerson: "required" as const };
-  const morning = restShift("m", "r-1", restDay(6, 7), restDay(6, 11), split);
-  assertEqual(restShortfall(morning, restShift("e", "r-1", restDay(6, 15), restDay(6, 19), split), tenHours), undefined);
+  const morning = restShift("m", "r-1", restDay(6, 7), restDay(6, 11));
   assertEqual(restShortfall(morning, restShift("f", "r-1", restDay(6, 15), restDay(6, 19)), tenHours)?.gapMinutes, 240);
   // Overlapping shifts are the overlap rule's finding.
   assertEqual(restShortfall(morning, restShift("g", "r-1", restDay(6, 10), restDay(6, 12)), tenHours), undefined);
@@ -339,7 +336,7 @@ minimumBreakZeroMeansOff();
 perPersonRestWarnsOnlyThatPerson();
 restIsJudgedAtTheLaterShiftsStart();
 restLooksAtTheNeighboursOnly();
-splitPartsAreNotRestAndOverlapIsNotRest();
+restIsMeasuredAndOverlapIsNotRest();
 shiftOrderAndOverlap();
 theFreeBoardsSingleValueBehavesAsToday();
 extraRulesSeeEveryEvent();

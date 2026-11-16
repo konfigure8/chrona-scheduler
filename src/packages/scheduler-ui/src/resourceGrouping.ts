@@ -1,4 +1,5 @@
 import { groupValue, UNGROUPED } from "./groupSets";
+import type { CreateRequest, DragResult } from "./interactions";
 import type { SchedulerResource } from "./types";
 
 export interface ResourceSubgroup {
@@ -101,4 +102,44 @@ export function buildResourceGroups(
       })),
     };
   });
+}
+
+/**
+ * The band a range drawn on a row sits in: the row's value in each grouping set the board shows (two honored), as
+ * buildResourceGroups bands the rows. Absent when the rows are not grouped or the row has no value (Ungrouped).
+ */
+export function bandGroupsOf(
+  resource: SchedulerResource | undefined,
+  groupBy: readonly string[],
+): Readonly<Record<string, string>> | undefined {
+  const entries = groupBy
+    .slice(0, 2)
+    .map((set) => [set, groupValue(resource?.groups, set)] as const)
+    .filter(([, value]) => value !== UNGROUPED);
+  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
+}
+
+/**
+ * Where a range drawn on the grid goes: an extension's own form for a new item (`hasCreate`) gets the request with the
+ * row and its band's groups; with none, the board's own dialog gets the range exactly as drawn, as before.
+ */
+export function drawnRangeTarget(
+  range: DragResult,
+  hasCreate: boolean,
+  resources: readonly SchedulerResource[],
+  groupBy: readonly string[],
+): { readonly range: DragResult } | { readonly request: CreateRequest } {
+  if (!hasCreate) {
+    return { range };
+  }
+  const resource = resources.find((one) => one.id === range.resourceId);
+  const groups = bandGroupsOf(resource, groupBy);
+  return {
+    request: {
+      end: range.end,
+      ...(groups ? { groups } : {}),
+      resource,
+      start: range.start,
+    },
+  };
 }

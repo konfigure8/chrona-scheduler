@@ -77,8 +77,8 @@ export interface ScheduleRuleContext {
   readonly event: SchedulerUiEvent | undefined;
   /**
    * Every scheduled event, as the host passed them. A rule that needs
-   * more than the proposed person's own (the other part of a split
-   * shift) looks here; most rules read personEvents only.
+   * more than the proposed person's own looks here; most rules read
+   * personEvents only.
    */
   readonly events: readonly SchedulerUiEvent[];
   /** The proposed person's own events. */
@@ -155,7 +155,7 @@ export function shiftsOverlap(
 }
 
 /** The parts of a shift the rest rule reads. */
-export type RestShift = Pick<SchedulerUiEvent, "end" | "id" | "split" | "start">;
+export type RestShift = Pick<SchedulerUiEvent, "end" | "id" | "start">;
 
 /**
  * A person's shifts in order: by start, then end, then id. The solver's
@@ -188,9 +188,8 @@ export interface RestShortfall {
  * Rest between two consecutive shifts of one person (`earlier` before
  * `later` in compareShifts order), judged by the minimum in force when
  * the later one starts. Undefined when the pair keeps the rule: the
- * shifts overlap (the overlap rule's finding), they are parts of one
- * split shift (F48: that gap is not rest), no minimum applies, or the
- * gap reaches it. The gap is measured between the real moments the
+ * shifts overlap (the overlap rule's finding), no minimum applies, or
+ * the gap reaches it. The gap is measured between the real moments the
  * board dates stand for (toInstant), as the solver measures it.
  */
 export function restShortfall(
@@ -199,9 +198,6 @@ export function restShortfall(
   minimumAt: MinimumRestAt,
   toInstant?: (display: Date) => Date,
 ): RestShortfall | undefined {
-  if (earlier.split && later.split && earlier.split.id === later.split.id) {
-    return undefined;
-  }
   const moment = (date: Date): number => (toInstant ? toInstant(date) : date).getTime();
   const gapMs = moment(later.start) - moment(earlier.end);
   if (gapMs < 0) {

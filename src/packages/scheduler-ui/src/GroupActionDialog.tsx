@@ -4,6 +4,7 @@ import {
   buildOffsetChanges,
   buildReassignChanges,
   dragResultChangesEvent,
+  refusesChange,
   type OffsetUnit,
   type TimelineChange,
   type ValidateChange,
@@ -38,6 +39,8 @@ export function GroupActionDialog(props: GroupActionDialogProps): JSX.Element {
   const { events, kind, onApply, onClose, resources, validateChange } = props;
   const strings = useSchedulerStrings();
   const fit = useBoardExtension()?.fit;
+  // A host that takes blocked changes decides at Apply; the blocked line still shows.
+  const takesBlockedChanges = useBoardExtension()?.takesBlockedChanges;
   // Without a fit judgement everyone fits, in the board's order.
   const rankedResources = React.useMemo(
     (): readonly ResourceFit[] =>
@@ -81,7 +84,7 @@ export function GroupActionDialog(props: GroupActionDialogProps): JSX.Element {
       )?.verdict.reason;
 
   const apply = (): void => {
-    if (outcome.blocked) {
+    if (refusesChange(outcome.blocked, takesBlockedChanges)) {
       return;
     }
     const effective = outcome.changes.filter(
@@ -202,7 +205,7 @@ export function GroupActionDialog(props: GroupActionDialogProps): JSX.Element {
         <div className="chrona-sched__dialog-actions">
           <button
             className="chrona-sched__dialog-primary"
-            disabled={outcome.blocked !== undefined}
+            disabled={refusesChange(outcome.blocked, takesBlockedChanges)}
             onClick={apply}
             type="button"
           >

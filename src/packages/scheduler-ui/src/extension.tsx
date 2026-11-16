@@ -4,8 +4,9 @@ import type { ContextMenuItem } from "./ContextMenu";
 import type { DateNames } from "./dateNames";
 import type { RowDecoration, RowDecorationKind } from "./decorations";
 import type { EventDialogProps } from "./EventDialog";
+import type { HoverCardEntry } from "./hoverCard";
 import type { HourFormat } from "./timeAxis";
-import type { TimelineChange } from "./interactions";
+import type { CreateRequest, TimelineChange } from "./interactions";
 import type { RosterDay } from "./rosterLayout";
 import type { MustBreachCounts, ScheduleCandidate, ScheduleRuleMatch } from "./schedulingContract";
 import type { MustRow, OpenShiftKind, ProposalChange, ProposalShift, SolveProgress } from "./solve";
@@ -24,6 +25,11 @@ export interface BoardState {
   readonly anchor?: Date;
   /** Editing is on: the board is editable and no proposal is open. */
   readonly canEdit: boolean;
+  /**
+   * Why the host locked the board (SchedulerSurfaceProps.lockReason): its notice's own sentence, for an extension's
+   * actions to wait with. Absent when the host has not locked it; a proposal under review is `reviewing`, never a lock.
+   */
+  readonly lockReason?: string;
   /** The events on the board; the proposal's while one is previewed. */
   readonly events: readonly SchedulerUiEvent[];
   readonly resources: readonly SchedulerResource[];
@@ -45,13 +51,8 @@ export interface BoardState {
 
 type Slot = (board: BoardState) => React.ReactNode;
 
-/** A new item the board hands its host: from New event, or a range drawn on the grid. */
-export interface CreateRequest {
-  readonly end: Date;
-  /** The row it was drawn on; absent on the unassigned row. */
-  readonly resource?: SchedulerResource;
-  readonly start: Date;
-}
+/** A new item the board hands its host (interactions.ts). */
+export type { CreateRequest };
 
 /** A column right of the Roster grid's last day: its short label and full name. */
 export interface RosterStatColumn {
@@ -153,6 +154,16 @@ export interface RosterGroup {
   };
   /** 1, a group (the default), or 2, a subgroup of the group before it. */
   readonly level?: 1 | 2;
+  /**
+   * The band's groups, by set name as an item's groups are: a new item made in one of its rows starts in them
+   * (CreateRequest.groups). Absent = none.
+   */
+  readonly groups?: Readonly<Record<string, string>>;
+  /**
+   * The band's required tags, when it groups by a tag (such as a role): a new item made in one of its rows starts with
+   * them (CreateRequest.requiredTags), so it lands in the band. Absent = none.
+   */
+  readonly requiredTags?: readonly string[];
   /**
    * True shows the heading and the footer only: no open row and no people,
    * so the footer stays as the group's summary. A heading over subgroups
@@ -294,6 +305,11 @@ export interface ReviewExtension {
   readonly ruleRows?: (roster: Omit<ReviewRoster, "events">) => readonly MustRow[];
   /** Who the report does not check in a period, and whether anyone is. */
   readonly unchecked: (roster: Omit<ReviewRoster, "events">) => UncheckedPeople;
+  /**
+   * A Must match the planner has approved (such as a shift assigned anyway with a reason): the report leaves it out of
+   * the Must rows and the tile, whether the solver or the board counted it; the extension shows it apart. Absent = none.
+   */
+  readonly approved?: (match: ScheduleRuleMatch) => boolean;
 }
 
 /** What the board asks an extension for "Why not…?". */
@@ -402,17 +418,22 @@ export interface ShiftMark {
    * mark's words ("Clocked in at 6:58am"), the rest after a dot.
    */
   readonly times?: readonly { readonly at: Date; readonly label: string }[];
+  /**
+   * One action the shift's hover card offers under the mark's words, as a link (such as "See history"). With it the
+   * card takes the pointer and stays open while the pointer moves from the shift onto it. Absent = the card is read-only.
+   */
+  readonly action?: ShiftMarkAction;
+}
+
+/** A shift mark's action in the hover card (ShiftMark.action). */
+export interface ShiftMarkAction {
+  readonly label: string;
+  readonly run: () => void;
 }
 
 export type { OpenShiftKind } from "./solve";
 
-/** A line of a shift's hover card. */
-export interface HoverCardEntry {
-  readonly label: string;
-  readonly value: string;
-  /** Full width, on a line of its own. */
-  readonly wide?: boolean;
-}
+export type { HoverCardEntry, HoverCardTag } from "./hoverCard";
 
 /** What the Roster grid hands an extension's compact chip (RosterExtension.chip). */
 export interface RosterChipStyle {
@@ -436,6 +457,13 @@ export interface DecorationContentInput {
 }
 
 export interface BoardExtension {
+  /**
+   * A change the board's rules block (a drop, a group drop, Move or
+   * Reassign N) is handed to the host with its block verdict instead of
+   * refused; the host decides. The hover marks are the same. Absent =
+   * the board refuses a blocked change.
+   */
+  readonly takesBlockedChanges?: boolean;
   /**
    * Groups at the top of the change list, before the board's own, such
    * as the covers a repair makes. Absent, or undefined for a proposal =

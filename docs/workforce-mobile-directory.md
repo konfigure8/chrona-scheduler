@@ -12,7 +12,7 @@ The **Setup checklist** shows the directory and Dataverse connections, directory
 
 **App activity** shows whether Chrona records first app use and last activity for workers. If this is off, use **Enable app activity** to start recording future use. Earlier activity is not filled in. This records app use, not Microsoft Entra sign-ins, and does not change access. You can turn recording off in **App settings → App activity**; existing activity dates are kept.
 
-The directory connection uses Microsoft Graph for group selection, worker profiles and reporting managers. The same connection is used for background sync. Your Dataverse connection reads and updates the saved Chrona records.
+Two directory connections read Microsoft Graph: **Office 365 Groups** for group selection and worker profiles, and **Office 365 Users** for reporting managers. The same connections are used for background sync. Your Dataverse connection reads and updates the saved Chrona records.
 
 The connection account is separate from the workers who will use the app. Selecting a Dataverse user in the advanced settings does not sign in as that user or change the account used by the background flows.
 
@@ -112,10 +112,10 @@ After you activate the source, use **Run sync** for an immediate request. Check 
 Keep the source and its selected groups. Use **Manage connections** to open the platform connection settings, then repair the connection the source uses:
 
 1. Open [Power Automate](https://make.powerautomate.com/) and select the same environment as your Chrona app.
-2. Open **Connections**. Find the directory connection used by the Chrona solution. Ask its owner to update the connection if it requires sign-in. For a new directory connection, use **HTTP with Microsoft Entra ID** and set both the resource URI and base URL to `https://graph.microsoft.com`.
-3. Open **Solutions**, then **Chrona Workforce Scheduler**. Bind the directory connection reference to the approved directory connection. Check the Dataverse connection reference too.
+2. Open **Connections**. Find the directory connection used by the Chrona solution. Ask its owner to update the connection if it requires sign-in. For a new directory connection, use **Office 365 Groups** or **Office 365 Users**: each is made with a sign-in, with nothing to type. The Office 365 Users connection needs an account with a mailbox. Office 365 Groups does not read role-assignable groups.
+3. Open **Solutions**, then **Chrona Workforce Mobile**. Bind the two directory connection references to the approved directory connections. Check the Dataverse connection reference too.
 4. Check the directory flows and turn on any required flow that is off. Repair its connection first if needed. A user who cannot use a connection might not be able to enable its flow.
-5. In the solution settings, check that **Worker administration website ID** identifies this worker site and **Worker directory automation enabled** is `true`.
+5. Leave **Worker administration website ID** and **Worker directory automation enabled** at their defaults on the import wizard page: Chrona sets them when the worker site is connected, unless a value is already set. If **Worker website** or **Directory updates** needs setup, set them in the solution settings: the website ID to this worker site, and automation to `true`.
 6. In Chrona, select the Dataverse user used by the Power Automate connection. This selection does not change that connection's account.
 7. Select **Check again**, then **Check connection**. Review the groups and filters, then run sync again. Read the new result before you assume updates have resumed.
 

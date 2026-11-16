@@ -8,7 +8,7 @@ import { useFullScreen } from "./fullScreen";
 import { VerticalSplitter } from "./Splitter";
 import { FlagGlyph } from "./FlagGlyph";
 import { NightGlyph } from "./NightGlyph";
-import { formatHoursMinutes } from "./EventHoverCard";
+import { formatHoursMinutes } from "./hoverCard";
 import { flagReasonText, type SchedulerStrings } from "./stringResources";
 import { UNGROUPED } from "./groupSets";
 import { useSchedulerStrings } from "./strings";

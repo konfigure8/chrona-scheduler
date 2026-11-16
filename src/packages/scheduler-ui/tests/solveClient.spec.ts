@@ -75,7 +75,7 @@ const noBreaches: MustBreachCounts = {
   daysOff: 0,
   maximumHours: 0,
   onLeaveOrUnavailable: 0,
-  other: { overlap: 0, splitParts: 0, unlisted: 0 },
+  other: { overlap: 0, unlisted: 0 },
   restBetweenShifts: 0,
   site: 0,
   skills: 0,
@@ -346,7 +346,7 @@ const run = async (): Promise<void> => {
       "a missing count",
     );
     assert.equal(
-      check({ current: roster, proposed: { mustBreaches: { ...noBreaches, other: { overlap: 0 } }, openShifts: 0 } }),
+      check({ current: roster, proposed: { mustBreaches: { ...noBreaches, other: {} }, openShifts: 0 } }),
       undefined,
       "a missing other count",
     );

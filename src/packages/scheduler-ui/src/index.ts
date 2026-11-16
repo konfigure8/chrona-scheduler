@@ -56,6 +56,7 @@ export {
 } from "./monthLayout";
 export {
   SchedulerSurface,
+  type DataNotice,
   type SchedulerSurfaceProps,
 } from "./SchedulerSurface";
 export { SolveProgressIndicator, useElapsedSeconds } from "./SolveProgress";
@@ -88,8 +89,10 @@ export {
   type RosterExtension,
   type ScorecardTile,
   type ShiftMark,
+  type ShiftMarkAction,
   type OpenShiftKind,
   type HoverCardEntry,
+  type HoverCardTag,
   type RosterChipStyle,
   type DecorationContentInput,
   type RosterGroup,
@@ -135,6 +138,7 @@ export {
   type EventDialogProps,
 } from "./EventDialog";
 export { EventHoverCard, type EventHoverCardProps } from "./EventHoverCard";
+export { STATUS_FIELD_KEY } from "./hoverCard";
 export { assignedHours } from "./hours";
 export {
   computeVisibleEntryRange,
@@ -229,7 +233,9 @@ export {
   type SchedulerStrings,
 } from "./strings";
 export {
+  bandGroupsOf,
   buildResourceGroups,
+  drawnRangeTarget,
   groupCollapseKey,
   type ResourceGroup,
   type ResourceSubgroup,
@@ -298,6 +304,7 @@ export {
   previewProposal,
   proposalDoubleBookings,
   proposalMustReport,
+  withoutApproved,
   proposalMustRules,
   proposalScore,
   type AppliedOutcome,

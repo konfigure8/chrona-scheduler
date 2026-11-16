@@ -8,6 +8,7 @@ import {
   PanelRightExpand20Regular,
   ShieldCheckmark16Regular,
   Shifts16Regular,
+  ErrorCircle16Regular,
   Warning16Regular,
 } from "@fluentui/react-icons";
 
@@ -22,6 +23,7 @@ import { ConversionDialog } from "./ConversionDialog";
 import type { SolveCapability } from "./capabilities";
 import { formatCapabilityList } from "./capabilityText";
 import { groupSetNames } from "./groupSets";
+import { drawnRangeTarget } from "./resourceGrouping";
 import { ContextMenu, type ContextMenuItem } from "./ContextMenu";
 import type { RowDecoration } from "./decorations";
 import { dateNamesFrom, formatDateLabel, formatDayTimeLabel } from "./dateNames";
@@ -35,7 +37,7 @@ import {
 } from "./extension";
 import { BoardEventDialog, type DraftEventInput } from "./EventDialog";
 import { EventHoverCard, type HoverAnchorRect } from "./EventHoverCard";
-import { buildRosterDays } from "./rosterLayout";
+import { buildRosterDays, rosterCellTarget, type RosterCell } from "./rosterLayout";
 import { BoardLookProvider, DialogLayer, type BoardLook } from "./dialogLayer";
 import { FullScreenProvider, useFullScreen, useFullScreenRoot } from "./fullScreen";
 import {
@@ -66,6 +68,7 @@ import {
   previewProposal,
   proposalDoubleBookings,
   proposalMustReport,
+  withoutApproved,
   proposalMustRules,
   proposalScore,
   type AppliedOutcome,
@@ -112,7 +115,7 @@ import {
 } from "./UnscheduledPanel";
 import { DayColumnsView, TopDownView } from "./VerticalViews";
 import type { HourFormat } from "./timeAxis";
-import { allowVerdict, type DragResult, type ValidateChange } from "./interactions";
+import { allowVerdict, boardEditing, hoverCardKeeps, type DragResult, type ValidateChange } from "./interactions";
 import type { RulePolicy } from "./scheduleRules";
 import {
   drawsOneDay,
@@ -128,6 +131,12 @@ import type {
   TimelineConfig,
   TimeWindow,
 } from "./types";
+
+/** A host's note about its data (SchedulerSurfaceProps.dataNotice): "error" for a read that failed, else "info". */
+export interface DataNotice {
+  readonly level: "error" | "info";
+  readonly text: string;
+}
 
 export interface SchedulerSurfaceProps {
   /** Maker lock: false hides the user-facing time-scale menu. */
@@ -184,9 +193,9 @@ export interface SchedulerSurfaceProps {
   readonly entitlement?: EntitlementDisplay;
   /** F26: resume-or-discard prompt for a run the session reported. */
   readonly resumeRun?: ResumeRunDisplay;
-  /** A host-side note about the data (a row cap reached, for instance),
-   * rendered as a calm status line above the grid. */
-  readonly dataNotice?: string;
+  /** A host-side note about the data, as a line above the grid: "info" (a row cap reached, for instance) is the
+   * calm status line; "error" (a read that failed, AGENTS.md 0.1) is the danger notice with its icon, announced at once. */
+  readonly dataNotice?: DataNotice;
   readonly solveState?: SolveState;
   /**
    * A solver answer to review (F31): the board previews it, the
@@ -239,6 +248,12 @@ export interface SchedulerSurfaceProps {
   readonly tagMode?: "single" | "multiple";
   readonly decorations?: readonly RowDecoration[];
   readonly editable?: boolean;
+  /**
+   * With editable false: why the host locked the board, in its notice's own sentence (a read that failed, Matt
+   * 2026-11-16 "Yes, both boards"). The board hands it to its extension (BoardState.lockReason), whose actions wait
+   * with it rather than as a proposal under review.
+   */
+  readonly lockReason?: string;
   readonly events: readonly SchedulerUiEvent[];
   readonly hourFormat?: HourFormat;
   /**
@@ -431,6 +446,8 @@ interface HoverState {
 }
 
 const hoverDelayMs = 250;
+/** How long a hover card with an action stays once the pointer leaves its shift: time to move onto the card. */
+const hoverGraceMs = 300;
 /** Fixed slot height (Teams-style): density comes from slots per hour. */
 const verticalSlotHeightPx = 24;
 
@@ -749,6 +766,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           window: reviewPeriod,
         }),
       () => review.checkMust({ events: currentAll, resources: props.resources, window: reviewPeriod }),
+      review.approved,
     );
   }, [
     appliedAll,
@@ -1057,7 +1075,13 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     : liveView && props.unscheduledEvents !== undefined
       ? liveView.unscheduled
       : currentUnscheduled;
-  const canEdit = props.editable !== false && !reviewing && !liveView && !solveIsRunning(props.solveState);
+  const { canEdit, lockReason } = boardEditing({
+    editable: props.editable,
+    live: liveView !== undefined,
+    lockReason: props.lockReason,
+    reviewing,
+    solving: solveIsRunning(props.solveState),
+  });
   const canCreate = canEdit && Boolean(props.onCreateEvent);
   /* A running solve shows as progress with Cancel; the board stays live. */
   const solving =
@@ -1122,7 +1146,10 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     const score = proposalScore(proposal, liveView?.changes ?? [], reviewOptions, period);
     const rosterNow = { events: all, resources: props.resources, window: period };
     const rosterLive = { events: roster, resources: props.resources, window: period };
-    const check = boardExtension?.review?.checkMust(rosterLive);
+    const counted = boardExtension?.review?.checkMust(rosterLive);
+    // Approved matches (ReviewExtension.approved) are shown apart by the extension, never as Must breaks.
+    const approved = boardExtension?.review?.approved;
+    const check = counted && approved ? withoutApproved(counted.mustBreaches, counted.matches, approved) : counted;
     const mustShifts = check
       ? new Set(check.matches.filter((match) => isMustRule(match.rule)).flatMap((match) => match.shiftIds))
       : undefined;
@@ -1369,6 +1396,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     canEdit,
     events: boardEvents,
     locale: props.locale,
+    ...(lockReason !== undefined ? { lockReason } : {}),
     resources: props.resources,
     reviewing: proposalChanges !== undefined,
     sidePanel: { collapsed: sideCollapsed, expand: expandSide },
@@ -1426,19 +1454,21 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     props.onSelectionChange?.([]);
   };
   // A new item: the extension's own form when it has one, else the board's dialog.
+  // A range drawn in a band of grouped rows (the timeline's) carries that band's groups to the extension's form.
   const openDraft = React.useCallback(
     (range: DragResult): void => {
-      if (extension?.createEvent) {
-        extension.createEvent({
-          end: range.end,
-          resource: props.resources.find((resource) => resource.id === range.resourceId),
-          start: range.start,
-        });
+      const groupBy =
+        props.view === "timeline"
+          ? props.groupBy ?? groupSetNames(props.resources, [...props.events, ...(props.unscheduledEvents ?? [])]).slice(0, 1)
+          : [];
+      const target = drawnRangeTarget(range, extension?.createEvent !== undefined, props.resources, groupBy);
+      if ("request" in target) {
+        extension?.createEvent?.(target.request);
         return;
       }
-      setDraftRange(range);
+      setDraftRange(target.range);
     },
-    [extension, props.resources],
+    [extension, props.events, props.groupBy, props.resources, props.unscheduledEvents, props.view],
   );
   const handleDraftRange = React.useCallback(
     (result: DragResult): void => {
@@ -1451,6 +1481,25 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
       openDraft(result);
     },
     [canCreate, openDraft],
+  );
+
+  // A new item from a Roster day cell: the extension's form gets the day with no times, else the board's dialog the cell's range.
+  const handleCellCreate = React.useCallback(
+    (cell: RosterCell): void => {
+      if (!canCreate) {
+        return;
+      }
+      const target = rosterCellTarget(cell, extension?.createEvent !== undefined, props.unassignedResourceId);
+      if (!target) {
+        return;
+      }
+      if ("request" in target) {
+        extension?.createEvent?.(target.request);
+        return;
+      }
+      setDraftRange(target.range);
+    },
+    [canCreate, extension, props.unassignedResourceId],
   );
 
   const draftDialogEvent = React.useMemo<SchedulerUiEvent | undefined>(
@@ -1577,13 +1626,33 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     };
   };
 
+  // A hover card whose mark offers an action stays a moment after the pointer leaves the shift, so it can reach the card.
+  const hoverKeepRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const keepHover = React.useCallback((): void => {
+    if (hoverKeepRef.current) {
+      clearTimeout(hoverKeepRef.current);
+      hoverKeepRef.current = null;
+    }
+  }, []);
   const clearHover = React.useCallback((): void => {
     if (hoverTimerRef.current) {
       clearTimeout(hoverTimerRef.current);
       hoverTimerRef.current = null;
     }
+    keepHover();
     setHover(undefined);
-  }, []);
+  }, [keepHover]);
+  React.useEffect(() => keepHover, [keepHover]);
+  const hoverHasAction = hover !== undefined && hoverCardKeeps(boardExtension?.shiftMark?.(hover.event));
+  const leaveHover = (): void => {
+    if (!hoverHasAction) {
+      clearHover();
+      return;
+    }
+    if (!hoverKeepRef.current) {
+      hoverKeepRef.current = setTimeout(clearHover, hoverGraceMs);
+    }
+  };
 
   React.useEffect(() => {
     if (drag.session) {
@@ -1665,15 +1734,21 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     if (drag.session || menu || dialogEvent) {
       return;
     }
+    // On a card that offers an action, the card keeps itself open (EventHoverCard).
+    if (hoverHasAction && (overEvent.target as HTMLElement | null)?.closest(".chrona-sched__hover-card")) {
+      keepHover();
+      return;
+    }
     const element = (overEvent.target as HTMLElement | null)?.closest<HTMLElement>(
       "[data-event-id]",
     );
     const event = findEvent(overEvent.target);
     if (!event || !element || isGhostEvent(event)) {
-      clearHover();
+      leaveHover();
       return;
     }
     if (hover?.event.id === event.id) {
+      keepHover();
       return;
     }
     if (hoverTimerRef.current) {
@@ -1702,7 +1777,7 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
     const from = findEvent(outEvent.target);
     const to = findEvent(outEvent.relatedTarget);
     if (from && from.id !== to?.id) {
-      clearHover();
+      leaveHover();
     }
   };
 
@@ -1945,8 +2020,10 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           events={boardEvents}
           extension={rosterExtension}
           hourFormat={props.hourFormat}
+          onCellCreate={canCreate ? handleCellCreate : undefined}
           onEventChange={props.onEventChange}
           onEventClick={props.onEventClick}
+          onEventOpen={openDialog}
           openEvents={boardUnscheduled}
           openResourceId={props.unassignedResourceId}
           resources={props.resources}
@@ -2592,13 +2669,23 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
         </div>
       ) : null}
       {props.dataNotice ? (
-        <div
-          className="chrona-sched__horizon-notice"
-          data-testid="data-notice"
-          role="status"
-        >
-          <span>{props.dataNotice}</span>
-        </div>
+        props.dataNotice.level === "error" ? (
+          <div
+            className="chrona-sched__horizon-notice chrona-sched__horizon-notice--error"
+            data-level="error"
+            data-testid="data-notice"
+            role="alert"
+          >
+            <span className="chrona-sched__read-notice-text">
+              <ErrorCircle16Regular aria-hidden="true" className="chrona-sched__data-notice-icon" />
+              <span>{props.dataNotice.text}</span>
+            </span>
+          </div>
+        ) : (
+          <div className="chrona-sched__horizon-notice" data-level="info" data-testid="data-notice" role="status">
+            <span>{props.dataNotice.text}</span>
+          </div>
+        )
       ) : null}
       {extensionNotice}
       {props.resumeRun ? (
@@ -3256,7 +3343,11 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
           anchor={hover.anchor}
           bounds={hover.bounds}
           event={hover.event}
+          onAction={clearHover}
+          onPointerEnter={keepHover}
+          onPointerLeave={clearHover}
           resource={resourcesById.get(hover.event.resourceId)}
+          {...(props.timeZoneLabel ? { timeZoneLabel: props.timeZoneLabel } : {})}
         />
       ) : null}
       {dialogEvent ? (

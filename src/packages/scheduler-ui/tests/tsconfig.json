@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "lib": ["ES2020"],
+    "jsx": "react-jsx",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "CommonJS",
     "moduleResolution": "Node",
     "noEmit": false,
@@ -20,6 +21,7 @@
     "../src/preferences.ts",
     "../src/rowVirtualization.ts",
     "../src/hours.ts",
+    "../src/hoverCard.ts",
     "../src/spans.ts",
     "../src/stringResources.ts",
     "../src/tagColors.ts",

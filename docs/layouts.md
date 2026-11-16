@@ -21,6 +21,10 @@ Without a Resource lookup bound there are no people or assets, so the timeline l
 
 ![The roster grid layout: a row per person, a column per day, a chip per shift](images/layout-roster.png)
 
+To add an item, double-click a day's empty space, or select **+** in the corner of a day with no item. The **New item** dialog opens with the row's person (on the **Open shifts** row, nobody) and the whole day, from midnight to midnight; set the times, then select **Save**. A day that already has an item takes another.
+
+From the keyboard, the grid is one tab stop. The arrow keys move between the days, and **Down** goes through a day's items before the day below. **Home** and **End** go to the row's first and last day, and **Ctrl+Home** and **Ctrl+End** to the grid's first and last day. **Enter** on a day opens **New item** for it, and **Enter** on an item opens it. **Shift+F10** opens an item's menu. **Tab** leaves the grid, and coming back returns to the day or item you left.
+
 ## Top-down
 
 ![The top-down layout: a column per person, the hours down the page, bars with their length](images/layout-topdown.png)

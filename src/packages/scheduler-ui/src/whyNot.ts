@@ -110,8 +110,6 @@ function shouldRuleLabel(rule: ShouldRuleName, strings: SchedulerStrings): strin
       return strings.ruleSpreadOfShifts;
     case "minimumHours":
       return strings.ruleMinimumHours;
-    case "splitPartsOnePerson":
-      return strings.mustKindSplitParts;
     default:
       // A package's own Should rule names itself (ruleRegistry.ts).
       return boardRules().shouldRules?.find((entry) => entry.rule === rule)?.label(strings);

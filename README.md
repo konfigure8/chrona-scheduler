@@ -36,7 +36,7 @@ The [install guide](docs/install.md) walks every step with the platform's own wo
 **Schedule**
 - Drag a bar to move it, drag its edges to resize it; it snaps to the time scale you chose.
 - Drag open work from the unscheduled panel onto a person to assign it.
-- Create by dragging on an empty slot or with **New event**; edit the details in a dialog.
+- Create by dragging on an empty slot or with **+ New**; edit the details in a dialog.
 - Select several bars and move them together by hours, days or weeks, or reassign them to another person in one go.
 - Undo and redo, all saved to your table.
 
@@ -46,7 +46,7 @@ The [install guide](docs/install.md) walks every step with the platform's own wo
 - See hours against capacity on every lane when your people table carries weekly hours.
 
 **Live in your app**
-- Right-click a bar for **Open record**, Chrona's actions and your app's own commands; select bars and your command bar works on them.
+- Right-click a bar for **Open record**, Chrona's actions and your app's own commands; select bars and your command bar works on them. Two switches on the view's settings take **Open record** or the app's commands out of the menu ([Where things are set up](docs/configure.md#3-the-scheduler-view-row-one-per-view)).
 - Your app's Fluent theme, light or dark. See the [supported languages](docs/faq.md#languages). Times follow the site's time zone, set on the calendar.
 - A layout per view, set by the maker: timeline lanes, a roster grid, top-down columns or an agenda list; and a color per row by role, group or status when the maker wants one. Day, week, work week and month time scales; groups such as teams or sites; a current-time line; non-working time and weekend shading.
 - The whole view loads, up to 20,000 rows.
@@ -77,7 +77,7 @@ While it runs, **Stop and review** ends the run and opens the best roster found 
 
 ## Staff rostering
 
-When scheduling turns into rostering, **Chrona Workforce Scheduler** adds the tables and the app for it: roles built from skills, with mismatch highlighting, availability and preferences, contracts with guaranteed and maximum hours and hourly rates, agreements with rest, hours, overtime and night shift rules, demand and the coverage strip, shift types and coverage with rotating patterns and generation, roster periods with publish and a planning horizon of the coming rosters, a roster import from Excel, **Mark absent** with a repair that moves only open shifts and on-call shifts, wages and overtime hours, and the **Outcomes** of each roster. Same board. It is licensed per scheduled person; ask us at support@chrona365.com.
+When scheduling turns into rostering, **Chrona Workforce Scheduler** adds the tables and the app for it: roles built from skills, with mismatch highlighting, availability and preferences, contracts with guaranteed and maximum hours and hourly rates, agreements with rest, hours, overtime and night shift rules, demand and the coverage strip, shift types and coverage with rotating patterns and generation, roster periods with publish and a planning horizon of the coming rosters, a roster import from Excel, **Mark absent** with a repair that moves only open shifts and on-call shifts, wages and overtime hours, and the **Outcomes** of each roster. Same board. Billing counts each worker Auto Schedule schedules once a month, whether or not you apply the proposal. See [Plan and billing](https://chrona365.com/docs/account/billing).
 
 ![Planning a roster: the planning horizon of coming rosters, coverage per hour, people with skills and hours, the unscheduled panel](docs/images/planning.png)
 

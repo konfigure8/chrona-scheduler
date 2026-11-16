@@ -28,7 +28,7 @@ Table **Chrona Scheduler Calendar** (`chr_chronaschedulercalendar`). The first s
 | Run for | `chr_defaultsolverseconds` | How long Auto Schedule works on a run, in seconds. The service caps it per plan. | 30 seconds. |
 | Product | `chr_product` | The product this calendar uses: Chrona Scheduler, or Chrona Workforce Scheduler for roles and availability. | Chrona Scheduler. |
 
-Warn lands the row with a note. Block snaps it back with the reason. These rules check the changes you make by hand. Auto Schedule checks its proposal as a whole; if you drop one of its changes, your overlap setting checks the shifts that stay.
+Warn lands the row with a note. Block snaps it back with the reason; on a Chrona Workforce Scheduler board, Block asks for a reason instead (**Assign anyway**). These rules check the changes you make by hand. Auto Schedule checks its proposal as a whole; if you drop one of its changes, your overlap setting checks the shifts that stay.
 
 ## 3. The scheduler view row, one per view
 
@@ -45,8 +45,13 @@ Table **Chrona Scheduler View** (`chr_chronaschedulerview`), keyed by the view's
 | Working start | `chr_workingstart` | Start of the working day, picked from a list; earlier hours are shaded. | No shading. |
 | Working end | `chr_workingend` | End of the working day, picked from a list; later hours are shaded. | No shading. |
 | Show weekends | `chr_showweekends` | Whether weekends are shown by default. | Shown. |
-| Period | `chr_periodunit` | The roster period: week, fortnight or month. The Roster grid shows a whole period at a time. In Chrona Workforce Scheduler, the calendar's site sets it. | The Roster grid shows the week. |
-| Period starts on | `chr_periodanchor` | The first day of the first roster period; periods repeat from here. In Chrona Workforce Scheduler, the calendar's site sets it. | Needed with Period. |
+| Show Open record in the shift menu | `chr_showopenform` | Whether a shift's right-click menu has **Open record**, which opens the record's form. | Shown. |
+| Show app commands in the shift menu | `chr_showappcommands` | Whether a shift's right-click menu lists your app's own commands for the record, such as **Assign**. When the app cannot hand them over, the menu says so in a grayed-out line. | Shown. |
+| Create new bookings on the board | `chr_showcreate` | Whether people can create bookings on the board. Off, **+ New** is gone and a click or drag in an empty slot creates nothing, in every layout; dragging, resizing and editing the bookings already there work as before. Turn it off when bookings are created somewhere else, such as a canvas app. | On. |
+| Period | `chr_periodunit` | The roster period: week, fortnight or month. The Roster grid shows a whole period at a time. In Chrona Workforce Scheduler, each scheduler sets its own in **Scheduler settings**. | The Roster grid shows the week. |
+| Period starts on | `chr_periodanchor` | The first day of the first roster period; periods repeat from here. In Chrona Workforce Scheduler, each scheduler sets its own in **Scheduler settings**. | Needed with Period. |
+
+With Chrona Workforce Scheduler, a scheduler's board takes the two shift menu switches from the scheduler, not from a view row: the board's gear, [Scheduler settings](https://chrona365.com/docs/workforce/scheduler-settings), **General**, **Shift menu** (**Show Open in form**, **Show app commands**), or the **Display** section of the scheduler's form. There the menu item is **Open in form**. **Create new bookings on the board** applies to Chrona Scheduler only. A Chrona Workforce Scheduler board does not read it.
 
 ## 4. The toolbar, per person
 
@@ -89,8 +94,6 @@ A calendar with a site shows only the shifts at that site. A calendar with no si
 | Time zone | `chr_timezone` | The site's time zone. Its calendars and shifts take it. | Required. |
 | Week starts on | `chr_weekstart` | The first day of the site's weeks: the board's weeks and week numbers, the rules that count per week, Auto Schedule and the worker app. | Monday. |
 | Currency | `chr_currency` | The currency of the site's wages. The board shows wages and overtime cost in it. A site always has one. Pick one of your environment's currencies. To add one, open the Power Platform admin center, select your environment, then **Settings** > **Business** > **Currencies**. | The organization's base currency. A new site gets it. |
-| Period | `chr_periodunit` | The roster period: week, fortnight or month. The Roster grid, Generate and Auto Schedule plan by it on every calendar at the site. | The Roster grid shows the week. |
-| Period starts on | `chr_periodanchor` | The first day of the first roster period; periods repeat from here. Rotating coverage rows count their **Cycle week** from it. | Needed with Period. |
 | Night time from, Night time to | `chr_nightstart`, `chr_nightend` | The site's night time. An end at or before the start is the next day. | The night time of the site's country. |
 | Night hours | `chr_nighthours` | The hours of a shift's work, breaks left out, inside the night time that make it a night shift. | The country's. |
 | More than the night hours | `chr_nightmore` | Yes: more than the night hours. No: at least. | The country's. |
@@ -112,11 +115,11 @@ A shift that starts on a public holiday of its site's calendar, on the site's cl
 
 ### Planning horizon
 
-A Workforce calendar can show its coming rosters above the board. On the calendar form, in the **Planning** section:
+A Workforce calendar can show its coming rosters above the board. In [Scheduler settings](https://chrona365.com/docs/workforce/scheduler-settings#planning), or on the calendar form, in the **Planning** section:
 
 | Setting | Column | What it does | If empty |
 | --- | --- | --- | --- |
-| Planning horizon | `chr_planninghorizon` | **Yes** shows the coming rosters at the top of the board, with **Publish**, **Outcomes** and **Auto Schedule** for the selected roster. Needs the site's **Period**. | No: the board shows its period bar. |
+| Planning horizon | `chr_planninghorizon` | **Yes** shows the coming rosters at the top of the board, with **Publish**, **Outcomes** and **Auto Schedule** for the selected roster. Needs the scheduler's **Period**. | No: the board shows its period bar. |
 | Plan ahead | `chr_planahead` | How many rosters after the current one the planning horizon shows. | 6. |
 | Publish ahead | `chr_publishahead` | How many days before a roster starts it is due to be published, by 17:00. | 3. |
 
@@ -126,7 +129,7 @@ Each roster has a card: how much of it is filled, when it was published and the 
 
 An agreement holds the rostering rules of an award, an enterprise agreement or your own policy. Each worker works under one agreement. Roles play no part.
 
-Set agreements up on the app's **Agreements** page, with the **Chrona Workforce Admin** role. A new agreement needs its **Currency**, which its amounts are in. It changes only while the agreement has no amount. Turn on auditing before the first rule: see [Install Chrona Workforce Scheduler](https://chrona365.com/docs/workforce/install).
+Set agreements up on the app's **Agreements** page, with the **Chrona Workforce Admin** role. A new agreement needs its **Currency**, which its amounts are in. It changes only while the agreement has no amount. Auditing is optional. To keep a history of rule changes, turn on auditing before the first rule: see [Install Chrona Workforce Scheduler](https://chrona365.com/docs/workforce/install).
 
 1. Add an agreement and give it a **Name**. Save it.
 2. On its **Rules** tab, add each rule to its group: **Rest**, **Days on and off**, **Hours**, **Overtime**, **Night shifts**, **Weekends**, **Duties**, **Hours balance**, **Premium rates** or **Pay loadings**. Each group has its own button, such as **Add rest rule**. A rule reads as one sentence with its numbers, its **Must** or **Should** level, its dates, its clause and its On switch. The Hours balance rules have no level and are not solver rules. Premium rates and pay loadings have no level either: they price hours and limit nothing. Each rule is one row of the **Agreement rule** table, with these columns:
@@ -209,7 +212,7 @@ A shift with recorded time (a clock time, a call-in, or an entry that is no long
 How the rules apply:
 
 - Auto Schedule keeps every Must rule, and leaves a shift open rather than break one. It keeps each Should rule where it can.
-- Periods are counted on the site's clock. A week starts on the site's **Week starts on** day. When the site's roster **Period** is a week or a fortnight, fortnights start on its **Period starts on** date. To line a week or fortnight rule up with the roster, set **Period starts on** to a date on that day. A month is a calendar month. **Roster period** is the period Auto Schedule plans.
+- Periods are counted on the site's clock. A week starts on the site's **Week starts on** day. When the scheduler's roster **Period** is a week or a fortnight, fortnights start on its **Period starts on** date. To line a week or fortnight rule up with the roster, set **Period starts on** to a date on that day. A month is a calendar month. **Roster period** is the period Auto Schedule plans.
 - A period that ends after the period Auto Schedule plans is counted up to that end. **Days off** and **Minimum hours** are reduced in proportion to the days counted.
 - **Weekly rest**, **Average hours**, **Sundays worked in a rolling window**, and **Night shifts in a period** or **Weekends worked** with Rolling weeks look at every window of weeks, one week after another.
 - **Days off a week, monthly average** counts each calendar month. A month the roster ends in needs its share of the month's days off, rounded down; the next roster counts the whole month, with the shifts already worked.
@@ -237,7 +240,7 @@ How the rules apply:
 - A deactivated agreement counts as no agreement.
 - Dataverse refuses to delete an agreement while workers work under it. Move them to another agreement first.
 - In the review, broken **Maximum hours**, **Days off**, **Weekly rest** and **Average hours** rules each count on a row of their own; a broken **Days off a week, monthly average** counts as **Days off**. Broken night rules count as night shifts. Broken weekend rules count as weekends. A broken **Duties in a period** counts on its own row, and so does a broken **Rotation**. A shift under a contract's **Minimum engagement** counts on its own row.
-- A change by hand that breaks a Must rest, days in a row or **Rotation** rule gets a warning on the board. The board does not block it. An On call duty over the worker's own shift warns as an overlap unless **On call during work** holds.
+- A drag, a Reassign or a pick in **Candidates** that breaks a Must rule asks for a reason first: **Assign anyway** lists each rule it breaks, and saves the shift pinned, with your reason in its history. See [Assign anyway](https://chrona365.com/docs/workforce/call-out#assign-anyway). A Should rule warns. An On call duty over the worker's own shift warns as an overlap unless **On call during work** holds.
 
 With an agent: the `agreement_reading` tool of the Chrona Model Context Protocol (MCP) server tells your agent how to read your agreement document and propose its rules, each with its clause number. Your agent writes nothing until you confirm each clause number and value. The `generate_agreement` tool then turns the rules into the requests that create the agreement and its rules. Your agent attaches the document, keeps each clause's words and links the workers with its own Dataverse tools. The document, its words and worker data do not reach the Chrona MCP server.
 
@@ -272,7 +275,7 @@ How contracts apply:
 - To change a worker's terms from a later day, add a new contract. Editing a contract that has started changes it from its first day.
 - **End contract** sets a contract's last day. A contract that has not started has **Delete** instead. The contract before it then runs until the day before the next contract, or with no end.
 - A contract's rules apply only on its own days. Auto Schedule keeps each worker within their **Maximum hours** and gives them their **Guaranteed hours** where it can, both over **Hours per**. The agreement's rules still hold. When a contract allows more hours than the agreement, the contract shows a warning, and the agreement's limit applies.
-- Auto Schedule gives a worker no shift shorter than their **Minimum engagement**, counting paid hours (the shift less its unpaid breaks). Each part of a split shift is one shift. When you make a shift shorter than it by hand, the board warns, and a proposal counts it under **Minimum engagement**.
+- Auto Schedule gives a worker no shift shorter than their **Minimum engagement**, counting paid hours (the shift less its unpaid breaks). A split shift is one shift and counts once. When you make a shift shorter than it by hand, the board warns, and a proposal counts it under **Minimum engagement**.
 - The Roster grid shows each worker's hours against the contract in force on the roster's first day: the bar runs to the maximum, with a mark at the guaranteed hours. Its tip names each figure.
 - **Wages** count each shift at the **Hourly rate** of the contract in force on its day, else the **Standard hourly rate** of its role. The wages note names each worker with no rate.
 - The **Chrona Workforce User** role reads contracts. The **Chrona Workforce Admin** role adds, changes, ends and deletes them.
@@ -321,7 +324,7 @@ When a worker cannot work, select **Mark absent**. On a roster that has started,
 
 A coverage row's **How many** is the shifts you need. Set **Maximum** above it to allow more: Generate also makes the shifts above How many, up to Maximum, as optional shifts. Left open, an optional shift shows quietly, not as a shift that needs cover. Auto Schedule fills it when workers are free. Workers can take it in Chrona Workforce Mobile like any open shift.
 
-Set **Duty type** on a shift type on the **Shift types** page: **Work** (the default), **On call at the workplace** or **On call from home**. Generate copies it to each shift it makes. A later change to the shift type does not change shifts already made. To change one shift, set **Duty type** on the Shift form. A duty follows its coverage row as other shifts do: **How many** duties are required, and the ones above it, up to **Maximum**, are optional.
+Set **Duty type** on a shift type on the **Shift types** page: **Work** (the default), **On call at the workplace** or **On call from home**. Generate copies it to each shift it makes. A later change to the shift type does not change shifts already made. To change one shift, set **Duty type** in the shift's dialog on the board. A duty follows its coverage row as other shifts do: **How many** duties are required, and the ones above it, up to **Maximum**, are optional.
 
 - A required duty left open needs cover: the board shows it as **Needs cover**, and Admin Home and the review count it. Auto Schedule fills it unless a Must rule blocks it. When you mark its worker absent, it opens and needs cover. Fill it with **Find cover**. A shift that needs cover and is longer than 30 minutes comes before a duty: when nobody else fits, Find cover moves the worker on call onto the absent worker's shift, and the duty then needs cover.
 - An optional duty left open is backup: the board shows it dashed, not as a shift that needs cover. Auto Schedule staffs it when workers are free, and a repair can move its worker onto a shift that the absence opens.

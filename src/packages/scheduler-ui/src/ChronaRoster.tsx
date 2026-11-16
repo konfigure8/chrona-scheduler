@@ -1,8 +1,9 @@
 import * as React from "react";
-import { Shifts20Regular } from "@fluentui/react-icons";
+import { Add16Regular, Shifts20Regular } from "@fluentui/react-icons";
 
 import {
   allowVerdict,
+  refusesChange,
   computeCellDropResult,
   type ChangeVerdict,
   type DragResult,
@@ -21,8 +22,11 @@ import {
   buildRosterDays,
   layoutOpenRow,
   layoutRoster,
+  moveRosterFocus,
   rosterGroupRows,
   rosterMarkPlacement,
+  type RosterCell,
+  type RosterFocus,
   type RosterRowLayout,
 } from "./rosterLayout";
 import { isDragLocked, showsPin } from "./locks";
@@ -68,6 +72,13 @@ export interface ChronaRosterProps {
   readonly hourFormat?: HourFormat;
   readonly onEventChange?: (change: TimelineChange) => void;
   readonly onEventClick?: (event: SchedulerUiEvent) => void;
+  /** Enter on a focused shift opens it, as Enter does on the Timeline. Absent = Enter clicks it. */
+  readonly onEventOpen?: (event: SchedulerUiEvent) => void;
+  /**
+   * A new item in a day cell: a double-click on the cell's empty space, its "+" or Enter on the focused cell, on a
+   * person's row or an open row (never the Filled / needed rows or the stats). Absent = no create gesture.
+   */
+  readonly onCellCreate?: (cell: RosterCell) => void;
   /**
    * The shifts nobody works, in their own row above the people, in
    * both products (F41). Absent = no row.
@@ -86,6 +97,37 @@ export interface ChronaRosterProps {
 interface CellDragState {
   readonly event: SchedulerUiEvent;
   readonly originDayIndex: number;
+}
+
+/** A row of day cells the keyboard walks and a new item can be made in: an open row, or a person's. */
+interface GridRow {
+  readonly cells: readonly (readonly SchedulerUiEvent[])[];
+  /** The row's band (RosterGroup.groups and requiredTags). */
+  readonly groups?: Readonly<Record<string, string>>;
+  readonly requiredTags?: readonly string[];
+  readonly open?: { readonly key: string; readonly lightsUp: boolean };
+  readonly person?: RosterRowLayout;
+}
+
+/** The keys that move the grid's focus (moveRosterFocus); the grid takes them from the page's scrolling. */
+const GRID_KEYS = new Set(["ArrowDown", "ArrowLeft", "ArrowRight", "ArrowUp", "End", "Home"]);
+
+let nextRosterId = 0;
+
+/** The grid stop an element is, or is inside: a day cell, or a shift in one. */
+function gridStopOf(target: EventTarget | null): RosterFocus | undefined {
+  const element = target instanceof Element ? target : null;
+  const cell = element?.closest<HTMLElement>("[data-grid-row]");
+  if (!cell) {
+    return undefined;
+  }
+  const row = Number(cell.dataset["gridRow"]);
+  const col = Number(cell.dataset["gridCol"]);
+  if (!Number.isFinite(row) || !Number.isFinite(col)) {
+    return undefined;
+  }
+  const chip = element?.closest<HTMLElement>("[data-grid-chip]");
+  return chip && cell.contains(chip) ? { chip: Number(chip.dataset["gridChip"]), col, row } : { col, row };
 }
 
 interface CellHover {
@@ -207,8 +249,10 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
     events,
     extension,
     hourFormat,
+    onCellCreate,
     onEventChange,
     onEventClick,
+    onEventOpen,
     openEvents,
     openResourceId,
     resources,
@@ -222,6 +266,7 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
   // A mark after a person's name, such as a scenario's glyph with its reason.
   const personMark = useBoardExtension()?.personMark;
   const fit = useBoardExtension()?.fit;
+  const takesBlockedChanges = useBoardExtension()?.takesBlockedChanges;
   const shiftMarkOf = useShiftMarks();
   const kindOf = useOpenShiftKind();
   const chipStyle = props.extension?.chip;
@@ -239,6 +284,9 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
   });
   const stats = extension?.columns;
   const [hover, setHover] = React.useState<CellHover | undefined>();
+  const [focusAt, setFocusAt] = React.useState<RosterFocus | undefined>();
+  const tableRef = React.useRef<HTMLTableElement | null>(null);
+  const hintId = React.useRef(`chrona-roster-hint-${(nextRosterId += 1)}`).current;
   const effectiveToday = today ?? new Date();
   const todayDayIndex = days.findIndex((day) =>
     isSameDay(day.start, effectiveToday),
@@ -363,7 +411,7 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
         cell.resourceId,
       );
       const verdict = dropVerdict(drag.event, result);
-      if (verdict.kind === "block") {
+      if (refusesChange(verdict, takesBlockedChanges)) {
         return;
       }
       // Nothing moves: the same day and person, or an open shift back on the open row.
@@ -403,7 +451,7 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
     },
   });
 
-  const renderChip = (event: SchedulerUiEvent, dayIndex: number): JSX.Element => {
+  const renderChip = (event: SchedulerUiEvent, dayIndex: number, stop: RosterFocus): JSX.Element => {
     const color = resolveEventColor(event, statusColorRules);
     // Text that reads on the maker's colour in any theme.
     const ink = readableTextOn(color);
@@ -421,6 +469,7 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
       <button
         aria-label={`${event.title}, ${formatTimeRange(event, hourFormat)}${event.night ? `, ${strings.nightShift}` : ""}${shiftMark ? `, ${shiftMark.label}` : ""}`}
         data-event-id={event.id}
+        data-grid-chip={stop.chip}
         className={[
           "chrona-sched__chip",
           "chrona-sched__chip--compact",
@@ -446,6 +495,8 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
         }
         data-on-color={ink ? "" : undefined}
         style={{ background: color, color: ink }}
+        // The grid is one tab stop (the ARIA grid pattern): only its focused cell or shift is in the tab order.
+        tabIndex={isActive(stop) ? 0 : -1}
         type="button"
       >
         {chipStyle ? (
@@ -470,10 +521,177 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
     : undefined;
   const draggingGroup = draggedEvent ? extension?.groupOf?.(draggedEvent) : undefined;
 
+  /*
+   * The rows of day cells, in the grid's order: each group's open row and its people, or, with no groups, the open row
+   * and the people. The keyboard walks them; the headings, the Filled / needed rows and the totals are not among them.
+   */
+  const gridRows: GridRow[] = [];
+  const groupGridRows: (readonly number[])[] = [];
+  if (groups) {
+    for (const group of groups) {
+      const shows = rosterGroupRows(group, openEvents !== undefined);
+      const members = new Set(group.resources.map((resource) => resource.id));
+      const band = { ...(group.groups ? { groups: group.groups } : {}), ...(group.requiredTags ? { requiredTags: group.requiredTags } : {}) };
+      const at: number[] = [];
+      if (shows.open && openEvents) {
+        at.push(gridRows.length);
+        gridRows.push({ cells: layoutOpenRow(group.open, days), ...band, open: { key: `open-${group.id}`, lightsUp: draggingGroup === group.id } });
+      }
+      if (shows.people) {
+        for (const row of rows.filter((one) => members.has(one.resource.id))) {
+          at.push(gridRows.length);
+          gridRows.push({ cells: row.cells, ...band, person: row });
+        }
+      }
+      groupGridRows.push(at);
+    }
+  } else {
+    if (openCells) {
+      gridRows.push({ cells: openCells, open: { key: "open", lightsUp: true } });
+    }
+    for (const row of rows) {
+      gridRows.push({ cells: row.cells, person: row });
+    }
+  }
+  const chipCounts = gridRows.map((row) => row.cells.map((cell) => cell.length));
+
+  /*
+   * Roving focus: the cell or shift focused last is the grid's one tab stop, so Tab comes back to it; before any, today's
+   * cell on the first row (else its first day). A stop the grid no longer has gives way to the nearest one it has.
+   */
+  const active = ((): RosterFocus | undefined => {
+    if (chipCounts.length === 0 || days.length === 0) {
+      return undefined;
+    }
+    const wanted = focusAt ?? { col: Math.max(0, todayDayIndex), row: 0 };
+    const row = Math.min(wanted.row, chipCounts.length - 1);
+    const col = Math.min(wanted.col, (chipCounts[row]?.length ?? 1) - 1);
+    const count = chipCounts[row]?.[col] ?? 0;
+    return wanted.chip !== undefined && count > 0 ? { chip: Math.min(wanted.chip, count - 1), col, row } : { col, row };
+  })();
+  const isActive = (stop: RosterFocus): boolean =>
+    active !== undefined && active.row === stop.row && active.col === stop.col && active.chip === stop.chip;
+
+  // A cell on a person's row, or on an open row when the host has a nobody, takes a new item.
+  const cellOf = (row: number, col: number): RosterCell | undefined => {
+    const grid = gridRows[row];
+    const day = days[col];
+    if (!grid || !day || !onCellCreate || (grid.person === undefined && openResourceId === undefined)) {
+      return undefined;
+    }
+    return {
+      day,
+      ...(grid.groups ? { groups: grid.groups } : {}),
+      ...(grid.requiredTags ? { requiredTags: grid.requiredTags } : {}),
+      ...(grid.person ? { resource: grid.person.resource } : {}),
+    };
+  };
+  const createIn = (row: number, col: number): void => {
+    const cell = cellOf(row, col);
+    if (cell && cellDrag.draggingEventId === undefined) {
+      onCellCreate?.(cell);
+    }
+  };
+  const focusStop = (stop: RosterFocus): void => {
+    const cell = tableRef.current?.querySelector<HTMLElement>(`[data-grid-row="${stop.row}"][data-grid-col="${stop.col}"]`);
+    const target = stop.chip === undefined ? cell : cell?.querySelector<HTMLElement>(`[data-grid-chip="${stop.chip}"]`);
+    target?.focus();
+    setFocusAt(stop);
+  };
+  const onGridFocus = (focusEvent: React.FocusEvent<HTMLTableElement>): void => {
+    const stop = gridStopOf(focusEvent.target);
+    if (stop) {
+      setFocusAt((previous) =>
+        previous && previous.row === stop.row && previous.col === stop.col && previous.chip === stop.chip ? previous : stop,
+      );
+    }
+  };
+  const onGridKeyDown = (keyEvent: React.KeyboardEvent<HTMLTableElement>): void => {
+    if (keyEvent.altKey || keyEvent.shiftKey || keyEvent.defaultPrevented) {
+      return;
+    }
+    const stop = gridStopOf(keyEvent.target);
+    const target = keyEvent.target as HTMLElement;
+    // Only the cell or the shift itself: a control inside a cell keeps its own keys.
+    if (!stop || !(target.matches("[data-grid-row]") || target.matches("[data-grid-chip]"))) {
+      return;
+    }
+    if (keyEvent.key === "Enter" && stop.chip === undefined) {
+      keyEvent.preventDefault();
+      createIn(stop.row, stop.col);
+      return;
+    }
+    const shift = stop.chip === undefined ? undefined : gridRows[stop.row]?.cells[stop.col]?.[stop.chip];
+    if (keyEvent.key === "Enter" && shift && onEventOpen) {
+      keyEvent.preventDefault();
+      onEventOpen(shift);
+      return;
+    }
+    if (!GRID_KEYS.has(keyEvent.key)) {
+      return;
+    }
+    keyEvent.preventDefault();
+    const next = moveRosterFocus(stop, { ctrlKey: keyEvent.ctrlKey || keyEvent.metaKey, key: keyEvent.key }, chipCounts);
+    if (next) {
+      focusStop(next);
+    }
+  };
+
+  // A day cell's own keyboard stop, and its way to a new item.
+  const gridCell = (row: number, col: number): {
+    readonly add: JSX.Element | null;
+    /** The cell's class when it takes a new item: it tints on hover. */
+    readonly className: string;
+    readonly props: React.TdHTMLAttributes<HTMLTableCellElement> & { readonly "data-grid-col": number; readonly "data-grid-row": number };
+  } => {
+    const creates = cellOf(row, col) !== undefined;
+    return {
+      className: creates ? "chrona-sched__roster-cell--creates" : "",
+      // Only in a day with no shifts, where it covers none; a day with shifts takes a double-click on its empty space, or Enter.
+      add: creates && (chipCounts[row]?.[col] ?? 0) === 0 ? (
+        // The mouse's way in, in the cell's corner on hover; the keyboard's is Enter on the cell.
+        <span
+          aria-hidden="true"
+          className="chrona-sched__roster-add"
+          data-testid="roster-add"
+          onClick={(clickEvent) => {
+            clickEvent.stopPropagation();
+            createIn(row, col);
+          }}
+          title={strings.draftItem}
+        >
+          <Add16Regular />
+        </span>
+      ) : null,
+      props: {
+        "data-grid-col": col,
+        "data-grid-row": row,
+        ...(creates
+          ? {
+              onDoubleClick: (clickEvent: React.MouseEvent<HTMLTableCellElement>) => {
+                // A double-click on a shift is the shift's.
+                if (!(clickEvent.target as HTMLElement).closest("[data-event-id]")) {
+                  createIn(row, col);
+                }
+              },
+              // A double-click makes an item, so it selects no text.
+              onMouseDown: (downEvent: React.MouseEvent<HTMLTableCellElement>) => {
+                if (downEvent.detail > 1) {
+                  downEvent.preventDefault();
+                }
+              },
+            }
+          : {}),
+        tabIndex: isActive({ col, row }) ? 0 : -1,
+      },
+    };
+  };
+
   const renderOpenRow = (
     cells: readonly (readonly SchedulerUiEvent[])[],
     key: string,
     lightsUp: boolean,
+    gridRow: number,
   ): JSX.Element => (
     <tr
       className={
@@ -485,7 +703,7 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
       data-testid="roster-open-row"
       key={key}
     >
-      <td className="chrona-sched__roster-resource">
+      <td className="chrona-sched__roster-resource" role="rowheader">
         <div className="chrona-sched__roster-name chrona-sched__roster-open-name">
           <Shifts20Regular />
           {strings.rosterOpenShifts}
@@ -498,18 +716,21 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
           openResourceId !== undefined &&
           hover.dayIndex === dayIndex &&
           hover.resourceId === openResourceId;
+        const grid = gridCell(gridRow, dayIndex);
         return (
           <td
+            {...grid.props}
             className={
-              isHovered
-                ? `chrona-sched__cell-drop chrona-sched__cell-drop--${hover.verdict.kind}`
-                : undefined
+              [isHovered ? `chrona-sched__cell-drop chrona-sched__cell-drop--${hover.verdict.kind}` : "", grid.className]
+                .filter(Boolean)
+                .join(" ") || undefined
             }
             data-cell-day-index={openResourceId === undefined ? undefined : dayIndex}
             data-cell-resource-id={openResourceId}
             key={days[dayIndex]?.start.getTime() ?? dayIndex}
           >
-            {cell.map((event) => renderChip(event, dayIndex))}
+            {cell.map((event, chip) => renderChip(event, dayIndex, { chip, col: dayIndex, row: gridRow }))}
+            {grid.add}
           </td>
         );
       })}
@@ -532,14 +753,14 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
     );
   };
 
-  const renderPersonRow = (row: RosterRowLayout): JSX.Element => {
+  const renderPersonRow = (row: RosterRowLayout, gridRow: number): JSX.Element => {
     const statValues =
       shownStats.length > 0
         ? (extension?.columnValues?.(row.resource, shownStats.map((stat) => stat.id)) ?? {})
         : {};
     return (
       <tr key={row.resource.id}>
-        <td className="chrona-sched__roster-resource" data-resource-id={row.resource.id}>
+        <td className="chrona-sched__roster-resource" data-resource-id={row.resource.id} role="rowheader">
           {renderName(row.resource)}
           {extension?.personDetail?.(row.resource)}
         </td>
@@ -554,8 +775,10 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
             hover &&
             hover.dayIndex === dayIndex &&
             hover.resourceId === row.resource.id;
+          const grid = gridCell(gridRow, dayIndex);
           return (
             <td
+              {...grid.props}
               className={
                 [
                   isHovered
@@ -571,6 +794,7 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
                     ? "chrona-sched__roster-cell--weekend"
                     : "",
                   marks.length > 0 ? "chrona-sched__roster-cell--marked" : "",
+                  grid.className,
                 ]
                   .filter(Boolean)
                   .join(" ") || undefined
@@ -596,7 +820,8 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
                   {marks.find((mark) => mark.caption)?.caption}
                 </span>
               ) : null}
-              {cell.map((event) => renderChip(event, dayIndex))}
+              {cell.map((event, chip) => renderChip(event, dayIndex, { chip, col: dayIndex, row: gridRow }))}
+              {grid.add}
             </td>
           );
         })}
@@ -610,9 +835,15 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
   };
 
   // A group's heading, its open shifts, its people, then its footer.
-  const renderGroup = (group: RosterGroup): JSX.Element => {
-    const members = new Set(group.resources.map((resource) => resource.id));
-    const shows = rosterGroupRows(group, openEvents !== undefined);
+  const renderGridRow = (index: number): JSX.Element | null => {
+    const grid = gridRows[index];
+    if (grid?.open) {
+      return renderOpenRow(grid.cells, grid.open.key, grid.open.lightsUp, index);
+    }
+    return grid?.person ? renderPersonRow(grid.person, index) : null;
+  };
+
+  const renderGroup = (group: RosterGroup, groupIndex: number): JSX.Element => {
     return (
       <React.Fragment key={`group-${group.id}`}>
         <tr
@@ -624,10 +855,7 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
           <td className="chrona-sched__roster-resource">{group.header ? group.header.resource : group.heading}</td>
           <td colSpan={days.length + shownStats.length}>{group.header?.days}</td>
         </tr>
-        {shows.open && openEvents
-          ? renderOpenRow(layoutOpenRow(group.open, days), `open-${group.id}`, draggingGroup === group.id)
-          : null}
-        {shows.people ? rows.filter((row) => members.has(row.resource.id)).map(renderPersonRow) : null}
+        {(groupGridRows[groupIndex] ?? []).map(renderGridRow)}
         {group.footer ? (
           <tr className="chrona-sched__roster-need" data-testid="roster-need-row">
             <td className="chrona-sched__roster-resource">
@@ -645,13 +873,59 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
     );
   };
 
-  // Open shifts on the grid's days fill the open row, so a grid with no people is empty only without them.
+  // The day header: the people column, a column per day, then the stats.
+  const headRow = (
+    <tr ref={headRef}>
+      <th className="chrona-sched__roster-resource">
+        {strings.resourceHeader}
+        {groups ? extension?.groupsHeader : null}
+      </th>
+      {days.map((day, dayIndex) => (
+        <th
+          className={
+            [
+              dayIndex === todayDayIndex
+                ? "chrona-sched__roster-day--today"
+                : "",
+              day.weekend ? "chrona-sched__roster-day--weekend" : "",
+            ]
+              .filter(Boolean)
+              .join(" ") || undefined
+          }
+          key={day.start.getTime()}
+        >
+          {/* The space keeps "Mon 17 Aug" as the header's text. */}
+          <span className="chrona-sched__roster-dow">{day.weekday}</span>{" "}
+          {day.date}
+        </th>
+      ))}
+      {shownStats.map((stat, index) => (
+        <th {...statCell(index)} key={stat.id} title={stat.title}>
+          {stat.label}
+        </th>
+      ))}
+    </tr>
+  );
+  // The day count and the stats' width size the fixed-layout table (see styles.css).
+  const tableStyle = {
+    ["--chrona-roster-columns" as string]: days.length,
+    ["--chrona-roster-stats-width" as string]: `${statsWidth}px`,
+  } as React.CSSProperties;
+
+  // Open shifts on the grid's days fill the open row, so a grid with no people is empty only without them. It keeps its
+  // day header over the message, as the timeline does, so the planner still sees which days the board is on.
   if (resources.length === 0 && !(openCells ?? []).some((cell) => cell.length > 0)) {
     return (
       <div className="chrona-sched__roster">
-        <div className="chrona-sched__empty">
-          <span>{strings.emptyResources}</span>
-          {props.emptyAction}
+        {/* The header and the message share one width, so the message sits under the days it belongs to. */}
+        <div className="chrona-sched__roster-empty" style={tableStyle}>
+          <table className="chrona-sched__roster-table" style={tableStyle}>
+            <thead>{headRow}</thead>
+          </table>
+          <div className="chrona-sched__empty">
+            <span>{strings.emptyResources}</span>
+            {props.emptyAction}
+          </div>
         </div>
       </div>
     );
@@ -659,7 +933,8 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
 
   return (
     <div
-      className="chrona-sched__roster"
+      // While a shift is dragged, no cell offers a new one.
+      className={cellDrag.draggingEventId ? "chrona-sched__roster chrona-sched__roster--dragging" : "chrona-sched__roster"}
       onScroll={shownStats.length > 0 ? markDaysUnder : undefined}
       ref={rootRef}
       // The stats' width and the totals row, so a focused chip scrolls clear of them (see styles.css).
@@ -671,55 +946,21 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
       }
     >
       <table
+        aria-describedby={onCellCreate ? hintId : undefined}
         className="chrona-sched__roster-table"
-        // The day count and the stats' width size the fixed-layout table (see styles.css).
-        style={
-          {
-            ["--chrona-roster-columns" as string]: days.length,
-            ["--chrona-roster-stats-width" as string]: `${statsWidth}px`,
-          } as React.CSSProperties
-        }
+        onFocus={onGridFocus}
+        onKeyDown={onGridKeyDown}
+        ref={tableRef}
+        // The ARIA grid pattern: one tab stop, the arrow keys move between the days and their shifts.
+        role="grid"
+        style={tableStyle}
       >
-        <thead>
-          <tr ref={headRef}>
-            <th className="chrona-sched__roster-resource">
-              {strings.resourceHeader}
-              {groups ? extension?.groupsHeader : null}
-            </th>
-            {days.map((day, dayIndex) => (
-              <th
-                className={
-                  [
-                    dayIndex === todayDayIndex
-                      ? "chrona-sched__roster-day--today"
-                      : "",
-                    day.weekend ? "chrona-sched__roster-day--weekend" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ") || undefined
-                }
-                key={day.start.getTime()}
-              >
-                {/* The space keeps "Mon 17 Aug" as the header's text. */}
-                <span className="chrona-sched__roster-dow">{day.weekday}</span>{" "}
-                {day.date}
-              </th>
-            ))}
-            {shownStats.map((stat, index) => (
-              <th {...statCell(index)} key={stat.id} title={stat.title}>
-                {stat.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
+        <thead>{headRow}</thead>
         <tbody>
           {groups ? (
             groups.map(renderGroup)
           ) : (
-            <>
-              {openCells ? renderOpenRow(openCells, "open", true) : null}
-              {rows.map(renderPersonRow)}
-            </>
+            gridRows.map((_row, index) => renderGridRow(index))
           )}
         </tbody>
         {totals ? (
@@ -740,6 +981,11 @@ export function ChronaRoster(props: ChronaRosterProps): JSX.Element {
           </tfoot>
         ) : null}
       </table>
+      {onCellCreate ? (
+        <span className="chrona-sched__sr-only" id={hintId}>
+          {strings.rosterCreateHint}
+        </span>
+      ) : null}
     </div>
   );
 }

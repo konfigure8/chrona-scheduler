@@ -1,13 +1,15 @@
 import * as React from "react";
 
 import { useBoardHourFormat } from "./boardLocale";
-import { spanMinutes, workedMinutes } from "./spans";
-import { dateNamesFrom, formatDayTimeLabel } from "./dateNames";
+import { dateNamesFrom } from "./dateNames";
 import { FlagGlyph } from "./FlagGlyph";
 import { useBoardExtension } from "./extension";
+import { hoverCardModel, type HoverCardEntry } from "./hoverCard";
+import { NightGlyph } from "./NightGlyph";
+import { PinGlyph } from "./PinGlyph";
 import { ShiftMarkNote, useShiftMarks } from "./ShiftMark";
 import { openKindOf } from "./solve";
-import { flagReasonText, formatString, type SchedulerStrings } from "./stringResources";
+import { flagReasonText } from "./stringResources";
 import { useSchedulerStrings } from "./strings";
 
 import type {
@@ -29,40 +31,18 @@ export interface EventHoverCardProps {
   readonly bounds: { readonly height: number; readonly width: number };
   readonly event: SchedulerUiEvent;
   readonly resource: SchedulerResource | undefined;
+  /** The pointer came onto the card (a mark with an action): the board keeps it open. */
+  readonly onPointerEnter?: () => void;
+  /** The pointer left the card: the board closes it. */
+  readonly onPointerLeave?: () => void;
+  /** The mark's action ran: the board closes the card first. */
+  readonly onAction?: () => void;
+  /** The board's time zone, as the toolbar's chip names it. Absent = the board shows none. */
+  readonly timeZoneLabel?: string;
 }
 
 const beakSize = 8;
 const edgePadding = 8;
-
-type DurationWords = Pick<SchedulerStrings, "hoverHours" | "hoverHoursMinutes" | "hoverWorkedSpan">;
-
-/**
- * Hours and minutes in the board's language (W2-P12: never the component's own "h" and "m"). One amount never splits
- * over two lines ("8 Std. 30 Min."): its spaces are no-break spaces. The Unscheduled panel uses it too.
- */
-export function formatHoursMinutes(totalMinutes: number, words: Pick<SchedulerStrings, "hoverHours" | "hoverHoursMinutes">): string {
-  const minutes = Math.round(totalMinutes);
-  const hours = String(Math.floor(minutes / 60));
-  const rest = minutes % 60;
-  const amount = rest === 0 ? formatString(words.hoverHours, { hours }) : formatString(words.hoverHoursMinutes, { hours, minutes: String(rest) });
-  return amount.replace(/ /g, "\u00a0");
-}
-
-/**
- * Duration means TIME WORKED, which for a shift with rostered gaps is not
- * the envelope: a chef on 9-2 then 5-10 works 10h across a 13h span, and
- * reporting 13h would overstate every split shift on the board. The span
- * is still shown, in brackets, because it is the number span-of-hours
- * rules care about (Docs/domain_model.md section 4).
- */
-function formatDuration(event: SchedulerUiEvent, words: DurationWords): string {
-  const worked = formatHoursMinutes(workedMinutes(event), words);
-  const span = spanMinutes(event);
-  if (Math.round(workedMinutes(event)) === Math.round(span)) {
-    return worked;
-  }
-  return formatString(words.hoverWorkedSpan, { span: formatHoursMinutes(span, words), worked });
-}
 
 /**
  * Bryntum-style hover card anchored to the hovered item with a beak
@@ -108,33 +88,32 @@ export function EventHoverCard(props: EventHoverCardProps): JSX.Element {
     setPlacement({ beakLeft, below, left, top });
   }, [anchor, bounds]);
 
-  const entries: readonly { readonly label: string; readonly value: string; readonly wide?: boolean }[] =
-    [
-      { label: strings.start, value: formatDayTimeLabel(event.start, dateNames, hourFormat) },
-      { label: strings.duration, value: formatDuration(event, strings) },
-      {
-        label: strings.assignedTo,
-        value:
-          event.status === "needsCover"
-            ? event.onCall === true || openKindOf(event, extension?.openShift) !== undefined
-              ? strings.unassigned
-              : strings.needsCover
-            : (resource?.name ?? event.resourceId),
-      },
-      ...(event.requiredTags && event.requiredTags.length > 0
-        ? [{ label: strings.requiredSkills, value: event.requiredTags.join(", ") }]
-        : []),
-      // An extension's own lines take the fields' place (BoardExtension.hoverEntries).
-      ...(extension?.hoverEntries?.(event) ?? event.fields ?? []),
-    ];
+  // An extension's own lines take the fields' place (BoardExtension.hoverEntries).
+  const extensionEntries = extension?.hoverEntries?.(event);
+  const model = hoverCardModel(event, {
+    dateNames,
+    ...(extensionEntries ? { extensionEntries } : {}),
+    hourFormat,
+    openWork: event.onCall === true || openKindOf(event, extension?.openShift) !== undefined,
+    ...(resource ? { resourceName: resource.name } : {}),
+    strings,
+    ...(props.timeZoneLabel ? { timeZoneLabel: props.timeZoneLabel } : {}),
+  });
 
+  // A mark with an action makes the card one to point at: it takes the pointer and offers the action as a link.
+  const action = shiftMark?.action;
   return (
     <div
-      className={
-        placement?.below
-          ? "chrona-sched__hover-card chrona-sched__hover-card--below"
-          : "chrona-sched__hover-card"
-      }
+      className={[
+        "chrona-sched__hover-card",
+        placement?.below ? "chrona-sched__hover-card--below" : undefined,
+        action ? "chrona-sched__hover-card--action" : undefined,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      data-testid="event-hover-card"
+      onMouseEnter={action ? props.onPointerEnter : undefined}
+      onMouseLeave={action ? props.onPointerLeave : undefined}
       ref={cardRef}
       style={{
         left: placement?.left ?? anchor.left,
@@ -142,16 +121,49 @@ export function EventHoverCard(props: EventHoverCardProps): JSX.Element {
         visibility: placement ? "visible" : "hidden",
       }}
     >
-      <div className="chrona-sched__hover-card-title">{event.title}</div>
+      {/* The status as a chip beside the title, never also as a row; pinned as a mark (Matt 2026-11-13). */}
+      <div className="chrona-sched__hover-card-head">
+        <span className="chrona-sched__hover-card-title">{model.title}</span>
+        {model.status ? (
+          <span
+            className={`chrona-sched__hover-card-status chrona-sched__hover-card-status--${model.status.tone}`}
+            data-testid="hover-card-status"
+          >
+            {model.status.text}
+          </span>
+        ) : null}
+        {model.pinned ? (
+          <span aria-label={strings.hoverPinned} className="chrona-sched__hover-card-pin" data-testid="hover-card-pinned" role="img">
+            <PinGlyph />
+          </span>
+        ) : null}
+      </div>
+      {model.chips.length > 0 ? (
+        <div className="chrona-sched__hover-card-chips" data-testid="hover-card-chips">
+          {model.chips.map((chip) => (
+            <span className="chrona-sched__hover-card-chip" data-kind={chip.kind} key={chip.kind}>
+              {chip.kind === "night" ? <NightGlyph /> : null}
+              {chip.label}
+            </span>
+          ))}
+        </div>
+      ) : null}
       {shiftMark ? <ShiftMarkNote className="chrona-sched__hover-card-mark" mark={shiftMark} /> : null}
-      <dl className="chrona-sched__hover-card-grid">
-        {entries.map((entry, index) => (
-          <div className={entry.wide ? "chrona-sched__hover-card-wide" : undefined} key={`${entry.label}-${index}`}>
-            <dt>{entry.label}</dt>
-            <dd>{entry.value}</dd>
-          </div>
-        ))}
-      </dl>
+      {action ? (
+        <button
+          className="chrona-sched__hover-card-action"
+          data-testid="hover-card-action"
+          onClick={() => {
+            props.onAction?.();
+            action.run();
+          }}
+          type="button"
+        >
+          {action.label}
+        </button>
+      ) : null}
+      <HoverCardRows entries={model.when} testId="hover-card-when" />
+      <HoverCardRows entries={model.details} testId="hover-card-details" />
       {event.flag ? (
         <p className="chrona-sched__hover-card-note">
           <FlagGlyph />
@@ -164,5 +176,34 @@ export function EventHoverCard(props: EventHoverCardProps): JSX.Element {
         style={{ left: placement?.beakLeft ?? 14 }}
       />
     </div>
+  );
+}
+
+/** One block of the card's rows, under a rule: each row's label over its value, or over its tags. */
+function HoverCardRows({ entries, testId }: { readonly entries: readonly HoverCardEntry[]; readonly testId: string }): JSX.Element {
+  return (
+    <dl className="chrona-sched__hover-card-grid" data-testid={testId}>
+      {entries.map((entry, index) => (
+        <div className={entry.wide ? "chrona-sched__hover-card-wide" : undefined} key={`${entry.label}-${index}`}>
+          <dt>{entry.label}</dt>
+          {entry.tags && entry.tags.length > 0 ? (
+            <dd aria-label={entry.value} className="chrona-sched__hover-card-tags">
+              {entry.tags.map((tag, tagIndex) => (
+                <span
+                  className={tag.look === "filled" ? "chrona-sched__tag chrona-sched__tag--filled" : "chrona-sched__tag"}
+                  data-look={tag.look ?? "outline"}
+                  key={`${tag.label}-${tagIndex}`}
+                  title={tag.label}
+                >
+                  {tag.label}
+                </span>
+              ))}
+            </dd>
+          ) : (
+            <dd>{entry.value}</dd>
+          )}
+        </div>
+      ))}
+    </dl>
   );
 }

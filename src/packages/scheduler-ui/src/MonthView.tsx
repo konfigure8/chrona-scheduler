@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { useBoardHourFormat } from "./boardLocale";
 import { useCellDrag } from "./ChronaRoster";
+import { useBoardExtension } from "./extension";
 import { formatClock } from "./clock";
 import { isDragLocked, showsPin } from "./locks";
 import { NightGlyph } from "./NightGlyph";
@@ -11,6 +12,7 @@ import { openShiftClass, openShiftNote } from "./solve";
 import { formatString, useSchedulerStrings } from "./strings";
 import {
   allowVerdict,
+  refusesChange,
   computeCellDropResult,
   type ChangeVerdict,
   type ValidateChange,
@@ -80,6 +82,7 @@ export function MonthView(props: MonthViewProps): JSX.Element {
    * Month cells have no resource axis; the drop keeps the event's resource
    * and the cell's day index is the absolute day number of its date.
    */
+  const takesBlockedChanges = useBoardExtension()?.takesBlockedChanges;
   const cellDrag = useCellDrag({
     onDrop: (drag, cell) => {
       const result = computeCellDropResult(
@@ -87,7 +90,7 @@ export function MonthView(props: MonthViewProps): JSX.Element {
         cell.dayIndex - drag.originDayIndex,
       );
       const verdict = validateChange?.(drag.event, result) ?? allowVerdict;
-      if (verdict.kind === "block") {
+      if (refusesChange(verdict, takesBlockedChanges)) {
         return;
       }
       if (result.start.getTime() === drag.event.start.getTime()) {

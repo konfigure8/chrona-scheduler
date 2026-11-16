@@ -11,6 +11,13 @@ import {
   lookupSchemaName,
   lookupTarget,
   mapRecordCommands,
+  retrieveRecordCommands,
+  shiftMenuFromRow,
+  shiftMenuHandlers,
+  boardCreates,
+  createHandler,
+  showCreateFromRow,
+  VIEW_ROW_COLUMNS,
   mapWorkItems,
   pagingStep,
   colorByFromChoice,
@@ -352,8 +359,11 @@ console.log("nameless resource tests passed");
   items[0]!.onSelect();
   assert.deepEqual(ran, ["assign"]);
   assert.equal(mapRecordCommands({ commands }).length, 4, "a wrapped result is read the same way");
-  assert.deepEqual(mapRecordCommands(undefined), []);
-  assert.deepEqual(mapRecordCommands("nonsense"), []);
+  assert.deepEqual(mapRecordCommands([]), [], "an empty list is no commands");
+  // An answer that is not a list of commands is unreadable: a failure, never "no commands" (AGENTS.md 0.1).
+  for (const unreadable of [undefined, null, "nonsense", 3, {}, { commands: "nonsense" }]) {
+    assert.throws(() => mapRecordCommands(unreadable), /not a list of commands/, `unreadable: ${JSON.stringify(unreadable)}`);
+  }
 }
 
 // A save waits for the person's table only when the change gives the row a person.
@@ -409,3 +419,75 @@ void (async () => {
   console.error(error);
   process.exit(1);
 });
+
+// B141: the view row's shift menu switches. A row from before them reads no value and keeps both items, as Show
+// weekends does; a switch set to No leaves its handler out, so the board draws no item for it.
+{
+  const handlers = { loadContextMenuItems: "commands", onOpenRecord: "form" };
+  assert.deepEqual(shiftMenuFromRow({ chr_showweekends: false }), { showAppCommands: undefined, showOpenForm: undefined }, "a row from before the upgrade has no value");
+  assert.deepEqual(shiftMenuFromRow({ chr_showappcommands: null, chr_showopenform: null }), { showAppCommands: undefined, showOpenForm: undefined }, "an empty cell has no value");
+  assert.deepEqual(shiftMenuHandlers(shiftMenuFromRow({}), handlers), handlers, "no value shows both items");
+  assert.deepEqual(shiftMenuHandlers({}, handlers), handlers, "a board without a view row shows both items");
+  assert.deepEqual(shiftMenuHandlers(shiftMenuFromRow({ chr_showappcommands: true, chr_showopenform: true }), handlers), handlers);
+  assert.deepEqual(shiftMenuHandlers(shiftMenuFromRow({ chr_showappcommands: true, chr_showopenform: false }), handlers), { loadContextMenuItems: "commands" }, "Open record off");
+  assert.deepEqual(shiftMenuHandlers(shiftMenuFromRow({ chr_showappcommands: false, chr_showopenform: true }), handlers), { onOpenRecord: "form" }, "the app's commands off");
+  assert.deepEqual(shiftMenuHandlers(shiftMenuFromRow({ chr_showappcommands: false, chr_showopenform: false }), handlers), {}, "both off");
+  console.log("shift menu switch tests passed");
+}
+
+// Create new bookings on the board (chr_showcreate, Matt 2026-11-16): the view row read asks for it; off, or not
+// known because the row is unread or its read failed, the host passes no create handler, so the board offers no New
+// event, no click on an empty slot and no drag to create. No row, or no value, keeps them: the column defaults to Yes.
+{
+  assert.ok((VIEW_ROW_COLUMNS as readonly string[]).includes("chr_showcreate"), "the view row read asks for the switch");
+  assert.equal(showCreateFromRow({ chr_showcreate: false }), false);
+  assert.equal(showCreateFromRow({ chr_showcreate: true }), true);
+  assert.equal(showCreateFromRow({ chr_showcreate: null }), undefined, "an empty cell has no value");
+  assert.equal(showCreateFromRow({ chr_showweekends: false }), undefined, "a row without the column has no value");
+  assert.equal(boardCreates({ answered: true, failed: false, showCreate: false }), false, "off: no create");
+  assert.equal(boardCreates({ answered: true, failed: false, showCreate: true }), true, "on: create");
+  assert.equal(boardCreates({ answered: true, failed: false }), true, "no row or no value: the column's default, Yes");
+  assert.equal(boardCreates({ answered: false, failed: false, showCreate: true }), false, "unread yet: not known, no create");
+  assert.equal(boardCreates({ answered: true, failed: true }), false, "a failed read: not known, no create, never the default");
+  assert.equal(boardCreates({ answered: true, failed: true, showCreate: true }), false, "a failed re-read does not keep an old Yes");
+  const create = (): void => undefined;
+  assert.deepEqual(createHandler(false, create), {}, "off: no onCreateEvent at all");
+  assert.equal(Object.prototype.hasOwnProperty.call(createHandler(false, create), "onCreateEvent"), false);
+  assert.deepEqual(createHandler(true, create), { onCreateEvent: create }, "on: the host's handler");
+  console.log("create switch tests passed");
+}
+
+// B141: a platform without the record-command method has no commands to show; a call that fails shows one disabled
+// item that says so, never an empty list that looks like no commands (AGENTS.md 0.1).
+void (async () => {
+  const failed = "Couldn't load the app's commands.";
+  assert.deepEqual(await retrieveRecordCommands(undefined, "s-1", failed), [], "no dataset: no commands");
+  assert.deepEqual(await retrieveRecordCommands({} as never, "s-1", failed), [], "no method: no commands");
+  const asked: unknown[] = [];
+  const answering = { retrieveRecordCommand: (ids: string[]) => { asked.push(ids); return Promise.resolve([{ commandId: "assign", label: "Assign", execute: () => undefined }]); } };
+  assert.deepEqual((await retrieveRecordCommands(answering as never, "s-1", failed)).map((i) => [i.id, i.label, i.disabled]), [["platform:assign", "Assign", false]]);
+  assert.deepEqual(asked, [["s-1"]]);
+  const errors: unknown[][] = [];
+  const consoleError = console.error;
+  console.error = (...args: unknown[]) => { errors.push(args); };
+  try {
+    for (const dataset of [
+      { retrieveRecordCommand: () => Promise.reject(new Error("command bar unavailable")) },
+      { retrieveRecordCommand: () => { throw new Error("command bar unavailable"); } },
+      // An answer of an unreadable shape is a failed read too.
+      { retrieveRecordCommand: () => Promise.resolve(undefined) },
+      { retrieveRecordCommand: () => Promise.resolve("nonsense") },
+    ]) {
+      const items = await retrieveRecordCommands(dataset as never, "s-1", failed);
+      assert.deepEqual(items.map((i) => [i.id, i.label, i.disabled]), [["platform:failed", failed, true]], "a failed read says so");
+      items[0]!.onSelect();
+    }
+  } finally {
+    console.error = consoleError;
+  }
+  const logged = errors.filter((args) => String(args[0]).includes("the app's commands"));
+  assert.equal(logged.length, 4, "the cause is logged");
+  assert.ok(String(logged[0]![1]).includes("command bar unavailable"));
+  assert.ok(String(logged[3]![1]).includes("not a list of commands"));
+  console.log("record command read tests passed");
+})().catch((error) => { console.error(error); process.exit(1); });

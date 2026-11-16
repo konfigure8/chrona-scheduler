@@ -115,9 +115,12 @@ import {
 
 import {
   canChangeViewSettings,
+  connectOffered,
+  connectWrites,
   recheckPrivilege,
   openRecordInDialog,
   readRowsVersion,
+  readViewRow,
   VIEW_SETTINGS_TABLE,
   watchWhileOpen,
 } from "./settingsDialog";
@@ -125,6 +128,8 @@ import { createAppNotifier, type NoticeLevel } from "./hostNotifications";
 import {
   calendarsNamedLikeQuery,
   emptyHostConfig,
+  hostEditsLocked,
+  hostReadFailure,
   loadHostConfig,
   nextCalendarName,
   PRODUCT_CHOICE,
@@ -170,9 +175,15 @@ import {
   hasColumn,
   mapWorkItems,
   representationFor,
+  boardCreates,
+  createHandler,
   retrieveRecordCommands,
+  shiftMenuFromRow,
+  showCreateFromRow,
+  shiftMenuHandlers,
   type WriteProvenance,
   UNASSIGNED_RESOURCE_ID,
+  VIEW_ROW_COLUMNS,
 } from "./dataverseData";
 import type { IInputs } from "./generated/ManifestTypes";
 
@@ -203,7 +214,6 @@ interface UndoEntry {
   readonly before: readonly SchedulerUiEvent[];
 }
 
-/** chr_chronaschedulerview row fields consumed as maker defaults. */
 interface ViewConfig {
   /** The maker's "Color by" for this view; empty leaves the bars neutral. */
   readonly colorBy?: ColorBy;
@@ -215,6 +225,11 @@ interface ViewConfig {
   readonly periodAnchor?: Date;
   readonly periodUnit?: PeriodUnit;
   readonly pxPerHour?: number;
+  /** B141: the shift menu switches (chr_showappcommands, chr_showopenform); no value shows the item. */
+  readonly showAppCommands?: boolean;
+  readonly showOpenForm?: boolean;
+  /** chr_showcreate: whether the board creates new items; no value creates them (the column defaults to Yes). */
+  readonly showCreate?: boolean;
   readonly showWeekends?: boolean;
   readonly slotMinutes?: number;
   readonly workingEndHour?: number;
@@ -379,6 +394,8 @@ export function useDataverseScheduleHost(
   const [viewRowAnswered, setViewRowAnswered] = React.useState(false);
   // Bumped when the maker closes the settings dialog, so saved settings apply at once.
   const [viewConfigRevision, setViewConfigRevision] = React.useState(0);
+  // The view row's read failed: the board says so, a run click names it, and the gear makes no second row (AGENTS.md 0.1).
+  const [viewRowFailed, setViewRowFailed] = React.useState(false);
   React.useEffect(() => {
     let cancelled = false;
     const webApi = context.webAPI;
@@ -386,85 +403,94 @@ export function useDataverseScheduleHost(
       setViewRowAnswered(true);
       return undefined;
     }
-    try {
-      webApi
-        .retrieveMultipleRecords(
-          "chr_chronaschedulerview",
-          `?$select=chr_chronaschedulerviewid,chr_layout,chr_colorby,chr_displaytimezone,chr_slotminutes,chr_pxperhour,chr_workingstart,chr_workingend,chr_showweekends,chr_periodunit,chr_periodanchor,_chr_calendar_value&$filter=chr_viewid eq '${viewId}'&$top=1`,
-        )
-        .then((result) => {
-          const row = result.entities[0];
-          if (cancelled) {
-            return null;
-          }
-          if (!row) {
-            setViewRowAnswered(true);
-            return null;
-          }
-          setViewRowId(
-            typeof row.chr_chronaschedulerviewid === "string" ? row.chr_chronaschedulerviewid : undefined,
-          );
-          setViewCalendarId(
-            typeof row._chr_calendar_value === "string" ? row._chr_calendar_value : undefined,
-          );
-          const periodUnit: PeriodUnit | undefined =
-            row.chr_periodunit === 1
-              ? "week"
-              : row.chr_periodunit === 2
-                ? "fortnight"
-                : row.chr_periodunit === 3
-                  ? "month"
-                  : undefined;
-          // A Date Only value names a day; read as UTC midnight it is the day before west of UTC.
-          const periodAnchorRaw =
-            typeof row.chr_periodanchor === "string" ? parseDateOnly(row.chr_periodanchor) : undefined;
-          setViewConfig({
-            colorBy: colorByFromChoice(row.chr_colorby),
-            displayTimeZone:
-              typeof row.chr_displaytimezone === "string"
-                ? row.chr_displaytimezone
-                : undefined,
-            layout: layoutFromChoice(row.chr_layout),
-            periodAnchor:
-              periodAnchorRaw && !Number.isNaN(periodAnchorRaw.getTime())
-                ? periodAnchorRaw
-                : undefined,
-            periodUnit,
-            pxPerHour:
-              typeof row.chr_pxperhour === "number"
-                ? row.chr_pxperhour
-                : undefined,
-            showWeekends:
-              typeof row.chr_showweekends === "boolean"
-                ? row.chr_showweekends
-                : undefined,
-            slotMinutes:
-              typeof row.chr_slotminutes === "number"
-                ? row.chr_slotminutes
-                : undefined,
-            workingEndHour: workingEndHour(row.chr_workingstart, row.chr_workingend),
-            workingStartHour:
-              typeof row.chr_workingstart === "number"
-                ? row.chr_workingstart / 60
-                : undefined,
-          });
-          setViewRowAnswered(true);
-          return null;
-        })
-        .catch(() => {
-          // Zero-config path: table absent or no row for this view.
-          if (!cancelled) {
-            setViewRowAnswered(true);
-          }
-        });
-    } catch {
-      // Feature unavailable in this host: zero-config path.
+    void readViewRow(webApi, viewId, VIEW_ROW_COLUMNS).then((read): null => {
+      if (cancelled) {
+        return null;
+      }
+      if (read.kind === "failed") {
+        console.error("[chrona] the board's view settings could not be read", read.error);
+        setViewRowFailed(true);
+        setViewRowAnswered(true);
+        notify("error", messages.msgViewSettingsUnread);
+        return null;
+      }
+      setViewRowFailed(false);
+      // No row for this view: the zero-config board.
+      if (read.kind === "none") {
+        setViewRowAnswered(true);
+        return null;
+      }
+      const row = read.row;
+      setViewRowId(
+        typeof row.chr_chronaschedulerviewid === "string" ? row.chr_chronaschedulerviewid : undefined,
+      );
+      setViewCalendarId(
+        typeof row._chr_calendar_value === "string" ? row._chr_calendar_value : undefined,
+      );
+      const periodUnit: PeriodUnit | undefined =
+        row.chr_periodunit === 1
+          ? "week"
+          : row.chr_periodunit === 2
+            ? "fortnight"
+            : row.chr_periodunit === 3
+              ? "month"
+              : undefined;
+      // A Date Only value names a day; read as UTC midnight it is the day before west of UTC.
+      const periodAnchorRaw =
+        typeof row.chr_periodanchor === "string" ? parseDateOnly(row.chr_periodanchor) : undefined;
+      setViewConfig({
+        colorBy: colorByFromChoice(row.chr_colorby),
+        displayTimeZone:
+          typeof row.chr_displaytimezone === "string"
+            ? row.chr_displaytimezone
+            : undefined,
+        layout: layoutFromChoice(row.chr_layout),
+        periodAnchor:
+          periodAnchorRaw && !Number.isNaN(periodAnchorRaw.getTime())
+            ? periodAnchorRaw
+            : undefined,
+        periodUnit,
+        pxPerHour:
+          typeof row.chr_pxperhour === "number"
+            ? row.chr_pxperhour
+            : undefined,
+        ...shiftMenuFromRow(row),
+        showCreate: showCreateFromRow(row),
+        showWeekends:
+          typeof row.chr_showweekends === "boolean"
+            ? row.chr_showweekends
+            : undefined,
+        slotMinutes:
+          typeof row.chr_slotminutes === "number"
+            ? row.chr_slotminutes
+            : undefined,
+        workingEndHour: workingEndHour(row.chr_workingstart, row.chr_workingend),
+        workingStartHour:
+          typeof row.chr_workingstart === "number"
+            ? row.chr_workingstart / 60
+            : undefined,
+      });
       setViewRowAnswered(true);
-    }
+      return null;
+    });
     return () => {
       cancelled = true;
     };
-  }, [context.webAPI, viewId, viewConfigRevision]);
+  }, [context.webAPI, viewId, viewConfigRevision, notify, messages.msgViewSettingsUnread]);
+  /*
+   * The scheduler's row or its people could not be read (AGENTS.md 0.1): the loader logged the cause; the board's
+   * error notice and data notice name it, and a run click names it. Without its row the board knows no scheduler,
+   * zone or settings, so it shows and plans no items and offers no Connect; without its people it lists nobody.
+   */
+  const calendarUnread = hostConfig.readFailed === "calendar";
+  const readFailedNote = hostReadFailure(hostConfig, messages);
+  // Nor, while it could not be read, does the board change anything (Matt 2026-11-16, "Yes, both boards").
+  const editsLocked = hostEditsLocked(hostConfig);
+  React.useEffect(() => {
+    if (readFailedNote) {
+      notify("error", readFailedNote);
+    }
+  }, [notify, readFailedNote]);
   const settingsReady = calendarSettingsReady({
     boundCalendarId: calendarConfigId,
     effectiveCalendarId: effectiveCalendarConfigId,
@@ -2002,6 +2028,7 @@ export function useDataverseScheduleHost(
       calendarId: hostConfig.calendarId,
       hasSession: session !== undefined,
       settingsReady,
+      settingsUnread: readFailedNote !== undefined,
     });
     if (action === "wait") {
       // Before the calendar's settings load: hold the click, shown as queued.
@@ -2009,9 +2036,19 @@ export function useDataverseScheduleHost(
       setSolveState({ status: "queued" });
       return;
     }
+    if (action === "settingsUnread" && readFailedNote) {
+      setSolveState(idleSolveState);
+      notify("error", readFailedNote);
+      return;
+    }
     if (action === "noCalendar") {
       setSolveState(idleSolveState);
-      notify("warning", messages.msgSolveNoCalendar);
+      // A view row that could not be read may name the scheduler: the click names the failed read, not a missing scheduler.
+      if (viewRowFailed) {
+        notify("error", messages.msgViewSettingsUnread);
+      } else {
+        notify("warning", messages.msgSolveNoCalendar);
+      }
       return;
     }
     const ticket = ++solveTicketRef.current;
@@ -2050,8 +2087,10 @@ export function useDataverseScheduleHost(
     failSolve,
     hostConfig.calendarId,
     messages.msgSolveNoCalendar,
+    messages.msgViewSettingsUnread,
     mintSession,
     notify,
+    readFailedNote,
     runWithSession,
     session,
     settingsReady,
@@ -2104,7 +2143,7 @@ export function useDataverseScheduleHost(
    * point this view's row at it, so the session has a calendar to scope
    * and the next load finds the configuration through the view row.
    */
-  const ensureCalendarConfiguration = React.useCallback(async (): Promise<string> => {
+  const createCalendarConfiguration = React.useCallback(async (): Promise<string> => {
     const webApi = context.webAPI;
     if (!webApi?.createRecord) {
       throw new Error("Dataverse is not available in this host.");
@@ -2169,6 +2208,18 @@ export function useDataverseScheduleHost(
     setViewCalendarId(calendarId);
     return calendarId;
   }, [context.userSettings, context.utils, context.webAPI, viewId, workItems]);
+  // After a failed read of the view row the board may already have a scheduler: Connect writes nothing (connectWrites).
+  // Nor after a failed read of the scheduler's own row: the board may already have it.
+  const connectGate = { boundCalendarId: calendarConfigId, calendarUnread, viewRowFailed };
+  const ensureCalendarConfiguration = React.useCallback(
+    (): Promise<string> =>
+      connectWrites(
+        { boundCalendarId: connectGate.boundCalendarId, calendarUnread: connectGate.calendarUnread, viewRowFailed: connectGate.viewRowFailed },
+        connectGate.calendarUnread ? messages.msgCalendarUnread : messages.msgViewSettingsUnread,
+        createCalendarConfiguration,
+      ),
+    [connectGate.boundCalendarId, connectGate.calendarUnread, connectGate.viewRowFailed, createCalendarConfiguration, messages.msgCalendarUnread, messages.msgViewSettingsUnread],
+  );
 
   /*
    * Only users who can change a board's settings see the gear. On a cold
@@ -2202,6 +2253,14 @@ export function useDataverseScheduleHost(
       let rowId = viewRowId;
       // The resolved id: the calendar property can hold a name.
       const calendarId = hostConfig.calendarId;
+      // A view row that could not be read may exist: the gear makes no second one, and says why.
+      if (!rowId && viewRowFailed) {
+        throw new Error(messages.msgViewSettingsUnread);
+      }
+      // Nor does it make one tied to no scheduler while the scheduler's row could not be read.
+      if (!rowId && calendarUnread) {
+        throw new Error(messages.msgCalendarUnread);
+      }
       if (!rowId) {
         const calendarBind = calendarId
           ? { "chr_Calendar@odata.bind": `/chr_chronaschedulercalendars(${calendarId})` }
@@ -2237,18 +2296,25 @@ export function useDataverseScheduleHost(
     // The live region tells screen readers; the platform's error dialog
     // shows everyone, with the reason under its details.
     const showFailure = async (error: unknown): Promise<void> => {
-      setMessage(messages.msgSettingsFailed);
+      // A failed read of the view row is the reason itself: the dialog says it, not "Could not open the settings".
+      const failure = viewRowFailed
+        ? messages.msgViewSettingsUnread
+        : calendarUnread
+          ? messages.msgCalendarUnread
+          : messages.msgSettingsFailed;
+      const cause = error instanceof Error ? error.message : String(error);
+      setMessage(failure);
       try {
         await context.navigation.openErrorDialog({
-          details: error instanceof Error ? error.message : String(error),
-          message: messages.msgSettingsFailed,
+          details: cause === failure ? "" : cause,
+          message: failure,
         });
       } catch {
         // No dialog API here: the live region is all there is.
       }
     };
     void open().catch(showFailure);
-  }, [context.navigation, context.webAPI, hostConfig.calendarId, messages, viewId, viewRowId, workItems]);
+  }, [calendarUnread, context.navigation, context.webAPI, hostConfig.calendarId, messages, viewId, viewRowFailed, viewRowId, workItems]);
 
   /* Q6-A: "Try a free sample run" IS the consent. Connect (admin
    * privilege), then the first free solve on the redacted payload. */
@@ -2397,18 +2463,31 @@ export function useDataverseScheduleHost(
         }
       : undefined;
 
+  /*
+   * A board without a bound calendar whose view row could not be read does not know its scheduler, its clock or its
+   * settings: it shows the failure in its data notice and shows and plans no shifts.
+   */
+  const viewRowUnknown = !connectOffered({ boundCalendarId: connectGate.boundCalendarId, viewRowFailed });
+  // A board whose scheduler's row could not be read shows and plans no items either, and names no zone.
+  const boardUnknown = viewRowUnknown || calendarUnread;
   const surfaceProps: Omit<SchedulerSurfaceProps, "view"> = {
     anchor,
     announcement: message,
     notice,
-    dataNotice: rowCapReached
-      ? formatString(messages.msgRowCapReached, { count: DATASET_ROW_CAP })
-      : undefined,
+    // A read that failed is the danger notice (Matt 2026-11-16, "Red notice style for all read failures"); the row cap stays calm.
+    dataNotice: readFailedNote
+      ? { level: "error", text: readFailedNote }
+      : viewRowUnknown
+        ? { level: "error", text: messages.msgViewSettingsUnread }
+        : rowCapReached
+          ? { level: "info", text: formatString(messages.msgRowCapReached, { count: DATASET_ROW_CAP }) }
+          : undefined,
     unassignedResourceId: UNASSIGNED_RESOURCE_ID,
     // F27: cached claims mean a connected instance whose Chrona is
     // unreachable; the free-control explainer is for the unconnected,
     // bound calendar or not: Connect creates the configuration it needs.
-    conversionSurface: !runButton
+    // A board whose view row could not be read may already be connected: no Connect until it is read (connectOffered).
+    conversionSurface: !runButton && connectOffered(connectGate)
       ? {
           connected: false,
           onConnect: connectAndSample,
@@ -2447,7 +2526,8 @@ export function useDataverseScheduleHost(
       solveCapabilities.length > 0 ? solveCapabilities : undefined,
     config: { ...defaultTimelineConfig, ...zoomForInterval(interval, zoomByInterval, dayZoom) },
     decorations: decorations.length > 0 ? decorations : undefined,
-    events: scheduled,
+    events: boardUnknown ? [] : scheduled,
+    ...(boardUnknown || editsLocked ? { editable: false } : {}),
     initialScrollHour: viewConfig.workingStartHour ?? 6,
     interval,
     now: toDisplay(new Date()),
@@ -2461,7 +2541,12 @@ export function useDataverseScheduleHost(
             setAnchor(stepPeriod(periodConfig, anchor, direction).start),
         }
       : {}),
-    onCreateEvent: (draft) => {
+    // The view row's Create new bookings on the board: off, or not yet known, the host passes no create handler.
+    ...createHandler<NonNullable<SchedulerSurfaceProps["onCreateEvent"]>>(boardCreates({
+      answered: viewRowAnswered,
+      failed: viewRowFailed,
+      showCreate: viewConfig.showCreate,
+    }), (draft) => {
       // A new shift on a person's row waits for the bind's names.
       if (
         draft.resourceId !== UNASSIGNED_RESOURCE_ID &&
@@ -2551,7 +2636,7 @@ export function useDataverseScheduleHost(
       } catch {
         notify("warning", messages.msgCannotCreateHere + LOCAL_ONLY_NOTE);
       }
-    },
+    }),
     onDeleteEvent: (event) => applyDelete([event]),
     onDeleteEvents: (doomed) => applyDelete(doomed),
     onEventChange: (change) => applyChanges([change]),
@@ -2572,13 +2657,16 @@ export function useDataverseScheduleHost(
     },
     // F28: the app's own commands, the record's own form, and the app's
     // command bar acting on the board's selection.
-    loadContextMenuItems: (event) => retrieveRecordCommands(workItems, event.id),
-    onOpenRecord: (event) => {
-      void context.navigation.openForm({
-        entityId: event.id,
-        entityName: workItems.getTargetEntityType(),
-      });
-    },
+    // B141: the view row's switches leave either out, and the board draws no item for it.
+    ...shiftMenuHandlers(viewConfig, {
+      loadContextMenuItems: (event: SchedulerUiEvent) => retrieveRecordCommands(workItems, event.id, messages.msgCommandsFailed),
+      onOpenRecord: (event: SchedulerUiEvent) => {
+        void context.navigation.openForm({
+          entityId: event.id,
+          entityName: workItems.getTargetEntityType(),
+        });
+      },
+    }),
     onSelectionChange: (ids) => {
       setSelectedEventIds(ids);
       try {
@@ -2650,21 +2738,28 @@ export function useDataverseScheduleHost(
     selectedEventIds,
     showWeekends,
     slotMinutes,
-    strings: controlStrings.surface,
+    // No silent fallbacks: when the scheduler's people, or its row, could not be read, the empty list says so, never
+    // "No resources to display".
+    strings: readFailedNote
+      ? { ...controlStrings.surface, emptyResources: calendarUnread ? messages.msgSettingsUnreadGrid : messages.msgResourcesUnreadGrid }
+      : controlStrings.surface,
     // The site's city on the toolbar; the zone in full and its offset in the tooltip.
     timeZoneDetail:
-      displayZone === "user" || formatTimeZoneCity(displayZone) === "UTC"
+      boardUnknown || displayZone === "user" || formatTimeZoneCity(displayZone) === "UTC"
         ? undefined
         : `${formatTimeZoneLabel(displayZone)} (${formatUtcOffsetLabel(zoneOffsetMinutes(new Date(), displayZone))})`,
-    timeZoneLabel:
-      displayZone === "user"
+    // A board whose view row, or whose scheduler's row, could not be read names no zone: it shows the failure instead
+    // (dataNotice).
+    timeZoneLabel: boardUnknown
+      ? ""
+      : displayZone === "user"
         ? formatUtcOffsetLabel(userOffsetMinutes(new Date()))
         : formatTimeZoneCity(displayZone),
     // Today is the site's today.
     today: toDisplay(new Date()),
     toInstant: toStored,
-    undatedEvents: undated,
-    unscheduledEvents: unscheduled,
+    undatedEvents: boardUnknown ? [] : undated,
+    unscheduledEvents: boardUnknown ? undefined : unscheduled,
     unscheduledFilter,
     unscheduledPanelWidth: panelWidth,
     validateChange,

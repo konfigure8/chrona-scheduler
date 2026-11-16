@@ -23,9 +23,9 @@ const at = (hour: number, minute = 0): Date =>
   new Date(2026, 7, 21, hour, minute);
 
 /**
- * A long gap: 9-2, three hours off, 5-10, in one shift. A rostered
- * split is two linked shifts (F48 Split shifts); the arithmetic here
- * holds for any gap.
+ * A long gap: 9-2, three hours off, 5-10, in one shift. A split shift
+ * is one shift with a break of 1 hour or more (Matt 2026-11-14); the
+ * arithmetic here holds for any gap.
  */
 const longGap: SchedulerUiEvent = {
   end: at(22),

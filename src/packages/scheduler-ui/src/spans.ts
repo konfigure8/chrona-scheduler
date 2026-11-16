@@ -6,7 +6,7 @@ import type { SchedulerUiEvent, ShiftGap } from "./types";
 /**
  * A shift is a SHAPE: `start`/`end` are the envelope, and its rostered
  * breaks are gaps inside it (Docs/domain_model.md section 4). A split
- * shift is not a gap: it is two linked shifts (F48 Split shifts).
+ * shift is one shift whose break of 1 hour or more is one of them.
  *
  * Three measures come off that shape, and each caller states which one
  * it means. This module is the single place they are computed, because
@@ -15,9 +15,7 @@ import type { SchedulerUiEvent, ShiftGap } from "./types";
  *   - workedMinutes   spans plus PAID gaps       (hours, overtime, cost)
  *   - coverageMinutes the whole shift            (ratios, demand)
  * People take short breaks in turn, so a break cuts paid time but
- * leaves no hole in cover. For one shift, coverage and span agree; they
- * part only across a split, whose parts are separate shifts with a hole
- * between them.
+ * leaves no hole in cover. For one shift, coverage and span agree.
  *
  * All three count by the clock on the site's wall: an overnight shift
  * across a daylight saving change keeps its clock length, as Fair Work
@@ -172,7 +170,7 @@ function slotAfter(edge: Date, snapMinutes: number): number {
 
 /**
  * Where a shift's gaps go when its start and end change, from any
- * client: the rule the server applies on every save (F48 Split shifts),
+ * client: the rule the server applies on every save,
  * so a host shows what the row holds after its save.
  *
  * MOVE: the gaps travel with the shift. A shift moved an hour later

@@ -127,7 +127,7 @@ export type SchedulerEventStatus = "assigned" | "needsCover";
 
 /**
  * A rostered non-working gap inside a shift: a meal break, a smoko, or
- * the long gap that makes a shift a split. Only gaps the customer
+ * the break of 1 hour or more of a split shift. Only gaps the customer
  * actually rosters exist here - an unrostered smoko is absent by
  * design, not missing (Docs/domain_model.md section 4).
  */
@@ -138,16 +138,6 @@ export interface ShiftGap {
   /** Paid gaps count as worked time; every gap still counts as cover. */
   readonly paid?: boolean;
   readonly start: Date;
-}
-
-/**
- * One part of a split shift (F48 Split shifts): a split is planned as one
- * and stored as two shifts that share this id. "required" makes one person
- * for both parts a must; "preferred" makes it a preference.
- */
-export interface ShiftSplit {
-  readonly id: string;
-  readonly samePerson: "preferred" | "required";
 }
 
 export interface SchedulerUiEvent {
@@ -223,8 +213,6 @@ export interface SchedulerUiEvent {
    */
   readonly requiredTags?: readonly string[];
   readonly resourceId: string;
-  /** Set on each part of a split shift (F48 Split shifts). */
-  readonly split?: ShiftSplit;
   readonly start: Date;
   readonly status: SchedulerEventStatus;
   readonly title: string;

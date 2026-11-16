@@ -1,24 +1,18 @@
-# Call-out for open shifts
+# Set up call-out delivery
 
-Chrona Workforce Scheduler offers an open shift to the workers who can take it, one level after another, until someone accepts. Each scheduler sets it on its calendar row.
+Set up the call-out timer, texts and offer links for Chrona Workforce Scheduler, then verify a real offer before relying on delivery.
 
 ## How a call-out runs
 
-- A published open shift that starts within the call-out horizon gets a call-out. The horizon is 3 days unless the scheduler sets another number of days. 0 switches call-out off.
-- Chrona ranks the workers who keep every Must rule. Workers who cost nothing are asked first. Then each goal, from the last goal in the scheduler's goal order up, adds a level. Workers who break the first goal are asked last.
-- The levels open at even steps until the cut-off: 60 minutes before the shift starts unless the scheduler sets another number. A call-out that starts after the cut-off asks every level at once.
-- Each worker gets the offer in Chrona Workforce Mobile, by email with Accept and Decline links, and by text when the scheduler has texts on and the worker has a mobile number.
-- An accept is the same request as in the app: Chrona checks every Must rule again, and the Review open-shift requests setting decides between an approval, by the worker's manager or a planner of the scheduler, and the first worker who accepts. When the shift has its worker, the others read "This shift is filled".
-- At the cut-off, a call-out that found nobody becomes No one took it, and the scheduler's planners get an alert.
-- While a call-out runs or is paused, only the workers with an offer see the shift under Open shifts. When it stops or finds nobody, everyone who can take the shift sees it again.
+See [Candidates and call-out](https://chrona365.com/docs/workforce/call-out#how-a-call-out-runs) for when a call-out starts, who receives offers, ranking, approval and planner actions.
 
 ## Set up call-out
 
 **Turn on call-out**
 
 1. Complete the Workforce Mobile setup.
-2. Turn on **Chrona Scheduled tasks** and **Chrona Call-out timer** as the install guide describes in step 7. Both flows use the connection reference **Chrona Scheduled tasks Dataverse**, so one connection serves both. The timer opens later levels and ends offers at the cut-off. It is the only call-out flow. The hourly **Call-out start** task starts offers for published open shifts that enter their horizon. In **Configuration > Auto Task Log**, use **Run now** to check at once. Check the last run and its count. For failures, see [When scheduled tasks stop](https://chrona365.com/docs/workforce/auto-task-log#when-scheduled-tasks-stop); a Dataverse rollback can stop the whole call without a saved log row.
-3. Set up the accept links below. Publish an open shift inside the scheduler's horizon. Check the timer's run history and the offer in the worker app before you rely on the flow.
+2. Check that **Chrona Scheduled tasks** and **Chrona Call-out timer** are on. Both flows use the connection reference **Chrona Scheduled tasks Dataverse**, so one connection serves both, and both are on after an import in which the admin picked that connection. If they are off, turn them on as the install guide describes in step 7. The timer opens later levels and ends offers at the cut-off. It is the only call-out flow. The hourly **Call-out start** task starts offers for shifts that lost their worker and enter their horizon while published open. In **Configuration > Auto Task Log**, use **Run now** to check at once. Check the last run and its count. For failures, see [When scheduled tasks stop](https://chrona365.com/docs/workforce/auto-task-log#when-scheduled-tasks-stop); a Dataverse rollback can stop the whole call without a saved log row.
+3. Set up the accept links below. On a future assigned, published shift inside the scheduler's horizon, remove the worker and publish the shift open. Check the timer's run history and the offer for an eligible worker listed on that scheduler in the worker app before you rely on the flow. A shift that never had a worker does not start a call-out.
 
 On the application-user route of install step 7, the application user has the role **Chrona Workforce Admin**. The role includes user-level Create, Read, Write and Delete on **Callback Registration**, as required by the [Dataverse row trigger](https://learn.microsoft.com/en-us/power-automate/dataverse/create-update-delete-trigger). If Turn on reports a missing callback privilege, update the managed Workforce solution and check the role of the connection's user. Do not give the application user System Administrator as a workaround. After the update, turn on the timer and check an actual run; an On status alone does not prove that the trigger works.
 
@@ -29,7 +23,7 @@ Texts leave from your own Twilio account. Each text carries only the offer link;
 1. In the Twilio Console, select a sender that can send SMS to your workers' country: a phone number, a registered alphanumeric sender ID, or a Messaging Service with a sender. Some countries need a regulatory bundle or sender registration, which can take days. In Australia, alphanumeric sender IDs must be registered first.
 2. Under **Account > API keys & tokens**, create an API key for this environment. Twilio shows its secret once. Chrona needs the API key only. Do not give it your account's Auth Token.
 3. As a **Chrona Workforce Admin**, call `chr_SetCallOutTexts` with `ConnectionString` = `AccountSid=AC...;ApiKeySid=SK...;ApiKeySecret=...` and `Sender` (the phone number in international format, the `MG...` Messaging Service SID or the sender ID). The API takes these two values only and refuses anything else with a message that names the expected format. Pass the secret securely at execution; do not paste it into chat, logs or a saved plan. The API returns only `Configured: true`.
-4. Turn on **Send texts** in the scheduler's **Call-out** settings. Publish an eligible open shift and check that its text arrives. A successful setup response alone does not prove message delivery.
+4. Turn on **Send texts** in the scheduler's [Call-out settings](https://chrona365.com/docs/workforce/scheduler-settings#call-out). Publish a shift that lost its worker open inside the scheduler's horizon, and check that an eligible worker listed on that scheduler receives the text. A successful setup response alone does not prove message delivery.
 
 Chrona stores the key and sender in secured columns on the existing Chrona connection row. No customer Key Vault is needed. Do not grant users read access to these columns. Dataverse System Administrators retain their platform access.
 

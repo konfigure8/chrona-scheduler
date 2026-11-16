@@ -4,6 +4,7 @@ import { useDragController } from "./dragContext";
 import { groupSetNames, groupValue, UNGROUPED } from "./groupSets";
 import {
   allowVerdict,
+  refusesChange,
   beginCreateSession,
   beginLaneAssignSession,
   beginMoveSession,
@@ -254,6 +255,7 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
 
   const drag = useDragController();
   const boardExtension = useBoardExtension();
+  const takesBlockedChanges = boardExtension?.takesBlockedChanges;
   const fit = boardExtension?.fit;
   // A mark after a person's name, such as a scenario's glyph with its reason.
   const personMark = boardExtension?.personMark;
@@ -832,7 +834,7 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
           partners,
           validateChange,
         );
-        if (group.blocked) {
+        if (refusesChange(group.blocked, takesBlockedChanges)) {
           return;
         }
         if (onEventsChange) {
@@ -846,7 +848,7 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
       }
       const verdict =
         validateChange?.(session.sourceEvent, result) ?? allowVerdict;
-      if (verdict.kind === "block") {
+      if (refusesChange(verdict, takesBlockedChanges)) {
         return;
       }
       onEventChange?.({ event: session.sourceEvent, result, verdict });
@@ -859,6 +861,7 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
       onEventsChange,
       onDraftRange,
       groupPartners,
+      takesBlockedChanges,
     ],
   );
 
@@ -1046,6 +1049,10 @@ export function ChronaTimeline(props: ChronaTimelineProps): JSX.Element {
     // Clicking empty canvas clears the selection (Outlook behavior).
     if (!downEvent.ctrlKey && !downEvent.metaKey && !downEvent.shiftKey) {
       applySelection([]);
+    }
+    // A board that creates nothing draws no new item: no outline, no time label, no long press.
+    if (!onDraftRange) {
+      return;
     }
     const pointer = pointerToCanvas(downEvent.clientX, downEvent.clientY);
     if (!pointer.resourceId) {

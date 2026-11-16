@@ -32,7 +32,7 @@ export class SolveBridgeError extends Error {
   }
 }
 
-export const CONTROL_VERSION = "1.39.3165";
+export const CONTROL_VERSION = "1.40.3815";
 
 export function resolveClientUrl(context: unknown): string {
   const page = (context as { page?: { getClientUrl?: () => string } }).page;
@@ -127,13 +127,19 @@ export function calendarSettingsReady(input: {
  * What a Solve click does. With a session or a calendar it runs. A
  * click before the calendar's settings load waits for them, shown as
  * queued, instead of doing nothing; once they load without a calendar,
- * the board says so.
+ * the board says so. Nor does a board whose scheduler's row or people
+ * could not be read (HostConfig.readFailed), session or not.
  */
 export function solveClickAction(input: {
   readonly calendarId: string | undefined;
   readonly hasSession: boolean;
+  /** The scheduler's row or its people could not be read (HostConfig.readFailed). */
+  readonly settingsUnread?: boolean;
   readonly settingsReady: boolean;
-}): "noCalendar" | "run" | "wait" {
+}): "noCalendar" | "run" | "settingsUnread" | "wait" {
+  if (input.settingsUnread) {
+    return "settingsUnread";
+  }
   if (input.hasSession || input.calendarId) {
     return "run";
   }

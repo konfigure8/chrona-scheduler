@@ -991,9 +991,8 @@ changeListPerPerson();
 }
 
 /*
- * F48 Split shifts: a shift's rostered gaps travel as breaks, at real
- * moments, and each part of a split names its split. Without either,
- * the shift carries neither field.
+ * A shift's rostered gaps travel as breaks, at real moments. Without
+ * gaps, the shift carries no breaks.
  */
 {
   const window = { end: at(24), start: at(0) };
@@ -1002,7 +1001,6 @@ changeListPerPerson();
     gaps: [{ end: at(11), label: "Tea", paid: true, start: at(10) }, { end: at(13), start: at(12) }],
     id: "lunch",
     resourceId: "mia",
-    split: { id: "split-1", samePerson: "required" },
     start: at(9),
     status: "assigned",
     title: "Lunch",
@@ -1020,11 +1018,8 @@ changeListPerPerson();
   assertEqual(breaks[0]?.start, "2027-02-01T11:00:00.000Z");
   assertEqual(breaks[0]?.paid, true);
   assertEqual(breaks[1]?.paid, false);
-  assertEqual(byId.get("lunch")?.split?.id, "split-1");
-  assertEqual(byId.get("lunch")?.split?.samePerson, "required");
   assertEqual("breaks" in (byId.get(assigned.id) ?? {}), false);
-  assertEqual("split" in (byId.get(assigned.id) ?? {}), false);
-  console.log("split and break tests passed");
+  console.log("break tests passed");
 }
 
 // F41 Live solve: the ruling's pace and the chart's bands.

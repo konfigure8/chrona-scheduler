@@ -220,7 +220,7 @@ const isText = (value: unknown): value is string => typeof value === "string";
 const isTextList = (value: unknown): value is readonly string[] =>
   Array.isArray(value) && value.every(isText);
 
-const OTHER_NAMED = ["overlap", "splitParts"] as const;
+const OTHER_NAMED = ["overlap"] as const;
 
 /**
  * Must counts, whole or not at all. An "other" Must rule this board
@@ -253,7 +253,7 @@ function readMustBreaches(value: unknown): MustBreachCounts | undefined {
     }
     extensionCounts[entry.row] = count;
   }
-  const { overlap, splitParts } = other;
+  const { overlap } = other;
   if (
     !isCount(daysInARow) ||
     !isCount(onLeaveOrUnavailable) ||
@@ -265,8 +265,7 @@ function readMustBreaches(value: unknown): MustBreachCounts | undefined {
     !isCount(weeklyRest) ||
     !isCount(averageHours) ||
     !isCount(nights) ||
-    !isCount(overlap) ||
-    !isCount(splitParts)
+    !isCount(overlap)
   ) {
     return undefined;
   }
@@ -287,7 +286,7 @@ function readMustBreaches(value: unknown): MustBreachCounts | undefined {
     maximumHours,
     nights,
     onLeaveOrUnavailable,
-    other: { overlap, splitParts, unlisted },
+    other: { overlap, unlisted },
     restBetweenShifts,
     site,
     skills,

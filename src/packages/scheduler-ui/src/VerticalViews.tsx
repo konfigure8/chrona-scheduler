@@ -4,6 +4,7 @@ import { formatClockRange } from "./clock";
 import { useDragController } from "./dragContext";
 import {
   allowVerdict,
+  refusesChange,
   beginCreateSession,
   beginMoveSession,
   beginResizeSession,
@@ -156,6 +157,7 @@ function VerticalGrid(props: VerticalGridProps): JSX.Element {
   const formatTimeRange = (start: Date, end: Date): string => formatClockRange(start, end, hourFormat);
   const drag = useDragController();
   const fit = useBoardExtension()?.fit;
+  const takesBlockedChanges = useBoardExtension()?.takesBlockedChanges;
   const canvasRefs = React.useRef(new Map<string, HTMLDivElement>());
   const pointerMovedRef = React.useRef(false);
   const pointerDownXRef = React.useRef(0);
@@ -239,12 +241,12 @@ function VerticalGrid(props: VerticalGridProps): JSX.Element {
       }
       const verdict =
         validateChange?.(session.sourceEvent, result) ?? allowVerdict;
-      if (verdict.kind === "block") {
+      if (refusesChange(verdict, takesBlockedChanges)) {
         return;
       }
       onEventChange?.({ event: session.sourceEvent, result, verdict });
     },
-    [hitTestColumn, geometryFor, validateChange, onEventChange],
+    [hitTestColumn, geometryFor, validateChange, onEventChange, takesBlockedChanges],
   );
 
   React.useEffect(() => {
@@ -391,7 +393,8 @@ function VerticalGrid(props: VerticalGridProps): JSX.Element {
     downEvent: React.PointerEvent<HTMLDivElement>,
     column: VerticalColumn,
   ): void => {
-    if (!editable || downEvent.button !== 0 || !column.resourceId) {
+    // A board that creates nothing draws no new item: no outline, no time label, no long press.
+    if (!editable || downEvent.button !== 0 || !column.resourceId || !onDraftRange) {
       return;
     }
     if (

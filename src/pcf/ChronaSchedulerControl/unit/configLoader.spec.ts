@@ -3,6 +3,8 @@ import * as assert from "node:assert/strict";
 import {
   calendarsNamedLikeQuery,
   defaultRulePolicies,
+  hostEditsLocked,
+  hostReadFailure,
   loadHostConfig,
   mapCalendarPolicies,
   mapCalendarRow,
@@ -126,4 +128,80 @@ console.log("configLoader tests passed");
     assert.deepEqual(calls, ["chr_chronaschedulercalendar", "systemuser"], "no other table is read");
     console.log("loader tests passed");
   })().catch((error) => { console.error(error); process.exit(1); });
+}
+
+/*
+ * AGENTS.md 0.1: a settings read that fails is never "no row". The scheduler's row refused: the cause is logged, the
+ * config names the failure and nothing behind the row is read. Its people refused: logged, named, and nobody, never
+ * the people the shifts name. A row that is not there, or a scheduler with no people, stays as it was.
+ */
+{
+  const CALENDAR = "6a1c1f0e-5d0b-4f55-9a43-0b6f2a1d7c11";
+  const refused = new Error("0x80040220 Principal user is missing prvReadchr_chronaschedulercalendar privilege");
+  const logged: unknown[][] = [];
+  const realError = console.error;
+  const webApiWith = (answer: (entity: string) => Promise<{ entities: Record<string, unknown>[] }>, calls: string[]) =>
+    ({
+      retrieveMultipleRecords: async (entity: string, options: string) => {
+        calls.push(`${entity}${options}`);
+        return answer(entity);
+      },
+    }) as unknown as ComponentFramework.Context<unknown>["webAPI"];
+  const messages = { msgCalendarUnread: "Scheduler unread.", msgResourcesUnread: "Resources unread." };
+  (async () => {
+    console.error = (...args: unknown[]) => { logged.push(args); };
+    try {
+      for (const id of [CALENDAR, "Bookings"]) {
+        const calls: string[] = [];
+        const config = await loadHostConfig(webApiWith(async () => { throw refused; }, calls), id);
+        assert.equal(config.readFailed, "calendar", `${id}: a refused read of the scheduler's row is named`);
+        assert.equal(config.calendarId, undefined);
+        assert.deepEqual(config.resources, [], `${id}: nobody known, never the people the shifts name`);
+        assert.equal(calls.length, 1, `${id}: nothing behind the row is read`);
+        assert.equal(hostReadFailure(config, messages), "Scheduler unread.");
+      }
+      assert.equal(logged.length, 2, "each failure's cause is logged");
+      assert.equal(logged[0]?.[1], refused);
+      // By its id the row is a query too: no row is an empty answer, the zero-config board, never a failure.
+      const calls: string[] = [];
+      const none = await loadHostConfig(webApiWith(async () => ({ entities: [] }), calls), CALENDAR);
+      assert.equal(none.readFailed, undefined, "a row that is not there is not a failed read");
+      assert.equal(none.calendarId, undefined);
+      assert.equal(none.resources, undefined, "no row: the board's own people, as before");
+      assert.equal(calls[0], `chr_chronaschedulercalendar?$filter=chr_chronaschedulercalendarid eq ${CALENDAR}&$top=1`);
+      assert.equal(hostReadFailure(none, messages), undefined);
+      // The people refused: named, logged, and nobody.
+      const row = { chr_chronaschedulercalendarid: CALENDAR, chr_name: "Bookings", chr_resourcenamecolumn: "fullname", chr_resourcetable: "systemuser" };
+      const peopleRefused = await loadHostConfig(
+        webApiWith(async (entity) => {
+          if (entity === "chr_chronaschedulercalendar") return { entities: [row] };
+          throw refused;
+        }, []),
+        CALENDAR,
+      );
+      assert.equal(peopleRefused.readFailed, "resources");
+      assert.equal(peopleRefused.calendarId, CALENDAR, "the scheduler itself was read");
+      assert.deepEqual(peopleRefused.resources, [], "nobody, never the people the shifts name");
+      assert.equal(hostReadFailure(peopleRefused, messages), "Resources unread.");
+      assert.equal(logged.length, 3);
+      // A scheduler whose people read answers with nobody stays as it was: the board's own people.
+      const noPeople = await loadHostConfig(
+        webApiWith(async (entity) => ({ entities: entity === "chr_chronaschedulercalendar" ? [row] : [] }), []),
+        CALENDAR,
+      );
+      assert.equal(noPeople.readFailed, undefined);
+      assert.equal(noPeople.resources, undefined);
+    } finally {
+      console.error = realError;
+    }
+    console.log("failed settings read tests passed");
+  })().catch((error) => { console.error(error); process.exit(1); });
+}
+
+// Matt 2026-11-16 "Yes, both boards": while the scheduler's row or its resources could not be read, the board is read-only.
+{
+  assert.equal(hostEditsLocked({ readFailed: "resources" }), true, "resources unread: no new item, no item edit, no drag");
+  assert.equal(hostEditsLocked({ readFailed: "calendar" }), true);
+  assert.equal(hostEditsLocked({}), false, "every read answered: the board edits as before");
+  console.log("read-only on a failed read tests passed");
 }

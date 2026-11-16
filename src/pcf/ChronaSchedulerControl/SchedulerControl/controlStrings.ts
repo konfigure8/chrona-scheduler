@@ -22,7 +22,11 @@ export interface ControlMessages {
   readonly fieldProvenance: string;
   readonly fieldPublishState: string;
   readonly fieldStatus: string;
+  /** The scheduler's own row could not be read (HostConfig.readFailed "calendar"): the board's error notice. */
+  readonly msgCalendarUnread: string;
   readonly msgCannotCreateHere: string;
+  /** B141: the app's commands for a shift could not be read; a disabled item in its menu says so. */
+  readonly msgCommandsFailed: string;
   /** F26 stage 3: bridge messages. */
   readonly msgConnectAdminOnly: string;
   readonly msgConnectFailed: string;
@@ -43,6 +47,10 @@ export interface ControlMessages {
   readonly msgPinnedMany: string;
   readonly msgPinnedOne: string;
   readonly msgRedid: string;
+  /** The scheduler's people could not be read (HostConfig.readFailed "resources"): the board's error notice. */
+  readonly msgResourcesUnread: string;
+  /** The empty resource list's line while the resources could not be read. */
+  readonly msgResourcesUnreadGrid: string;
   readonly msgRestored: string;
   readonly msgRestoreSkipped: string;
   readonly msgRowCapReached: string;
@@ -59,6 +67,10 @@ export interface ControlMessages {
   readonly reasonOutsideHours: string;
   readonly reasonOverlap: string;
   readonly msgSettingsFailed: string;
+  /** The empty resource list's line while the scheduler's row could not be read. */
+  readonly msgSettingsUnreadGrid: string;
+  /** The view row (the board's maker settings) could not be read: the board's error notice. */
+  readonly msgViewSettingsUnread: string;
 }
 
 export const defaultControlMessages: ControlMessages = {
@@ -66,7 +78,9 @@ export const defaultControlMessages: ControlMessages = {
   fieldProvenance: "Source",
   fieldPublishState: "Publish state",
   fieldStatus: "Status",
+  msgCalendarUnread: "Couldn't read this scheduler's settings. Reload the page to try again.",
   msgCannotCreateHere: "Cannot create here",
+  msgCommandsFailed: "Couldn't load the app's commands. Reopen the menu to try again.",
   msgConnectAdminOnly: "An administrator connects Chrona for this environment (Chrona Scheduler Admin role).",
   msgConnectFailed: "Chrona Connect failed: {message}",
   msgConnected: "Connected to Chrona ({limit} free runs per day). Starting your first sample run...",
@@ -85,6 +99,8 @@ export const defaultControlMessages: ControlMessages = {
   msgPinnedMany: "Pinned {count} items",
   msgPinnedOne: "Pinned {title}",
   msgRedid: "Redid change",
+  msgResourcesUnread: "Couldn't load the resources, so their items are hidden too. Reload the page to try again.",
+  msgResourcesUnreadGrid: "Resources couldn't load.",
   msgRestored: "Restored",
   msgRestoreSkipped: " ({count} item(s) could not be restored)",
   msgRowCapReached: "Only the first {count} rows of this view are shown. Narrow the view to see the rest.",
@@ -101,6 +117,8 @@ export const defaultControlMessages: ControlMessages = {
   reasonOutsideHours: "Outside working hours ({start}‑{end})",
   reasonOverlap: "Overlaps an existing item",
   msgSettingsFailed: "Could not open the scheduler settings",
+  msgSettingsUnreadGrid: "Settings couldn't load.",
+  msgViewSettingsUnread: "Couldn't read this view's settings. Reload the page to try again.",
 };
 
 export interface ControlStrings {

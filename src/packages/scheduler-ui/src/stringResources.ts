@@ -29,11 +29,25 @@ export interface SchedulerStrings {
   readonly dialogNotAllowed: string;
   readonly dialogOtherOptions: string;
   readonly draftItem: string;
-  readonly duration: string;
-  /** The hover card's duration: whole hours, hours and minutes, and time worked with its span (W2-P12). */
+  /** The hover card's lengths: whole hours, and hours and minutes (W2-P12). */
   readonly hoverHours: string;
   readonly hoverHoursMinutes: string;
-  readonly hoverWorkedSpan: string;
+  /** The hover card's Times row (Matt 2026-11-13): its label, a day with its time, start to end, and the length in brackets. */
+  readonly hoverTimes: string;
+  readonly hoverDayTime: string;
+  readonly hoverTimeRange: string;
+  readonly hoverTimesLength: string;
+  /** The length when breaks make time worked and the span differ (decision 2026-11-16). */
+  readonly hoverWorkedAndSpan: string;
+  /** The hover card's breaks as tags: the row's label, a break with no name, and paid or unpaid in brackets. */
+  readonly hoverBreaks: string;
+  readonly hoverBreak: string;
+  readonly hoverBreakPaid: string;
+  readonly hoverBreakUnpaid: string;
+  /** The pin mark beside the hover card's title: its name. */
+  readonly hoverPinned: string;
+  /** The hover card's chip on a shift with a break of 1 hour or more (Matt 2026-11-14). */
+  readonly hoverSplitShift: string;
   readonly emptyResources: string;
   /** F27: entitlement states beside the solve entry (display only). */
   readonly entitlementGrace: string;
@@ -156,6 +170,8 @@ export interface SchedulerStrings {
   readonly redo: string;
   /** The Roster grid's row of shifts nobody works. */
   readonly rosterOpenShifts: string;
+  /** The Roster grid's hint for a screen reader: Enter on a focused day cell makes a new item there. */
+  readonly rosterCreateHint: string;
   readonly periodPrevious: string;
   /** The week band's tick where a roster period starts: {date} is its first day. */
   readonly periodBoundaryLabel: string;
@@ -246,7 +262,6 @@ export interface SchedulerStrings {
   readonly mustRowOther: string;
   /** The kinds "Other Must rules" names. */
   readonly mustKindOverlap: string;
-  readonly mustKindSplitParts: string;
   readonly mustKindUnlisted: string;
   /** A breakdown row read in full: plain, and as a button that opens its shifts. */
   readonly mustRowSummary: string;
@@ -434,10 +449,19 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   dialogNotAllowed: "This change is not allowed.",
   dialogOtherOptions: "Other",
   draftItem: "New item",
-  duration: "Duration",
   hoverHours: "{hours} h",
   hoverHoursMinutes: "{hours} h {minutes} min",
-  hoverWorkedSpan: "{worked} ({span} span)",
+  hoverTimes: "Times",
+  hoverDayTime: "{day}, {time}",
+  hoverTimeRange: "{start} – {end}",
+  hoverTimesLength: "{times} ({length})",
+  hoverWorkedAndSpan: "{worked} worked, {span} span",
+  hoverBreaks: "Breaks",
+  hoverBreak: "Break",
+  hoverBreakPaid: "{break} (paid)",
+  hoverBreakUnpaid: "{break} (unpaid)",
+  hoverPinned: "Pinned",
+  hoverSplitShift: "Split shift",
   emptyResources:
     "No resources to display. Check the view's resource configuration.",
   entitlementGrace: "Payment past due, grace until {date}",
@@ -546,7 +570,7 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   moveUnit: "Unit",
   name: "Name",
   needsCover: "Needs cover",
-  newEvent: "New event",
+  newEvent: "New",
   next: "Next",
   noticeBlocked: "Not allowed: {reason}",
   noticeWarning: "Note: {reason}",
@@ -557,6 +581,7 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   periodOf: "day {day} of {days}",
   redo: "Redo",
   rosterOpenShifts: "Open shifts",
+  rosterCreateHint: "Press Enter on a day to add an item.",
   periodPrevious: "Previous period",
   periodBoundaryLabel: "Period from {date}",
   weekNumberLabel: "W{week}",
@@ -632,7 +657,6 @@ export const defaultSchedulerStrings: SchedulerStrings = {
   nightShift: "Night shift",
   mustRowOther: "Other Must rules",
   mustKindOverlap: "Double booking",
-  mustKindSplitParts: "Split parts",
   mustKindUnlisted: "Other",
   mustRowSummary: "{rule}: {now} now, {proposed} proposed",
   mustRowOpen: "{rule}: {now} now, {proposed} proposed. Show shifts",

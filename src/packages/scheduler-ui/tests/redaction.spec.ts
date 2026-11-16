@@ -265,7 +265,7 @@ const counts: MustBreachCounts = {
   daysOff: 0,
   maximumHours: 0,
   onLeaveOrUnavailable: 0,
-  other: { overlap: 0, splitParts: 0, unlisted: 0 },
+  other: { overlap: 0, unlisted: 0 },
   restBetweenShifts: 1,
   site: 0,
   skills: 0,
@@ -380,42 +380,31 @@ void (async () => {
     "candidate on the stable placeholder",
   );
 
-  // F48 Split shifts: breaks and the split reach the solver; the split id is a pseudonym.
-  const splitId = "6b1f7c0e-1d2a-4c3b-9e8f-0a1b2c3d4e5f";
+  // A split shift is one shift with a break of 1 hour or more (Matt 2026-11-14): its breaks reach the solver.
   const split = problemFromSchedule({
     events: [
       {
-        end: at(14),
-        gaps: [{ end: new Date(Date.UTC(2026, 7, 17, 12, 30)), paid: false, start: at(12) }],
-        id: "s-part-1",
+        end: at(22),
+        gaps: [
+          { end: new Date(Date.UTC(2026, 7, 17, 12, 30)), paid: false, start: at(12) },
+          { end: at(17), paid: false, start: at(14) },
+        ],
+        id: "s-split",
         resourceId: "r-open",
-        split: { id: splitId, samePerson: "required" },
         start: at(9),
         status: "needsCover",
-        title: "Chef (morning)",
+        title: "Chef",
       },
-      {
-        end: at(22),
-        id: "s-part-2",
-        resourceId: "r-open",
-        split: { id: splitId, samePerson: "required" },
-        start: at(17),
-        status: "needsCover",
-        title: "Chef (evening)",
-      },
+      { end: at(22), id: "s-plain", resourceId: "r-open", start: at(17), status: "needsCover", title: "Chef (evening)" },
     ],
     resources,
     window: { end: at(24), start: at(0) },
   });
   const sent = await redactProblemForTenant(split, tenantKey);
-  const [morning, evening] = sent.problem.shifts;
-  assertEqual(morning?.breaks?.length, 1, "F48 the break is sent");
-  assertEqual(morning?.breaks?.[0]?.paid, false, "F48 unpaid stays unpaid");
-  assertEqual(morning?.split?.samePerson, "required", "F48 the same-person rule is sent");
-  assertEqual(morning?.split?.id, evening?.split?.id, "F48 both parts name one split");
-  assertEqual(morning?.split?.id, "s-1", "F48 the split id is a pseudonym");
-  assertEqual(JSON.stringify(sent.problem).includes(splitId), false, "F48 the real split id stays home");
-  assertEqual(evening?.breaks, undefined, "F48 a part without breaks sends none");
+  const [splitShift, plain] = sent.problem.shifts;
+  assertEqual(splitShift?.breaks?.length, 2, "both breaks are sent");
+  assertEqual(splitShift?.breaks?.[1]?.paid, false, "unpaid stays unpaid");
+  assertEqual(plain?.breaks, undefined, "a shift without breaks sends none");
 
   // F126: the meter of people on published rosters hashes people outside the
   // browser with the same scheme; its tests pin these same values, so a

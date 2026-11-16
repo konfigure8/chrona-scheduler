@@ -323,6 +323,8 @@ export interface PlatformRecordCommand {
 
 export interface PlatformMenuItem {
   readonly disabled?: boolean;
+  /** A line before the item, as the board's menu draws it. */
+  readonly dividerBefore?: boolean;
   readonly id: string;
   readonly label: string;
   readonly onSelect: () => void;
@@ -343,15 +345,20 @@ const PLATFORM_PREFIXES = ["Mscrm.", "AIBuilder."];
 /**
  * The app's own record commands as context-menu items: visible,
  * executable, labelled, one per label. The platform's Open Record is
- * left out because Open record is on the menu already (F28).
+ * left out because Open record is on the menu already (F28). An answer
+ * that is not a list of commands cannot be read: it throws, so the menu
+ * shows the failure, never "no commands" (AGENTS.md 0.1).
  */
 export function mapRecordCommands(result: unknown): readonly PlatformMenuItem[] {
   const wrapped = result as { readonly commands?: unknown } | null | undefined;
-  const list: unknown[] = Array.isArray(result)
+  const list: unknown[] | undefined = Array.isArray(result)
     ? result
     : Array.isArray(wrapped?.commands)
       ? wrapped.commands
-      : [];
+      : undefined;
+  if (!list) {
+    throw new Error(`The app's commands for the record are not a list of commands (${typeof result}).`);
+  }
   const items: PlatformMenuItem[] = [];
   for (const raw of list) {
     const command = raw as PlatformRecordCommand | null | undefined;
@@ -385,10 +392,15 @@ export function mapRecordCommands(result: unknown): readonly PlatformMenuItem[] 
   return items;
 }
 
-/** Asks the platform for a record's commands where the method exists (model-driven apps); elsewhere, none. */
+/**
+ * Asks the platform for a record's commands where the method exists (model-driven apps); elsewhere, none. A call
+ * that fails, or answers in a shape that cannot be read, shows as one disabled item with `failedLabel`, never as no
+ * commands (AGENTS.md 0.1, B141); the cause is logged.
+ */
 export async function retrieveRecordCommands(
   dataset: DataSet | undefined,
   recordId: string,
+  failedLabel: string,
 ): Promise<readonly PlatformMenuItem[]> {
   const method = (
     dataset as { retrieveRecordCommand?: (ids: string[]) => Promise<unknown> } | undefined
@@ -398,9 +410,91 @@ export async function retrieveRecordCommands(
   }
   try {
     return mapRecordCommands(await method.call(dataset, [recordId]));
-  } catch {
-    return [];
+  } catch (error) {
+    console.error("[chrona] the app's commands for the record could not be read", error);
+    return [{ disabled: true, dividerBefore: true, id: "platform:failed", label: failedLabel, onSelect: () => undefined }];
   }
+}
+
+/** B141: the view row's shift menu switches; absent when the row has no value. */
+export interface ShiftMenuSwitches {
+  /** chr_showappcommands: the app's own commands for the shift. */
+  readonly showAppCommands?: boolean;
+  /** chr_showopenform: Open record, the shift's own form. */
+  readonly showOpenForm?: boolean;
+}
+
+/** The switches as Show weekends is read: a Yes/No value, or none for an empty cell or a row from before them. */
+export function shiftMenuFromRow(row: Readonly<Record<string, unknown>>): ShiftMenuSwitches {
+  return {
+    showAppCommands: typeof row.chr_showappcommands === "boolean" ? row.chr_showappcommands : undefined,
+    showOpenForm: typeof row.chr_showopenform === "boolean" ? row.chr_showopenform : undefined,
+  };
+}
+
+/**
+ * The shift menu's host handlers the switches let through. No value shows the item (the columns default to Yes);
+ * a switch set to No leaves its handler out, so the board draws no item for it.
+ */
+export function shiftMenuHandlers<Commands, OpenRecord>(
+  switches: ShiftMenuSwitches,
+  handlers: { readonly loadContextMenuItems: Commands; readonly onOpenRecord: OpenRecord },
+): { readonly loadContextMenuItems?: Commands; readonly onOpenRecord?: OpenRecord } {
+  return {
+    ...((switches.showAppCommands ?? true) ? { loadContextMenuItems: handlers.loadContextMenuItems } : {}),
+    ...((switches.showOpenForm ?? true) ? { onOpenRecord: handlers.onOpenRecord } : {}),
+  };
+}
+
+/** The view row's columns the board reads (chr_chronaschedulerview, one row per native view). */
+export const VIEW_ROW_COLUMNS = [
+  "chr_chronaschedulerviewid",
+  "chr_layout",
+  "chr_colorby",
+  "chr_displaytimezone",
+  "chr_slotminutes",
+  "chr_pxperhour",
+  "chr_workingstart",
+  "chr_workingend",
+  "chr_showweekends",
+  "chr_showopenform",
+  "chr_showappcommands",
+  "chr_showcreate",
+  "chr_periodunit",
+  "chr_periodanchor",
+  "_chr_calendar_value",
+] as const;
+
+/** chr_showcreate, Create new bookings on the board: the Yes/No value, or none for an empty cell, read as Show weekends is. */
+export function showCreateFromRow(row: Readonly<Record<string, unknown>>): boolean | undefined {
+  return typeof row.chr_showcreate === "boolean" ? row.chr_showcreate : undefined;
+}
+
+/** What the board knows of its view row when it decides whether to offer its create paths. */
+export interface CreateSwitchRead {
+  /** The view row's read has answered: a row, or no row for this view. */
+  readonly answered: boolean;
+  /** The view row's read failed (AGENTS.md 0.1). */
+  readonly failed: boolean;
+  /** chr_showcreate; no value is the column's default, Yes. */
+  readonly showCreate?: boolean;
+}
+
+/**
+ * Whether the board offers + New, a click on an empty slot and a drag that draws a new item. Only once the view
+ * row has answered: while it is unread, or when its read failed, the board does not know the switch and offers none,
+ * never the default (Matt 2026-11-16, read failures lock). A row set to No offers none; no row, or no value, offers them.
+ */
+export function boardCreates(read: CreateSwitchRead): boolean {
+  return read.answered && !read.failed && (read.showCreate ?? true);
+}
+
+/**
+ * The create handler the switch lets through: when the board creates nothing the host passes no onCreateEvent, so
+ * the surface draws no + New, no cell create and no drag to create. Edits, drags and resizes are untouched.
+ */
+export function createHandler<Create>(creates: boolean, onCreateEvent: Create): { readonly onCreateEvent?: Create } {
+  return creates ? { onCreateEvent } : {};
 }
 
 export interface MappedData {

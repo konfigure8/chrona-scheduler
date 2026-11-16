@@ -195,17 +195,44 @@
   <data name="draftItem" xml:space="preserve">
     <value>Nuevo elemento</value>
   </data>
-  <data name="duration" xml:space="preserve">
-    <value>Duración</value>
-  </data>
   <data name="hoverHours" xml:space="preserve">
     <value>{hours} h</value>
   </data>
   <data name="hoverHoursMinutes" xml:space="preserve">
     <value>{hours} h {minutes} min</value>
   </data>
-  <data name="hoverWorkedSpan" xml:space="preserve">
-    <value>{worked} (amplitud {span})</value>
+  <data name="hoverTimes" xml:space="preserve">
+    <value>Horario</value>
+  </data>
+  <data name="hoverDayTime" xml:space="preserve">
+    <value>{day}, {time}</value>
+  </data>
+  <data name="hoverTimeRange" xml:space="preserve">
+    <value>{start} – {end}</value>
+  </data>
+  <data name="hoverTimesLength" xml:space="preserve">
+    <value>{times} ({length})</value>
+  </data>
+  <data name="hoverWorkedAndSpan" xml:space="preserve">
+    <value>{worked} trabajadas, amplitud {span}</value>
+  </data>
+  <data name="hoverBreaks" xml:space="preserve">
+    <value>Descansos</value>
+  </data>
+  <data name="hoverBreak" xml:space="preserve">
+    <value>Descanso</value>
+  </data>
+  <data name="hoverBreakPaid" xml:space="preserve">
+    <value>{break} (remunerado)</value>
+  </data>
+  <data name="hoverBreakUnpaid" xml:space="preserve">
+    <value>{break} (no remunerado)</value>
+  </data>
+  <data name="hoverPinned" xml:space="preserve">
+    <value>Fijado</value>
+  </data>
+  <data name="hoverSplitShift" xml:space="preserve">
+    <value>Turno partido</value>
   </data>
   <data name="emptyResources" xml:space="preserve">
     <value>No hay recursos. Revisa la configuración de la vista.</value>
@@ -351,6 +378,9 @@
   <data name="moveUnit" xml:space="preserve">
     <value>Unidad</value>
   </data>
+  <data name="msgCalendarUnread" xml:space="preserve">
+    <value>No se pudo leer la configuración de este planificador. Recarga la página para volver a intentarlo.</value>
+  </data>
   <data name="msgCannotCreateHere" xml:space="preserve">
     <value>No se puede crear aquí</value>
   </data>
@@ -411,6 +441,12 @@
   <data name="msgRestoreSkipped" xml:space="preserve">
     <value> ({count} elementos no restaurados)</value>
   </data>
+  <data name="msgResourcesUnread" xml:space="preserve">
+    <value>No se pudieron cargar los recursos, así que sus elementos también están ocultos. Recarga la página para volver a intentarlo.</value>
+  </data>
+  <data name="msgResourcesUnreadGrid" xml:space="preserve">
+    <value>No se pudieron cargar los recursos.</value>
+  </data>
   <data name="msgRestored" xml:space="preserve">
     <value>Restaurado</value>
   </data>
@@ -450,6 +486,9 @@
   <data name="msgUpdated" xml:space="preserve">
     <value>{title} actualizado</value>
   </data>
+  <data name="msgViewSettingsUnread" xml:space="preserve">
+    <value>No se pudo leer la configuración de esta vista. Recarga la página para volver a intentarlo.</value>
+  </data>
   <data name="msgWarningSuffix" xml:space="preserve">
     <value> (aviso: {reason})</value>
   </data>
@@ -460,7 +499,7 @@
     <value>Sin cubrir</value>
   </data>
   <data name="newEvent" xml:space="preserve">
-    <value>Nuevo evento</value>
+    <value>Nuevo</value>
   </data>
   <data name="next" xml:space="preserve">
     <value>Siguiente</value>
@@ -762,6 +801,9 @@
   <data name="resumeRunning" xml:space="preserve">
     <value>Hay una programación automática en curso para este cuadrante.</value>
   </data>
+  <data name="rosterCreateHint" xml:space="preserve">
+    <value>Pulsa Entrar en un día para agregar un elemento.</value>
+  </data>
   <data name="rosterOpenShifts" xml:space="preserve">
     <value>Turnos abiertos</value>
   </data>
@@ -1044,6 +1086,9 @@
   <data name="msgSettingsFailed" xml:space="preserve">
     <value>No se pudo abrir la configuración del planificador</value>
   </data>
+  <data name="msgSettingsUnreadGrid" xml:space="preserve">
+    <value>No se pudo cargar la configuración.</value>
+  </data>
   <data name="noDate" xml:space="preserve">
     <value>Sin fecha</value>
   </data>
@@ -1097,9 +1142,6 @@
   </data>
   <data name="mustKindOverlap" xml:space="preserve">
     <value>Doble asignación</value>
-  </data>
-  <data name="mustKindSplitParts" xml:space="preserve">
-    <value>Turno partido</value>
   </data>
   <data name="mustKindUnlisted" xml:space="preserve">
     <value>Otras</value>
@@ -1286,5 +1328,8 @@
   </data>
   <data name="preferencesUnmetTitle" xml:space="preserve">
     <value>Preferencias no cumplidas</value>
+  </data>
+  <data name="msgCommandsFailed" xml:space="preserve">
+    <value>No se pudieron cargar los comandos de la aplicación. Vuelve a abrir el menú.</value>
   </data>
 </root>
