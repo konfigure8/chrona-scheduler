@@ -117,6 +117,7 @@ import {
   canChangeViewSettings,
   connectOffered,
   connectWrites,
+  newSchedulerZone,
   recheckPrivilege,
   openRecordInDialog,
   readRowsVersion,
@@ -144,7 +145,8 @@ import {
   SolveBridgeError,
   solveClickAction,
 } from "./solveBridge";
-import { resolveControlStrings } from "./controlStrings";
+import { notSavedText, resolveControlStrings } from "./controlStrings";
+import { putBackHistory, putBackRows, type RefusedRow } from "./refusedWrites";
 import { showsRunButton, solveBlock } from "./solveGate";
 import { buildSolveProblem } from "./solveProblem";
 import {
@@ -213,6 +215,9 @@ interface UndoEntry {
   readonly after: readonly SchedulerUiEvent[];
   readonly before: readonly SchedulerUiEvent[];
 }
+
+/** A refused write's row, read when the board puts it back. */
+type RefusedLookup = () => RefusedRow<SchedulerUiEvent> | undefined;
 
 interface ViewConfig {
   /** The maker's "Color by" for this view; empty leaves the bars neutral. */
@@ -349,8 +354,27 @@ export function useDataverseScheduleHost(
     [dataFingerprint, messages],
   );
 
-  const [events, setEvents] = React.useState<readonly SchedulerUiEvent[]>(
+  const [events, setEventsState] = React.useState<readonly SchedulerUiEvent[]>(
     mapped.events,
+  );
+  /*
+   * The board's rows as last set. Every change goes through setEvents, which
+   * works out the new rows here, once, so a change pushes its undo step
+   * outside any state updater: React may run an updater twice, and one drag
+   * left two undo steps.
+   */
+  const eventsRef = React.useRef(events);
+  const setEvents = React.useCallback(
+    (
+      update:
+        | readonly SchedulerUiEvent[]
+        | ((current: readonly SchedulerUiEvent[]) => readonly SchedulerUiEvent[]),
+    ): void => {
+      const next = typeof update === "function" ? update(eventsRef.current) : update;
+      eventsRef.current = next;
+      setEventsState(next);
+    },
+    [],
   );
   const [history, setHistory] = React.useState<UndoRedoState<UndoEntry>>(
     emptyUndoRedo(),
@@ -790,35 +814,103 @@ export function useDataverseScheduleHost(
   }, [mapped.resourceEntityType]);
   const applyEvents = React.useCallback(
     (next: readonly SchedulerUiEvent[], note: string): void => {
-      setEvents((previous) => {
-        setHistory((h) => pushEntry(h, { after: next, before: previous }));
-        return next;
-      });
+      const previous = eventsRef.current;
+      setEvents(next);
+      setHistory((h) => pushEntry(h, { after: next, before: previous }));
       setMessage(note);
     },
-    [],
+    [setEvents],
   );
 
+  /*
+   * A write Dataverse refused: the row goes back to what Dataverse holds, in
+   * the board and in its undo history, and the notice is the failure alone,
+   * with Dataverse's own reason (AGENTS.md 0.1). The row is read when the put
+   * back runs.
+   */
+  const putBack = React.useCallback((refused: RefusedLookup | undefined): void => {
+    if (!refused) return;
+    setEvents((current) => {
+      const row = refused();
+      return row ? putBackRows(current, row) : current;
+    });
+    setHistory((current) => {
+      const row = refused();
+      return row ? putBackHistory(current, row) : current;
+    });
+  }, []);
+  const refuse = React.useCallback(
+    (text: string, refused: RefusedLookup | undefined): void => {
+      putBack(refused);
+      notify("error", text);
+    },
+    [notify, putBack],
+  );
+  /*
+   * One notice for a change's refused writes, once every write has answered: one row names
+   * it, more say how many of the change's rows were not saved, with the first refusal's reason.
+   */
+  const noticeRefusals = React.useCallback(
+    (written: readonly Promise<unknown>[], refusals: readonly unknown[], title: string | undefined): void => {
+      const total = written.length;
+      void Promise.all(written).then(() => {
+        if (refusals.length === 0) return null;
+        notify(
+          "error",
+          notSavedText(
+            messages,
+            refusals[0],
+            total > 1 ? { count: refusals.length, total } : title === undefined ? undefined : { title },
+          ),
+        );
+        return null;
+      });
+    },
+    [notify],
+  );
+
+  /*
+   * One row's write. Refused, the row goes back; the notice names it, unless the caller
+   * gathers the change's refusals into one notice (report).
+   */
   const patchRecord = React.useCallback(
-    (recordId: string, payload: Record<string, unknown>, note: string): void => {
+    (
+      recordId: string,
+      payload: Record<string, unknown>,
+      note: string,
+      refused?: RefusedLookup,
+      report?: (error: unknown) => void,
+    ): Promise<boolean> => {
       const entityType = workItems.getTargetEntityType?.();
       if (!entityType || !context.webAPI?.updateRecord) {
+        // No Dataverse to write to: the change stays on the board only, and says so.
         notify("warning", note + LOCAL_ONLY_NOTE);
-        return;
+        return Promise.resolve(false);
       }
+      // Dataverse answered and refused: the row goes back, and the notice gives its reason, never "no connection".
+      const refusedWith = (error: unknown): boolean => {
+        putBack(refused);
+        if (report) {
+          report(error);
+        } else {
+          const title = refused?.()?.saved.title;
+          notify("error", notSavedText(messages, error, title === undefined ? undefined : { title }));
+        }
+        return false;
+      };
       try {
-        context.webAPI
+        return context.webAPI
           .updateRecord(entityType, recordId, payload)
           .then(() => {
             setMessage(note);
-            return null;
+            return true;
           })
-          .catch(() => notify("warning", note + LOCAL_ONLY_NOTE));
-      } catch {
-        notify("warning", note + LOCAL_ONLY_NOTE);
+          .catch(refusedWith);
+      } catch (error) {
+        return Promise.resolve(refusedWith(error));
       }
     },
-    [dataFingerprint],
+    [dataFingerprint, notify, putBack],
   );
 
   /*
@@ -829,9 +921,12 @@ export function useDataverseScheduleHost(
   const applyDelete = React.useCallback(
     (targets: readonly SchedulerUiEvent[]): void => {
       const ids = new Set(targets.map((target) => target.id));
-      setEvents((previous) =>
-        previous.filter((candidate) => !ids.has(candidate.id)),
-      );
+      // The board's own copies of the rows deleted, to put back if Dataverse refuses a delete.
+      const removed = new Map<string, SchedulerUiEvent>();
+      setEvents((previous) => {
+        for (const candidate of previous) if (ids.has(candidate.id)) removed.set(candidate.id, candidate);
+        return previous.filter((candidate) => !ids.has(candidate.id));
+      });
       setHistory(emptyUndoRedo());
       const note =
         targets.length === 1
@@ -846,31 +941,46 @@ export function useDataverseScheduleHost(
         notify("warning", note + LOCAL_ONLY_NOTE);
         return;
       }
-      let failed = 0;
+      // The rows Dataverse refused to delete are still there: the board shows them again.
+      const refusedIds = new Set<string>();
       let done = 0;
+      // The first refusal's error: the notice names Dataverse's reason.
+      let refusal: unknown;
+      const answered = (id: string, error?: unknown, failed = false): void => {
+        if (failed) {
+          refusedIds.add(id);
+          refusal = refusal ?? error;
+        }
+        done += 1;
+        if (done < targets.length) return;
+        if (refusedIds.size === 0) {
+          setMessage(note);
+          return;
+        }
+        setEvents((previous) => [
+          ...previous,
+          ...[...refusedIds].flatMap((refusedId) => {
+            const row = removed.get(refusedId);
+            return row && !previous.some((candidate) => candidate.id === refusedId) ? [row] : [];
+          }),
+        ]);
+        const one = targets.length === 1 ? targets[0] : undefined;
+        notify(
+          "error",
+          notSavedText(messages, refusal, one ? { title: one.title } : { count: refusedIds.size, total: targets.length }),
+        );
+      };
       for (const target of targets) {
         try {
           context.webAPI
             .deleteRecord(entityType, target.id)
-            .then(() => null)
-            .catch(() => {
-              failed += 1;
-              return null;
-            })
-            .then(() => {
-              done += 1;
-              if (done === targets.length) {
-                if (failed > 0) {
-                  notify("warning", note + LOCAL_ONLY_NOTE);
-                } else {
-                  setMessage(note);
-                }
-              }
-              return null;
-            })
+            .then(
+              () => answered(target.id),
+              (error: unknown) => answered(target.id, error, true),
+            )
             .catch(() => undefined);
-        } catch {
-          notify("warning", note + LOCAL_ONLY_NOTE);
+        } catch (error) {
+          answered(target.id, error, true);
         }
       }
     },
@@ -897,7 +1007,7 @@ export function useDataverseScheduleHost(
           if (ready) {
             applyChangesRef.current?.(changes, options);
           } else {
-            notify("warning", messages.msgPersonNotSaved);
+            notify("error", messages.msgPersonNotSaved);
           }
           return null;
         });
@@ -911,28 +1021,40 @@ export function useDataverseScheduleHost(
       if (byId.size === 0) {
         return;
       }
-      setEvents((previous) => {
-        const next = previous.map((candidate) => {
-          const change = byId.get(candidate.id);
-          if (!change?.event) {
-            return candidate;
-          }
-          return {
-            ...candidate,
-            end: toStored(change.result.end),
-            resourceId: change.result.resourceId,
-            start: toStored(change.result.start),
-            status:
-              change.result.resourceId === UNASSIGNED_RESOURCE_ID
-                ? ("needsCover" as const)
-                : ("assigned" as const),
-            title: change.title ?? candidate.title,
-            undated: undefined,
-          };
-        });
-        setHistory((h) => pushEntry(h, { after: next, before: previous }));
-        return next;
+      // With Dataverse there but no start or end column to write to, nothing can be saved: the board stays as it is.
+      if (
+        workItems.getTargetEntityType?.() &&
+        typeof context.webAPI?.updateRecord === "function" &&
+        (!columnLogicalName(workItems, "start") || !columnLogicalName(workItems, "end"))
+      ) {
+        notify("error", messages.msgNotSavedNoColumns);
+        return;
+      }
+      // Each changed row as Dataverse holds it and as the board shows it, to put back if its write is refused.
+      const refusedRows = new Map<string, RefusedRow<SchedulerUiEvent>>();
+      const previous = eventsRef.current;
+      const next = previous.map((candidate) => {
+        const change = byId.get(candidate.id);
+        if (!change?.event) {
+          return candidate;
+        }
+        const shown: SchedulerUiEvent = {
+          ...candidate,
+          end: toStored(change.result.end),
+          resourceId: change.result.resourceId,
+          start: toStored(change.result.start),
+          status:
+            change.result.resourceId === UNASSIGNED_RESOURCE_ID
+              ? ("needsCover" as const)
+              : ("assigned" as const),
+          title: change.title ?? candidate.title,
+          undated: undefined,
+        };
+        refusedRows.set(candidate.id, { saved: candidate, shown });
+        return shown;
       });
+      setEvents(next);
+      setHistory((h) => pushEntry(h, { after: next, before: previous }));
       const first = changes[0];
       const warned = changes.find(
         (change) => change.verdict.kind === "warn" && change.verdict.reason,
@@ -950,6 +1072,12 @@ export function useDataverseScheduleHost(
           : formatString(messages.msgMovedMany, {
               count: changes.length,
             })) + verdictNote;
+      // The change's writes and their refusals, for one notice once all have answered.
+      const written: Promise<boolean>[] = [];
+      const refusals: unknown[] = [];
+      const report = (error: unknown): void => {
+        refusals.push(error);
+      };
       for (const change of changes) {
         if (!change.event) {
           continue;
@@ -999,13 +1127,17 @@ export function useDataverseScheduleHost(
           }
         }
         if (payload) {
-          patchRecord(change.event.id, payload, note);
+          const id = change.event.id;
+          written.push(patchRecord(id, payload, note, () => refusedRows.get(id), report));
         } else {
-          notify("warning", note + LOCAL_ONLY_NOTE);
+          // No write could be built: the board has no start or end column, so nothing was saved.
+          const id = change.event.id;
+          refuse(messages.msgNotSavedNoColumns, () => refusedRows.get(id));
         }
       }
+      noticeRefusals(written, refusals, first?.event?.title);
     },
-    [events, manualProvenance, patchRecord, toStored, whenBindable, workItems],
+    [events, manualProvenance, noticeRefusals, patchRecord, refuse, toStored, whenBindable, workItems],
   );
   applyChangesRef.current = applyChanges;
 
@@ -1024,6 +1156,10 @@ export function useDataverseScheduleHost(
       const currentById = new Map(current.map((row) => [row.id, row]));
       const targetById = new Map(target.map((row) => [row.id, row]));
       let skipped = 0;
+      // The restore's writes and their refusals, for one notice once all have answered.
+      const written: Promise<boolean>[] = [];
+      const refusals: unknown[] = [];
+      let restoredTitle: string | undefined;
       for (const row of target) {
         const was = currentById.get(row.id);
         if (!was) {
@@ -1095,7 +1231,9 @@ export function useDataverseScheduleHost(
           }
         }
         if (Object.keys(payload).length > 0) {
-          patchRecord(row.id, payload, messages.msgRestored);
+          // Refused, the row stays as Dataverse holds it: as it was before this Undo or Redo.
+          restoredTitle = was.title;
+          written.push(patchRecord(row.id, payload, messages.msgRestored, () => ({ saved: was, shown: row }), (error) => refusals.push(error)));
         }
       }
       const entityType = workItems.getTargetEntityType?.();
@@ -1111,35 +1249,38 @@ export function useDataverseScheduleHost(
           }
         }
       }
+      noticeRefusals(written, refusals, restoredTitle);
       return skipped > 0
         ? formatString(messages.msgRestoreSkipped, { count: skipped })
         : "";
     },
-    [manualProvenance, patchRecord, workItems],
+    [manualProvenance, noticeRefusals, patchRecord, workItems],
   );
 
-  const undo = React.useCallback((): void => {
-    setHistory((h) => {
-      const { entry, state } = popUndo(h);
-      if (entry) {
-        setEvents(entry.before);
-        const note = syncSnapshot(entry.after, entry.before);
-        notify("info", messages.msgUndid + note);
-      }
-      return state;
-    });
-  }, [syncSnapshot]);
-  const redo = React.useCallback((): void => {
-    setHistory((h) => {
-      const { entry, state } = popRedo(h);
-      if (entry) {
-        setEvents(entry.after);
-        const note = syncSnapshot(entry.before, entry.after);
-        notify("info", messages.msgRedid + note);
-      }
-      return state;
-    });
-  }, [syncSnapshot]);
+  /*
+   * Undo and redo take a step off the history, then write and announce once,
+   * outside any state updater: React may run an updater twice, which wrote
+   * and announced each step twice.
+   */
+  const historyRef = React.useRef(history);
+  historyRef.current = history;
+  const restoreStep = (direction: "redo" | "undo"): void => {
+    const { entry, state } =
+      direction === "undo" ? popUndo(historyRef.current) : popRedo(historyRef.current);
+    if (!entry) {
+      return;
+    }
+    historyRef.current = state;
+    setHistory(state);
+    const [from, to] = direction === "undo" ? [entry.after, entry.before] : [entry.before, entry.after];
+    setEvents(to);
+    const note = syncSnapshot(from, to);
+    notify("info", (direction === "undo" ? messages.msgUndid : messages.msgRedid) + note);
+  };
+  const restoreStepRef = React.useRef(restoreStep);
+  restoreStepRef.current = restoreStep;
+  const undo = React.useCallback((): void => restoreStepRef.current("undo"), []);
+  const redo = React.useCallback((): void => restoreStepRef.current("redo"), []);
   React.useEffect(() => {
     const handler = (keyEvent: KeyboardEvent): void => {
       if (keyEvent.ctrlKey && keyEvent.key.toLowerCase() === "z") {
@@ -1263,10 +1404,17 @@ export function useDataverseScheduleHost(
     (targets: readonly SchedulerUiEvent[], locked: boolean): void => {
       const ids = new Set(targets.map((target) => target.id));
       const first = events.find((candidate) => ids.has(candidate.id));
+      const next = events.map((candidate) =>
+        ids.has(candidate.id) ? withPin(candidate, locked) : candidate,
+      );
+      // A refused pin puts the row back as it was.
+      const refusedRow = (id: string): RefusedLookup => () => {
+        const saved = events.find((candidate) => candidate.id === id);
+        const shown = next.find((candidate) => candidate.id === id);
+        return saved && shown ? { saved, shown } : undefined;
+      };
       applyEvents(
-        events.map((candidate) =>
-          ids.has(candidate.id) ? withPin(candidate, locked) : candidate,
-        ),
+        next,
         ids.size === 1
           ? formatString(
               locked ? messages.msgPinnedOne : messages.msgUnpinnedOne,
@@ -1277,21 +1425,29 @@ export function useDataverseScheduleHost(
               { count: ids.size },
             ),
       );
+      // The pins' writes and their refusals, for one notice once all have answered.
+      const written: Promise<boolean>[] = [];
+      const refusals: unknown[] = [];
       for (const id of new Set(targets.map((target) => target.id))) {
         const payload = buildLockPayload(workItems, locked);
         if (payload) {
-          patchRecord(
-            id,
-            payload,
-            formatString(
-              locked ? messages.msgPinnedOne : messages.msgUnpinnedOne,
-              { title: first?.title ?? "item" },
+          written.push(
+            patchRecord(
+              id,
+              payload,
+              formatString(
+                locked ? messages.msgPinnedOne : messages.msgUnpinnedOne,
+                { title: first?.title ?? "item" },
+              ),
+              refusedRow(id),
+              (error) => refusals.push(error),
             ),
           );
         }
       }
+      noticeRefusals(written, refusals, first?.title);
     },
-    [applyEvents, events, patchRecord, workItems],
+    [applyEvents, events, noticeRefusals, patchRecord, workItems],
   );
 
   // F22 deliverable 2: the minimum solvable mapping declaration. One
@@ -1789,7 +1945,7 @@ export function useDataverseScheduleHost(
             (Boolean(workItems.getTargetEntityType?.()) && typeof context.webAPI?.updateRecord === "function") &&
             !(await whenBindable())
           ) {
-            notify("warning", messages.msgPersonNotSaved);
+            notify("error", messages.msgPersonNotSaved);
             return;
           }
           if (changes.length > 0) {
@@ -2148,6 +2304,18 @@ export function useDataverseScheduleHost(
     if (!webApi?.createRecord) {
       throw new Error("Dataverse is not available in this host.");
     }
+    // A new scheduler takes the maker's zone: the browser's, when it runs at their Power Apps offset. Without one it is
+    // not created, and Connect says why (the server refuses a scheduler without a zone too).
+    const now = new Date();
+    const makerZone = newSchedulerZone(
+      browserTimeZone(),
+      (zone) => zoneOffsetMinutes(now, zone),
+      context.userSettings.getTimeZoneOffsetMinutes(now),
+    );
+    if (!makerZone) {
+      console.error("[chrona] Connect created no scheduler: the browser's time zone is not at the Power Apps offset");
+      throw new Error(messages.msgNewSchedulerZone);
+    }
     const entityType = workItems.getTargetEntityType?.() ?? "";
     let name = entityType || "Chrona Scheduler";
     if (entityType && context.utils?.getEntityMetadata) {
@@ -2179,14 +2347,7 @@ export function useDataverseScheduleHost(
     }
     // F38: a calendar this control creates names the free scheduler's product.
     const product = PRODUCT_CHOICE.scheduler;
-    // A new calendar takes the maker's zone: the browser's, when it runs at their Power Apps offset.
-    const makerZone = browserTimeZone();
-    const now = new Date();
-    const zone =
-      makerZone && zoneOffsetMinutes(now, makerZone) === context.userSettings.getTimeZoneOffsetMinutes(now)
-        ? { chr_timezone: makerZone }
-        : {};
-    const created = await webApi.createRecord("chr_chronaschedulercalendar", { chr_name: name, chr_product: product, ...zone });
+    const created = await webApi.createRecord("chr_chronaschedulercalendar", { chr_name: name, chr_product: product, chr_timezone: makerZone });
     const calendarId = created.id;
     if (viewId !== "default") {
       const bind = { "chr_Calendar@odata.bind": `/chr_chronaschedulercalendars(${calendarId})` };
@@ -2207,7 +2368,7 @@ export function useDataverseScheduleHost(
     }
     setViewCalendarId(calendarId);
     return calendarId;
-  }, [context.userSettings, context.utils, context.webAPI, viewId, workItems]);
+  }, [context.userSettings, context.utils, context.webAPI, messages.msgNewSchedulerZone, viewId, workItems]);
   // After a failed read of the view row the board may already have a scheduler: Connect writes nothing (connectWrites).
   // Nor after a failed read of the scheduler's own row: the board may already have it.
   const connectGate = { boundCalendarId: calendarConfigId, calendarUnread, viewRowFailed };
@@ -2482,6 +2643,14 @@ export function useDataverseScheduleHost(
         : rowCapReached
           ? { level: "info", text: formatString(messages.msgRowCapReached, { count: DATASET_ROW_CAP }) }
           : undefined,
+    // A scheduler with no time zone shows each viewer's own zone; the warning says so until a zone is set (lead
+    // 2026-11-17, relaying Matt: "Existing schedulers without a zone show a warning message prominently.").
+    settingsWarning:
+      hostConfig.calendarId && !calendarUnread && displayZone === "user" && !normalizeTimeZoneId(hostConfig.timeZone)
+        ? canChangeSettings
+          ? messages.msgNoTimeZone
+          : messages.msgNoTimeZoneAskAdmin
+        : undefined,
     unassignedResourceId: UNASSIGNED_RESOURCE_ID,
     // F27: cached claims mean a connected instance whose Chrona is
     // unreachable; the free-control explainer is for the unconnected,
@@ -2559,7 +2728,7 @@ export function useDataverseScheduleHost(
             void createEventRef.current?.(draft);
             return true;
           }
-          notify("warning", messages.msgPersonNotSaved);
+          notify("error", messages.msgPersonNotSaved);
           return false;
         });
       }
@@ -2567,14 +2736,13 @@ export function useDataverseScheduleHost(
       const startName = columnLogicalName(workItems, "start");
       const endName = columnLogicalName(workItems, "end");
       const titleName = columnLogicalName(workItems, "title");
-      if (
-        !entityType ||
-        !context.webAPI?.createRecord ||
-        !startName ||
-        !endName ||
-        !titleName
-      ) {
+      if (!entityType || !context.webAPI?.createRecord) {
+        // No Dataverse to create in: the only case that is local only.
         notify("warning", messages.msgCannotCreateHere + LOCAL_ONLY_NOTE);
+        return;
+      }
+      if (!startName || !endName || !titleName) {
+        notify("error", messages.msgCannotCreateNoColumns);
         return;
       }
       const payload: Record<string, unknown> = {
@@ -2633,8 +2801,9 @@ export function useDataverseScheduleHost(
               formatString(messages.msgCreateFailed, { title: draft.title }),
             ),
           );
-      } catch {
-        notify("warning", messages.msgCannotCreateHere + LOCAL_ONLY_NOTE);
+      } catch (error) {
+        // The create was sent and failed at once: Dataverse's reason, never "no connection".
+        notify("error", notSavedText(messages, error, { title: draft.title }));
       }
     }),
     onDeleteEvent: (event) => applyDelete([event]),
@@ -2688,28 +2857,33 @@ export function useDataverseScheduleHost(
       setLocked([source], !showsPin(source));
     },
     onUnscheduleEvent: (event) => {
+      const next = events.map((candidate) =>
+        candidate.id === event.id
+          ? {
+              ...candidate,
+              resourceId: UNASSIGNED_RESOURCE_ID,
+              status: "needsCover" as const,
+            }
+          : candidate,
+      );
       applyEvents(
-        events.map((candidate) =>
-          candidate.id === event.id
-            ? {
-                ...candidate,
-                resourceId: UNASSIGNED_RESOURCE_ID,
-                status: "needsCover" as const,
-              }
-            : candidate,
-        ),
+        next,
         formatString(messages.msgUnscheduled, { title: event.title }),
       );
+      // A refused Unschedule puts the row back with its person.
+      const saved = events.find((candidate) => candidate.id === event.id);
+      const shown = next.find((candidate) => candidate.id === event.id);
       const payload = buildUnschedulePayload(
         workItems,
         resourceNavRef.current ?? columnLogicalName(workItems, "resource"),
         manualProvenance,
       );
       if (payload) {
-        patchRecord(
+        void patchRecord(
           event.id,
           payload,
           formatString(messages.msgUnscheduled, { title: event.title }),
+          () => (saved && shown ? { saved, shown } : undefined),
         );
       }
     },
@@ -2750,10 +2924,11 @@ export function useDataverseScheduleHost(
         : `${formatTimeZoneLabel(displayZone)} (${formatUtcOffsetLabel(zoneOffsetMinutes(new Date(), displayZone))})`,
     // A board whose view row, or whose scheduler's row, could not be read names no zone: it shows the failure instead
     // (dataNotice).
+    // Each viewer's own Power Apps zone (the scheduler has none, or the view asks for it) says so, never a bare offset.
     timeZoneLabel: boardUnknown
       ? ""
       : displayZone === "user"
-        ? formatUtcOffsetLabel(userOffsetMinutes(new Date()))
+        ? formatString(messages.msgYourTimeZone, { offset: formatUtcOffsetLabel(userOffsetMinutes(new Date())) })
         : formatTimeZoneCity(displayZone),
     // Today is the site's today.
     today: toDisplay(new Date()),

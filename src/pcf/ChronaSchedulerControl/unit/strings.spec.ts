@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { defaultSchedulerStrings } from "@chrona/scheduler-ui";
-import { defaultControlMessages, resolveControlStrings } from "../SchedulerControl/controlStrings";
+import { defaultControlMessages, notSavedText, resolveControlStrings } from "../SchedulerControl/controlStrings";
 
 // Compiled into out-unit/unit; the resx files stay in the source tree.
 const STRINGS_DIR = join(__dirname, "..", "..", "SchedulerControl", "strings");
@@ -78,5 +78,19 @@ assert.notEqual(resolved.surface?.periodNext, defaultSchedulerStrings.periodNext
 const fallback = resolveControlStrings(undefined);
 assert.equal(fallback.messages.msgCreated, defaultControlMessages.msgCreated);
 assert.equal(fallback.surface, undefined);
+
+// A write Dataverse refused reads as a failure only, with Dataverse's own reason word for word and what to do, never "no Dataverse connection".
+const refusal = { errorCode: -2147220969, message: "chr_shift With Id = 42 Does Not Exist." };
+assert.equal(notSavedText(defaultControlMessages, refusal), "Not saved: chr_shift With Id = 42 Does Not Exist. If this keeps happening, show this message to your admin.");
+assert.equal(notSavedText(defaultControlMessages, refusal, { title: "Morning triage" }), "Not saved: Morning triage. chr_shift With Id = 42 Does Not Exist. If this keeps happening, show this message to your admin.");
+assert.equal(notSavedText(defaultControlMessages, new Error("No privilege."), { count: 2, total: 3 }), "Not saved: 2 of 3 items. No privilege. If this keeps happening, show this message to your admin.");
+assert.equal(notSavedText(defaultControlMessages, undefined, { title: "Ward round" }), "Not saved: Ward round. Dataverse refused the change and gave no reason. Try again.");
+assert.equal(notSavedText(defaultControlMessages, { message: "  " }), "Not saved: Dataverse refused the change and gave no reason. Try again.");
+// A reason without a full stop gets one before the next sentence; Dataverse's words are never read as a placeholder.
+assert.equal(notSavedText(defaultControlMessages, "Bad {title} value.", { title: "X" }), "Not saved: X. Bad {title} value. If this keeps happening, show this message to your admin.");
+assert.equal(notSavedText(resolved.messages, refusal, { count: 1, total: 2 }), "Nicht gespeichert: 1 von 2 Elementen. chr_shift With Id = 42 Does Not Exist. Passiert das wieder, zeigen Sie diese Meldung Ihrem Admin.");
+
+// A shift with no title is not named.
+assert.equal(notSavedText(defaultControlMessages, "Locked.", { title: "  " }), "Not saved: Locked. If this keeps happening, show this message to your admin.");
 
 console.log("strings resx tests passed");

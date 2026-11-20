@@ -384,6 +384,9 @@
   <data name="msgCannotCreateHere" xml:space="preserve">
     <value>Hier kann nichts angelegt werden</value>
   </data>
+  <data name="msgCannotCreateNoColumns" xml:space="preserve">
+    <value>Hier kann nichts angelegt werden: Das Board hat keine Start-, End- oder Titelspalte.</value>
+  </data>
   <data name="msgConnectAdminOnly" xml:space="preserve">
     <value>Ein Administrator verbindet Chrona für diese Umgebung (Rolle Chrona Scheduler Admin).</value>
   </data>
@@ -414,8 +417,26 @@
   <data name="msgMovedMany" xml:space="preserve">
     <value>{count} Elemente verschoben</value>
   </data>
+  <data name="msgNotSaved" xml:space="preserve">
+    <value>Nicht gespeichert: {reason}</value>
+  </data>
+  <data name="msgNotSavedMany" xml:space="preserve">
+    <value>Nicht gespeichert: {count} von {total} Elementen. {reason}</value>
+  </data>
+  <data name="msgNotSavedNoColumns" xml:space="preserve">
+    <value>Nicht gespeichert: Das Board hat keine Start- oder Endspalte.</value>
+  </data>
+  <data name="msgNotSavedNoReason" xml:space="preserve">
+    <value>Dataverse hat die Änderung abgelehnt und keinen Grund genannt. Bitte erneut versuchen.</value>
+  </data>
+  <data name="msgNotSavedOne" xml:space="preserve">
+    <value>Nicht gespeichert: {title}. {reason}</value>
+  </data>
+  <data name="msgNotSavedReason" xml:space="preserve">
+    <value>{reason} Passiert das wieder, zeigen Sie diese Meldung Ihrem Admin.</value>
+  </data>
   <data name="msgPersonNotSaved" xml:space="preserve">
-    <value>Nicht gespeichert: Die Person kann noch nicht gespeichert werden. Bitte erneut versuchen.</value>
+    <value>Nicht gespeichert: Das Board konnte das Element nicht zuweisen. Bitte erneut versuchen.</value>
   </data>
   <data name="fieldBundle" xml:space="preserve">
     <value>Bündel</value>
@@ -488,6 +509,18 @@
   </data>
   <data name="msgViewSettingsUnread" xml:space="preserve">
     <value>Die Einstellungen dieser Ansicht konnten nicht gelesen werden. Laden Sie die Seite neu, um es erneut zu versuchen.</value>
+  </data>
+  <data name="msgYourTimeZone" xml:space="preserve">
+    <value>Ihre Zeitzone ({offset})</value>
+  </data>
+  <data name="msgNoTimeZone" xml:space="preserve">
+    <value>Dieser Planer hat keine Zeitzone, daher sieht jeder die Zeiten in seiner eigenen Zeitzone. Öffnen Sie den Planer über die Planer-Einstellungen, um eine festzulegen.</value>
+  </data>
+  <data name="msgNoTimeZoneAskAdmin" xml:space="preserve">
+    <value>Dieser Planer hat keine Zeitzone, daher sieht jeder die Zeiten in seiner eigenen Zeitzone. Bitten Sie die Administration, eine festzulegen.</value>
+  </data>
+  <data name="msgNewSchedulerZone" xml:space="preserve">
+    <value>Die Zeitzone Ihres Geräts stimmt nicht mit Ihrer Power Apps-Zeitzone überein. Stellen Sie in Power Apps dieselbe Zeitzone ein (Einstellungen &gt; Persönliche Einstellungen) und versuchen Sie es erneut.</value>
   </data>
   <data name="msgWarningSuffix" xml:space="preserve">
     <value> (Hinweis: {reason})</value>

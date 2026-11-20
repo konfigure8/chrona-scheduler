@@ -384,6 +384,9 @@
   <data name="msgCannotCreateHere" xml:space="preserve">
     <value>Cannot create here</value>
   </data>
+  <data name="msgCannotCreateNoColumns" xml:space="preserve">
+    <value>Cannot create here: the board has no start, end or title column.</value>
+  </data>
   <data name="msgConnectAdminOnly" xml:space="preserve">
     <value>An administrator connects Chrona for this environment (Chrona Scheduler Admin role).</value>
   </data>
@@ -414,8 +417,26 @@
   <data name="msgMovedMany" xml:space="preserve">
     <value>Moved {count} items</value>
   </data>
+  <data name="msgNotSaved" xml:space="preserve">
+    <value>Not saved: {reason}</value>
+  </data>
+  <data name="msgNotSavedMany" xml:space="preserve">
+    <value>Not saved: {count} of {total} items. {reason}</value>
+  </data>
+  <data name="msgNotSavedNoColumns" xml:space="preserve">
+    <value>Not saved: the board has no start or end column.</value>
+  </data>
+  <data name="msgNotSavedNoReason" xml:space="preserve">
+    <value>Dataverse refused the change and gave no reason. Try again.</value>
+  </data>
+  <data name="msgNotSavedOne" xml:space="preserve">
+    <value>Not saved: {title}. {reason}</value>
+  </data>
+  <data name="msgNotSavedReason" xml:space="preserve">
+    <value>{reason} If this keeps happening, show this message to your admin.</value>
+  </data>
   <data name="msgPersonNotSaved" xml:space="preserve">
-    <value>Not saved: the board cannot save the person yet. Try again.</value>
+    <value>Not saved: the board couldn't assign the item. Try again.</value>
   </data>
   <data name="fieldBundle" xml:space="preserve">
     <value>Bundle</value>
@@ -488,6 +509,18 @@
   </data>
   <data name="msgViewSettingsUnread" xml:space="preserve">
     <value>Couldn't read this view's settings. Reload the page to try again.</value>
+  </data>
+  <data name="msgYourTimeZone" xml:space="preserve">
+    <value>Your time zone ({offset})</value>
+  </data>
+  <data name="msgNoTimeZone" xml:space="preserve">
+    <value>This scheduler has no time zone, so everyone sees times in their own time zone. Open the scheduler from Scheduler settings to set one.</value>
+  </data>
+  <data name="msgNoTimeZoneAskAdmin" xml:space="preserve">
+    <value>This scheduler has no time zone, so everyone sees times in their own time zone. Ask your administrator to set one.</value>
+  </data>
+  <data name="msgNewSchedulerZone" xml:space="preserve">
+    <value>Your device's time zone doesn't match your Power Apps time zone. Set the same zone in Power Apps (Settings &gt; Personal settings), then try again.</value>
   </data>
   <data name="msgWarningSuffix" xml:space="preserve">
     <value> (warning: {reason})</value>

@@ -196,6 +196,10 @@ export interface SchedulerSurfaceProps {
   /** A host-side note about the data, as a line above the grid: "info" (a row cap reached, for instance) is the
    * calm status line; "error" (a read that failed, AGENTS.md 0.1) is the danger notice with its icon, announced at once. */
   readonly dataNotice?: DataNotice;
+  /** A host-side warning about the board's settings that stays until the maker fixes them (a scheduler with no time
+   * zone, for instance): the warning notice with its icon, as a line above the grid, with a Scheduler settings button
+   * when the viewer can open them (onOpenSettings). */
+  readonly settingsWarning?: string;
   readonly solveState?: SolveState;
   /**
    * A solver answer to review (F31): the board previews it, the
@@ -2686,6 +2690,31 @@ function InteractionShell(props: SchedulerSurfaceProps): JSX.Element {
             <span>{props.dataNotice.text}</span>
           </div>
         )
+      ) : null}
+      {props.settingsWarning ? (
+        <div
+          className="chrona-sched__horizon-notice chrona-sched__horizon-notice--warning"
+          data-level="warning"
+          data-testid="settings-warning"
+          role="status"
+        >
+          <span className="chrona-sched__read-notice-text">
+            <Warning16Regular aria-hidden="true" className="chrona-sched__read-notice-icon" />
+            <span>{props.settingsWarning}</span>
+          </span>
+          {props.onOpenSettings ? (
+            <span className="chrona-sched__resume-actions">
+              <button
+                className="chrona-sched__toolbar-button chrona-sched__entitlement-action"
+                data-testid="settings-warning-open"
+                onClick={leavingFullScreen(props.onOpenSettings)}
+                type="button"
+              >
+                {strings.schedulerSettings}
+              </button>
+            </span>
+          ) : null}
+        </div>
       ) : null}
       {extensionNotice}
       {props.resumeRun ? (

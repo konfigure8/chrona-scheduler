@@ -384,6 +384,9 @@
   <data name="msgCannotCreateHere" xml:space="preserve">
     <value>Hier aanmaken niet mogelijk</value>
   </data>
+  <data name="msgCannotCreateNoColumns" xml:space="preserve">
+    <value>Hier aanmaken niet mogelijk: het bord heeft geen begin-, eind- of titelkolom.</value>
+  </data>
   <data name="msgConnectAdminOnly" xml:space="preserve">
     <value>Een beheerder koppelt Chrona aan deze omgeving (rol Chrona Scheduler Admin).</value>
   </data>
@@ -414,8 +417,26 @@
   <data name="msgMovedMany" xml:space="preserve">
     <value>{count} items verplaatst</value>
   </data>
+  <data name="msgNotSaved" xml:space="preserve">
+    <value>Niet opgeslagen: {reason}</value>
+  </data>
+  <data name="msgNotSavedMany" xml:space="preserve">
+    <value>Niet opgeslagen: {count} van {total} items. {reason}</value>
+  </data>
+  <data name="msgNotSavedNoColumns" xml:space="preserve">
+    <value>Niet opgeslagen: het bord heeft geen begin- of eindkolom.</value>
+  </data>
+  <data name="msgNotSavedNoReason" xml:space="preserve">
+    <value>Dataverse heeft de wijziging geweigerd en geen reden gegeven. Probeer het opnieuw.</value>
+  </data>
+  <data name="msgNotSavedOne" xml:space="preserve">
+    <value>Niet opgeslagen: {title}. {reason}</value>
+  </data>
+  <data name="msgNotSavedReason" xml:space="preserve">
+    <value>{reason} Gebeurt dit vaker, laat dit bericht dan aan je beheerder zien.</value>
+  </data>
   <data name="msgPersonNotSaved" xml:space="preserve">
-    <value>Niet opgeslagen: de persoon kan nog niet worden opgeslagen. Probeer het opnieuw.</value>
+    <value>Niet opgeslagen: het bord kon het item niet toewijzen. Probeer het opnieuw.</value>
   </data>
   <data name="fieldBundle" xml:space="preserve">
     <value>Bundel</value>
@@ -488,6 +509,18 @@
   </data>
   <data name="msgViewSettingsUnread" xml:space="preserve">
     <value>Kon de instellingen van deze weergave niet lezen. Laad de pagina opnieuw om het nog eens te proberen.</value>
+  </data>
+  <data name="msgYourTimeZone" xml:space="preserve">
+    <value>Je tijdzone ({offset})</value>
+  </data>
+  <data name="msgNoTimeZone" xml:space="preserve">
+    <value>Deze planner heeft geen tijdzone, dus iedereen ziet de tijden in zijn eigen tijdzone. Open de planner via Plannerinstellingen om er een in te stellen.</value>
+  </data>
+  <data name="msgNoTimeZoneAskAdmin" xml:space="preserve">
+    <value>Deze planner heeft geen tijdzone, dus iedereen ziet de tijden in zijn eigen tijdzone. Vraag je beheerder om er een in te stellen.</value>
+  </data>
+  <data name="msgNewSchedulerZone" xml:space="preserve">
+    <value>De tijdzone van je apparaat komt niet overeen met je Power Apps-tijdzone. Stel in Power Apps dezelfde tijdzone in (Instellingen &gt; Persoonlijke instellingen) en probeer het opnieuw.</value>
   </data>
   <data name="msgWarningSuffix" xml:space="preserve">
     <value> (let op: {reason})</value>

@@ -25,6 +25,8 @@ export interface ControlMessages {
   /** The scheduler's own row could not be read (HostConfig.readFailed "calendar"): the board's error notice. */
   readonly msgCalendarUnread: string;
   readonly msgCannotCreateHere: string;
+  /** Nothing to create into: the board has no start, end or title column. */
+  readonly msgCannotCreateNoColumns: string;
   /** B141: the app's commands for a shift could not be read; a disabled item in its menu says so. */
   readonly msgCommandsFailed: string;
   /** F26 stage 3: bridge messages. */
@@ -40,8 +42,21 @@ export interface ControlMessages {
   readonly msgCreated: string;
   readonly msgDeletedMany: string;
   readonly msgDeletedOne: string;
+  /** Said only when the board has no way to write (no table, no Web API): the change stays on the board. */
   readonly msgLocalOnly: string;
   readonly msgMovedMany: string;
+  /** Dataverse refused a write the board cannot name a row for: {reason} is msgNotSavedReason or msgNotSavedNoReason. */
+  readonly msgNotSaved: string;
+  /** Dataverse refused some of a batch's writes; the board put those rows back. */
+  readonly msgNotSavedMany: string;
+  /** No write was built: the board has no start or end column to write the change to. */
+  readonly msgNotSavedNoColumns: string;
+  /** Dataverse refused a write and gave no message. */
+  readonly msgNotSavedNoReason: string;
+  /** Dataverse refused one row's write; the board put it back. */
+  readonly msgNotSavedOne: string;
+  /** Dataverse's own message, word for word, and what to do when it keeps happening. */
+  readonly msgNotSavedReason: string;
   /** A person could not be saved: the board refused the change. */
   readonly msgPersonNotSaved: string;
   readonly msgPinnedMany: string;
@@ -71,6 +86,15 @@ export interface ControlMessages {
   readonly msgSettingsUnreadGrid: string;
   /** The view row (the board's maker settings) could not be read: the board's error notice. */
   readonly msgViewSettingsUnread: string;
+  /** The time zone chip when the board shows each viewer's own Power Apps zone: {offset} is its offset now ("UTC+10:00", or "UTC"). */
+  readonly msgYourTimeZone: string;
+  /** The board's warning notice while its scheduler has no time zone and it shows each viewer's own zone, for a viewer
+   * who can open Scheduler settings (the notice carries that button). */
+  readonly msgNoTimeZone: string;
+  /** The same warning for a viewer who can't change the settings. */
+  readonly msgNoTimeZoneAskAdmin: string;
+  /** Connect can't create a scheduler: the browser's zone and the Power Apps offset disagree, so it has no zone to give it. */
+  readonly msgNewSchedulerZone: string;
 }
 
 export const defaultControlMessages: ControlMessages = {
@@ -80,6 +104,7 @@ export const defaultControlMessages: ControlMessages = {
   fieldStatus: "Status",
   msgCalendarUnread: "Couldn't read this scheduler's settings. Reload the page to try again.",
   msgCannotCreateHere: "Cannot create here",
+  msgCannotCreateNoColumns: "Cannot create here: the board has no start, end or title column.",
   msgCommandsFailed: "Couldn't load the app's commands. Reopen the menu to try again.",
   msgConnectAdminOnly: "An administrator connects Chrona for this environment (Chrona Scheduler Admin role).",
   msgConnectFailed: "Chrona Connect failed: {message}",
@@ -95,7 +120,13 @@ export const defaultControlMessages: ControlMessages = {
   msgDeletedOne: "Deleted {title}",
   msgLocalOnly: " (local only - no Dataverse connection)",
   msgMovedMany: "Moved {count} items",
-  msgPersonNotSaved: "Not saved: the board cannot save the person yet. Try again.",
+  msgNotSaved: "Not saved: {reason}",
+  msgNotSavedMany: "Not saved: {count} of {total} items. {reason}",
+  msgNotSavedNoColumns: "Not saved: the board has no start or end column.",
+  msgNotSavedNoReason: "Dataverse refused the change and gave no reason. Try again.",
+  msgNotSavedOne: "Not saved: {title}. {reason}",
+  msgNotSavedReason: "{reason} If this keeps happening, show this message to your admin.",
+  msgPersonNotSaved: "Not saved: the board couldn't assign the item. Try again.",
   msgPinnedMany: "Pinned {count} items",
   msgPinnedOne: "Pinned {title}",
   msgRedid: "Redid change",
@@ -119,6 +150,10 @@ export const defaultControlMessages: ControlMessages = {
   msgSettingsFailed: "Could not open the scheduler settings",
   msgSettingsUnreadGrid: "Settings couldn't load.",
   msgViewSettingsUnread: "Couldn't read this view's settings. Reload the page to try again.",
+  msgYourTimeZone: "Your time zone ({offset})",
+  msgNoTimeZone: "This scheduler has no time zone, so everyone sees times in their own time zone. Open the scheduler from Scheduler settings to set one.",
+  msgNoTimeZoneAskAdmin: "This scheduler has no time zone, so everyone sees times in their own time zone. Ask your administrator to set one.",
+  msgNewSchedulerZone: "Your device's time zone doesn't match your Power Apps time zone. Set the same zone in Power Apps (Settings > Personal settings), then try again.",
 };
 
 export interface ControlStrings {
@@ -158,6 +193,39 @@ export function resolveControlStrings(
     messages: messages as unknown as ControlMessages,
     surface: surface as Partial<SchedulerStrings> | undefined,
   };
+}
+
+/**
+ * The notice for writes Dataverse refused: one per change, naming the row, or how many of
+ * the change's rows were not saved; a failure only, never the change's own
+ * "Updated ..." note, and never "no connection", since the board reached Dataverse
+ * (AGENTS.md 0.1). It carries the platform's own message where it gave one (an
+ * Xrm.WebApi error's message), word for word.
+ */
+export function notSavedText(
+  messages: Pick<ControlMessages, "msgNotSaved" | "msgNotSavedMany" | "msgNotSavedNoReason" | "msgNotSavedOne" | "msgNotSavedReason">,
+  error: unknown,
+  scope?: { readonly title: string } | { readonly count: number; readonly total: number },
+): string {
+  const raw =
+    typeof error === "string"
+      ? error
+      : typeof error === "object" && error !== null && typeof (error as { message?: unknown }).message === "string"
+        ? (error as { message: string }).message
+        : "";
+  const trimmed = raw.trim();
+  // Dataverse's words as they are; a full stop only where they end without one, before the next sentence.
+  const reason = trimmed === "" || /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+  const why = reason ? messages.msgNotSavedReason.split("{reason}").join(reason) : messages.msgNotSavedNoReason;
+  const template =
+    // A row with no title is not named: "Not saved: ." would say nothing.
+    scope === undefined || ("title" in scope && scope.title.trim() === "")
+      ? messages.msgNotSaved
+      : "title" in scope
+        ? messages.msgNotSavedOne.split("{title}").join(scope.title)
+        : messages.msgNotSavedMany.split("{count}").join(String(scope.count)).split("{total}").join(String(scope.total));
+  // The reason goes in last: Dataverse's own words are never read as a placeholder.
+  return template.split("{reason}").join(why);
 }
 
 /** The resx values for some keys; undefined when the reader has none of them. */

@@ -384,6 +384,9 @@
   <data name="msgCannotCreateHere" xml:space="preserve">
     <value>Não é possível criar aqui</value>
   </data>
+  <data name="msgCannotCreateNoColumns" xml:space="preserve">
+    <value>Não é possível criar aqui: o quadro não tem coluna de início, de término ou de título.</value>
+  </data>
   <data name="msgConnectAdminOnly" xml:space="preserve">
     <value>Um administrador conecta o Chrona a este ambiente (função Chrona Scheduler Admin).</value>
   </data>
@@ -414,8 +417,26 @@
   <data name="msgMovedMany" xml:space="preserve">
     <value>{count} itens movidos</value>
   </data>
+  <data name="msgNotSaved" xml:space="preserve">
+    <value>Não salvo: {reason}</value>
+  </data>
+  <data name="msgNotSavedMany" xml:space="preserve">
+    <value>Não salvo: {count} de {total} itens. {reason}</value>
+  </data>
+  <data name="msgNotSavedNoColumns" xml:space="preserve">
+    <value>Não salvo: o quadro não tem coluna de início ou de término.</value>
+  </data>
+  <data name="msgNotSavedNoReason" xml:space="preserve">
+    <value>O Dataverse recusou a alteração sem informar o motivo. Tente novamente.</value>
+  </data>
+  <data name="msgNotSavedOne" xml:space="preserve">
+    <value>Não salvo: {title}. {reason}</value>
+  </data>
+  <data name="msgNotSavedReason" xml:space="preserve">
+    <value>{reason} Se isso continuar acontecendo, mostre esta mensagem ao seu administrador.</value>
+  </data>
   <data name="msgPersonNotSaved" xml:space="preserve">
-    <value>Não salvo: ainda não é possível salvar a pessoa. Tente novamente.</value>
+    <value>Não salvo: o quadro não conseguiu atribuir o item. Tente novamente.</value>
   </data>
   <data name="fieldBundle" xml:space="preserve">
     <value>Lote</value>
@@ -488,6 +509,18 @@
   </data>
   <data name="msgViewSettingsUnread" xml:space="preserve">
     <value>Não foi possível ler a configuração desta exibição. Recarregue a página para tentar novamente.</value>
+  </data>
+  <data name="msgYourTimeZone" xml:space="preserve">
+    <value>Seu fuso horário ({offset})</value>
+  </data>
+  <data name="msgNoTimeZone" xml:space="preserve">
+    <value>Este agendador não tem fuso horário, então cada pessoa vê os horários no próprio fuso. Abra o agendador em Configurações do agendador para definir um.</value>
+  </data>
+  <data name="msgNoTimeZoneAskAdmin" xml:space="preserve">
+    <value>Este agendador não tem fuso horário, então cada pessoa vê os horários no próprio fuso. Peça ao administrador para definir um.</value>
+  </data>
+  <data name="msgNewSchedulerZone" xml:space="preserve">
+    <value>O fuso horário do seu dispositivo não corresponde ao do Power Apps. Defina o mesmo fuso no Power Apps (Configurações &gt; Configurações pessoais) e tente novamente.</value>
   </data>
   <data name="msgWarningSuffix" xml:space="preserve">
     <value> (aviso: {reason})</value>

@@ -12,7 +12,7 @@ Table **Chrona Scheduler Calendar** (`chr_chronaschedulercalendar`). The first s
 
 | Setting | Column | What it does | Without it |
 | --- | --- | --- | --- |
-| Time zone | `chr_timezone` | The site's time zone, picked from a list, such as `Australia/Perth`. The board shows every time in it, for everyone. The first sample run sets yours. In Chrona Workforce Scheduler, the calendar's site sets it. | Each user's own Power Apps time zone. |
+| Time zone | `chr_timezone` | The site's time zone, picked from a list, such as `Australia/Perth`. The board shows every time in it, unless a view sets its own Display time zone. A scheduler needs one to be created. The first sample run sets it from your device's time zone. Your device must be at the same time as your Power Apps time zone. If it is not, the run says so and creates no scheduler. In Chrona Workforce Scheduler, the calendar's site sets it. | A new scheduler is not saved. An existing scheduler shows each user's own Power Apps time zone, unless the view sets its own Display time zone. While the board shows each user's own zone, it shows a warning until you set a zone. |
 | Resource table | `chr_resourcetable` | The people or asset table, picked from a list, for example `contact` or your own. | The table behind the Resource lookup. |
 | Resource name column | `chr_resourcenamecolumn` | The column shown as the lane's name, picked from the table's columns. | The table's primary name. |
 | Group column | `chr_resourcegroupcolumn` | Lanes grouped under this column's value, for example a team or a site; picked from the table's columns. | No groups. |
@@ -107,7 +107,7 @@ A holiday calendar holds a list of public holidays. Open **Holiday calendars** i
 | Setting | Column | What it does | If empty |
 | --- | --- | --- | --- |
 | Name | `chr_name` | The calendar's name, such as Bavaria. | Required. |
-| Region | `chr_region` | The region whose public holidays Chrona gets. When you set or change it, Chrona gets the public holidays of this year and next year from Nager.Date (date.nager.at): the country's and the region's own. | Chrona gets no days. You add each day yourself. |
+| Region | `chr_region` | The region whose public holidays Chrona gets. When you save the calendar with a new or changed region, the form gets the public holidays of this year and next year from Nager.Date (date.nager.at): the country's and the region's own. It then says how many days it added, or why it couldn't. A region set outside the form, by an import, a flow or the Web API, gets no days until you select **Fetch latest**. | Chrona gets no days. You add each day yourself. |
 
 To get the newest days, select **Fetch latest** on the calendar. Chrona adds a day only on a date that has no day yet. To add a day yourself, add it to the calendar's **Public holidays** list with its date and name. To remove a day, deactivate it: Chrona does not add it again.
 

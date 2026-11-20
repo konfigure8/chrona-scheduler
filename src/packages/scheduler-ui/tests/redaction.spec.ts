@@ -65,6 +65,15 @@ const problem = problemFromSchedule({
 const redaction = redactProblem(problem);
 const wire = JSON.stringify(redaction.problem);
 
+// Extra resource facts use the same keys; the extension cannot replace protected identity fields.
+const resourceExtension = redactProblem(problem, {
+  resource: (resource, resourceKey) => ({ id: resource.id, linkedPerson: resourceKey("r-riley"), name: resource.name }),
+}).problem;
+assertEqual((resourceExtension.resources[0] as unknown as { linkedPerson: string }).linkedPerson, "p-2", "resource hook keys a reference");
+assertEqual(resourceExtension.resources[0]?.id, "p-1", "resource hook cannot replace the key");
+assertEqual(resourceExtension.resources[0]?.name, "p-1", "resource hook cannot expose the name");
+assertEqual(JSON.stringify(redactProblem(problem, {}).problem), wire, "no resource hook leaves the wire unchanged");
+
 // Nothing personal survives: no names, no titles, no name-derived ids.
 for (const leak of [
   "Alex Chen",

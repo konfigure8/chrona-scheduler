@@ -98,5 +98,5 @@ const plain: SchedulerUiEvent = { end: at(3, 21, 30), id: "s1", resourceId: "r1"
 
 // The board's time zone when it has one.
 {
-  assert.deepEqual(hoverCardModel(plain, { ...input, timeZoneLabel: "Berlin" }).when[1], { label: "Displayed time zone", value: "Berlin" });
+  assert.deepEqual(hoverCardModel(plain, { ...input, timeZoneLabel: "Berlin" }).when[1], { label: "Displayed time zone", value: "Berlin", wide: true });
 }

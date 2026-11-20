@@ -23,6 +23,7 @@
     "../SchedulerControl/controlStrings.ts",
     "../SchedulerControl/dataverseData.ts",
     "../SchedulerControl/configLoader.ts",
+    "../SchedulerControl/refusedWrites.ts",
     "./*.spec.ts"
   ]
 }

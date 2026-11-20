@@ -222,3 +222,16 @@ export function watchWhileOpen(
     clearInterval(timer);
   };
 }
+
+/**
+ * The time zone a scheduler Connect creates takes: the browser's, when the browser runs at the Power Apps user's
+ * offset now. Otherwise none, and Connect creates no scheduler: a scheduler always has a zone (Matt 2026-11-17, "a
+ * time zone on every new calendar: simplest -> make it mandatory and part of creating a new scheduler record").
+ */
+export function newSchedulerZone(
+  browserZone: string | undefined,
+  zoneOffsetNow: (zone: string) => number,
+  userOffsetNow: number,
+): string | undefined {
+  return browserZone && zoneOffsetNow(browserZone) === userOffsetNow ? browserZone : undefined;
+}

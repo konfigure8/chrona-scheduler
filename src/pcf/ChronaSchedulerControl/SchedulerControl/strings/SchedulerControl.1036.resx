@@ -384,6 +384,9 @@
   <data name="msgCannotCreateHere" xml:space="preserve">
     <value>Création impossible ici</value>
   </data>
+  <data name="msgCannotCreateNoColumns" xml:space="preserve">
+    <value>Création impossible ici : le tableau n'a pas de colonne de début, de fin ou de titre.</value>
+  </data>
   <data name="msgConnectAdminOnly" xml:space="preserve">
     <value>Un administrateur connecte Chrona à cet environnement (rôle Chrona Scheduler Admin).</value>
   </data>
@@ -414,8 +417,26 @@
   <data name="msgMovedMany" xml:space="preserve">
     <value>{count} éléments déplacés</value>
   </data>
+  <data name="msgNotSaved" xml:space="preserve">
+    <value>Non enregistré : {reason}</value>
+  </data>
+  <data name="msgNotSavedMany" xml:space="preserve">
+    <value>Non enregistré : {count} sur {total} éléments. {reason}</value>
+  </data>
+  <data name="msgNotSavedNoColumns" xml:space="preserve">
+    <value>Non enregistré : le tableau n'a pas de colonne de début ou de fin.</value>
+  </data>
+  <data name="msgNotSavedNoReason" xml:space="preserve">
+    <value>Dataverse a refusé la modification sans donner de raison. Réessayez.</value>
+  </data>
+  <data name="msgNotSavedOne" xml:space="preserve">
+    <value>Non enregistré : {title}. {reason}</value>
+  </data>
+  <data name="msgNotSavedReason" xml:space="preserve">
+    <value>{reason} Si cela se reproduit, montrez ce message à votre administrateur.</value>
+  </data>
   <data name="msgPersonNotSaved" xml:space="preserve">
-    <value>Non enregistré : le planning ne peut pas encore enregistrer la personne. Réessayez.</value>
+    <value>Non enregistré : le tableau n'a pas pu attribuer l'élément. Réessayez.</value>
   </data>
   <data name="fieldBundle" xml:space="preserve">
     <value>Lot</value>
@@ -488,6 +509,18 @@
   </data>
   <data name="msgViewSettingsUnread" xml:space="preserve">
     <value>Impossible de lire les paramètres de cette vue. Rechargez la page pour réessayer.</value>
+  </data>
+  <data name="msgYourTimeZone" xml:space="preserve">
+    <value>Votre fuseau horaire ({offset})</value>
+  </data>
+  <data name="msgNoTimeZone" xml:space="preserve">
+    <value>Ce planning n'a pas de fuseau horaire : chacun voit les heures dans son propre fuseau horaire. Ouvrez le planning depuis Paramètres du planning pour en définir un.</value>
+  </data>
+  <data name="msgNoTimeZoneAskAdmin" xml:space="preserve">
+    <value>Ce planning n'a pas de fuseau horaire : chacun voit les heures dans son propre fuseau horaire. Demandez à votre administrateur d'en définir un.</value>
+  </data>
+  <data name="msgNewSchedulerZone" xml:space="preserve">
+    <value>Le fuseau horaire de votre appareil ne correspond pas à celui de Power Apps. Définissez le même fuseau dans Power Apps (Paramètres &gt; Paramètres personnels), puis réessayez.</value>
   </data>
   <data name="msgWarningSuffix" xml:space="preserve">
     <value> (attention : {reason})</value>

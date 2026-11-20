@@ -179,7 +179,8 @@ export function hoverCardModel(event: SchedulerUiEvent, input: HoverCardInput): 
   const when: HoverCardEntry[] = [
     { label: strings.hoverTimes, value: formatShiftTimes(event, input), wide: true },
     ...(breaks.length > 0 ? [{ label: strings.hoverBreaks, tags: breaks, value: breaks.map((tag) => tag.label).join(", "), wide: true }] : []),
-    ...(input.timeZoneLabel ? [{ label: strings.timeZoneChip, value: input.timeZoneLabel }] : []),
+    // A full row: "Your time zone (UTC-08:00)" never breaks inside its offset.
+    ...(input.timeZoneLabel ? [{ label: strings.timeZoneChip, value: input.timeZoneLabel, wide: true }] : []),
   ];
   // The status is the chip's: its field never shows again as a row.
   const fields = (event.fields ?? []).filter((field: SchedulerEventField) => field.key !== STATUS_FIELD_KEY);

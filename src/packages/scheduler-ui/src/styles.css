@@ -774,8 +774,11 @@
   background: var(--csui-surface-hover);
   border-radius: 9999px;
   color: var(--csui-text-soft);
+  flex-shrink: 0;
   font-size: 12px;
   padding: 2px 10px;
+  /* "Your time zone (UTC-08:00)" moves to the next row whole, never as a two-line pill. */
+  white-space: nowrap;
 }
 
 /* Teams-style time-scale menu */

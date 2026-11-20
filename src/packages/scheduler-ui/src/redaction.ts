@@ -20,6 +20,7 @@ import type {
   ScheduleCandidate,
   ScheduleCandidateCheck,
   ScheduleContractAgreement,
+  ScheduleContractResource,
   ScheduleContractShift,
   ScheduleProblemV2,
   ScheduleRosterCheck,
@@ -67,6 +68,8 @@ export function redactProblem(problem: ScheduleProblemV2, extension?: RedactionE
 export interface RedactionExtension {
   /** An agreement's facts beside its id and rules. */
   readonly agreement?: (agreement: ScheduleContractAgreement) => Readonly<Record<string, unknown>>;
+  /** A resource's extra facts; references to people must use resourceKey. */
+  readonly resource?: (resource: ScheduleContractResource, resourceKey: (realId: string) => string | undefined) => Readonly<Record<string, unknown>>;
   /** Facts on the problem itself; `resourceKey` is undefined for a person the problem does not hold. */
   readonly problem?: (
     problem: ScheduleProblemV2,
@@ -177,6 +180,7 @@ function redactWith(
       // F24 Repair mode: an intent and a charge, not personal data.
       ...(problem.repair ? { repair: problem.repair } : {}),
       resources: problem.resources.map((resource) => ({
+        ...extension?.resource?.(resource, resourceKey),
         ...(resource.agreementId !== undefined
           ? { agreementId: pseudoAgreement(resource.agreementId) }
           : {}),

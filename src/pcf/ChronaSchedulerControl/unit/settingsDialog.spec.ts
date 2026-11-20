@@ -3,6 +3,7 @@ import * as assert from "node:assert/strict";
 import {
   connectOffered,
   connectWrites,
+  newSchedulerZone,
   openRecordInDialog,
   readRowsVersion,
   readViewRow,
@@ -254,7 +255,20 @@ async function aFailedViewRowReadBlocksConnect(): Promise<void> {
   assert.equal(writes.length, 2, "nothing more written");
 }
 
+/** A scheduler Connect creates always has a zone: the browser's at the Power Apps offset, else none and no create. */
+function aNewSchedulerTakesTheMakersZoneOrNone(): void {
+  const offsets: Record<string, number> = { "Australia/Brisbane": 600, "America/Los_Angeles": -480 };
+  const offsetOf = (zone: string): number => offsets[zone] ?? Number.NaN;
+  assert.equal(newSchedulerZone("Australia/Brisbane", offsetOf, 600), "Australia/Brisbane");
+  // The browser in Brisbane, Power Apps set to Pacific time: no zone to give, so Connect creates nothing.
+  assert.equal(newSchedulerZone("Australia/Brisbane", offsetOf, -480), undefined);
+  // A browser that names no zone: none either.
+  assert.equal(newSchedulerZone(undefined, offsetOf, 600), undefined);
+  assert.equal(newSchedulerZone("", offsetOf, 600), undefined);
+}
+
 void (async (): Promise<void> => {
+  aNewSchedulerTakesTheMakersZoneOrNone();
   await opensTheSideDialogWithItsObject();
   await aFailedViewRowReadIsNotNoRow();
   await aFailedViewRowReadBlocksConnect();

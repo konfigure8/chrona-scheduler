@@ -384,6 +384,9 @@
   <data name="msgCannotCreateHere" xml:space="preserve">
     <value>No se puede crear aquí</value>
   </data>
+  <data name="msgCannotCreateNoColumns" xml:space="preserve">
+    <value>No se puede crear aquí: el tablero no tiene columna de inicio, de fin o de título.</value>
+  </data>
   <data name="msgConnectAdminOnly" xml:space="preserve">
     <value>Un administrador conecta Chrona a este entorno (rol Chrona Scheduler Admin).</value>
   </data>
@@ -414,8 +417,26 @@
   <data name="msgMovedMany" xml:space="preserve">
     <value>{count} elementos movidos</value>
   </data>
+  <data name="msgNotSaved" xml:space="preserve">
+    <value>No guardado: {reason}</value>
+  </data>
+  <data name="msgNotSavedMany" xml:space="preserve">
+    <value>No guardado: {count} de {total} elementos. {reason}</value>
+  </data>
+  <data name="msgNotSavedNoColumns" xml:space="preserve">
+    <value>No guardado: el tablero no tiene columna de inicio o de fin.</value>
+  </data>
+  <data name="msgNotSavedNoReason" xml:space="preserve">
+    <value>Dataverse rechazó el cambio sin indicar el motivo. Inténtalo de nuevo.</value>
+  </data>
+  <data name="msgNotSavedOne" xml:space="preserve">
+    <value>No guardado: {title}. {reason}</value>
+  </data>
+  <data name="msgNotSavedReason" xml:space="preserve">
+    <value>{reason} Si vuelve a ocurrir, muestra este mensaje a tu administrador.</value>
+  </data>
   <data name="msgPersonNotSaved" xml:space="preserve">
-    <value>No guardado: aún no se puede guardar la persona. Inténtalo de nuevo.</value>
+    <value>No guardado: el tablero no pudo asignar el elemento. Inténtalo de nuevo.</value>
   </data>
   <data name="fieldBundle" xml:space="preserve">
     <value>Lote</value>
@@ -488,6 +509,18 @@
   </data>
   <data name="msgViewSettingsUnread" xml:space="preserve">
     <value>No se pudo leer la configuración de esta vista. Recarga la página para volver a intentarlo.</value>
+  </data>
+  <data name="msgYourTimeZone" xml:space="preserve">
+    <value>Tu zona horaria ({offset})</value>
+  </data>
+  <data name="msgNoTimeZone" xml:space="preserve">
+    <value>Este planificador no tiene zona horaria, así que cada persona ve las horas en su propia zona horaria. Abre el planificador desde Configuración del planificador para definir una.</value>
+  </data>
+  <data name="msgNoTimeZoneAskAdmin" xml:space="preserve">
+    <value>Este planificador no tiene zona horaria, así que cada persona ve las horas en su propia zona horaria. Pide a tu administrador que defina una.</value>
+  </data>
+  <data name="msgNewSchedulerZone" xml:space="preserve">
+    <value>La zona horaria de tu dispositivo no coincide con la de Power Apps. Define la misma zona en Power Apps (Configuración &gt; Configuración personal) y vuelve a intentarlo.</value>
   </data>
   <data name="msgWarningSuffix" xml:space="preserve">
     <value> (aviso: {reason})</value>
